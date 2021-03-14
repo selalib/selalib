@@ -83,65 +83,65 @@ module sll_m_poisson_2d_mudpack_curvilinear
    !> Derived type to solve Poisson equation on 2d curvilinear mesh
    type, extends(sll_c_poisson_2d_base) :: poisson_2d_mudpack_curvilinear
 
-      !> 
+      !>
       sll_real64, dimension(:, :), pointer :: cxx_2d
-      !> 
+      !>
       sll_real64, dimension(:, :), pointer :: cxy_2d
-      !> 
+      !>
       sll_real64, dimension(:, :), pointer :: cyy_2d
-      !> 
+      !>
       sll_real64, dimension(:, :), pointer :: cx_2d
-      !> 
+      !>
       sll_real64, dimension(:, :), pointer :: cy_2d
-      !> 
+      !>
       sll_real64, dimension(:, :), pointer :: ce_2d
-      !> 
+      !>
       sll_real64, dimension(:), pointer :: cxx_1d
-      !> 
+      !>
       sll_real64, dimension(:), pointer :: cyy_1d
-      !> 
+      !>
       sll_real64, dimension(:), pointer :: cx_1d
-      !> 
+      !>
       sll_real64, dimension(:), pointer :: cy_1d
-      !> 
+      !>
       sll_real64, dimension(:), pointer :: cex_1d
-      !> 
+      !>
       sll_real64, dimension(:), pointer :: cey_1d
-      !> 
+      !>
       sll_real64 :: cxx
-      !> 
+      !>
       sll_real64 :: cyy
-      !> 
+      !>
       sll_real64 :: cx
-      !> 
+      !>
       sll_real64 :: cy
-      !> 
+      !>
       sll_real64 :: ce
-      !> 
+      !>
       sll_int32  :: mudpack_case
-      !> 
+      !>
       class(sll_c_interpolator_2d), pointer   :: cxx_2d_interp
-      !> 
+      !>
       class(sll_c_interpolator_2d), pointer   :: cxy_2d_interp
-      !> 
+      !>
       class(sll_c_interpolator_2d), pointer   :: cyy_2d_interp
-      !> 
+      !>
       class(sll_c_interpolator_2d), pointer   :: cx_2d_interp
-      !> 
+      !>
       class(sll_c_interpolator_2d), pointer   :: cy_2d_interp
-      !> 
+      !>
       class(sll_c_interpolator_2d), pointer   :: ce_2d_interp
-      !> 
+      !>
       class(sll_c_interpolator_1d), pointer   :: cxx_1d_interp
-      !> 
+      !>
       class(sll_c_interpolator_1d), pointer   :: cyy_1d_interp
-      !> 
+      !>
       class(sll_c_interpolator_1d), pointer   :: cx_1d_interp
-      !> 
+      !>
       class(sll_c_interpolator_1d), pointer   :: cy_1d_interp
-      !> 
+      !>
       class(sll_c_interpolator_1d), pointer   :: cex_1d_interp
-      !> 
+      !>
       class(sll_c_interpolator_1d), pointer   :: cey_1d_interp
 
       sll_real64, dimension(:), pointer :: work !< array for tmp data
@@ -152,11 +152,11 @@ module sll_m_poisson_2d_mudpack_curvilinear
 
    contains
 
-      !> 
+      !>
       procedure, pass(poisson) :: initialize => initialize_poisson_2d_mudpack_curvilinear
-      !> 
+      !>
       procedure, pass(poisson) :: compute_phi_from_rho => compute_phi_from_rho_2d_mudpack
-      !> 
+      !>
       procedure, pass(poisson) :: compute_E_from_rho => compute_E_from_rho_2d_mudpack
 
       !> Compute the squarred L_2 for given coefficients
@@ -170,7 +170,7 @@ module sll_m_poisson_2d_mudpack_curvilinear
 
    end type poisson_2d_mudpack_curvilinear
 
-   !> 
+   !>
    class(poisson_2d_mudpack_curvilinear), pointer :: mudpack_wrapper => null()
 
 contains

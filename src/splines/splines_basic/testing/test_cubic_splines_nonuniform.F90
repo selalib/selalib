@@ -36,13 +36,12 @@ program test_cubic_splines_nonuniform
    sll_real64 :: max_err(6)
 
    sll_int32 :: nseed
-   sll_int32, allocatable :: seed(:) 
+   sll_int32, allocatable :: seed(:)
 
    call random_seed(size=nseed)
-   allocate(seed(nseed))
+   allocate (seed(nseed))
    seed = 42
    call random_seed(put=seed)
-
 
    test_passed = .true.
 

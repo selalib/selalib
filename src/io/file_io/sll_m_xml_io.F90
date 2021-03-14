@@ -129,10 +129,10 @@ contains
                                         nnodes_x1, &
                                         filetype)
 
-            sll_int32, intent(in)        :: file_id   
-            character(len=*), intent(in) :: filename  
-            character(len=*), intent(in) :: filetype  
-            sll_int32, intent(in)        :: nnodes_x1 
+            sll_int32, intent(in)        :: file_id
+            character(len=*), intent(in) :: filename
+            character(len=*), intent(in) :: filetype
+            sll_int32, intent(in)        :: nnodes_x1
 
             SLL_ASSERT_ALWAYS(filetype == 'HDF' .or. filetype == 'Binary')
             write (file_id, "(a,i10,a)") "<DataItem Dimensions='", nnodes_x1, &
@@ -158,9 +158,9 @@ contains
                                         nnodes_x2, &
                                         filetype)
 
-            sll_int32, intent(in)        :: file_id   
-            character(len=*), intent(in) :: filename 
-            character(len=*), intent(in) :: filetype 
+            sll_int32, intent(in)        :: file_id
+            character(len=*), intent(in) :: filename
+            character(len=*), intent(in) :: filetype
             sll_int32, intent(in)        :: nnodes_x1
             sll_int32, intent(in)        :: nnodes_x2
 
@@ -360,14 +360,14 @@ contains
                                                        x2dsetname, &
                                                        gridtype)
 
-            sll_int32, intent(in)        :: file_id     
-            character(len=*), intent(in) :: x1filename 
-            character(len=*), intent(in) :: x2filename 
-            sll_int32, intent(in)        :: nnodes_x1  
-            sll_int32, intent(in)        :: nnodes_x2   
-            character(len=*), intent(in) :: x1dsetname  
-            character(len=*), intent(in) :: x2dsetname  
-            character(len=*), intent(in) :: gridtype    
+            sll_int32, intent(in)        :: file_id
+            character(len=*), intent(in) :: x1filename
+            character(len=*), intent(in) :: x2filename
+            sll_int32, intent(in)        :: nnodes_x1
+            sll_int32, intent(in)        :: nnodes_x2
+            character(len=*), intent(in) :: x1dsetname
+            character(len=*), intent(in) :: x2dsetname
+            character(len=*), intent(in) :: gridtype
 
             write (file_id, "(a)") "<Grid Name='mesh' GridType='"//gridtype//"'>"
             write (file_id, &

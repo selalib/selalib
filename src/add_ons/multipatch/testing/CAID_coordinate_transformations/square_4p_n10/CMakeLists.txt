@@ -22,8 +22,7 @@
 # FOREACH(arg  ${IEN_TXT_FILES}) SET(IEN_FILES "${IEN_FILES} ${arg}")
 # ENDFOREACH(arg ${IEN_TXT_FILES})
 
-# LIST_LENGTH(length ${IEN_TXT_FILES})
-# MESSAGE("length: ${length}")
+# LIST_LENGTH(length ${IEN_TXT_FILES}) MESSAGE("length: ${length}")
 
 # FOREACH(arg  ${LM_TXT_FILES}) SET(LM_FILES "${LM_FILES} ${arg}")
 # ENDFOREACH(arg ${LM_TXT_FILES})

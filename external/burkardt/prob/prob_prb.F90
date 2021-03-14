@@ -1,5 +1,5 @@
 program main
-use sll_m_prob
+   use sll_m_prob
 !*****************************************************************************80
 !
 !! MAIN is the main program for PROB_PRB.
@@ -20,236 +20,236 @@ use sll_m_prob
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  call timestamp ( )
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'PROB_PRB'
-  write ( *, '(a)' ) '  FORTRAN90 version:'
-  write ( *, '(a)' ) '  Test the PROB library.'
+   call timestamp()
+   write (*, '(a)') ' '
+   write (*, '(a)') 'PROB_PRB'
+   write (*, '(a)') '  FORTRAN90 version:'
+   write (*, '(a)') '  Test the PROB library.'
 
-  call test001 ( )
-  call test002 ( )
-  call test003 ( )
-  call test004 ( )
-  call test005 ( )
-  call test006 ( )
-  call test007 ( )
-  call test008 ( )
-  call test009 ( )
+   call test001()
+   call test002()
+   call test003()
+   call test004()
+   call test005()
+   call test006()
+   call test007()
+   call test008()
+   call test009()
 
-  call test010 ( )
-  call test0105 ( )
-  call test0106 ( )
-  call test011 ( )
-  call test012 ( )
-  call test013 ( )
-  call test014 ( )
-  call test015 ( )
-  call test016 ( )
+   call test010()
+   call test0105()
+   call test0106()
+   call test011()
+   call test012()
+   call test013()
+   call test014()
+   call test015()
+   call test016()
 
-  call test020 ( )
-  call test021 ( )
-  call test022 ( )
-  call test023 ( )
-  call test0235 ( )
-  call test024 ( )
-  call test025 ( )
-  call test0251 ( )
-  call test0252 ( )
-  call test0253 ( )
-  call test0254 ( )
-  call test026 ( )
-  call test027 ( )
-  call test0275 ( )
-  call test0276 ( )
-  call test028 ( )
-  call test029 ( )
+   call test020()
+   call test021()
+   call test022()
+   call test023()
+   call test0235()
+   call test024()
+   call test025()
+   call test0251()
+   call test0252()
+   call test0253()
+   call test0254()
+   call test026()
+   call test027()
+   call test0275()
+   call test0276()
+   call test028()
+   call test029()
 
-  call test030 ( )
-  call test031 ( )
-  call test032 ( )
-  call test033 ( )
-  call test034 ( )
-  call test035 ( )
-  call test036 ( )
-  call test037 ( )
-  call test0375 ( )
-  call test038 ( )
-  call test039 ( )
-  call test0395 ( )
+   call test030()
+   call test031()
+   call test032()
+   call test033()
+   call test034()
+   call test035()
+   call test036()
+   call test037()
+   call test0375()
+   call test038()
+   call test039()
+   call test0395()
 
-  call test040 ( )
-  call test041 ( )
-  call test042 ( )
-  call test043 ( )
-  call test044 ( )
-  call test045 ( )
-  call test046 ( )
-  call test047 ( )
-  call test048 ( )
-  call test049 ( )
+   call test040()
+   call test041()
+   call test042()
+   call test043()
+   call test044()
+   call test045()
+   call test046()
+   call test047()
+   call test048()
+   call test049()
 
-  call test050 ( )
-  call test051 ( )
-  call test052 ( )
-  call test053 ( )
-  call test054 ( )
-  call test055 ( )
-  call test056 ( )
-  call test0563 ( )
-  call test0564 ( )
-  call test0565 ( )
-  call test0566 ( )
-  call test057 ( )
-  call test058 ( )
-  call test059 ( )
+   call test050()
+   call test051()
+   call test052()
+   call test053()
+   call test054()
+   call test055()
+   call test056()
+   call test0563()
+   call test0564()
+   call test0565()
+   call test0566()
+   call test057()
+   call test058()
+   call test059()
 
-  call test060 ( )
-  call test061 ( )
-  call test062 ( )
-  call test063 ( )
-  call test064 ( )
-  call test065 ( )
-  call test066 ( )
-  call test067 ( )
-  call test068 ( )
-  call test069 ( )
+   call test060()
+   call test061()
+   call test062()
+   call test063()
+   call test064()
+   call test065()
+   call test066()
+   call test067()
+   call test068()
+   call test069()
 
-  call test070 ( )
-  call test07025 ( )
-  call test0705 ( )
-  call test071 ( )
-  call test072 ( )
-  call test073 ( )
-  call test074 ( )
-  call test0744 ( )
-  call test0745 ( )
-  call test075 ( )
-  call test076 ( )
-  call test077 ( )
-  call test078 ( )
-  call test079 ( )
+   call test070()
+   call test07025()
+   call test0705()
+   call test071()
+   call test072()
+   call test073()
+   call test074()
+   call test0744()
+   call test0745()
+   call test075()
+   call test076()
+   call test077()
+   call test078()
+   call test079()
 
-  call test080 ( )
-  call test081 ( )
-  call test082 ( )
-  call test083 ( )
-  call test084 ( )
-  call test085 ( )
-  call test086 ( )
-  call test087 ( )
-  call test088 ( )
-  call test089 ( )
+   call test080()
+   call test081()
+   call test082()
+   call test083()
+   call test084()
+   call test085()
+   call test086()
+   call test087()
+   call test088()
+   call test089()
 
-  call test090 ( )
-  call test091 ( )
-  call test092 ( )
-  call test093 ( )
-  call test094 ( )
-  call test095 ( )
-  call test096 ( )
-  call test0965 ( )
-  call test097 ( )
-  call test098 ( )
-  call test099 ( )
+   call test090()
+   call test091()
+   call test092()
+   call test093()
+   call test094()
+   call test095()
+   call test096()
+   call test0965()
+   call test097()
+   call test098()
+   call test099()
 
-  call test100 ( )
-  call test101 ( )
-  call test102 ( )
-  call test103 ( )
-  call test104 ( )
-  call test105 ( )
-  call test106 ( )
-  call test107 ( )
-  call test108 ( )
-  call test109 ( )
+   call test100()
+   call test101()
+   call test102()
+   call test103()
+   call test104()
+   call test105()
+   call test106()
+   call test107()
+   call test108()
+   call test109()
 
-  call test110 ( )
-  call test111 ( )
-  call test112 ( )
-  call test113 ( )
-  call test114 ( )
-  call test1145 ( )
-  call test1146 ( )
-  call test115 ( )
-  call test116 ( )
-  call test117 ( )
-  call test118 ( )
-  call test1184 ( )
-  call test1185 ( )
-  call test1186 ( )
-  call test1187 ( )
-  call test1188 ( )
-  call test1189 ( )
-  call test119 ( )
+   call test110()
+   call test111()
+   call test112()
+   call test113()
+   call test114()
+   call test1145()
+   call test1146()
+   call test115()
+   call test116()
+   call test117()
+   call test118()
+   call test1184()
+   call test1185()
+   call test1186()
+   call test1187()
+   call test1188()
+   call test1189()
+   call test119()
 
-  call test120 ( )
-  call test123 ( )
-  call test124 ( )
-  call test125 ( )
-  call test126 ( )
-  call test127 ( )
-  call test128 ( )
-  call test129 ( )
+   call test120()
+   call test123()
+   call test124()
+   call test125()
+   call test126()
+   call test127()
+   call test128()
+   call test129()
 
-  call test130 ( )
-  call test1304 ( )
-  call test1306 ( )
-  call test131 ( )
-  call test132 ( )
-  call test133 ( )
-  call test134 ( )
-  call test1341 ( )
-  call test1342 ( )
-  call test1344 ( )
-  call test135 ( )
-  call test136 ( )
-  call test137 ( )
-  call test138 ( )
-  call test139 ( )
+   call test130()
+   call test1304()
+   call test1306()
+   call test131()
+   call test132()
+   call test133()
+   call test134()
+   call test1341()
+   call test1342()
+   call test1344()
+   call test135()
+   call test136()
+   call test137()
+   call test138()
+   call test139()
 
-  call test140 ( )
-  call test141 ( )
-  call test142 ( )
-  call test1425 ( )
-  call test143 ( )
-  call test144 ( )
-  call test145 ( )
-  call test146 ( )
-  call test147 ( )
-  call test148 ( )
-  call test1485 ( )
-  call test1486 ( )
-  call test149 ( )
+   call test140()
+   call test141()
+   call test142()
+   call test1425()
+   call test143()
+   call test144()
+   call test145()
+   call test146()
+   call test147()
+   call test148()
+   call test1485()
+   call test1486()
+   call test149()
 
-  call test150 ( )
-  call test151 ( )
-  call test152 ( )
-  call test153 ( )
-  call test154 ( )
-  call test155 ( )
-  call test1555 ( )
-  call test156 ( )
-  call test157 ( )
-  call test158 ( )
-  call test159 ( )
+   call test150()
+   call test151()
+   call test152()
+   call test153()
+   call test154()
+   call test155()
+   call test1555()
+   call test156()
+   call test157()
+   call test158()
+   call test159()
 
-  call test160 ( )
-  call test161 ( )
-  call test162 ( )
+   call test160()
+   call test161()
+   call test162()
 !
 !  Terminate.
 !
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'PROB_PRB'
-  write ( *, '(a)' ) '  Normal end of execution.'
-  write ( *, '(a)' ) ' '
-  call timestamp ( )
+   write (*, '(a)') ' '
+   write (*, '(a)') 'PROB_PRB'
+   write (*, '(a)') '  Normal end of execution.'
+   write (*, '(a)') ' '
+   call timestamp()
 
-  stop
+   stop
 end
-subroutine test001 ( )
+subroutine test001()
 
 !*****************************************************************************80
 !
@@ -267,30 +267,30 @@ subroutine test001 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) n
-  real ( kind = 8 ) x
+   real(kind=8) cdf
+   integer(kind=4) n
+   real(kind=8) x
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST001'
-  write ( *, '(a)' ) '  For the ANGLE PDF:'
-  write ( *, '(a)' ) '  ANGLE_CDF evaluates the CDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST001'
+   write (*, '(a)') '  For the ANGLE PDF:'
+   write (*, '(a)') '  ANGLE_CDF evaluates the CDF;'
 
-  n = 5
-  x = 0.50D+00
+   n = 5
+   x = 0.50D+00
 
-  call angle_cdf ( x, n, cdf )
+   call angle_cdf(x, n, cdf)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  PDF parameter N = ', n
-  write ( *, '(a,g14.6)' ) '  PDF argument X =  ', x
-  write ( *, '(a,g14.6)' ) '  CDF value =       ', cdf
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  PDF parameter N = ', n
+   write (*, '(a,g14.6)') '  PDF argument X =  ', x
+   write (*, '(a,g14.6)') '  CDF value =       ', cdf
 
-  return
+   return
 end
-subroutine test002 ( )
+subroutine test002()
 
 !*****************************************************************************80
 !
@@ -308,30 +308,30 @@ subroutine test002 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ) n
-  real ( kind = 8 ) pdf
-  real ( kind = 8 ) x
+   integer(kind=4) n
+   real(kind=8) pdf
+   real(kind=8) x
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST002'
-  write ( *, '(a)' ) '  For the ANGLE PDF:'
-  write ( *, '(a)' ) '  ANGLE_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST002'
+   write (*, '(a)') '  For the ANGLE PDF:'
+   write (*, '(a)') '  ANGLE_PDF evaluates the PDF;'
 
-  n = 5
-  x = 0.50D+00
+   n = 5
+   x = 0.50D+00
 
-  call angle_pdf ( x, n, pdf )
+   call angle_pdf(x, n, pdf)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  PDF parameter N = ', n
-  write ( *, '(a,g14.6)' ) '  PDF argument X =  ', x
-  write ( *, '(a,g14.6)' ) '  PDF value =       ', pdf
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  PDF parameter N = ', n
+   write (*, '(a,g14.6)') '  PDF argument X =  ', x
+   write (*, '(a,g14.6)') '  PDF value =       ', pdf
 
-  return
+   return
 end
-subroutine test003 ( )
+subroutine test003()
 
 !*****************************************************************************80
 !
@@ -349,26 +349,26 @@ subroutine test003 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) n
+   real(kind=8) mean
+   integer(kind=4) n
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST003'
-  write ( *, '(a)' ) '  For the ANGLE PDF:'
-  write ( *, '(a)' ) '  ANGLE_MEAN computes the mean;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST003'
+   write (*, '(a)') '  For the ANGLE PDF:'
+   write (*, '(a)') '  ANGLE_MEAN computes the mean;'
 
-  n = 5
-  call angle_mean ( n, mean )
+   n = 5
+   call angle_mean(n, mean)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  PDF parameter N = ', n
-  write ( *, '(a,g14.6)' ) '  PDF mean =        ', mean
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  PDF parameter N = ', n
+   write (*, '(a,g14.6)') '  PDF mean =        ', mean
 
-  return
+   return
 end
-subroutine test004 ( )
+subroutine test004()
 
 !*****************************************************************************80
 !
@@ -386,43 +386,43 @@ subroutine test004 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST004'
-  write ( *, '(a)' ) '  For the Anglit PDF:'
-  write ( *, '(a)' ) '  ANGLIT_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  ANGLIT_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  ANGLIT_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST004'
+   write (*, '(a)') '  For the Anglit PDF:'
+   write (*, '(a)') '  ANGLIT_CDF evaluates the CDF;'
+   write (*, '(a)') '  ANGLIT_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  ANGLIT_PDF evaluates the PDF;'
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call anglit_sample ( seed, x )
+      call anglit_sample(seed, x)
 
-    call anglit_pdf ( x, pdf )
+      call anglit_pdf(x, pdf)
 
-    call anglit_cdf ( x, cdf )
+      call anglit_cdf(x, cdf)
 
-    call anglit_cdf_inv ( cdf, x2 )
+      call anglit_cdf_inv(cdf, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test005 ( )
+subroutine test005()
 
 !*****************************************************************************80
 !
@@ -440,51 +440,51 @@ subroutine test005 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST005'
-  write ( *, '(a)' ) '  For the Anglit PDF:'
-  write ( *, '(a)' ) '  ANGLIT_MEAN computes the mean;'
-  write ( *, '(a)' ) '  ANGLIT_SAMPLE samples;'
-  write ( *, '(a)' ) '  ANGLIT_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST005'
+   write (*, '(a)') '  For the Anglit PDF:'
+   write (*, '(a)') '  ANGLIT_MEAN computes the mean;'
+   write (*, '(a)') '  ANGLIT_SAMPLE samples;'
+   write (*, '(a)') '  ANGLIT_VARIANCE computes the variance.'
 
-  call anglit_mean ( mean )
-  call anglit_variance ( variance )
+   call anglit_mean(mean)
+   call anglit_variance(variance)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call anglit_sample ( seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call anglit_sample(seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test006 ( )
+subroutine test006()
 
 !*****************************************************************************80
 !
@@ -502,57 +502,57 @@ subroutine test006 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  logical arcsin_check
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   logical arcsin_check
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST006'
-  write ( *, '(a)' ) '  For the Arcsin PDF:'
-  write ( *, '(a)' ) '  ARCSIN_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  ARCSIN_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  ARCSIN_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST006'
+   write (*, '(a)') '  For the Arcsin PDF:'
+   write (*, '(a)') '  ARCSIN_CDF evaluates the CDF;'
+   write (*, '(a)') '  ARCSIN_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  ARCSIN_PDF evaluates the PDF;'
 
-  a = 1.0D+00
+   a = 1.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A = ', a
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A = ', a
 
-  if ( .not. arcsin_check ( a ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. arcsin_check(a)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call arcsin_sample ( a, seed, x )
+      call arcsin_sample(a, seed, x)
 
-    call arcsin_pdf ( x, a, pdf )
+      call arcsin_pdf(x, a, pdf)
 
-    call arcsin_cdf ( x, a, cdf )
+      call arcsin_cdf(x, a, cdf)
 
-    call arcsin_cdf_inv ( cdf, a, x2 )
+      call arcsin_cdf_inv(cdf, a, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test007 ( )
+subroutine test007()
 
 !*****************************************************************************80
 !
@@ -570,73 +570,73 @@ subroutine test007 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  logical arcsin_check
-  integer ( kind = 4 ) i
-  integer ( kind = 4 ) j
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   logical arcsin_check
+   integer(kind=4) i
+   integer(kind=4) j
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST007'
-  write ( *, '(a)' ) '  For the Arcsin PDF:'
-  write ( *, '(a)' ) '  ARCSIN_MEAN computes the mean;'
-  write ( *, '(a)' ) '  ARCSIN_SAMPLE samples;'
-  write ( *, '(a)' ) '  ARCSIN_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST007'
+   write (*, '(a)') '  For the Arcsin PDF:'
+   write (*, '(a)') '  ARCSIN_MEAN computes the mean;'
+   write (*, '(a)') '  ARCSIN_SAMPLE samples;'
+   write (*, '(a)') '  ARCSIN_VARIANCE computes the variance.'
 
-  do i = 1, 2
+   do i = 1, 2
 
-    if ( i == 1 ) then
-      a = 1.0D+00
-    else if ( i == 2 ) then
-      a = 16.0D+00
-    end if
+      if (i == 1) then
+         a = 1.0D+00
+      else if (i == 2) then
+         a = 16.0D+00
+      end if
 
-    write ( *, '(a)' ) ' '
-    write ( *, '(a,g14.6)' ) '  PDF parameter A = ', a
+      write (*, '(a)') ' '
+      write (*, '(a,g14.6)') '  PDF parameter A = ', a
 
-    if ( .not. arcsin_check ( a ) ) then
-      write ( *, '(a)' ) ' '
-      write ( *, '(a)' ) 'Fatal error!'
-      write ( *, '(a)' ) '  The parameters are not legal.'
-      return
-    end if
+      if (.not. arcsin_check(a)) then
+         write (*, '(a)') ' '
+         write (*, '(a)') 'Fatal error!'
+         write (*, '(a)') '  The parameters are not legal.'
+         return
+      end if
 
-    call arcsin_mean ( a, mean )
-    call arcsin_variance ( a, variance )
+      call arcsin_mean(a, mean)
+      call arcsin_variance(a, variance)
 
-    write ( *, '(a,g14.6)' ) '  PDF mean =        ', mean
-    write ( *, '(a,g14.6)' ) '  PDF variance =    ', variance
+      write (*, '(a,g14.6)') '  PDF mean =        ', mean
+      write (*, '(a,g14.6)') '  PDF variance =    ', variance
 
-    do j = 1, sample_num
-      call arcsin_sample ( a, seed, x(j) )
-    end do
+      do j = 1, sample_num
+         call arcsin_sample(a, seed, x(j))
+      end do
 
-    call r8vec_mean ( sample_num, x, mean )
-    call r8vec_variance ( sample_num, x, variance )
-    call r8vec_max ( sample_num, x, xmax )
-    call r8vec_min ( sample_num, x, xmin )
+      call r8vec_mean(sample_num, x, mean)
+      call r8vec_variance(sample_num, x, variance)
+      call r8vec_max(sample_num, x, xmax)
+      call r8vec_min(sample_num, x, xmin)
 
-    write ( *, '(a)' ) ' '
-    write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-    write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-    write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-    write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-    write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+      write (*, '(a)') ' '
+      write (*, '(a,i8)') '  Sample size =     ', sample_num
+      write (*, '(a,g14.6)') '  Sample mean =     ', mean
+      write (*, '(a,g14.6)') '  Sample variance = ', variance
+      write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+      write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test008 ( )
+subroutine test008()
 
 !*****************************************************************************80
 !
@@ -654,30 +654,30 @@ subroutine test008 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ) n
-  real ( kind = 8 ) pdf
+   integer(kind=4) n
+   real(kind=8) pdf
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST008'
-  write ( *, '(a)' ) '  For the Benford PDF:'
-  write ( *, '(a)' ) '  BENFORD_PDF evaluates the PDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST008'
+   write (*, '(a)') '  For the Benford PDF:'
+   write (*, '(a)') '  BENFORD_PDF evaluates the PDF.'
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '  N    PDF(N)'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '  N    PDF(N)'
+   write (*, '(a)') ' '
 
-  do n = 1, 19
+   do n = 1, 19
 
-    call benford_pdf ( n, pdf )
-    write ( *, '(i8,g14.6)' ) n, pdf
+      call benford_pdf(n, pdf)
+      write (*, '(i8,g14.6)') n, pdf
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test009 ( )
+subroutine test009()
 
 !*****************************************************************************80
 !
@@ -695,57 +695,57 @@ subroutine test009 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  logical bernoulli_check
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  integer ( kind = 4 ) x
-  integer ( kind = 4 ) x2
+   real(kind=8) a
+   logical bernoulli_check
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   integer(kind=4) x
+   integer(kind=4) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST009'
-  write ( *, '(a)' ) '  For the Bernoulli PDF,'
-  write ( *, '(a)' ) '  BERNOULLI_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  BERNOULLI_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  BERNOULLI_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST009'
+   write (*, '(a)') '  For the Bernoulli PDF,'
+   write (*, '(a)') '  BERNOULLI_CDF evaluates the CDF;'
+   write (*, '(a)') '  BERNOULLI_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  BERNOULLI_PDF evaluates the PDF;'
 
-  a = 0.75D+00
+   a = 0.75D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A = ', a
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A = ', a
 
-  if ( .not. bernoulli_check ( a ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. bernoulli_check(a)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call bernoulli_sample ( a, seed, x )
+      call bernoulli_sample(a, seed, x)
 
-    call bernoulli_pdf ( x, a, pdf )
+      call bernoulli_pdf(x, a, pdf)
 
-    call bernoulli_cdf ( x, a, cdf )
+      call bernoulli_cdf(x, a, cdf)
 
-    call bernoulli_cdf_inv ( cdf, a, x2 )
+      call bernoulli_cdf_inv(cdf, a, x2)
 
-    write ( *, '(2x,i14,2g14.6,i14)' ) x, pdf, cdf, x2
+      write (*, '(2x,i14,2g14.6,i14)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test010 ( )
+subroutine test010()
 
 !*****************************************************************************80
 !
@@ -763,64 +763,64 @@ subroutine test010 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  logical bernoulli_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  integer ( kind = 4 ) x(sample_num)
-  integer ( kind = 4 ) xmax
-  integer ( kind = 4 ) xmin
+   real(kind=8) a
+   logical bernoulli_check
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   integer(kind=4) x(sample_num)
+   integer(kind=4) xmax
+   integer(kind=4) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST010'
-  write ( *, '(a)' ) '  For the Bernoulli PDF:'
-  write ( *, '(a)' ) '  BERNOULLI_MEAN computes the mean;'
-  write ( *, '(a)' ) '  BERNOULLI_SAMPLE samples;'
-  write ( *, '(a)' ) '  BERNOULLI_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST010'
+   write (*, '(a)') '  For the Bernoulli PDF:'
+   write (*, '(a)') '  BERNOULLI_MEAN computes the mean;'
+   write (*, '(a)') '  BERNOULLI_SAMPLE samples;'
+   write (*, '(a)') '  BERNOULLI_VARIANCE computes the variance.'
 
-  a = 0.75D+00
+   a = 0.75D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A = ', a
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A = ', a
 
-  if ( .not. bernoulli_check ( a ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. bernoulli_check(a)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call bernoulli_mean ( a, mean )
-  call bernoulli_variance ( a, variance )
+   call bernoulli_mean(a, mean)
+   call bernoulli_variance(a, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =        ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =    ', variance
+   write (*, '(a,g14.6)') '  PDF mean =        ', mean
+   write (*, '(a,g14.6)') '  PDF variance =    ', variance
 
-  do i = 1, sample_num
-    call bernoulli_sample ( a, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call bernoulli_sample(a, seed, x(i))
+   end do
 
-  call i4vec_mean ( sample_num, x, mean )
-  call i4vec_variance ( sample_num, x, variance )
-  call i4vec_max ( sample_num, x, xmax )
-  call i4vec_min ( sample_num, x, xmin )
+   call i4vec_mean(sample_num, x, mean)
+   call i4vec_variance(sample_num, x, variance)
+   call i4vec_max(sample_num, x, xmax)
+   call i4vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,i8)'    ) '  Sample maximum =  ', xmax
-  write ( *, '(a,i8)'    ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,i8)') '  Sample maximum =  ', xmax
+   write (*, '(a,i8)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test0105 ( )
+subroutine test0105()
 
 !*****************************************************************************80
 !
@@ -838,43 +838,43 @@ subroutine test0105 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) bessel_i0
-  real ( kind = 8 ) fx
-  real ( kind = 8 ) fx2
-  integer ( kind = 4 ) n_data
-  real ( kind = 8 ) x
+   real(kind=8) bessel_i0
+   real(kind=8) fx
+   real(kind=8) fx2
+   integer(kind=4) n_data
+   real(kind=8) x
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST0105:'
-  write ( *, '(a)' ) '  BESSEL_I0 computes values of '
-  write ( *, '(a)' ) '    the Bessel I0 function.'
-  write ( *, '(a)' ) '  BESSEL_I0_VALUES returns some exact values.'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) &
-    '          X            Exact                  BESSEL_I0(X)'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST0105:'
+   write (*, '(a)') '  BESSEL_I0 computes values of '
+   write (*, '(a)') '    the Bessel I0 function.'
+   write (*, '(a)') '  BESSEL_I0_VALUES returns some exact values.'
+   write (*, '(a)') ' '
+   write (*, '(a)') &
+      '          X            Exact                  BESSEL_I0(X)'
+   write (*, '(a)') ' '
 
-  n_data = 0
+   n_data = 0
 
-  do
+   do
 
-    call bessel_i0_values ( n_data, x, fx )
+      call bessel_i0_values(n_data, x, fx)
 
-    if ( n_data == 0 ) then
-      exit
-    end if
+      if (n_data == 0) then
+         exit
+      end if
 
-    fx2 = bessel_i0 ( x )
+      fx2 = bessel_i0(x)
 
-    write ( *, '(2x,f14.6,2x,g24.16,2x,g24.16)' ) x, fx, fx2
+      write (*, '(2x,f14.6,2x,g24.16,2x,g24.16)') x, fx, fx2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test0106 ( )
+subroutine test0106()
 
 !*****************************************************************************80
 !
@@ -892,43 +892,43 @@ subroutine test0106 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) bessel_i1
-  real ( kind = 8 ) fx
-  real ( kind = 8 ) fx2
-  integer ( kind = 4 ) n_data
-  real ( kind = 8 ) x
+   real(kind=8) bessel_i1
+   real(kind=8) fx
+   real(kind=8) fx2
+   integer(kind=4) n_data
+   real(kind=8) x
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST0106:'
-  write ( *, '(a)' ) '  BESSEL_I1 computes values of '
-  write ( *, '(a)' ) '    the Bessel I1 function.'
-  write ( *, '(a)' ) '  BESSEL_I1_VALUES returns some exact values.'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) &
-    '          X            Exact                  BESSEL_I1(X)'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST0106:'
+   write (*, '(a)') '  BESSEL_I1 computes values of '
+   write (*, '(a)') '    the Bessel I1 function.'
+   write (*, '(a)') '  BESSEL_I1_VALUES returns some exact values.'
+   write (*, '(a)') ' '
+   write (*, '(a)') &
+      '          X            Exact                  BESSEL_I1(X)'
+   write (*, '(a)') ' '
 
-  n_data = 0
+   n_data = 0
 
-  do
+   do
 
-    call bessel_i1_values ( n_data, x, fx )
+      call bessel_i1_values(n_data, x, fx)
 
-    if ( n_data == 0 ) then
-      exit
-    end if
+      if (n_data == 0) then
+         exit
+      end if
 
-    fx2 = bessel_i1 ( x )
+      fx2 = bessel_i1(x)
 
-    write ( *, '(2x,f14.6,2x,g24.16,2x,g24.16)' ) x, fx, fx2
+      write (*, '(2x,f14.6,2x,g24.16,2x,g24.16)') x, fx, fx2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test011 ( )
+subroutine test011()
 
 !*****************************************************************************80
 !
@@ -946,37 +946,37 @@ subroutine test011 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) beta
-  real ( kind = 8 ) beta1
-  real ( kind = 8 ) beta2
-  real ( kind = 8 ) gamma
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) beta
+   real(kind=8) beta1
+   real(kind=8) beta2
+   real(kind=8) gamma
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST011'
-  write ( *, '(a)' ) '  BETA evaluates the Beta function;'
-  write ( *, '(a)' ) '  GAMMA evaluates the Gamma function.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST011'
+   write (*, '(a)') '  BETA evaluates the Beta function;'
+   write (*, '(a)') '  GAMMA evaluates the Gamma function.'
 
-  a = 2.2D+00
-  b = 3.7D+00
+   a = 2.2D+00
+   b = 3.7D+00
 
-  beta1 = beta ( a, b )
-  beta2 = gamma ( a ) * gamma ( b ) / gamma ( a + b )
+   beta1 = beta(a, b)
+   beta2 = gamma(a)*gamma(b)/gamma(a + b)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  Argument A =                   ', a
-  write ( *, '(a,g14.6)' ) '  Argument B =                   ', b
-  write ( *, '(a,g14.6)' ) '  Beta(A,B) =                    ', beta1
-  write ( *, '(a)' ) '  (Expected value = 0.0454 )'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  Gamma(A)*Gamma(B)/Gamma(A+B) = ', beta2
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  Argument A =                   ', a
+   write (*, '(a,g14.6)') '  Argument B =                   ', b
+   write (*, '(a,g14.6)') '  Beta(A,B) =                    ', beta1
+   write (*, '(a)') '  (Expected value = 0.0454 )'
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  Gamma(A)*Gamma(B)/Gamma(A+B) = ', beta2
 
-  return
+   return
 end
-subroutine test012 ( )
+subroutine test012()
 
 !*****************************************************************************80
 !
@@ -994,60 +994,60 @@ subroutine test012 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  logical beta_check
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   logical beta_check
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST012'
-  write ( *, '(a)' ) '  For the Beta PDF:'
-  write ( *, '(a)' ) '  BETA_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  BETA_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  BETA_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST012'
+   write (*, '(a)') '  For the Beta PDF:'
+   write (*, '(a)') '  BETA_CDF evaluates the CDF;'
+   write (*, '(a)') '  BETA_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  BETA_PDF evaluates the PDF;'
 
-  a = 12.0D+00
-  b = 12.0D+00
+   a = 12.0D+00
+   b = 12.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A = ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B = ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A = ', a
+   write (*, '(a,g14.6)') '  PDF parameter B = ', b
 
-  if ( .not. beta_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. beta_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       A       B       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       A       B       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call beta_sample ( a, b, seed, x )
+      call beta_sample(a, b, seed, x)
 
-    call beta_pdf ( x, a, b, pdf )
+      call beta_pdf(x, a, b, pdf)
 
-    call beta_cdf ( x, a, b, cdf )
+      call beta_cdf(x, a, b, cdf)
 
-    call beta_cdf_inv ( cdf, a, b, x2 )
+      call beta_cdf_inv(cdf, a, b, x2)
 
-    write ( *, '(2x,6g14.6)' ) a, b, x, pdf, cdf, x2
+      write (*, '(2x,6g14.6)') a, b, x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test013 ( )
+subroutine test013()
 
 !*****************************************************************************80
 !
@@ -1065,44 +1065,44 @@ subroutine test013 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) beta_inc
-  real ( kind = 8 ) fx
-  real ( kind = 8 ) fx2
-  integer ( kind = 4 ) n_data
-  real ( kind = 8 ) x
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) beta_inc
+   real(kind=8) fx
+   real(kind=8) fx2
+   integer(kind=4) n_data
+   real(kind=8) x
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST013:'
-  write ( *, '(a)' ) '  BETA_INC evaluates the normalized incomplete Beta'
-  write ( *, '(a)' ) '  function BETA_INC(A,B,X).'
-  write ( *, '(a)' ) '  BETA_INC_VALUES returns some exact values.'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '  A      B       X       Exact F       BETA_INC(A,B,X)'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST013:'
+   write (*, '(a)') '  BETA_INC evaluates the normalized incomplete Beta'
+   write (*, '(a)') '  function BETA_INC(A,B,X).'
+   write (*, '(a)') '  BETA_INC_VALUES returns some exact values.'
+   write (*, '(a)') ' '
+   write (*, '(a)') '  A      B       X       Exact F       BETA_INC(A,B,X)'
+   write (*, '(a)') ' '
 
-  n_data = 0
+   n_data = 0
 
-  do
+   do
 
-    call beta_inc_values ( n_data, a, b, x, fx )
+      call beta_inc_values(n_data, a, b, x, fx)
 
-    if ( n_data == 0 ) then
-      exit
-    end if
+      if (n_data == 0) then
+         exit
+      end if
 
-    fx2 = beta_inc ( a, b, x )
+      fx2 = beta_inc(a, b, x)
 
-    write ( *, '(2x,3f8.4,2g14.6)' ) a, b, x, fx, fx2
+      write (*, '(2x,3f8.4,2g14.6)') a, b, x, fx, fx2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test014 ( )
+subroutine test014()
 
 !*****************************************************************************80
 !
@@ -1120,67 +1120,67 @@ subroutine test014 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  logical beta_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   logical beta_check
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST014'
-  write ( *, '(a)' ) '  For the Beta PDF:'
-  write ( *, '(a)' ) '  BETA_MEAN computes the mean;'
-  write ( *, '(a)' ) '  BETA_SAMPLE samples;'
-  write ( *, '(a)' ) '  BETA_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST014'
+   write (*, '(a)') '  For the Beta PDF:'
+   write (*, '(a)') '  BETA_MEAN computes the mean;'
+   write (*, '(a)') '  BETA_SAMPLE samples;'
+   write (*, '(a)') '  BETA_VARIANCE computes the variance.'
 
-  a = 2.0D+00
-  b = 3.0D+00
+   a = 2.0D+00
+   b = 3.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A = ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B = ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A = ', a
+   write (*, '(a,g14.6)') '  PDF parameter B = ', b
 
-  if ( .not. beta_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. beta_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call beta_mean ( a, b, mean )
-  call beta_variance ( a, b, variance )
+   call beta_mean(a, b, mean)
+   call beta_variance(a, b, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =        ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =    ', variance
+   write (*, '(a,g14.6)') '  PDF mean =        ', mean
+   write (*, '(a,g14.6)') '  PDF variance =    ', variance
 
-  do i = 1, sample_num
-    call beta_sample ( a, b, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call beta_sample(a, b, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test015 ( )
+subroutine test015()
 
 !*****************************************************************************80
 !
@@ -1198,63 +1198,63 @@ subroutine test015 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  logical beta_binomial_check
-  integer ( kind = 4 ) c
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  integer ( kind = 4 ) x
-  integer ( kind = 4 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   logical beta_binomial_check
+   integer(kind=4) c
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   integer(kind=4) x
+   integer(kind=4) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST015'
-  write ( *, '(a)' ) '  For the Beta Binomial PDF,'
-  write ( *, '(a)' ) '  BETA_BINOMIAL_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  BETA_BINOMIAL_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  BETA_BINOMIAL_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST015'
+   write (*, '(a)') '  For the Beta Binomial PDF,'
+   write (*, '(a)') '  BETA_BINOMIAL_CDF evaluates the CDF;'
+   write (*, '(a)') '  BETA_BINOMIAL_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  BETA_BINOMIAL_PDF evaluates the PDF;'
 
-  a = 2.0D+00
-  b = 3.0D+00
-  c = 4
+   a = 2.0D+00
+   b = 3.0D+00
+   c = 4
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A = ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B = ', b
-  write ( *, '(a,i8)'    ) '  PDF parameter C = ', c
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A = ', a
+   write (*, '(a,g14.6)') '  PDF parameter B = ', b
+   write (*, '(a,i8)') '  PDF parameter C = ', c
 
-  if ( .not. beta_binomial_check ( a, b, c ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. beta_binomial_check(a, b, c)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call beta_binomial_sample ( a, b, c, seed, x )
+      call beta_binomial_sample(a, b, c, seed, x)
 
-    call beta_binomial_pdf ( x, a, b, c, pdf )
+      call beta_binomial_pdf(x, a, b, c, pdf)
 
-    call beta_binomial_cdf ( x, a, b, c, cdf )
+      call beta_binomial_cdf(x, a, b, c, cdf)
 
-    call beta_binomial_cdf_inv ( cdf, a, b, c, x2 )
+      call beta_binomial_cdf_inv(cdf, a, b, c, x2)
 
-    write ( *, '(2x,i14,2g14.6,i14)' ) x, pdf, cdf, x2
+      write (*, '(2x,i14,2g14.6,i14)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test016 ( )
+subroutine test016()
 
 !*****************************************************************************80
 !
@@ -1272,70 +1272,70 @@ subroutine test016 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  logical beta_binomial_check
-  integer ( kind = 4 ) c
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  integer ( kind = 4 ) x(sample_num)
-  integer ( kind = 4 ) xmax
-  integer ( kind = 4 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   logical beta_binomial_check
+   integer(kind=4) c
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   integer(kind=4) x(sample_num)
+   integer(kind=4) xmax
+   integer(kind=4) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST016'
-  write ( *, '(a)' ) '  For the Beta Binomial PDF:'
-  write ( *, '(a)' ) '  BETA_BINOMIAL_MEAN computes the mean;'
-  write ( *, '(a)' ) '  BETA_BINOMIAL_SAMPLE samples;'
-  write ( *, '(a)' ) '  BETA_BINOMIAL_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST016'
+   write (*, '(a)') '  For the Beta Binomial PDF:'
+   write (*, '(a)') '  BETA_BINOMIAL_MEAN computes the mean;'
+   write (*, '(a)') '  BETA_BINOMIAL_SAMPLE samples;'
+   write (*, '(a)') '  BETA_BINOMIAL_VARIANCE computes the variance.'
 
-  a = 2.0D+00
-  b = 3.0D+00
-  c = 4
+   a = 2.0D+00
+   b = 3.0D+00
+   c = 4
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A = ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B = ', b
-  write ( *, '(a,i8)'    ) '  PDF parameter C = ', c
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A = ', a
+   write (*, '(a,g14.6)') '  PDF parameter B = ', b
+   write (*, '(a,i8)') '  PDF parameter C = ', c
 
-  if ( .not. beta_binomial_check ( a, b, c ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. beta_binomial_check(a, b, c)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call beta_binomial_mean ( a, b, c, mean )
-  call beta_binomial_variance ( a, b, c, variance )
+   call beta_binomial_mean(a, b, c, mean)
+   call beta_binomial_variance(a, b, c, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =        ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =    ', variance
+   write (*, '(a,g14.6)') '  PDF mean =        ', mean
+   write (*, '(a,g14.6)') '  PDF variance =    ', variance
 
-  do i = 1, sample_num
-    call beta_binomial_sample ( a, b, c, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call beta_binomial_sample(a, b, c, seed, x(i))
+   end do
 
-  call i4vec_mean ( sample_num, x, mean )
-  call i4vec_variance ( sample_num, x, variance )
-  call i4vec_max ( sample_num, x, xmax )
-  call i4vec_min ( sample_num, x, xmin )
+   call i4vec_mean(sample_num, x, mean)
+   call i4vec_variance(sample_num, x, variance)
+   call i4vec_max(sample_num, x, xmax)
+   call i4vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,i8)'    ) '  Sample maximum =  ', xmax
-  write ( *, '(a,i8)'    ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,i8)') '  Sample maximum =  ', xmax
+   write (*, '(a,i8)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test020 ( )
+subroutine test020()
 
 !*****************************************************************************80
 !
@@ -1353,50 +1353,50 @@ subroutine test020 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) fx
-  real ( kind = 8 ) fx2
-  integer ( kind = 4 ) n_data
-  integer ( kind = 4 ) x
+   integer(kind=4) a
+   real(kind=8) b
+   real(kind=8) fx
+   real(kind=8) fx2
+   integer(kind=4) n_data
+   integer(kind=4) x
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST020:'
-  write ( *, '(a)' ) '  BINOMIAL_CDF evaluates the cumulative distribution'
-  write ( *, '(a)' ) '  function for the discrete binomial probability'
-  write ( *, '(a)' ) '  density function.'
-  write ( *, '(a)' ) '  BINOMIAL_CDF_VALUES returns some exact values.'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '  A is the number of trials;'
-  write ( *, '(a)' ) '  B is the probability of success on one trial;'
-  write ( *, '(a)' ) '  X is the number of successes;'
-  write ( *, '(a)' ) '  BINOMIAL_CDF is the probability of having up to X'
-  write ( *, '(a)' ) '  successes.'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '      A     B         X   Exact F     BINOMIAL_CDF(A,B,X)'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST020:'
+   write (*, '(a)') '  BINOMIAL_CDF evaluates the cumulative distribution'
+   write (*, '(a)') '  function for the discrete binomial probability'
+   write (*, '(a)') '  density function.'
+   write (*, '(a)') '  BINOMIAL_CDF_VALUES returns some exact values.'
+   write (*, '(a)') ' '
+   write (*, '(a)') '  A is the number of trials;'
+   write (*, '(a)') '  B is the probability of success on one trial;'
+   write (*, '(a)') '  X is the number of successes;'
+   write (*, '(a)') '  BINOMIAL_CDF is the probability of having up to X'
+   write (*, '(a)') '  successes.'
+   write (*, '(a)') ' '
+   write (*, '(a)') '      A     B         X   Exact F     BINOMIAL_CDF(A,B,X)'
+   write (*, '(a)') ' '
 
-  n_data = 0
+   n_data = 0
 
-  do
+   do
 
-    call binomial_cdf_values ( n_data, a, b, x, fx )
+      call binomial_cdf_values(n_data, a, b, x, fx)
 
-    if ( n_data == 0 ) then
-      exit
-    end if
+      if (n_data == 0) then
+         exit
+      end if
 
-    call binomial_cdf ( x, a, b, fx2 )
+      call binomial_cdf(x, a, b, fx2)
 
-    write ( *, '(2x,i8,2x,f8.4,2x,i8,g14.6,g14.6)' ) a, b, x, fx, fx2
+      write (*, '(2x,i8,2x,f8.4,2x,i8,g14.6,g14.6)') a, b, x, fx, fx2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test021 ( )
+subroutine test021()
 
 !*****************************************************************************80
 !
@@ -1414,60 +1414,60 @@ subroutine test021 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ) a
-  real ( kind = 8 ) b
-  logical binomial_check
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  integer ( kind = 4 ) x
-  integer ( kind = 4 ) x2
+   integer(kind=4) a
+   real(kind=8) b
+   logical binomial_check
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   integer(kind=4) x
+   integer(kind=4) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST021'
-  write ( *, '(a)' ) '  For the Binomial PDF:'
-  write ( *, '(a)' ) '  BINOMIAL_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  BINOMIAL_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  BINOMIAL_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST021'
+   write (*, '(a)') '  For the Binomial PDF:'
+   write (*, '(a)') '  BINOMIAL_CDF evaluates the CDF;'
+   write (*, '(a)') '  BINOMIAL_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  BINOMIAL_PDF evaluates the PDF;'
 
-  a = 5
-  b = 0.65D+00
+   a = 5
+   b = 0.65D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  PDF parameter A = ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B = ', b
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  PDF parameter A = ', a
+   write (*, '(a,g14.6)') '  PDF parameter B = ', b
 
-  if ( .not. binomial_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. binomial_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call binomial_sample ( a, b, seed, x )
+      call binomial_sample(a, b, seed, x)
 
-    call binomial_pdf ( x, a, b, pdf )
+      call binomial_pdf(x, a, b, pdf)
 
-    call binomial_cdf ( x, a, b, cdf )
+      call binomial_cdf(x, a, b, cdf)
 
-    call binomial_cdf_inv ( cdf, a, b, x2 )
+      call binomial_cdf_inv(cdf, a, b, x2)
 
-    write ( *, '(2x,i14,2g14.6,i14)' ) x, pdf, cdf, x2
+      write (*, '(2x,i14,2g14.6,i14)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test022 ( )
+subroutine test022()
 
 !*****************************************************************************80
 !
@@ -1485,35 +1485,35 @@ subroutine test022 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ) cnk1
-  real ( kind = 8 ) cnk2_log
-  real ( kind = 8 ) cnk2
-  integer ( kind = 4 ) k
-  integer ( kind = 4 ) n
+   integer(kind=4) cnk1
+   real(kind=8) cnk2_log
+   real(kind=8) cnk2
+   integer(kind=4) k
+   integer(kind=4) n
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST022'
-  write ( *, '(a)' ) '  BINOMIAL_COEF evaluates binomial coefficients.'
-  write ( *, '(a)' ) '  BINOMIAL_COEF_LOG evaluates the logarithm.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST022'
+   write (*, '(a)') '  BINOMIAL_COEF evaluates binomial coefficients.'
+   write (*, '(a)') '  BINOMIAL_COEF_LOG evaluates the logarithm.'
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '    N     K       C(N,K)'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '    N     K       C(N,K)'
+   write (*, '(a)') ' '
 
-  do n = 0, 4
-    do k = 0, n
-      call binomial_coef ( n, k, cnk1 )
-      call binomial_coef_log ( n, k, cnk2_log )
-      cnk2 = exp ( cnk2_log )
-      write ( *, '(3i8,g14.6)' ) n, k, cnk1, cnk2
-    end do
-  end do
+   do n = 0, 4
+      do k = 0, n
+         call binomial_coef(n, k, cnk1)
+         call binomial_coef_log(n, k, cnk2_log)
+         cnk2 = exp(cnk2_log)
+         write (*, '(3i8,g14.6)') n, k, cnk1, cnk2
+      end do
+   end do
 
-  return
+   return
 end
-subroutine test023 ( )
+subroutine test023()
 
 !*****************************************************************************80
 !
@@ -1531,67 +1531,67 @@ subroutine test023 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  integer ( kind = 4 ) a
-  real ( kind = 8 ) b
-  logical binomial_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  integer ( kind = 4 ) x(sample_num)
-  integer ( kind = 4 ) xmax
-  integer ( kind = 4 ) xmin
+   integer(kind=4) a
+   real(kind=8) b
+   logical binomial_check
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   integer(kind=4) x(sample_num)
+   integer(kind=4) xmax
+   integer(kind=4) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST023'
-  write ( *, '(a)' ) '  For the Binomial PDF:'
-  write ( *, '(a)' ) '  BINOMIAL_MEAN computes the mean;'
-  write ( *, '(a)' ) '  BINOMIAL_SAMPLE samples;'
-  write ( *, '(a)' ) '  BINOMIAL_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST023'
+   write (*, '(a)') '  For the Binomial PDF:'
+   write (*, '(a)') '  BINOMIAL_MEAN computes the mean;'
+   write (*, '(a)') '  BINOMIAL_SAMPLE samples;'
+   write (*, '(a)') '  BINOMIAL_VARIANCE computes the variance.'
 
-  a = 5
-  b = 0.30D+00
+   a = 5
+   b = 0.30D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  PDF parameter A = ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B = ', b
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  PDF parameter A = ', a
+   write (*, '(a,g14.6)') '  PDF parameter B = ', b
 
-  if ( .not. binomial_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. binomial_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call binomial_mean ( a, b, mean )
-  call binomial_variance ( a, b, variance )
+   call binomial_mean(a, b, mean)
+   call binomial_variance(a, b, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =        ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =    ', variance
+   write (*, '(a,g14.6)') '  PDF mean =        ', mean
+   write (*, '(a,g14.6)') '  PDF variance =    ', variance
 
-  do i = 1, sample_num
-    call binomial_sample ( a, b, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call binomial_sample(a, b, seed, x(i))
+   end do
 
-  call i4vec_mean ( sample_num, x, mean )
-  call i4vec_variance ( sample_num, x, variance )
-  call i4vec_max ( sample_num, x, xmax )
-  call i4vec_min ( sample_num, x, xmin )
+   call i4vec_mean(sample_num, x, mean)
+   call i4vec_variance(sample_num, x, variance)
+   call i4vec_max(sample_num, x, xmax)
+   call i4vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,i8)'    ) '  Sample maximum =  ', xmax
-  write ( *, '(a,i8)'    ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,i8)') '  Sample maximum =  ', xmax
+   write (*, '(a,i8)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test0235 ( )
+subroutine test0235()
 
 !*****************************************************************************80
 !
@@ -1609,39 +1609,39 @@ subroutine test0235 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) n
-  integer ( kind = 4 ) n2
-  real ( kind = 8 ) pdf
+   real(kind=8) cdf
+   integer(kind=4) n
+   integer(kind=4) n2
+   real(kind=8) pdf
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST0235'
-  write ( *, '(a)' ) '  For the Birthday PDF,'
-  write ( *, '(a)' ) '  BIRTHDAY_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  BIRTHDAY_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  BIRTHDAY_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST0235'
+   write (*, '(a)') '  For the Birthday PDF,'
+   write (*, '(a)') '  BIRTHDAY_CDF evaluates the CDF;'
+   write (*, '(a)') '  BIRTHDAY_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  BIRTHDAY_PDF evaluates the PDF;'
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       N            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       N            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do n = 1, 30
+   do n = 1, 30
 
-    call birthday_pdf ( n, pdf )
+      call birthday_pdf(n, pdf)
 
-    call birthday_cdf ( n, cdf )
+      call birthday_cdf(n, cdf)
 
-    call birthday_cdf_inv ( cdf, n2 )
+      call birthday_cdf_inv(cdf, n2)
 
-    write ( *, '(2x,i8,2x,g14.6,2x,g14.6,2x,i8)' ) n, pdf, cdf, n2
+      write (*, '(2x,i8,2x,g14.6,2x,g14.6,2x,i8)') n, pdf, cdf, n2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test024 ( )
+subroutine test024()
 
 !*****************************************************************************80
 !
@@ -1659,63 +1659,63 @@ subroutine test024 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  logical bradford_check
-  real ( kind = 8 ) c
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   logical bradford_check
+   real(kind=8) c
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST024'
-  write ( *, '(a)' ) '  For the Bradford PDF:'
-  write ( *, '(a)' ) '  BRADFORD_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  BRADFORD_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  BRADFORD_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST024'
+   write (*, '(a)') '  For the Bradford PDF:'
+   write (*, '(a)') '  BRADFORD_CDF evaluates the CDF;'
+   write (*, '(a)') '  BRADFORD_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  BRADFORD_PDF evaluates the PDF;'
 
-  a = 1.0D+00
-  b = 2.0D+00
-  c = 3.0D+00
+   a = 1.0D+00
+   b = 2.0D+00
+   c = 3.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A = ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B = ', b
-  write ( *, '(a,g14.6)' ) '  PDF parameter C = ', c
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A = ', a
+   write (*, '(a,g14.6)') '  PDF parameter B = ', b
+   write (*, '(a,g14.6)') '  PDF parameter C = ', c
 
-  if ( .not. bradford_check ( a, b, c ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. bradford_check(a, b, c)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call bradford_sample ( a, b, c, seed, x )
+      call bradford_sample(a, b, c, seed, x)
 
-    call bradford_pdf ( x, a, b, c, pdf )
+      call bradford_pdf(x, a, b, c, pdf)
 
-    call bradford_cdf ( x, a, b, c, cdf )
+      call bradford_cdf(x, a, b, c, cdf)
 
-    call bradford_cdf_inv ( cdf, a, b, c, x2 )
+      call bradford_cdf_inv(cdf, a, b, c, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test025 ( )
+subroutine test025()
 
 !*****************************************************************************80
 !
@@ -1733,70 +1733,70 @@ subroutine test025 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  logical bradford_check
-  real ( kind = 8 ) c
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   logical bradford_check
+   real(kind=8) c
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST025'
-  write ( *, '(a)' ) '  For the Bradford PDF:'
-  write ( *, '(a)' ) '  BRADFORD_MEAN computes the mean;'
-  write ( *, '(a)' ) '  BRADFORD_SAMPLE samples;'
-  write ( *, '(a)' ) '  BRADFORD_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST025'
+   write (*, '(a)') '  For the Bradford PDF:'
+   write (*, '(a)') '  BRADFORD_MEAN computes the mean;'
+   write (*, '(a)') '  BRADFORD_SAMPLE samples;'
+   write (*, '(a)') '  BRADFORD_VARIANCE computes the variance.'
 
-  a = 1.0D+00
-  b = 2.0D+00
-  c = 3.0D+00
+   a = 1.0D+00
+   b = 2.0D+00
+   c = 3.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A = ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B = ', b
-  write ( *, '(a,g14.6)' ) '  PDF parameter C = ', c
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A = ', a
+   write (*, '(a,g14.6)') '  PDF parameter B = ', b
+   write (*, '(a,g14.6)') '  PDF parameter C = ', c
 
-  if ( .not. bradford_check ( a, b, c ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. bradford_check(a, b, c)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call bradford_mean ( a, b, c, mean )
-  call bradford_variance ( a, b, c, variance )
+   call bradford_mean(a, b, c, mean)
+   call bradford_variance(a, b, c, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =        ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =    ', variance
+   write (*, '(a,g14.6)') '  PDF mean =        ', mean
+   write (*, '(a,g14.6)') '  PDF variance =    ', variance
 
-  do i = 1, sample_num
-    call bradford_sample ( a, b, c, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call bradford_sample(a, b, c, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test0251 ( )
+subroutine test0251()
 
 !*****************************************************************************80
 !
@@ -1814,46 +1814,46 @@ subroutine test0251 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  integer ( kind = 4 ) i
-  integer ( kind = 4 ) j
-  integer ( kind = 4 ) k
-  real ( kind = 8 ) l
-  real ( kind = 8 ) pdf
+   real(kind=8) a
+   real(kind=8) b
+   integer(kind=4) i
+   integer(kind=4) j
+   integer(kind=4) k
+   real(kind=8) l
+   real(kind=8) pdf
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST0251'
-  write ( *, '(a)' ) '  BUFFON_LAPLACE_PDF evaluates the Buffon-Laplace PDF,'
-  write ( *, '(a)' ) '  the probability that, on a grid of cells of width A'
-  write ( *, '(a)' ) '  and height B, a needle of length L, dropped at random,'
-  write ( *, '(a)' ) '  will cross at least one grid line.'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '      A         B         L        PDF'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST0251'
+   write (*, '(a)') '  BUFFON_LAPLACE_PDF evaluates the Buffon-Laplace PDF,'
+   write (*, '(a)') '  the probability that, on a grid of cells of width A'
+   write (*, '(a)') '  and height B, a needle of length L, dropped at random,'
+   write (*, '(a)') '  will cross at least one grid line.'
+   write (*, '(a)') ' '
+   write (*, '(a)') '      A         B         L        PDF'
+   write (*, '(a)') ' '
 
-  do i = 1, 5
-    a = real ( i, kind = 8 )
-    do j = 1, 5
-      b = real ( j, kind = 8 )
+   do i = 1, 5
+      a = real(i, kind=8)
+      do j = 1, 5
+         b = real(j, kind=8)
 
-      do k = 0, 5
-        l = real ( k, kind = 8 ) * min ( a, b ) / 5.0D+00
-        call buffon_laplace_pdf ( a, b, l, pdf )
-        write ( *, '(2x,f8.4,2x,f8.4,2x,f8.4,2x,g14.6)' ) a, b, l, pdf
+         do k = 0, 5
+            l = real(k, kind=8)*min(a, b)/5.0D+00
+            call buffon_laplace_pdf(a, b, l, pdf)
+            write (*, '(2x,f8.4,2x,f8.4,2x,f8.4,2x,g14.6)') a, b, l, pdf
+         end do
+
+         write (*, '(a)') ' '
+
       end do
 
-      write ( *, '(a)' ) ' '
+   end do
 
-    end do
-
-  end do
-
-  return
+   return
 end
-subroutine test0252 ( )
+subroutine test0252()
 
 !*****************************************************************************80
 !
@@ -1871,72 +1871,72 @@ subroutine test0252 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: test_num = 4
+   integer(kind=4), parameter :: test_num = 4
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  integer ( kind = 4 ) buffon_laplace_simulate
-  real ( kind = 8 ) err
-  integer ( kind = 4 ) hits
-  real ( kind = 8 ) l
-  real ( kind = 8 ), parameter :: pi = 3.141592653589793238462643D+00
-  real ( kind = 8 ) pi_est
-  integer ( kind = 4 ) seed
-  integer ( kind = 4 ) test
-  integer ( kind = 4 ) trial_num
-  integer ( kind = 4 ), dimension ( test_num ) :: trial_num_test = (/ &
-    10, 100, 10000, 1000000 /)
+   real(kind=8) a
+   real(kind=8) b
+   integer(kind=4) buffon_laplace_simulate
+   real(kind=8) err
+   integer(kind=4) hits
+   real(kind=8) l
+   real(kind=8), parameter :: pi = 3.141592653589793238462643D+00
+   real(kind=8) pi_est
+   integer(kind=4) seed
+   integer(kind=4) test
+   integer(kind=4) trial_num
+   integer(kind=4), dimension(test_num) :: trial_num_test = (/ &
+                                           10, 100, 10000, 1000000/)
 
-  a = 1.0D+00
-  b = 1.0D+00
-  l = 1.0D+00
+   a = 1.0D+00
+   b = 1.0D+00
+   l = 1.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST0252'
-  write ( *, '(a)' ) '  BUFFON_LAPLACE_SIMULATE simulates a Buffon-Laplace'
-  write ( *, '(a)' ) '  needle dropping experiment.  On a grid of cells of '
-  write ( *, '(a)' ) '  width A and height B, a needle of length L is dropped'
-  write ( *, '(a)' ) '  at random.  We count the number of times it crosses'
-  write ( *, '(a)' ) '  at least one grid line, and use this to estimate '
-  write ( *, '(a)' ) '  the value of PI.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST0252'
+   write (*, '(a)') '  BUFFON_LAPLACE_SIMULATE simulates a Buffon-Laplace'
+   write (*, '(a)') '  needle dropping experiment.  On a grid of cells of '
+   write (*, '(a)') '  width A and height B, a needle of length L is dropped'
+   write (*, '(a)') '  at random.  We count the number of times it crosses'
+   write (*, '(a)') '  at least one grid line, and use this to estimate '
+   write (*, '(a)') '  the value of PI.'
 
-  seed = 123456789
+   seed = 123456789
 
-  call random_initialize ( seed )
+   call random_initialize(seed)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,f14.6)' ) '  Cell width A =    ', a
-  write ( *, '(a,f14.6)' ) '  Cell height B =   ', b
-  write ( *, '(a,f14.6)' ) '  Needle length L = ', l
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '    Trials      Hits          Est(Pi)     Err'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a,f14.6)') '  Cell width A =    ', a
+   write (*, '(a,f14.6)') '  Cell height B =   ', b
+   write (*, '(a,f14.6)') '  Needle length L = ', l
+   write (*, '(a)') ' '
+   write (*, '(a)') '    Trials      Hits          Est(Pi)     Err'
+   write (*, '(a)') ' '
 
-  do test = 1, test_num
+   do test = 1, test_num
 
-    trial_num = trial_num_test(test)
+      trial_num = trial_num_test(test)
 
-    hits = buffon_laplace_simulate ( a, b, l, trial_num, seed )
+      hits = buffon_laplace_simulate(a, b, l, trial_num, seed)
 
-    if ( 0 < hits ) then
-      pi_est = ( 2.0D+00 * l * ( a + b ) - l * l ) &
-        * real ( trial_num, kind = 8 ) &
-        / ( a * b * real ( hits, kind = 8 ) )
-    else
-      pi_est = huge ( pi_est )
-    end if
+      if (0 < hits) then
+         pi_est = (2.0D+00*l*(a + b) - l*l) &
+                  *real(trial_num, kind=8) &
+                  /(a*b*real(hits, kind=8))
+      else
+         pi_est = huge(pi_est)
+      end if
 
-    err = abs ( pi_est - pi )
+      err = abs(pi_est - pi)
 
-    write ( *, '(2x,i8,2x,i8,2x,f14.6,2x,g14.6)' ) trial_num, hits, pi_est, err
+      write (*, '(2x,i8,2x,i8,2x,f14.6,2x,g14.6)') trial_num, hits, pi_est, err
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test0253 ( )
+subroutine test0253()
 
 !*****************************************************************************80
 !
@@ -1954,41 +1954,41 @@ subroutine test0253 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  integer ( kind = 4 ) i
-  integer ( kind = 4 ) j
-  integer ( kind = 4 ) k
-  real ( kind = 8 ) l
-  real ( kind = 8 ) pdf
+   real(kind=8) a
+   integer(kind=4) i
+   integer(kind=4) j
+   integer(kind=4) k
+   real(kind=8) l
+   real(kind=8) pdf
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST0253'
-  write ( *, '(a)' ) '  BUFFON_PDF evaluates the Buffon PDF,'
-  write ( *, '(a)' ) '  the probability that, on a grid of cells of width A,'
-  write ( *, '(a)' ) '  a needle of length L, dropped at random,'
-  write ( *, '(a)' ) '  will cross at least one grid line.'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '      A         L        PDF'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST0253'
+   write (*, '(a)') '  BUFFON_PDF evaluates the Buffon PDF,'
+   write (*, '(a)') '  the probability that, on a grid of cells of width A,'
+   write (*, '(a)') '  a needle of length L, dropped at random,'
+   write (*, '(a)') '  will cross at least one grid line.'
+   write (*, '(a)') ' '
+   write (*, '(a)') '      A         L        PDF'
+   write (*, '(a)') ' '
 
-  do i = 1, 5
-    a = real ( i, kind = 8 )
+   do i = 1, 5
+      a = real(i, kind=8)
 
-    do k = 0, 5
-      l = real ( k, kind = 8 ) * a / 5.0D+00
-      call buffon_pdf ( a, l, pdf )
-      write ( *, '(2x,f8.4,2x,f8.4,2x,g14.6)' ) a, l, pdf
-    end do
+      do k = 0, 5
+         l = real(k, kind=8)*a/5.0D+00
+         call buffon_pdf(a, l, pdf)
+         write (*, '(2x,f8.4,2x,f8.4,2x,g14.6)') a, l, pdf
+      end do
 
-    write ( *, '(a)' ) ' '
+      write (*, '(a)') ' '
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test0254 ( )
+subroutine test0254()
 
 !*****************************************************************************80
 !
@@ -2006,68 +2006,68 @@ subroutine test0254 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: test_num = 4
+   integer(kind=4), parameter :: test_num = 4
 
-  real ( kind = 8 ) a
-  integer ( kind = 4 ) buffon_simulate
-  real ( kind = 8 ) err
-  integer ( kind = 4 ) hits
-  real ( kind = 8 ) l
-  real ( kind = 8 ), parameter :: pi = 3.141592653589793238462643D+00
-  real ( kind = 8 ) pi_est
-  integer ( kind = 4 ) seed
-  integer ( kind = 4 ) test
-  integer ( kind = 4 ) trial_num
-  integer ( kind = 4 ), dimension ( test_num ) :: trial_num_test = (/ &
-    10, 100, 10000, 1000000 /)
+   real(kind=8) a
+   integer(kind=4) buffon_simulate
+   real(kind=8) err
+   integer(kind=4) hits
+   real(kind=8) l
+   real(kind=8), parameter :: pi = 3.141592653589793238462643D+00
+   real(kind=8) pi_est
+   integer(kind=4) seed
+   integer(kind=4) test
+   integer(kind=4) trial_num
+   integer(kind=4), dimension(test_num) :: trial_num_test = (/ &
+                                           10, 100, 10000, 1000000/)
 
-  a = 1.0D+00
-  l = 1.0D+00
+   a = 1.0D+00
+   l = 1.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST0254'
-  write ( *, '(a)' ) '  BUFFON_SIMULATE simulates a Buffon-Laplace'
-  write ( *, '(a)' ) '  needle dropping experiment.  On a grid of cells of '
-  write ( *, '(a)' ) '  width A, a needle of length L is dropped'
-  write ( *, '(a)' ) '  at random.  We count the number of times it crosses'
-  write ( *, '(a)' ) '  at least one grid line, and use this to estimate '
-  write ( *, '(a)' ) '  the value of PI.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST0254'
+   write (*, '(a)') '  BUFFON_SIMULATE simulates a Buffon-Laplace'
+   write (*, '(a)') '  needle dropping experiment.  On a grid of cells of '
+   write (*, '(a)') '  width A, a needle of length L is dropped'
+   write (*, '(a)') '  at random.  We count the number of times it crosses'
+   write (*, '(a)') '  at least one grid line, and use this to estimate '
+   write (*, '(a)') '  the value of PI.'
 
-  seed = 123456789
+   seed = 123456789
 
-  call random_initialize ( seed )
+   call random_initialize(seed)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,f14.6)' ) '  Cell width A =    ', a
-  write ( *, '(a,f14.6)' ) '  Needle length L = ', l
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '    Trials      Hits          Est(Pi)     Err'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a,f14.6)') '  Cell width A =    ', a
+   write (*, '(a,f14.6)') '  Needle length L = ', l
+   write (*, '(a)') ' '
+   write (*, '(a)') '    Trials      Hits          Est(Pi)     Err'
+   write (*, '(a)') ' '
 
-  do test = 1, test_num
+   do test = 1, test_num
 
-    trial_num = trial_num_test(test)
+      trial_num = trial_num_test(test)
 
-    hits = buffon_simulate ( a, l, trial_num )
+      hits = buffon_simulate(a, l, trial_num)
 
-    if ( 0 < hits ) then
-      pi_est = ( 2.0D+00 * l ) * real ( trial_num, kind = 8 ) &
-        / ( a * real ( hits, kind = 8 ) )
-    else
-      pi_est = huge ( pi_est )
-    end if
+      if (0 < hits) then
+         pi_est = (2.0D+00*l)*real(trial_num, kind=8) &
+                  /(a*real(hits, kind=8))
+      else
+         pi_est = huge(pi_est)
+      end if
 
-    err = abs ( pi_est - pi )
+      err = abs(pi_est - pi)
 
-    write ( *, '(2x,i8,2x,i8,2x,f14.6,2x,g14.6)' ) trial_num, hits, pi_est, err
+      write (*, '(2x,i8,2x,i8,2x,f14.6,2x,g14.6)') trial_num, hits, pi_est, err
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test026 ( )
+subroutine test026()
 
 !*****************************************************************************80
 !
@@ -2085,66 +2085,66 @@ subroutine test026 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  logical burr_check
-  real ( kind = 8 ) c
-  real ( kind = 8 ) cdf
-  real ( kind = 8 ) d
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   logical burr_check
+   real(kind=8) c
+   real(kind=8) cdf
+   real(kind=8) d
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST026'
-  write ( *, '(a)' ) '  For the Burr PDF:'
-  write ( *, '(a)' ) '  BURR_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  BURR_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  BURR_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST026'
+   write (*, '(a)') '  For the Burr PDF:'
+   write (*, '(a)') '  BURR_CDF evaluates the CDF;'
+   write (*, '(a)') '  BURR_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  BURR_PDF evaluates the PDF;'
 
-  a = 1.0D+00
-  b = 2.0D+00
-  c = 3.0D+00
-  d = 2.0D+00
+   a = 1.0D+00
+   b = 2.0D+00
+   c = 3.0D+00
+   d = 2.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A = ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B = ', b
-  write ( *, '(a,g14.6)' ) '  PDF parameter C = ', c
-  write ( *, '(a,g14.6)' ) '  PDF parameter D = ', d
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A = ', a
+   write (*, '(a,g14.6)') '  PDF parameter B = ', b
+   write (*, '(a,g14.6)') '  PDF parameter C = ', c
+   write (*, '(a,g14.6)') '  PDF parameter D = ', d
 
-  if ( .not. burr_check ( a, b, c, d ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. burr_check(a, b, c, d)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call burr_sample ( a, b, c, d, seed, x )
+      call burr_sample(a, b, c, d, seed, x)
 
-    call burr_pdf ( x, a, b, c, d, pdf )
+      call burr_pdf(x, a, b, c, d, pdf)
 
-    call burr_cdf ( x, a, b, c, d, cdf )
+      call burr_cdf(x, a, b, c, d, cdf)
 
-    call burr_cdf_inv ( cdf, a, b, c, d, x2 )
+      call burr_cdf_inv(cdf, a, b, c, d, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test027 ( )
+subroutine test027()
 
 !*****************************************************************************80
 !
@@ -2162,73 +2162,73 @@ subroutine test027 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  logical burr_check
-  real ( kind = 8 ) c
-  real ( kind = 8 ) d
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   logical burr_check
+   real(kind=8) c
+   real(kind=8) d
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST027'
-  write ( *, '(a)' ) '  For the Burr PDF:'
-  write ( *, '(a)' ) '  BURR_MEAN computes the mean;'
-  write ( *, '(a)' ) '  BURR_VARIANCE computes the variance;'
-  write ( *, '(a)' ) '  BURR_SAMPLE samples;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST027'
+   write (*, '(a)') '  For the Burr PDF:'
+   write (*, '(a)') '  BURR_MEAN computes the mean;'
+   write (*, '(a)') '  BURR_VARIANCE computes the variance;'
+   write (*, '(a)') '  BURR_SAMPLE samples;'
 
-  a = 1.0D+00
-  b = 2.0D+00
-  c = 3.0D+00
-  d = 2.0D+00
+   a = 1.0D+00
+   b = 2.0D+00
+   c = 3.0D+00
+   d = 2.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A = ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B = ', b
-  write ( *, '(a,g14.6)' ) '  PDF parameter C = ', c
-  write ( *, '(a,g14.6)' ) '  PDF parameter D = ', d
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A = ', a
+   write (*, '(a,g14.6)') '  PDF parameter B = ', b
+   write (*, '(a,g14.6)') '  PDF parameter C = ', c
+   write (*, '(a,g14.6)') '  PDF parameter D = ', d
 
-  if ( .not. burr_check ( a, b, c, d ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. burr_check(a, b, c, d)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call burr_mean ( a, b, c, d, mean )
-  call burr_variance ( a, b, c, d, variance )
+   call burr_mean(a, b, c, d, mean)
+   call burr_variance(a, b, c, d, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =        ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =    ', variance
+   write (*, '(a,g14.6)') '  PDF mean =        ', mean
+   write (*, '(a,g14.6)') '  PDF variance =    ', variance
 
-  do i = 1, sample_num
-    call burr_sample ( a, b, c, d, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call burr_sample(a, b, c, d, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test0275 ( )
+subroutine test0275()
 
 !*****************************************************************************80
 !
@@ -2246,54 +2246,54 @@ subroutine test0275 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) :: a = 0.0D+00
-  real ( kind = 8 ) :: b = 0.25D+00
-  logical cardioid_check
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) :: a = 0.0D+00
+   real(kind=8) :: b = 0.25D+00
+   logical cardioid_check
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST0275'
-  write ( *, '(a)' ) '  For the Cardioid PDF:'
-  write ( *, '(a)' ) '  CARDIOID_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  CARDIOID_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  CARDIOID_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST0275'
+   write (*, '(a)') '  For the Cardioid PDF:'
+   write (*, '(a)') '  CARDIOID_CDF evaluates the CDF;'
+   write (*, '(a)') '  CARDIOID_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  CARDIOID_PDF evaluates the PDF;'
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A = ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B = ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A = ', a
+   write (*, '(a,g14.6)') '  PDF parameter B = ', b
 
-  if ( .not. cardioid_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. cardioid_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call cardioid_sample ( a, b, seed, x )
-    call cardioid_pdf ( x, a, b, pdf )
-    call cardioid_cdf ( x, a, b, cdf )
-    call cardioid_cdf_inv ( cdf, a, b, x2 )
+      call cardioid_sample(a, b, seed, x)
+      call cardioid_pdf(x, a, b, pdf)
+      call cardioid_cdf(x, a, b, cdf)
+      call cardioid_cdf_inv(cdf, a, b, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test0276 ( )
+subroutine test0276()
 
 !*****************************************************************************80
 !
@@ -2311,65 +2311,65 @@ subroutine test0276 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) :: a = 0.0D+00
-  real ( kind = 8 ) :: b = 0.25D+00
-  logical cardioid_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) :: a = 0.0D+00
+   real(kind=8) :: b = 0.25D+00
+   logical cardioid_check
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST0276'
-  write ( *, '(a)' ) '  For the Cardioid PDF:'
-  write ( *, '(a)' ) '  CARDIOID_MEAN computes the mean;'
-  write ( *, '(a)' ) '  CARDIOID_SAMPLE samples;'
-  write ( *, '(a)' ) '  CARDIOID_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST0276'
+   write (*, '(a)') '  For the Cardioid PDF:'
+   write (*, '(a)') '  CARDIOID_MEAN computes the mean;'
+   write (*, '(a)') '  CARDIOID_SAMPLE samples;'
+   write (*, '(a)') '  CARDIOID_VARIANCE computes the variance.'
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A = ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B = ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A = ', a
+   write (*, '(a,g14.6)') '  PDF parameter B = ', b
 
-  if ( .not. cardioid_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. cardioid_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call cardioid_mean ( a, b, mean )
-  call cardioid_variance ( a, b, variance )
+   call cardioid_mean(a, b, mean)
+   call cardioid_variance(a, b, variance)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call cardioid_sample ( a, b, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call cardioid_sample(a, b, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test028 ( )
+subroutine test028()
 
 !*****************************************************************************80
 !
@@ -2387,60 +2387,60 @@ subroutine test028 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  logical cauchy_check
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   logical cauchy_check
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST028'
-  write ( *, '(a)' ) '  For the Cauchy PDF:'
-  write ( *, '(a)' ) '  CAUCHY_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  CAUCHY_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  CAUCHY_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST028'
+   write (*, '(a)') '  For the Cauchy PDF:'
+   write (*, '(a)') '  CAUCHY_CDF evaluates the CDF;'
+   write (*, '(a)') '  CAUCHY_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  CAUCHY_PDF evaluates the PDF;'
 
-  a = 2.0D+00
-  b = 3.0D+00
+   a = 2.0D+00
+   b = 3.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A = ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B = ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A = ', a
+   write (*, '(a,g14.6)') '  PDF parameter B = ', b
 
-  if ( .not. cauchy_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. cauchy_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call cauchy_sample ( a, b, seed, x )
+      call cauchy_sample(a, b, seed, x)
 
-    call cauchy_pdf ( x, a, b, pdf )
+      call cauchy_pdf(x, a, b, pdf)
 
-    call cauchy_cdf ( x, a, b, cdf )
+      call cauchy_cdf(x, a, b, cdf)
 
-    call cauchy_cdf_inv ( cdf, a, b, x2 )
+      call cauchy_cdf_inv(cdf, a, b, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test029 ( )
+subroutine test029()
 
 !*****************************************************************************80
 !
@@ -2458,67 +2458,67 @@ subroutine test029 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  logical cauchy_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   logical cauchy_check
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST029'
-  write ( *, '(a)' ) '  For the Cauchy PDF:'
-  write ( *, '(a)' ) '  CAUCHY_MEAN computes the mean;'
-  write ( *, '(a)' ) '  CAUCHY_VARIANCE computes the variance;'
-  write ( *, '(a)' ) '  CAUCHY_SAMPLE samples.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST029'
+   write (*, '(a)') '  For the Cauchy PDF:'
+   write (*, '(a)') '  CAUCHY_MEAN computes the mean;'
+   write (*, '(a)') '  CAUCHY_VARIANCE computes the variance;'
+   write (*, '(a)') '  CAUCHY_SAMPLE samples.'
 
-  a = 2.0D+00
-  b = 3.0D+00
+   a = 2.0D+00
+   b = 3.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A = ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B = ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A = ', a
+   write (*, '(a,g14.6)') '  PDF parameter B = ', b
 
-  if ( .not. cauchy_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. cauchy_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call cauchy_mean ( a, b, mean )
-  call cauchy_variance ( a, b, variance )
+   call cauchy_mean(a, b, mean)
+   call cauchy_variance(a, b, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =        ', mean
-  write ( *, '(a,g14.6)' ) '  PDF mean =        ', variance
+   write (*, '(a,g14.6)') '  PDF mean =        ', mean
+   write (*, '(a,g14.6)') '  PDF mean =        ', variance
 
-  do i = 1, sample_num
-    call cauchy_sample ( a, b, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call cauchy_sample(a, b, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test030 ( )
+subroutine test030()
 
 !*****************************************************************************80
 !
@@ -2536,63 +2536,63 @@ subroutine test030 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) c
-  real ( kind = 8 ) cdf
-  logical chi_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) c
+   real(kind=8) cdf
+   logical chi_check
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST030'
-  write ( *, '(a)' ) '  For the Chi PDF:'
-  write ( *, '(a)' ) '  CHI_CDF evaluates the CDF.'
-  write ( *, '(a)' ) '  CHI_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  CHI_PDF evaluates the PDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST030'
+   write (*, '(a)') '  For the Chi PDF:'
+   write (*, '(a)') '  CHI_CDF evaluates the CDF.'
+   write (*, '(a)') '  CHI_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  CHI_PDF evaluates the PDF.'
 
-  a = 1.0D+00
-  b = 2.0D+00
-  c = 3.0D+00
+   a = 1.0D+00
+   b = 2.0D+00
+   c = 3.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
-  write ( *, '(a,g14.6)' ) '  PDF parameter C =             ', c
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
+   write (*, '(a,g14.6)') '  PDF parameter C =             ', c
 
-  if ( .not. chi_check ( a, b, c ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. chi_check(a, b, c)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call chi_sample ( a, b, c, seed, x )
+      call chi_sample(a, b, c, seed, x)
 
-    call chi_pdf ( x, a, b, c, pdf )
+      call chi_pdf(x, a, b, c, pdf)
 
-    call chi_cdf ( x, a, b, c, cdf )
+      call chi_cdf(x, a, b, c, cdf)
 
-    call chi_cdf_inv ( cdf, a, b, c, x2 )
+      call chi_cdf_inv(cdf, a, b, c, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test031 ( )
+subroutine test031()
 
 !*****************************************************************************80
 !
@@ -2610,70 +2610,70 @@ subroutine test031 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) c
-  logical chi_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) c
+   logical chi_check
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST031'
-  write ( *, '(a)' ) '  For the Chi PDF:'
-  write ( *, '(a)' ) '  CHI_MEAN computes the mean;'
-  write ( *, '(a)' ) '  CHI_VARIANCE computes the variance;'
-  write ( *, '(a)' ) '  CHI_SAMPLE samples.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST031'
+   write (*, '(a)') '  For the Chi PDF:'
+   write (*, '(a)') '  CHI_MEAN computes the mean;'
+   write (*, '(a)') '  CHI_VARIANCE computes the variance;'
+   write (*, '(a)') '  CHI_SAMPLE samples.'
 
-  a = 1.0D+00
-  b = 2.0D+00
-  c = 3.0D+00
+   a = 1.0D+00
+   b = 2.0D+00
+   c = 3.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A = ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B = ', b
-  write ( *, '(a,g14.6)' ) '  PDF parameter C = ', c
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A = ', a
+   write (*, '(a,g14.6)') '  PDF parameter B = ', b
+   write (*, '(a,g14.6)') '  PDF parameter C = ', c
 
-  if ( .not. chi_check ( a, b, c ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. chi_check(a, b, c)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call chi_mean ( a, b, c, mean )
-  call chi_variance ( a, b, c, variance )
+   call chi_mean(a, b, c, mean)
+   call chi_variance(a, b, c, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =        ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =    ', variance
+   write (*, '(a,g14.6)') '  PDF mean =        ', mean
+   write (*, '(a,g14.6)') '  PDF variance =    ', variance
 
-  do i = 1, sample_num
-    call chi_sample ( a, b, c, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call chi_sample(a, b, c, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test032 ( )
+subroutine test032()
 
 !*****************************************************************************80
 !
@@ -2691,46 +2691,46 @@ subroutine test032 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ) a
-  real ( kind = 8 ) a2
-  real ( kind = 8 ) fx
-  real ( kind = 8 ) fx2
-  integer ( kind = 4 ) n_data
-  real ( kind = 8 ) x
+   integer(kind=4) a
+   real(kind=8) a2
+   real(kind=8) fx
+   real(kind=8) fx2
+   integer(kind=4) n_data
+   real(kind=8) x
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST032:'
-  write ( *, '(a)' ) '  CHI_SQUARE_CDF evaluates the cumulative'
-  write ( *, '(a)' ) '  distribution function for the chi-square central'
-  write ( *, '(a)' ) '  probability density function.'
-  write ( *, '(a)' ) '  CHI_SQUARE_CDF_VALUES returns some exact values.'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '  A    X       Exact F     CHI_SQUARE_CDF(A,X)'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST032:'
+   write (*, '(a)') '  CHI_SQUARE_CDF evaluates the cumulative'
+   write (*, '(a)') '  distribution function for the chi-square central'
+   write (*, '(a)') '  probability density function.'
+   write (*, '(a)') '  CHI_SQUARE_CDF_VALUES returns some exact values.'
+   write (*, '(a)') ' '
+   write (*, '(a)') '  A    X       Exact F     CHI_SQUARE_CDF(A,X)'
+   write (*, '(a)') ' '
 
-  n_data = 0
+   n_data = 0
 
-  do
+   do
 
-    call chi_square_cdf_values ( n_data, a, x, fx )
+      call chi_square_cdf_values(n_data, a, x, fx)
 
-    if ( n_data == 0 ) then
-      exit
-    end if
+      if (n_data == 0) then
+         exit
+      end if
 
-    a2 = real ( a, kind = 8 )
+      a2 = real(a, kind=8)
 
-    call chi_square_cdf ( x, a2, fx2 )
+      call chi_square_cdf(x, a2, fx2)
 
-    write ( *, '(2x,i4,f8.4,2g14.6)' ) a, x, fx, fx2
+      write (*, '(2x,i4,f8.4,2g14.6)') a, x, fx, fx2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test033 ( )
+subroutine test033()
 
 !*****************************************************************************80
 !
@@ -2748,57 +2748,57 @@ subroutine test033 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) cdf
-  logical chi_square_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) cdf
+   logical chi_square_check
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST033'
-  write ( *, '(a)' ) '  For the central chi square PDF:'
-  write ( *, '(a)' ) '  CHI_SQUARE_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  CHI_SQUARE_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  CHI_SQUARE_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST033'
+   write (*, '(a)') '  For the central chi square PDF:'
+   write (*, '(a)') '  CHI_SQUARE_CDF evaluates the CDF;'
+   write (*, '(a)') '  CHI_SQUARE_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  CHI_SQUARE_PDF evaluates the PDF;'
 
-  a = 4.0D+00
+   a = 4.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
 
-  if ( .not. chi_square_check ( a ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. chi_square_check(a)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call chi_square_sample ( a, seed, x )
+      call chi_square_sample(a, seed, x)
 
-    call chi_square_pdf ( x, a, pdf )
+      call chi_square_pdf(x, a, pdf)
 
-    call chi_square_cdf ( x, a, cdf )
+      call chi_square_cdf(x, a, cdf)
 
-    call chi_square_cdf_inv ( cdf, a, x2 )
+      call chi_square_cdf_inv(cdf, a, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test034 ( )
+subroutine test034()
 
 !*****************************************************************************80
 !
@@ -2816,64 +2816,64 @@ subroutine test034 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  logical chi_square_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   logical chi_square_check
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST034'
-  write ( *, '(a)' ) '  For the central chi square PDF:'
-  write ( *, '(a)' ) '  CHI_SQUARE_MEAN computes the mean;'
-  write ( *, '(a)' ) '  CHI_SQUARE_SAMPLE samples;'
-  write ( *, '(a)' ) '  CHI_SQUARE_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST034'
+   write (*, '(a)') '  For the central chi square PDF:'
+   write (*, '(a)') '  CHI_SQUARE_MEAN computes the mean;'
+   write (*, '(a)') '  CHI_SQUARE_SAMPLE samples;'
+   write (*, '(a)') '  CHI_SQUARE_VARIANCE computes the variance.'
 
-  a = 10.0D+00
+   a = 10.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
 
-  if ( .not. chi_square_check ( a ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. chi_square_check(a)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call chi_square_mean ( a, mean )
-  call chi_square_variance ( a, variance )
+   call chi_square_mean(a, mean)
+   call chi_square_variance(a, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call chi_square_sample ( a, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call chi_square_sample(a, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test035 ( )
+subroutine test035()
 
 !*****************************************************************************80
 !
@@ -2891,68 +2891,68 @@ subroutine test035 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  logical chi_square_noncentral_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   logical chi_square_noncentral_check
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST035'
-  write ( *, '(a)' ) '  For the noncentral chi square PDF:'
-  write ( *, '(a)' ) '  CHI_SQUARE_NONCENTRAL_SAMPLE samples.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST035'
+   write (*, '(a)') '  For the noncentral chi square PDF:'
+   write (*, '(a)') '  CHI_SQUARE_NONCENTRAL_SAMPLE samples.'
 
-  a = 3.0D+00
-  b = 2.0D+00
+   a = 3.0D+00
+   b = 2.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A = ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B = ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A = ', a
+   write (*, '(a,g14.6)') '  PDF parameter B = ', b
 
-  if ( .not. chi_square_noncentral_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. chi_square_noncentral_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call chi_square_noncentral_mean ( a, b, mean )
-  call chi_square_noncentral_variance ( a, b, variance )
+   call chi_square_noncentral_mean(a, b, mean)
+   call chi_square_noncentral_variance(a, b, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =        ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =    ', variance
+   write (*, '(a,g14.6)') '  PDF mean =        ', mean
+   write (*, '(a,g14.6)') '  PDF variance =    ', variance
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i12)'   ) '  Initial seed =    ', seed
+   write (*, '(a)') ' '
+   write (*, '(a,i12)') '  Initial seed =    ', seed
 
-  do i = 1, sample_num
-    call chi_square_noncentral_sample ( a, b, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call chi_square_noncentral_sample(a, b, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a,i12)'   ) '  Final seed =      ', seed
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a,i12)') '  Final seed =      ', seed
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test036 ( )
+subroutine test036()
 
 !*****************************************************************************80
 !
@@ -2970,60 +2970,60 @@ subroutine test036 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) c
-  integer ( kind = 4 ) i
-  integer ( kind = 4 ) j
-  real ( kind = 8 ) mean(2)
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance(2)
-  real ( kind = 8 ) x_table(sample_num,2)
-  real ( kind = 8 ) x1
-  real ( kind = 8 ) x2
-  real ( kind = 8 ) xmax(2)
-  real ( kind = 8 ) xmin(2)
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) c
+   integer(kind=4) i
+   integer(kind=4) j
+   real(kind=8) mean(2)
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance(2)
+   real(kind=8) x_table(sample_num, 2)
+   real(kind=8) x1
+   real(kind=8) x2
+   real(kind=8) xmax(2)
+   real(kind=8) xmin(2)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST036'
-  write ( *, '(a)' ) '  CIRCLE_SAMPLE samples points in a circle.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST036'
+   write (*, '(a)') '  CIRCLE_SAMPLE samples points in a circle.'
 
-  a = 10.0D+00
-  b = 4.0D+00
-  c = 3.0D+00
+   a = 10.0D+00
+   b = 4.0D+00
+   c = 3.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  X coordinate of center is A = ', a
-  write ( *, '(a,g14.6)' ) '  Y coordinate of center is B = ', b
-  write ( *, '(a,g14.6)' ) '  Radius is C =                 ', c
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  X coordinate of center is A = ', a
+   write (*, '(a,g14.6)') '  Y coordinate of center is B = ', b
+   write (*, '(a,g14.6)') '  Radius is C =                 ', c
 
-  do i = 1, sample_num
-    call circle_sample ( a, b, c, seed, x1, x2 )
-    x_table(i,1) = x1
-    x_table(i,2) = x2
-  end do
+   do i = 1, sample_num
+      call circle_sample(a, b, c, seed, x1, x2)
+      x_table(i, 1) = x1
+      x_table(i, 2) = x2
+   end do
 
-  do j = 1, 2
-    call r8vec_mean ( sample_num, x_table(1,j), mean(j) )
-    call r8vec_variance ( sample_num, x_table(1,j), variance(j) )
-    call r8vec_max ( sample_num, x_table(1,j), xmax(j) )
-    call r8vec_min ( sample_num, x_table(1,j), xmin(j) )
-  end do
+   do j = 1, 2
+      call r8vec_mean(sample_num, x_table(1, j), mean(j))
+      call r8vec_variance(sample_num, x_table(1, j), variance(j))
+      call r8vec_max(sample_num, x_table(1, j), xmax(j))
+      call r8vec_min(sample_num, x_table(1, j), xmin(j))
+   end do
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'     ) '  Sample size =     ', sample_num
-  write ( *, '(a,2g14.6)' ) '  Sample mean =     ', mean(1:2)
-  write ( *, '(a,2g14.6)' ) '  Sample variance = ', variance(1:2)
-  write ( *, '(a,2g14.6)' ) '  Sample maximum =  ', xmax(1:2)
-  write ( *, '(a,2g14.6)' ) '  Sample minimum =  ', xmin(1:2)
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,2g14.6)') '  Sample mean =     ', mean(1:2)
+   write (*, '(a,2g14.6)') '  Sample variance = ', variance(1:2)
+   write (*, '(a,2g14.6)') '  Sample maximum =  ', xmax(1:2)
+   write (*, '(a,2g14.6)') '  Sample minimum =  ', xmin(1:2)
 
-  return
+   return
 end
-subroutine test037 ( )
+subroutine test037()
 
 !*****************************************************************************80
 !
@@ -3041,57 +3041,57 @@ subroutine test037 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  integer ( kind = 4 ) i
-  integer ( kind = 4 ) j
-  real ( kind = 8 ) mean(2)
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance(2)
-  real ( kind = 8 ) x(2)
-  real ( kind = 8 ) x_table(sample_num,2)
-  real ( kind = 8 ) xmax(2)
-  real ( kind = 8 ) xmin(2)
+   integer(kind=4) i
+   integer(kind=4) j
+   real(kind=8) mean(2)
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance(2)
+   real(kind=8) x(2)
+   real(kind=8) x_table(sample_num, 2)
+   real(kind=8) xmax(2)
+   real(kind=8) xmin(2)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST037'
-  write ( *, '(a)' ) '  For the Circular Normal 01 PDF:'
-  write ( *, '(a)' ) '  CIRCULAR_NORMAL_01_MEAN computes the mean;'
-  write ( *, '(a)' ) '  CIRCULAR_NORMAL_01_SAMPLE samples;'
-  write ( *, '(a)' ) '  CIRCULAR_NORMAL_01_VARIANCE computes variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST037'
+   write (*, '(a)') '  For the Circular Normal 01 PDF:'
+   write (*, '(a)') '  CIRCULAR_NORMAL_01_MEAN computes the mean;'
+   write (*, '(a)') '  CIRCULAR_NORMAL_01_SAMPLE samples;'
+   write (*, '(a)') '  CIRCULAR_NORMAL_01_VARIANCE computes variance.'
 
-  call circular_normal_01_mean ( mean )
-  call circular_normal_01_variance ( variance )
+   call circular_normal_01_mean(mean)
+   call circular_normal_01_variance(variance)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,2g14.6)' ) '  PDF means =               ', mean(1:2)
-  write ( *, '(a,2g14.6)' ) '  PDF variances =           ', variance(1:2)
+   write (*, '(a)') ' '
+   write (*, '(a,2g14.6)') '  PDF means =               ', mean(1:2)
+   write (*, '(a,2g14.6)') '  PDF variances =           ', variance(1:2)
 
-  do i = 1, sample_num
-    call circular_normal_01_sample ( seed, x )
-    x_table(i,1) = x(1)
-    x_table(i,2) = x(2)
-  end do
+   do i = 1, sample_num
+      call circular_normal_01_sample(seed, x)
+      x_table(i, 1) = x(1)
+      x_table(i, 2) = x(2)
+   end do
 
-  do j = 1, 2
-    call r8vec_mean ( sample_num, x_table(1,j), mean(j) )
-    call r8vec_variance ( sample_num, x_table(1,j), variance(j) )
-    call r8vec_max ( sample_num, x_table(1,j), xmax(j) )
-    call r8vec_min ( sample_num, x_table(1,j), xmin(j) )
-  end do
+   do j = 1, 2
+      call r8vec_mean(sample_num, x_table(1, j), mean(j))
+      call r8vec_variance(sample_num, x_table(1, j), variance(j))
+      call r8vec_max(sample_num, x_table(1, j), xmax(j))
+      call r8vec_min(sample_num, x_table(1, j), xmin(j))
+   end do
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'     ) '  Sample size =     ', sample_num
-  write ( *, '(a,2g14.6)' ) '  Sample mean =     ', mean(1:2)
-  write ( *, '(a,2g14.6)' ) '  Sample variance = ', variance(1:2)
-  write ( *, '(a,2g14.6)' ) '  Sample maximum =  ', xmax(1:2)
-  write ( *, '(a,2g14.6)' ) '  Sample minimum =  ', xmin(1:2)
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,2g14.6)') '  Sample mean =     ', mean(1:2)
+   write (*, '(a,2g14.6)') '  Sample variance = ', variance(1:2)
+   write (*, '(a,2g14.6)') '  Sample maximum =  ', xmax(1:2)
+   write (*, '(a,2g14.6)') '  Sample minimum =  ', xmin(1:2)
 
-  return
+   return
 end
-subroutine test0375 ( )
+subroutine test0375()
 
 !*****************************************************************************80
 !
@@ -3109,63 +3109,63 @@ subroutine test0375 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a(2)
-  real ( kind = 8 ) b
-  integer ( kind = 4 ) i
-  integer ( kind = 4 ) j
-  real ( kind = 8 ) mean(2)
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance(2)
-  real ( kind = 8 ) x(2)
-  real ( kind = 8 ) x_table(sample_num,2)
-  real ( kind = 8 ) xmax(2)
-  real ( kind = 8 ) xmin(2)
+   real(kind=8) a(2)
+   real(kind=8) b
+   integer(kind=4) i
+   integer(kind=4) j
+   real(kind=8) mean(2)
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance(2)
+   real(kind=8) x(2)
+   real(kind=8) x_table(sample_num, 2)
+   real(kind=8) xmax(2)
+   real(kind=8) xmin(2)
 
-  a(1) = 1.0D+00
-  a(2) = 5.0D+00
-  b = 0.75D+00
+   a(1) = 1.0D+00
+   a(2) = 5.0D+00
+   b = 0.75D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST0375'
-  write ( *, '(a)' ) '  For the Circular Normal PDF:'
-  write ( *, '(a)' ) '  CIRCULAR_NORMAL_MEAN computes the mean;'
-  write ( *, '(a)' ) '  CIRCULAR_NORMAL_SAMPLE samples;'
-  write ( *, '(a)' ) '  CIRCULAR_NORMAL_VARIANCE computes variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST0375'
+   write (*, '(a)') '  For the Circular Normal PDF:'
+   write (*, '(a)') '  CIRCULAR_NORMAL_MEAN computes the mean;'
+   write (*, '(a)') '  CIRCULAR_NORMAL_SAMPLE samples;'
+   write (*, '(a)') '  CIRCULAR_NORMAL_VARIANCE computes variance.'
 
-  call circular_normal_mean ( a, b, mean )
-  call circular_normal_variance ( a, b, variance )
+   call circular_normal_mean(a, b, mean)
+   call circular_normal_variance(a, b, variance)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,2g14.6)' ) '  PDF means =               ', mean(1:2)
-  write ( *, '(a,2g14.6)' ) '  PDF variances =           ', variance(1:2)
+   write (*, '(a)') ' '
+   write (*, '(a,2g14.6)') '  PDF means =               ', mean(1:2)
+   write (*, '(a,2g14.6)') '  PDF variances =           ', variance(1:2)
 
-  do i = 1, sample_num
-    call circular_normal_sample ( a, b, seed, x )
-    x_table(i,1) = x(1)
-    x_table(i,2) = x(2)
-  end do
+   do i = 1, sample_num
+      call circular_normal_sample(a, b, seed, x)
+      x_table(i, 1) = x(1)
+      x_table(i, 2) = x(2)
+   end do
 
-  do j = 1, 2
-    call r8vec_mean ( sample_num, x_table(1,j), mean(j) )
-    call r8vec_variance ( sample_num, x_table(1,j), variance(j) )
-    call r8vec_max ( sample_num, x_table(1,j), xmax(j) )
-    call r8vec_min ( sample_num, x_table(1,j), xmin(j) )
-  end do
+   do j = 1, 2
+      call r8vec_mean(sample_num, x_table(1, j), mean(j))
+      call r8vec_variance(sample_num, x_table(1, j), variance(j))
+      call r8vec_max(sample_num, x_table(1, j), xmax(j))
+      call r8vec_min(sample_num, x_table(1, j), xmin(j))
+   end do
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'     ) '  Sample size =     ', sample_num
-  write ( *, '(a,2g14.6)' ) '  Sample mean =     ', mean(1:2)
-  write ( *, '(a,2g14.6)' ) '  Sample variance = ', variance(1:2)
-  write ( *, '(a,2g14.6)' ) '  Sample maximum =  ', xmax(1:2)
-  write ( *, '(a,2g14.6)' ) '  Sample minimum =  ', xmin(1:2)
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,2g14.6)') '  Sample mean =     ', mean(1:2)
+   write (*, '(a,2g14.6)') '  Sample variance = ', variance(1:2)
+   write (*, '(a,2g14.6)') '  Sample maximum =  ', xmax(1:2)
+   write (*, '(a,2g14.6)') '  Sample minimum =  ', xmin(1:2)
 
-  return
+   return
 end
-subroutine test038 ( )
+subroutine test038()
 
 !*****************************************************************************80
 !
@@ -3183,60 +3183,60 @@ subroutine test038 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) cdf
-  logical cosine_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) cdf
+   logical cosine_check
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST038'
-  write ( *, '(a)' ) '  For the Cosine PDF:'
-  write ( *, '(a)' ) '  COSINE_CDF evaluates the CDF.'
-  write ( *, '(a)' ) '  COSINE_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  COSINE_PDF evaluates the PDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST038'
+   write (*, '(a)') '  For the Cosine PDF:'
+   write (*, '(a)') '  COSINE_CDF evaluates the CDF.'
+   write (*, '(a)') '  COSINE_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  COSINE_PDF evaluates the PDF.'
 
-  a = 2.0D+00
-  b = 1.0D+00
+   a = 2.0D+00
+   b = 1.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A = ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B = ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A = ', a
+   write (*, '(a,g14.6)') '  PDF parameter B = ', b
 
-  if ( .not. cosine_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. cosine_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call cosine_sample ( a, b, seed, x )
+      call cosine_sample(a, b, seed, x)
 
-    call cosine_pdf ( x, a, b, pdf )
+      call cosine_pdf(x, a, b, pdf)
 
-    call cosine_cdf ( x, a, b, cdf )
+      call cosine_cdf(x, a, b, cdf)
 
-    call cosine_cdf_inv ( cdf, a, b, x2 )
+      call cosine_cdf_inv(cdf, a, b, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test039 ( )
+subroutine test039()
 
 !*****************************************************************************80
 !
@@ -3254,67 +3254,67 @@ subroutine test039 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  logical cosine_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   logical cosine_check
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST039'
-  write ( *, '(a)' ) '  For the Cosine PDF:'
-  write ( *, '(a)' ) '  COSINE_MEAN computes the mean;'
-  write ( *, '(a)' ) '  COSINE_SAMPLE samples;'
-  write ( *, '(a)' ) '  COSINE_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST039'
+   write (*, '(a)') '  For the Cosine PDF:'
+   write (*, '(a)') '  COSINE_MEAN computes the mean;'
+   write (*, '(a)') '  COSINE_SAMPLE samples;'
+   write (*, '(a)') '  COSINE_VARIANCE computes the variance.'
 
-  a = 2.0D+00
-  b = 1.0D+00
+   a = 2.0D+00
+   b = 1.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
 
-  if ( .not. cosine_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. cosine_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call cosine_mean ( a, b, mean )
-  call cosine_variance ( a, b, variance )
+   call cosine_mean(a, b, mean)
+   call cosine_variance(a, b, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call cosine_sample ( a, b, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call cosine_sample(a, b, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test0395 ( )
+subroutine test0395()
 
 !*****************************************************************************80
 !
@@ -3332,38 +3332,38 @@ subroutine test0395 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ) box_num
-  real ( kind = 8 ) cdf
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) type_num
+   integer(kind=4) box_num
+   real(kind=8) cdf
+   real(kind=8) pdf
+   integer(kind=4) type_num
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST0395'
-  write ( *, '(a)' ) '  COUPON_COMPLETE_PDF evaluates the coupon collector''s'
-  write ( *, '(a)' ) '  complete collection pdf.'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST0395'
+   write (*, '(a)') '  COUPON_COMPLETE_PDF evaluates the coupon collector''s'
+   write (*, '(a)') '  complete collection pdf.'
+   write (*, '(a)') ' '
 
-  do type_num = 2, 4
+   do type_num = 2, 4
 
-    write ( *, '(a)' ) ' '
-    write ( *, '(a,i8)' ) '  Number of coupon types is ', type_num
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) '   BOX_NUM      PDF             CDF'
-    write ( *, '(a)' ) ' '
-    cdf = 0.0D+00
-    do box_num = 1, 20
-      call coupon_complete_pdf ( type_num, box_num, pdf )
-      cdf = cdf + pdf
-      write ( *, '(2x,i8,2x,g14.6,2x,g14.6)' ) box_num, pdf, cdf
-    end do
+      write (*, '(a)') ' '
+      write (*, '(a,i8)') '  Number of coupon types is ', type_num
+      write (*, '(a)') ' '
+      write (*, '(a)') '   BOX_NUM      PDF             CDF'
+      write (*, '(a)') ' '
+      cdf = 0.0D+00
+      do box_num = 1, 20
+         call coupon_complete_pdf(type_num, box_num, pdf)
+         cdf = cdf + pdf
+         write (*, '(2x,i8,2x,g14.6,2x,g14.6)') box_num, pdf, cdf
+      end do
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test040 ( )
+subroutine test040()
 
 !*****************************************************************************80
 !
@@ -3381,49 +3381,49 @@ subroutine test040 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: n_trial = 10
-  integer ( kind = 4 ), parameter :: max_type = 25
+   integer(kind=4), parameter :: n_trial = 10
+   integer(kind=4), parameter :: max_type = 25
 
-  real ( kind = 8 ) average
-  integer ( kind = 4 ) coupon(max_type)
-  real ( kind = 8 ) expect
-  integer ( kind = 4 ) i
-  integer ( kind = 4 ) n_coupon
-  integer ( kind = 4 ) n_type
-  integer ( kind = 4 ) :: seed = 123456789
+   real(kind=8) average
+   integer(kind=4) coupon(max_type)
+   real(kind=8) expect
+   integer(kind=4) i
+   integer(kind=4) n_coupon
+   integer(kind=4) n_type
+   integer(kind=4) :: seed = 123456789
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST040'
-  write ( *, '(a)' ) '  COUPON_SIMULATE simulates the coupon '
-  write ( *, '(a)' ) '  collector''s problem.'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST040'
+   write (*, '(a)') '  COUPON_SIMULATE simulates the coupon '
+   write (*, '(a)') '  collector''s problem.'
+   write (*, '(a)') ' '
 
-  do n_type = 5, max_type, 5
+   do n_type = 5, max_type, 5
 
-    write ( *, '(a)' ) ' '
-    write ( *, '(a,i8)' ) '  Number of coupon types is ', n_type
-    expect = real ( n_type, kind = 8 ) * log ( real ( n_type, kind = 8 ) )
-    write ( *, '(a,g14.6)' ) '  Expected wait is about ', expect
-    write ( *, '(a)' ) ' '
+      write (*, '(a)') ' '
+      write (*, '(a,i8)') '  Number of coupon types is ', n_type
+      expect = real(n_type, kind=8)*log(real(n_type, kind=8))
+      write (*, '(a,g14.6)') '  Expected wait is about ', expect
+      write (*, '(a)') ' '
 
-    average = 0.0D+00
-    do i = 1, n_trial
-      call coupon_simulate ( n_type, seed, coupon, n_coupon )
-      write ( *, '(2i5)' ) i, n_coupon
-      average = average + real ( n_coupon, kind = 8 )
-    end do
+      average = 0.0D+00
+      do i = 1, n_trial
+         call coupon_simulate(n_type, seed, coupon, n_coupon)
+         write (*, '(2i5)') i, n_coupon
+         average = average + real(n_coupon, kind=8)
+      end do
 
-    average = average / real ( n_trial, kind = 8 )
-    write ( *, '(a)' ) ' '
-    write ( *, '(a,g14.6)' ) '  Average wait was ', average
+      average = average/real(n_trial, kind=8)
+      write (*, '(a)') ' '
+      write (*, '(a,g14.6)') '  Average wait was ', average
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test041 ( )
+subroutine test041()
 
 !*****************************************************************************80
 !
@@ -3441,57 +3441,57 @@ subroutine test041 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ) a
-  real ( kind = 8 ) cdf
-  logical deranged_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  integer ( kind = 4 ) x
-  integer ( kind = 4 ) x2
+   integer(kind=4) a
+   real(kind=8) cdf
+   logical deranged_check
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   integer(kind=4) x
+   integer(kind=4) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST041'
-  write ( *, '(a)' ) '  For the Deranged PDF:'
-  write ( *, '(a)' ) '  DERANGED_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  DERANGED_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  DERANGED_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST041'
+   write (*, '(a)') '  For the Deranged PDF:'
+   write (*, '(a)') '  DERANGED_CDF evaluates the CDF;'
+   write (*, '(a)') '  DERANGED_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  DERANGED_PDF evaluates the PDF;'
 
-  a = 7
+   a = 7
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  PDF parameter A = ', a
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  PDF parameter A = ', a
 
-  if ( .not. deranged_check ( a ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. deranged_check(a)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call deranged_sample ( a, seed, x )
+      call deranged_sample(a, seed, x)
 
-    call deranged_pdf ( x, a, pdf )
+      call deranged_pdf(x, a, pdf)
 
-    call deranged_cdf ( x, a, cdf )
+      call deranged_cdf(x, a, cdf)
 
-    call deranged_cdf_inv ( cdf, a, x2 )
+      call deranged_cdf_inv(cdf, a, x2)
 
-    write ( *, '(2x,i14,2g14.6,i14)' ) x, pdf, cdf, x2
+      write (*, '(2x,i14,2g14.6,i14)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test042 ( )
+subroutine test042()
 
 !*****************************************************************************80
 !
@@ -3509,44 +3509,44 @@ subroutine test042 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ) a
-  real ( kind = 8 ) cdf
-  logical deranged_check
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) x
+   integer(kind=4) a
+   real(kind=8) cdf
+   logical deranged_check
+   real(kind=8) pdf
+   integer(kind=4) x
 
-  a = 7
+   a = 7
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST042'
-  write ( *, '(a)' ) '  For the Deranged PDF:'
-  write ( *, '(a)' ) '  DERANGED_PDF evaluates the PDF.'
-  write ( *, '(a)' ) '  DERANGED_CDF evaluates the CDF.'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)' ) '  PDF parameter A = ', a
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST042'
+   write (*, '(a)') '  For the Deranged PDF:'
+   write (*, '(a)') '  DERANGED_PDF evaluates the PDF.'
+   write (*, '(a)') '  DERANGED_CDF evaluates the CDF.'
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  PDF parameter A = ', a
 
-  if ( .not. deranged_check ( a ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. deranged_check(a)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '  X    PDF(X)      CDF(X)'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '  X    PDF(X)      CDF(X)'
+   write (*, '(a)') ' '
 
-  do x = 0, a
-    call deranged_pdf ( x, a, pdf )
-    call deranged_cdf ( x, a, cdf )
-    write ( *, '(2x,i8,2g14.6)' ) x, pdf, cdf
-  end do
+   do x = 0, a
+      call deranged_pdf(x, a, pdf)
+      call deranged_cdf(x, a, cdf)
+      write (*, '(2x,i8,2g14.6)') x, pdf, cdf
+   end do
 
-  return
+   return
 end
-subroutine test043 ( )
+subroutine test043()
 
 !*****************************************************************************80
 !
@@ -3564,64 +3564,64 @@ subroutine test043 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  integer ( kind = 4 ) a
-  logical deranged_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  integer ( kind = 4 ) x(sample_num)
-  integer ( kind = 4 ) xmax
-  integer ( kind = 4 ) xmin
+   integer(kind=4) a
+   logical deranged_check
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   integer(kind=4) x(sample_num)
+   integer(kind=4) xmax
+   integer(kind=4) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST043'
-  write ( *, '(a)' ) '  For the Deranged PDF:'
-  write ( *, '(a)' ) '  DERANGED_MEAN computes the mean.'
-  write ( *, '(a)' ) '  DERANGED_VARIANCE computes the variance.'
-  write ( *, '(a)' ) '  DERANGED_SAMPLE samples.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST043'
+   write (*, '(a)') '  For the Deranged PDF:'
+   write (*, '(a)') '  DERANGED_MEAN computes the mean.'
+   write (*, '(a)') '  DERANGED_VARIANCE computes the variance.'
+   write (*, '(a)') '  DERANGED_SAMPLE samples.'
 
-  a = 7
+   a = 7
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  PDF parameter A =             ', a
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  PDF parameter A =             ', a
 
-  if ( .not. deranged_check ( a ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. deranged_check(a)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call deranged_mean ( a, mean )
-  call deranged_variance ( a, variance )
+   call deranged_mean(a, mean)
+   call deranged_variance(a, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call deranged_sample ( a, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call deranged_sample(a, seed, x(i))
+   end do
 
-  call i4vec_mean ( sample_num, x, mean )
-  call i4vec_variance ( sample_num, x, variance )
-  call i4vec_max ( sample_num, x, xmax )
-  call i4vec_min ( sample_num, x, xmin )
+   call i4vec_mean(sample_num, x, mean)
+   call i4vec_variance(sample_num, x, variance)
+   call i4vec_max(sample_num, x, xmax)
+   call i4vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,i8)'    ) '  Sample maximum =  ', xmax
-  write ( *, '(a,i8)'    ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,i8)') '  Sample maximum =  ', xmax
+   write (*, '(a,i8)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test044 ( )
+subroutine test044()
 
 !*****************************************************************************80
 !
@@ -3639,45 +3639,45 @@ subroutine test044 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) digamma
-  real ( kind = 8 ) fx
-  real ( kind = 8 ) fx2
-  integer ( kind = 4 ) n_data
-  real ( kind = 8 ) x
+   real(kind=8) digamma
+   real(kind=8) fx
+   real(kind=8) fx2
+   integer(kind=4) n_data
+   real(kind=8) x
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST044:'
-  write ( *, '(a)' ) '  DIGAMMA evaluates the DIGAMMA or PSI function.'
-  write ( *, '(a)' ) '  PSI_VALUES returns some exact values.'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '     X       Exact F       DIGAMMA(X)'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST044:'
+   write (*, '(a)') '  DIGAMMA evaluates the DIGAMMA or PSI function.'
+   write (*, '(a)') '  PSI_VALUES returns some exact values.'
+   write (*, '(a)') ' '
+   write (*, '(a)') '     X       Exact F       DIGAMMA(X)'
+   write (*, '(a)') ' '
 
-  n_data = 0
+   n_data = 0
 
-  do
+   do
 
-    call psi_values ( n_data, x, fx )
+      call psi_values(n_data, x, fx)
 
-    if ( n_data == 0 ) then
-      exit
-    end if
+      if (n_data == 0) then
+         exit
+      end if
 
-    if ( x <= 0.0D+00 ) then
-      cycle
-    end if
+      if (x <= 0.0D+00) then
+         cycle
+      end if
 
-    fx2 = digamma ( x )
+      fx2 = digamma(x)
 
-    write ( *, '(f8.4,2g14.6)' ) x, fx, fx2
+      write (*, '(f8.4,2g14.6)') x, fx, fx2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test045 ( )
+subroutine test045()
 
 !*****************************************************************************80
 !
@@ -3695,77 +3695,77 @@ subroutine test045 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: test_num = 3
+   integer(kind=4), parameter :: test_num = 3
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) atest(test_num)
-  real ( kind = 8 ) b
-  real ( kind = 8 ) btest(test_num)
-  real ( kind = 8 ) cdf
-  real ( kind = 8 ) r8_pi
-  logical dipole_check
-  integer ( kind = 4 ) i
-  integer ( kind = 4 ) itest
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) atest(test_num)
+   real(kind=8) b
+   real(kind=8) btest(test_num)
+   real(kind=8) cdf
+   real(kind=8) r8_pi
+   logical dipole_check
+   integer(kind=4) i
+   integer(kind=4) itest
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST045'
-  write ( *, '(a)' ) '  For the Dipole PDF:'
-  write ( *, '(a)' ) '  DIPOLE_CDF evaluates the CDF.'
-  write ( *, '(a)' ) '  DIPOLE_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  DIPOLE_PDF evaluates the PDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST045'
+   write (*, '(a)') '  For the Dipole PDF:'
+   write (*, '(a)') '  DIPOLE_CDF evaluates the CDF.'
+   write (*, '(a)') '  DIPOLE_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  DIPOLE_PDF evaluates the PDF.'
 
-  atest(1) = 0.0D+00
-  btest(1) = 1.0D+00
-  atest(2) = r8_pi() / 4.0D+00
-  btest(2) = 0.5D+00
-  atest(3) = r8_pi() / 2.0D+00
-  btest(3) = 0.0D+00
+   atest(1) = 0.0D+00
+   btest(1) = 1.0D+00
+   atest(2) = r8_pi()/4.0D+00
+   btest(2) = 0.5D+00
+   atest(3) = r8_pi()/2.0D+00
+   btest(3) = 0.0D+00
 
-  do itest = 1, test_num
+   do itest = 1, test_num
 
-    a = atest(itest)
-    b = btest(itest)
+      a = atest(itest)
+      b = btest(itest)
 
-    write ( *, '(a)' ) ' '
-    write ( *, '(a,g14.6)' ) '  PDF parameter A = ', a
-    write ( *, '(a,g14.6)' ) '  PDF parameter B = ', b
+      write (*, '(a)') ' '
+      write (*, '(a,g14.6)') '  PDF parameter A = ', a
+      write (*, '(a,g14.6)') '  PDF parameter B = ', b
 
-    if ( .not. dipole_check ( a, b ) ) then
-      write ( *, '(a)' ) ' '
-      write ( *, '(a)' ) 'Fatal error!'
-      write ( *, '(a)' ) '  The parameters are not legal.'
-      return
-    end if
+      if (.not. dipole_check(a, b)) then
+         write (*, '(a)') ' '
+         write (*, '(a)') 'Fatal error!'
+         write (*, '(a)') '  The parameters are not legal.'
+         return
+      end if
 
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-    write ( *, '(a)' ) ' '
+      write (*, '(a)') ' '
+      write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+      write (*, '(a)') ' '
 
-    do i = 1, 10
+      do i = 1, 10
 
-      call dipole_sample ( a, b, seed, x )
+         call dipole_sample(a, b, seed, x)
 
-      call dipole_pdf ( x, a, b, pdf )
+         call dipole_pdf(x, a, b, pdf)
 
-      call dipole_cdf ( x, a, b, cdf )
+         call dipole_cdf(x, a, b, cdf)
 
-      call dipole_cdf_inv ( cdf, a, b, x2 )
+         call dipole_cdf_inv(cdf, a, b, x2)
 
-      write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+         write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-    end do
+      end do
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test046 ( )
+subroutine test046()
 
 !*****************************************************************************80
 !
@@ -3783,70 +3783,70 @@ subroutine test046 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 10000
-  integer ( kind = 4 ), parameter :: test_num = 3
+   integer(kind=4), parameter :: sample_num = 10000
+   integer(kind=4), parameter :: test_num = 3
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ), dimension ( test_num ) :: a_test = (/ &
-    0.0D+00, 0.785398163397448D+00, 1.57079632679490D+00 /)
-  real ( kind = 8 ) b
-  real ( kind = 8 ), dimension ( test_num ) :: b_test = (/ &
-    1.0D+00, 0.5D+00, 0.0D+00 /)
-  real ( kind = 8 ) r8_pi
-  logical dipole_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  integer ( kind = 4 ) test
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8), dimension(test_num) :: a_test = (/ &
+                                        0.0D+00, 0.785398163397448D+00, 1.57079632679490D+00/)
+   real(kind=8) b
+   real(kind=8), dimension(test_num) :: b_test = (/ &
+                                        1.0D+00, 0.5D+00, 0.0D+00/)
+   real(kind=8) r8_pi
+   logical dipole_check
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   integer(kind=4) test
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST046'
-  write ( *, '(a)' ) '  For the Dipole PDF:'
-  write ( *, '(a)' ) '  DIPOLE_SAMPLE samples.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST046'
+   write (*, '(a)') '  For the Dipole PDF:'
+   write (*, '(a)') '  DIPOLE_SAMPLE samples.'
 
-  do test = 1, test_num
+   do test = 1, test_num
 
-    a = a_test(test)
-    b = b_test(test)
+      a = a_test(test)
+      b = b_test(test)
 
-    write ( *, '(a)' ) ' '
-    write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-    write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
+      write (*, '(a)') ' '
+      write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+      write (*, '(a,g14.6)') '  PDF parameter B =             ', b
 
-    if ( .not. dipole_check ( a, b ) ) then
-      write ( *, '(a)' ) ' '
-      write ( *, '(a)' ) 'Fatal error!'
-      write ( *, '(a)' ) '  The parameters are not legal.'
-      return
-    end if
+      if (.not. dipole_check(a, b)) then
+         write (*, '(a)') ' '
+         write (*, '(a)') 'Fatal error!'
+         write (*, '(a)') '  The parameters are not legal.'
+         return
+      end if
 
-    do i = 1, sample_num
-      call dipole_sample ( a, b, seed, x(i) )
-    end do
+      do i = 1, sample_num
+         call dipole_sample(a, b, seed, x(i))
+      end do
 
-    call r8vec_mean ( sample_num, x, mean )
-    call r8vec_variance ( sample_num, x, variance )
-    call r8vec_max ( sample_num, x, xmax )
-    call r8vec_min ( sample_num, x, xmin )
+      call r8vec_mean(sample_num, x, mean)
+      call r8vec_variance(sample_num, x, variance)
+      call r8vec_max(sample_num, x, xmax)
+      call r8vec_min(sample_num, x, xmin)
 
-    write ( *, '(a)' ) ' '
-    write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-    write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-    write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-    write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-    write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+      write (*, '(a)') ' '
+      write (*, '(a,i8)') '  Sample size =     ', sample_num
+      write (*, '(a,g14.6)') '  Sample mean =     ', mean
+      write (*, '(a,g14.6)') '  Sample variance = ', variance
+      write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+      write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test047 ( )
+subroutine test047()
 
 !*****************************************************************************80
 !
@@ -3864,79 +3864,79 @@ subroutine test047 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: n = 3
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: n = 3
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a(n)
-  logical dirichlet_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean(n)
-  real ( kind = 8 ) m2(n,n)
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance(n)
-  real ( kind = 8 ) x(n,sample_num)
-  real ( kind = 8 ) xmax(n)
-  real ( kind = 8 ) xmin(n)
+   real(kind=8) a(n)
+   logical dirichlet_check
+   integer(kind=4) i
+   real(kind=8) mean(n)
+   real(kind=8) m2(n, n)
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance(n)
+   real(kind=8) x(n, sample_num)
+   real(kind=8) xmax(n)
+   real(kind=8) xmin(n)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST047'
-  write ( *, '(a)' ) '  For the Dirichlet PDF:'
-  write ( *, '(a)' ) '  DIRICHLET_SAMPLE samples;'
-  write ( *, '(a)' ) '  DIRICHLET_MEAN computes the mean;'
-  write ( *, '(a)' ) '  DIRICHLET_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST047'
+   write (*, '(a)') '  For the Dirichlet PDF:'
+   write (*, '(a)') '  DIRICHLET_SAMPLE samples;'
+   write (*, '(a)') '  DIRICHLET_MEAN computes the mean;'
+   write (*, '(a)') '  DIRICHLET_VARIANCE computes the variance.'
 
-  a(1:n) = (/ 0.250D+00, 0.500D+00, 1.250D+00 /)
+   a(1:n) = (/0.250D+00, 0.500D+00, 1.250D+00/)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)' ) '  Number of components N =        ', n
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Number of components N =        ', n
 
-  call r8vec_print ( n, a, '  PDF parameters A:' )
-  write ( *, '(a)'    ) '  PDF parameters A(1:N):'
+   call r8vec_print(n, a, '  PDF parameters A:')
+   write (*, '(a)') '  PDF parameters A(1:N):'
 
-  if ( .not. dirichlet_check ( n, a ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. dirichlet_check(n, a)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call dirichlet_mean ( n, a, mean )
+   call dirichlet_mean(n, a, mean)
 
-  call dirichlet_variance ( n, a, variance )
+   call dirichlet_variance(n, a, variance)
 
-  call r8vec_print ( n, mean, '  PDF mean:' )
+   call r8vec_print(n, mean, '  PDF mean:')
 
-  call r8vec_print ( n, variance, '  PDF variance:' )
+   call r8vec_print(n, variance, '  PDF variance:')
 
-  call dirichlet_moment2 ( n, a, m2 )
+   call dirichlet_moment2(n, a, m2)
 
-  call r8mat_print ( n, n, m2, '  Second moments:' )
+   call r8mat_print(n, n, m2, '  Second moments:')
 
-  do i = 1, sample_num
-    call dirichlet_sample ( n, a, seed, x(1,i) )
-  end do
+   do i = 1, sample_num
+      call dirichlet_sample(n, a, seed, x(1, i))
+   end do
 
-  call r8row_max ( n, sample_num, x, xmax )
-  call r8row_min ( n, sample_num, x, xmin )
-  call r8row_mean ( n, sample_num, x, mean )
-  call r8row_variance ( n, sample_num, x, variance )
+   call r8row_max(n, sample_num, x, xmax)
+   call r8row_min(n, sample_num, x, xmin)
+   call r8row_mean(n, sample_num, x, mean)
+   call r8row_variance(n, sample_num, x, variance)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)' ) '  Sample size = ', sample_num
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size = ', sample_num
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '  Observed Mean, Variance, Max, Min:'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '  Observed Mean, Variance, Max, Min:'
+   write (*, '(a)') ' '
 
-  do i = 1, n
-    write ( *, '(2x,i8,4g14.6)' ) i, mean(i), variance(i), xmax(i), xmin(i)
-  end do
+   do i = 1, n
+      write (*, '(2x,i8,4g14.6)') i, mean(i), variance(i), xmax(i), xmin(i)
+   end do
 
-  return
+   return
 end
-subroutine test048 ( )
+subroutine test048()
 
 !*****************************************************************************80
 !
@@ -3954,46 +3954,46 @@ subroutine test048 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: n = 3
+   integer(kind=4), parameter :: n = 3
 
-  real ( kind = 8 ) a(n)
-  logical dirichlet_check
-  real ( kind = 8 ) pdf
-  real ( kind = 8 ) x(n)
+   real(kind=8) a(n)
+   logical dirichlet_check
+   real(kind=8) pdf
+   real(kind=8) x(n)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST048'
-  write ( *, '(a)' ) '  For the Dirichlet PDF:'
-  write ( *, '(a)' ) '  DIRICHLET_PDF evaluates the PDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST048'
+   write (*, '(a)') '  For the Dirichlet PDF:'
+   write (*, '(a)') '  DIRICHLET_PDF evaluates the PDF.'
 
-  a(1:3) = (/ 0.250D+00, 0.500D+00, 1.250D+00 /)
+   a(1:3) = (/0.250D+00, 0.500D+00, 1.250D+00/)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)' ) '  Number of components N =        ', n
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Number of components N =        ', n
 
-  call r8vec_print ( n, a, '  PDF parameters A:' )
+   call r8vec_print(n, a, '  PDF parameters A:')
 
-  if ( .not. dirichlet_check ( n, a ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. dirichlet_check(n, a)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  x(1:3) = (/ 0.500D+00, 0.125D+00, 0.375D+00 /)
+   x(1:3) = (/0.500D+00, 0.125D+00, 0.375D+00/)
 
-  call r8vec_print ( n, x, '  PDF argument X: ' )
+   call r8vec_print(n, x, '  PDF argument X: ')
 
-  call dirichlet_pdf ( x, n, a, pdf )
+   call dirichlet_pdf(x, n, a, pdf)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF value =           ', pdf
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF value =           ', pdf
 
-  return
+   return
 end
-subroutine test049 ( )
+subroutine test049()
 
 !*****************************************************************************80
 !
@@ -4011,86 +4011,86 @@ subroutine test049 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: comp_num = 2
-  integer ( kind = 4 ), parameter :: elem_num = 3
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: comp_num = 2
+   integer(kind=4), parameter :: elem_num = 3
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a(elem_num,comp_num)
-  integer ( kind = 4 ) comp
-  real ( kind = 8 ) comp_weight(comp_num)
-  logical dirichlet_mix_check
-  integer ( kind = 4 ) elem_i
-  integer ( kind = 4 ) j
-  real ( kind = 8 ) mean(elem_num)
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance(elem_num)
-  real ( kind = 8 ) x(elem_num,sample_num)
-  real ( kind = 8 ) xmax(elem_num)
-  real ( kind = 8 ) xmin(elem_num)
+   real(kind=8) a(elem_num, comp_num)
+   integer(kind=4) comp
+   real(kind=8) comp_weight(comp_num)
+   logical dirichlet_mix_check
+   integer(kind=4) elem_i
+   integer(kind=4) j
+   real(kind=8) mean(elem_num)
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance(elem_num)
+   real(kind=8) x(elem_num, sample_num)
+   real(kind=8) xmax(elem_num)
+   real(kind=8) xmin(elem_num)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST049'
-  write ( *, '(a)' ) '  For the Dirichlet Mixture PDF:'
-  write ( *, '(a)' ) '  DIRICHLET_MIX_SAMPLE samples;'
-  write ( *, '(a)' ) '  DIRICHLET_MIX_MEAN computes the mean;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST049'
+   write (*, '(a)') '  For the Dirichlet Mixture PDF:'
+   write (*, '(a)') '  DIRICHLET_MIX_SAMPLE samples;'
+   write (*, '(a)') '  DIRICHLET_MIX_MEAN computes the mean;'
 
-  a(1,1) = 0.250D+00
-  a(2,1) = 0.500D+00
-  a(3,1) = 1.250D+00
+   a(1, 1) = 0.250D+00
+   a(2, 1) = 0.500D+00
+   a(3, 1) = 1.250D+00
 
-  a(1,2) = 1.500D+00
-  a(2,2) = 0.500D+00
-  a(3,2) = 2.000D+00
+   a(1, 2) = 1.500D+00
+   a(2, 2) = 0.500D+00
+   a(3, 2) = 2.000D+00
 
-  comp_weight(1) = 1.0D+00
-  comp_weight(2) = 2.0D+00
+   comp_weight(1) = 1.0D+00
+   comp_weight(2) = 2.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)' ) '  Number of elements ELEM_NUM =   ', elem_num
-  write ( *, '(a,i8)' ) '  Number of components COMP_NUM = ', comp_num
-  call r8mat_print ( elem_num, comp_num, a, '  PDF parameters A(ELEM,COMP):' )
-  call r8vec_print ( comp_num, comp_weight, '  Component weights' )
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Number of elements ELEM_NUM =   ', elem_num
+   write (*, '(a,i8)') '  Number of components COMP_NUM = ', comp_num
+   call r8mat_print(elem_num, comp_num, a, '  PDF parameters A(ELEM,COMP):')
+   call r8vec_print(comp_num, comp_weight, '  Component weights')
 
-  if ( .not. dirichlet_mix_check ( comp_num, elem_num, a, comp_weight ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. dirichlet_mix_check(comp_num, elem_num, a, comp_weight)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call dirichlet_mix_mean ( comp_num, elem_num, a, comp_weight, mean )
+   call dirichlet_mix_mean(comp_num, elem_num, a, comp_weight, mean)
 
-  call r8vec_print ( elem_num, mean, '  PDF means: ' )
+   call r8vec_print(elem_num, mean, '  PDF means: ')
 
-  do j = 1, sample_num
-    call dirichlet_mix_sample ( comp_num, elem_num, a, &
-      comp_weight, seed, comp, x(1,j) )
-  end do
+   do j = 1, sample_num
+      call dirichlet_mix_sample(comp_num, elem_num, a, &
+                                comp_weight, seed, comp, x(1, j))
+   end do
 
-  call r8row_max ( elem_num, sample_num, x, xmax )
+   call r8row_max(elem_num, sample_num, x, xmax)
 
-  call r8row_min ( elem_num, sample_num, x, xmin )
+   call r8row_min(elem_num, sample_num, x, xmin)
 
-  call r8row_mean ( elem_num, sample_num, x, mean )
+   call r8row_mean(elem_num, sample_num, x, mean)
 
-  call r8row_variance ( elem_num, sample_num, x, variance )
+   call r8row_variance(elem_num, sample_num, x, variance)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)' ) '  Sample size = ', sample_num
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '  Observed Mean, Variance, Max, Min:'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size = ', sample_num
+   write (*, '(a)') ' '
+   write (*, '(a)') '  Observed Mean, Variance, Max, Min:'
+   write (*, '(a)') ' '
 
-  do elem_i = 1, elem_num
-    write ( *, '(2x,i8,4g14.6)' ) elem_i, &
-      mean(elem_i), variance(elem_i), xmax(elem_i), xmin(elem_i)
-  end do
+   do elem_i = 1, elem_num
+      write (*, '(2x,i8,4g14.6)') elem_i, &
+         mean(elem_i), variance(elem_i), xmax(elem_i), xmin(elem_i)
+   end do
 
-  return
+   return
 end
-subroutine test050 ( )
+subroutine test050()
 
 !*****************************************************************************80
 !
@@ -4108,57 +4108,57 @@ subroutine test050 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: comp_num = 2
-  integer ( kind = 4 ), parameter :: elem_num = 3
+   integer(kind=4), parameter :: comp_num = 2
+   integer(kind=4), parameter :: elem_num = 3
 
-  real ( kind = 8 ) a(elem_num,comp_num)
-  real ( kind = 8 ) comp_weight(comp_num)
-  logical dirichlet_mix_check
-  real ( kind = 8 ) pdf
-  real ( kind = 8 ) x(elem_num)
+   real(kind=8) a(elem_num, comp_num)
+   real(kind=8) comp_weight(comp_num)
+   logical dirichlet_mix_check
+   real(kind=8) pdf
+   real(kind=8) x(elem_num)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST050'
-  write ( *, '(a)' ) '  For the Dirichlet mixture PDF:'
-  write ( *, '(a)' ) '  DIRICHLET_MIX_PDF evaluates the PDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST050'
+   write (*, '(a)') '  For the Dirichlet mixture PDF:'
+   write (*, '(a)') '  DIRICHLET_MIX_PDF evaluates the PDF.'
 
-  a(1,1) = 0.250D+00
-  a(2,1) = 0.500D+00
-  a(3,1) = 1.250D+00
+   a(1, 1) = 0.250D+00
+   a(2, 1) = 0.500D+00
+   a(3, 1) = 1.250D+00
 
-  a(1,2) = 1.500D+00
-  a(2,2) = 0.500D+00
-  a(3,2) = 2.000D+00
+   a(1, 2) = 1.500D+00
+   a(2, 2) = 0.500D+00
+   a(3, 2) = 2.000D+00
 
-  comp_weight(1:2) = (/ 1.0D+00, 2.0D+00 /)
+   comp_weight(1:2) = (/1.0D+00, 2.0D+00/)
 
-  write ( *, '(a,i8)' ) '  Number of elements ELEM_NUM =   ', elem_num
-  write ( *, '(a,i8)' ) '  Number of components COMP_NUM = ', comp_num
-  call r8mat_print ( elem_num, comp_num, a, '  PDF parameters A(ELEM,COMP):' )
-  call r8vec_print ( comp_num, comp_weight, '  Component weights' )
+   write (*, '(a,i8)') '  Number of elements ELEM_NUM =   ', elem_num
+   write (*, '(a,i8)') '  Number of components COMP_NUM = ', comp_num
+   call r8mat_print(elem_num, comp_num, a, '  PDF parameters A(ELEM,COMP):')
+   call r8vec_print(comp_num, comp_weight, '  Component weights')
 
-  if ( .not. dirichlet_mix_check ( comp_num, elem_num, a, comp_weight ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. dirichlet_mix_check(comp_num, elem_num, a, comp_weight)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  x(1:3) = (/ 0.500D+00, 0.125D+00, 0.375D+00 /)
+   x(1:3) = (/0.500D+00, 0.125D+00, 0.375D+00/)
 
-  call r8vec_print ( elem_num, x, '  PDF argument X: ' )
+   call r8vec_print(elem_num, x, '  PDF argument X: ')
 
-  call dirichlet_mix_pdf ( x, comp_num, elem_num, a, comp_weight, &
-    pdf )
+   call dirichlet_mix_pdf(x, comp_num, elem_num, a, comp_weight, &
+                          pdf)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF value =           ', pdf
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF value =           ', pdf
 
-  return
+   return
 end
-subroutine test051 ( )
+subroutine test051()
 
 !*****************************************************************************80
 !
@@ -4176,68 +4176,68 @@ subroutine test051 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: n = 2
+   integer(kind=4), parameter :: n = 2
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) aval
-  real ( kind = 8 ) avec(n)
-  real ( kind = 8 ) b
-  real ( kind = 8 ) bval
-  logical dirichlet_check
-  real ( kind = 8 ) pdf
-  real ( kind = 8 ) x
-  real ( kind = 8 ) xval
-  real ( kind = 8 ) xvec(n)
+   real(kind=8) a
+   real(kind=8) aval
+   real(kind=8) avec(n)
+   real(kind=8) b
+   real(kind=8) bval
+   logical dirichlet_check
+   real(kind=8) pdf
+   real(kind=8) x
+   real(kind=8) xval
+   real(kind=8) xvec(n)
 
-  xval = 0.25D+00
-  aval = 2.50D+00
-  bval = 3.50D+00
+   xval = 0.25D+00
+   aval = 2.50D+00
+   bval = 3.50D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST051'
-  write ( *, '(a)' ) '  BETA_PDF evaluates the Beta PDF.'
-  write ( *, '(a)' ) '  DIRICHLET_PDF evaluates the Dirichlet PDF.'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '  For N = 2, Dirichlet = Beta.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST051'
+   write (*, '(a)') '  BETA_PDF evaluates the Beta PDF.'
+   write (*, '(a)') '  DIRICHLET_PDF evaluates the Dirichlet PDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') '  For N = 2, Dirichlet = Beta.'
 
-  xvec(1) = xval
-  xvec(2) = 1.0D+00 - xval
+   xvec(1) = xval
+   xvec(2) = 1.0D+00 - xval
 
-  avec(1:2) = (/ aval, bval /)
+   avec(1:2) = (/aval, bval/)
 
-  if ( .not. dirichlet_check ( n, avec ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. dirichlet_check(n, avec)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)' ) '  Number of components N =        ', n
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Number of components N =        ', n
 
-  call r8vec_print ( n, avec, '  PDF parameter A: ' )
+   call r8vec_print(n, avec, '  PDF parameter A: ')
 
-  call r8vec_print ( n, x, '  PDF argument X: ' )
+   call r8vec_print(n, x, '  PDF argument X: ')
 
-  call dirichlet_pdf ( xvec, n, avec, pdf )
+   call dirichlet_pdf(xvec, n, avec, pdf)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  Dirichlet PDF value =  ', pdf
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  Dirichlet PDF value =  ', pdf
 
-  x = xval
+   x = xval
 
-  a = aval
-  b = bval
+   a = aval
+   b = bval
 
-  call beta_pdf ( x, a, b, pdf )
+   call beta_pdf(x, a, b, pdf)
 
-  write ( *, '(a,g14.6)' ) '  Beta PDF value =       ', pdf
+   write (*, '(a,g14.6)') '  Beta PDF value =       ', pdf
 
-  return
+   return
 end
-subroutine test052 ( )
+subroutine test052()
 
 !*****************************************************************************80
 !
@@ -4255,60 +4255,60 @@ subroutine test052 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: a = 6
+   integer(kind=4), parameter :: a = 6
 
-  real ( kind = 8 ) b(a)
-  real ( kind = 8 ) cdf
-  logical discrete_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  integer ( kind = 4 ) x
-  integer ( kind = 4 ) x2
+   real(kind=8) b(a)
+   real(kind=8) cdf
+   logical discrete_check
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   integer(kind=4) x
+   integer(kind=4) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST052'
-  write ( *, '(a)' ) '  For the Discrete PDF:'
-  write ( *, '(a)' ) '  DISCRETE_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  DISCRETE_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  DISCRETE_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST052'
+   write (*, '(a)') '  For the Discrete PDF:'
+   write (*, '(a)') '  DISCRETE_CDF evaluates the CDF;'
+   write (*, '(a)') '  DISCRETE_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  DISCRETE_PDF evaluates the PDF;'
 
-  b(1:6) = (/ 1.0D+00, 2.0D+00, 6.0D+00, 2.0D+00, 4.0D+00, 1.0D+00 /)
+   b(1:6) = (/1.0D+00, 2.0D+00, 6.0D+00, 2.0D+00, 4.0D+00, 1.0D+00/)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)' ) '  PDF parameter A = ', a
-  call r8vec_print ( a, b, '  PDF parameters B = ' )
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  PDF parameter A = ', a
+   call r8vec_print(a, b, '  PDF parameters B = ')
 
-  if ( .not. discrete_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. discrete_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call discrete_sample ( a, b, seed, x )
+      call discrete_sample(a, b, seed, x)
 
-    call discrete_pdf ( x, a, b, pdf )
+      call discrete_pdf(x, a, b, pdf)
 
-    call discrete_cdf ( x, a, b, cdf )
+      call discrete_cdf(x, a, b, cdf)
 
-    call discrete_cdf_inv ( cdf, a, b, x2 )
+      call discrete_cdf_inv(cdf, a, b, x2)
 
-    write ( *, '(2x,i14,2g14.6,i14)' ) x, pdf, cdf, x2
+      write (*, '(2x,i14,2g14.6,i14)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test053 ( )
+subroutine test053()
 
 !*****************************************************************************80
 !
@@ -4326,67 +4326,67 @@ subroutine test053 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: a = 6
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: a = 6
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) b(a)
-  logical discrete_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  integer ( kind = 4 ) x(sample_num)
-  integer ( kind = 4 ) xmax
-  integer ( kind = 4 ) xmin
+   real(kind=8) b(a)
+   logical discrete_check
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   integer(kind=4) x(sample_num)
+   integer(kind=4) xmax
+   integer(kind=4) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST053'
-  write ( *, '(a)' ) '  For the Discrete PDF:'
-  write ( *, '(a)' ) '  DISCRETE_MEAN computes the mean;'
-  write ( *, '(a)' ) '  DISCRETE_SAMPLE samples;'
-  write ( *, '(a)' ) '  DISCRETE_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST053'
+   write (*, '(a)') '  For the Discrete PDF:'
+   write (*, '(a)') '  DISCRETE_MEAN computes the mean;'
+   write (*, '(a)') '  DISCRETE_SAMPLE samples;'
+   write (*, '(a)') '  DISCRETE_VARIANCE computes the variance.'
 
-  b(1:6) = (/ 1.0D+00, 2.0D+00, 6.0D+00, 2.0D+00, 4.0D+00, 1.0D+00 /)
+   b(1:6) = (/1.0D+00, 2.0D+00, 6.0D+00, 2.0D+00, 4.0D+00, 1.0D+00/)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)' ) '  PDF parameter A =             ', a
-  call r8vec_print ( a, b, '  PDF parameters B = ' )
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  PDF parameter A =             ', a
+   call r8vec_print(a, b, '  PDF parameters B = ')
 
-  if ( .not. discrete_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. discrete_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call discrete_mean ( a, b, mean )
-  call discrete_variance ( a, b, variance )
+   call discrete_mean(a, b, mean)
+   call discrete_variance(a, b, variance)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call discrete_sample ( a, b, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call discrete_sample(a, b, seed, x(i))
+   end do
 
-  call i4vec_mean ( sample_num, x, mean )
-  call i4vec_variance ( sample_num, x, variance )
-  call i4vec_max ( sample_num, x, xmax )
-  call i4vec_min ( sample_num, x, xmin )
+   call i4vec_mean(sample_num, x, mean)
+   call i4vec_variance(sample_num, x, variance)
+   call i4vec_max(sample_num, x, xmax)
+   call i4vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,i8)'    ) '  Sample maximum =  ', xmax
-  write ( *, '(a,i8)'    ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,i8)') '  Sample maximum =  ', xmax
+   write (*, '(a,i8)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test054 ( )
+subroutine test054()
 
 !*****************************************************************************80
 !
@@ -4404,62 +4404,62 @@ subroutine test054 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: a = 6
+   integer(kind=4), parameter :: a = 6
 
-  real ( kind = 8 ), save, dimension ( a ) :: b = (/ &
-    1.0D+00, 1.0D+00, 3.0D+00, 2.0D+00, 1.0D+00, 2.0D+00 /)
-  real ( kind = 8 ), save, dimension ( a ) :: c = (/ &
-    0.0D+00, 1.0D+00, 2.0D+00, 4.5D+00, 6.0D+00, 10.0D+00 /)
-  real ( kind = 8 ) cdf
-  logical empirical_discrete_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8), save, dimension(a) :: b = (/ &
+                                       1.0D+00, 1.0D+00, 3.0D+00, 2.0D+00, 1.0D+00, 2.0D+00/)
+   real(kind=8), save, dimension(a) :: c = (/ &
+                                       0.0D+00, 1.0D+00, 2.0D+00, 4.5D+00, 6.0D+00, 10.0D+00/)
+   real(kind=8) cdf
+   logical empirical_discrete_check
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST054'
-  write ( *, '(a)' ) '  For the Empirical Discrete PDF:'
-  write ( *, '(a)' ) '  EMPIRICAL_DISCRETE_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  EMPIRICAL_DISCRETE_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  EMPIRICAL_DISCRETE_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST054'
+   write (*, '(a)') '  For the Empirical Discrete PDF:'
+   write (*, '(a)') '  EMPIRICAL_DISCRETE_CDF evaluates the CDF;'
+   write (*, '(a)') '  EMPIRICAL_DISCRETE_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  EMPIRICAL_DISCRETE_PDF evaluates the PDF;'
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  PDF parameter A =             ', a
-  call r8vec_print ( a, b, '  PDF parameter B:' )
-  call r8vec_print ( a, c, '  PDF parameter C:' )
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  PDF parameter A =             ', a
+   call r8vec_print(a, b, '  PDF parameter B:')
+   call r8vec_print(a, c, '  PDF parameter C:')
 
-  if ( .not. empirical_discrete_check ( a, b, c ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. empirical_discrete_check(a, b, c)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call empirical_discrete_sample ( a, b, c, seed, x )
+      call empirical_discrete_sample(a, b, c, seed, x)
 
-    call empirical_discrete_pdf ( x, a, b, c, pdf )
+      call empirical_discrete_pdf(x, a, b, c, pdf)
 
-    call empirical_discrete_cdf ( x, a, b, c, cdf )
+      call empirical_discrete_cdf(x, a, b, c, cdf)
 
-    call empirical_discrete_cdf_inv ( cdf, a, b, c, x2 )
+      call empirical_discrete_cdf_inv(cdf, a, b, c, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test055 ( )
+subroutine test055()
 
 !*****************************************************************************80
 !
@@ -4477,69 +4477,69 @@ subroutine test055 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: a = 6
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: a = 6
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ), save, dimension ( a ) :: b = (/ &
-    1.0D+00, 1.0D+00, 3.0D+00, 2.0D+00, 1.0D+00, 2.0D+00 /)
-  real ( kind = 8 ), save, dimension ( a ) :: c = (/ &
-    0.0D+00, 1.0D+00, 2.0D+00, 4.5D+00, 6.0D+00, 10.0D+00 /)
-  logical empirical_discrete_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8), save, dimension(a) :: b = (/ &
+                                       1.0D+00, 1.0D+00, 3.0D+00, 2.0D+00, 1.0D+00, 2.0D+00/)
+   real(kind=8), save, dimension(a) :: c = (/ &
+                                       0.0D+00, 1.0D+00, 2.0D+00, 4.5D+00, 6.0D+00, 10.0D+00/)
+   logical empirical_discrete_check
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST055'
-  write ( *, '(a)' ) '  For the Empirical Discrete PDF:'
-  write ( *, '(a)' ) '  EMPIRICAL_DISCRETE_MEAN computes the mean;'
-  write ( *, '(a)' ) '  EMPIRICAL_DISCRETE_SAMPLE samples;'
-  write ( *, '(a)' ) '  EMPIRICAL_DISCRETE_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST055'
+   write (*, '(a)') '  For the Empirical Discrete PDF:'
+   write (*, '(a)') '  EMPIRICAL_DISCRETE_MEAN computes the mean;'
+   write (*, '(a)') '  EMPIRICAL_DISCRETE_SAMPLE samples;'
+   write (*, '(a)') '  EMPIRICAL_DISCRETE_VARIANCE computes the variance.'
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'   ) '  PDF parameter A =             ', a
-  call r8vec_print ( a, b, '  PDF parameter B:' )
-  call r8vec_print ( a, c, '  PDF parameter C:' )
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  PDF parameter A =             ', a
+   call r8vec_print(a, b, '  PDF parameter B:')
+   call r8vec_print(a, c, '  PDF parameter C:')
 
-  if ( .not. empirical_discrete_check ( a, b, c ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. empirical_discrete_check(a, b, c)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call empirical_discrete_mean ( a, b, c, mean )
-  call empirical_discrete_variance ( a, b, c, variance )
+   call empirical_discrete_mean(a, b, c, mean)
+   call empirical_discrete_variance(a, b, c, variance)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call empirical_discrete_sample ( a, b, c, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call empirical_discrete_sample(a, b, c, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test056 ( )
+subroutine test056()
 
 !*****************************************************************************80
 !
@@ -4557,52 +4557,52 @@ subroutine test056 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: a = 6
+   integer(kind=4), parameter :: a = 6
 
-  real ( kind = 8 ), save, dimension ( a ) :: b = (/ &
-    1.0D+00, 1.0D+00, 3.0D+00, 2.0D+00, 1.0D+00, 2.0D+00 /)
-  real ( kind = 8 ), save, dimension ( a ) :: c = (/ &
-    0.0D+00, 1.0D+00, 2.0D+00, 4.5D+00, 6.0D+00, 10.0D+00 /)
-  real ( kind = 8 ) cdf
-  logical empirical_discrete_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  real ( kind = 8 ) x
+   real(kind=8), save, dimension(a) :: b = (/ &
+                                       1.0D+00, 1.0D+00, 3.0D+00, 2.0D+00, 1.0D+00, 2.0D+00/)
+   real(kind=8), save, dimension(a) :: c = (/ &
+                                       0.0D+00, 1.0D+00, 2.0D+00, 4.5D+00, 6.0D+00, 10.0D+00/)
+   real(kind=8) cdf
+   logical empirical_discrete_check
+   integer(kind=4) i
+   real(kind=8) pdf
+   real(kind=8) x
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST056'
-  write ( *, '(a)' ) '  For the Empirical Discrete PDF.'
-  write ( *, '(a)' ) '  EMPIRICAL_DISCRETE_PDF evaluates the PDF.'
-  write ( *, '(a)' ) '  EMPIRICAL_DISCRETE_CDF evaluates the CDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST056'
+   write (*, '(a)') '  For the Empirical Discrete PDF.'
+   write (*, '(a)') '  EMPIRICAL_DISCRETE_PDF evaluates the PDF.'
+   write (*, '(a)') '  EMPIRICAL_DISCRETE_CDF evaluates the CDF.'
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)' ) '  PDF parameter A =             ', a
-  call r8vec_print ( a, b, '  PDF parameter B:' )
-  call r8vec_print ( a, c, '  PDF parameter C:' )
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  PDF parameter A =             ', a
+   call r8vec_print(a, b, '  PDF parameter B:')
+   call r8vec_print(a, c, '  PDF parameter C:')
 
-  if ( .not. empirical_discrete_check ( a, b, c ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. empirical_discrete_check(a, b, c)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '      X      PDF(X)      CDF(X)'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '      X      PDF(X)      CDF(X)'
+   write (*, '(a)') ' '
 
-  do i = -2, 12
-    x = real ( i, kind = 8 )
-    call empirical_discrete_pdf ( x, a, b, c, pdf )
-    call empirical_discrete_cdf ( x, a, b, c, cdf )
-    write ( *, '(2x,f8.4,2g14.6)' ) x, pdf, cdf
-  end do
+   do i = -2, 12
+      x = real(i, kind=8)
+      call empirical_discrete_pdf(x, a, b, c, pdf)
+      call empirical_discrete_cdf(x, a, b, c, cdf)
+      write (*, '(2x,f8.4,2g14.6)') x, pdf, cdf
+   end do
 
-  return
+   return
 end
-subroutine test0563 ( )
+subroutine test0563()
 
 !*****************************************************************************80
 !
@@ -4620,43 +4620,43 @@ subroutine test0563 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  integer ( kind = 4 ) x
-  integer ( kind = 4 ) x2
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   integer(kind=4) x
+   integer(kind=4) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST0563'
-  write ( *, '(a)' ) '  For the English Sentence Length PDF:'
-  write ( *, '(a)' ) '  ENGLISH_SENTENCE_LENGTH_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  ENGLISH_SENTENCE_LENGTH_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  ENGLISH_SENTENCE_LENGTH_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST0563'
+   write (*, '(a)') '  For the English Sentence Length PDF:'
+   write (*, '(a)') '  ENGLISH_SENTENCE_LENGTH_CDF evaluates the CDF;'
+   write (*, '(a)') '  ENGLISH_SENTENCE_LENGTH_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  ENGLISH_SENTENCE_LENGTH_PDF evaluates the PDF;'
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call english_sentence_length_sample ( seed, x )
+      call english_sentence_length_sample(seed, x)
 
-    call english_sentence_length_pdf ( x, pdf )
+      call english_sentence_length_pdf(x, pdf)
 
-    call english_sentence_length_cdf ( x, cdf )
+      call english_sentence_length_cdf(x, cdf)
 
-    call english_sentence_length_cdf_inv ( cdf, x2 )
+      call english_sentence_length_cdf_inv(cdf, x2)
 
-    write ( *, '(2x,i14,2g14.6,i14)' ) x, pdf, cdf, x2
+      write (*, '(2x,i14,2g14.6,i14)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test0564 ( )
+subroutine test0564()
 
 !*****************************************************************************80
 !
@@ -4674,51 +4674,51 @@ subroutine test0564 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  integer ( kind = 4 ) x(sample_num)
-  integer ( kind = 4 ) xmax
-  integer ( kind = 4 ) xmin
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   integer(kind=4) x(sample_num)
+   integer(kind=4) xmax
+   integer(kind=4) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST0564'
-  write ( *, '(a)' ) '  For the English Sentence Length PDF:'
-  write ( *, '(a)' ) '  ENGLISH_SENTENCE_LENGTH_MEAN computes the mean;'
-  write ( *, '(a)' ) '  ENGLISH_SENTENCE_LENGTH_SAMPLE samples;'
-  write ( *, '(a)' ) '  ENGLISH_SENTENCE_LENGTH_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST0564'
+   write (*, '(a)') '  For the English Sentence Length PDF:'
+   write (*, '(a)') '  ENGLISH_SENTENCE_LENGTH_MEAN computes the mean;'
+   write (*, '(a)') '  ENGLISH_SENTENCE_LENGTH_SAMPLE samples;'
+   write (*, '(a)') '  ENGLISH_SENTENCE_LENGTH_VARIANCE computes the variance.'
 
-  call english_sentence_length_mean ( mean )
-  call english_sentence_length_variance ( variance )
+   call english_sentence_length_mean(mean)
+   call english_sentence_length_variance(variance)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call english_sentence_length_sample ( seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call english_sentence_length_sample(seed, x(i))
+   end do
 
-  call i4vec_mean ( sample_num, x, mean )
-  call i4vec_variance ( sample_num, x, variance )
-  call i4vec_max ( sample_num, x, xmax )
-  call i4vec_min ( sample_num, x, xmin )
+   call i4vec_mean(sample_num, x, mean)
+   call i4vec_variance(sample_num, x, variance)
+   call i4vec_max(sample_num, x, xmax)
+   call i4vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,i8)'    ) '  Sample maximum =  ', xmax
-  write ( *, '(a,i8)'    ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,i8)') '  Sample maximum =  ', xmax
+   write (*, '(a,i8)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test0565 ( )
+subroutine test0565()
 
 !*****************************************************************************80
 !
@@ -4736,43 +4736,43 @@ subroutine test0565 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  integer ( kind = 4 ) x
-  integer ( kind = 4 ) x2
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   integer(kind=4) x
+   integer(kind=4) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST0565'
-  write ( *, '(a)' ) '  For the English Word Length PDF:'
-  write ( *, '(a)' ) '  ENGLISH_WORD_LENGTH_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  ENGLISH_WORD_LENGTH_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  ENGLISH_WORD_LENGTH_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST0565'
+   write (*, '(a)') '  For the English Word Length PDF:'
+   write (*, '(a)') '  ENGLISH_WORD_LENGTH_CDF evaluates the CDF;'
+   write (*, '(a)') '  ENGLISH_WORD_LENGTH_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  ENGLISH_WORD_LENGTH_PDF evaluates the PDF;'
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call english_word_length_sample ( seed, x )
+      call english_word_length_sample(seed, x)
 
-    call english_word_length_pdf ( x, pdf )
+      call english_word_length_pdf(x, pdf)
 
-    call english_word_length_cdf ( x, cdf )
+      call english_word_length_cdf(x, cdf)
 
-    call english_word_length_cdf_inv ( cdf, x2 )
+      call english_word_length_cdf_inv(cdf, x2)
 
-    write ( *, '(2x,i14,2g14.6,i14)' ) x, pdf, cdf, x2
+      write (*, '(2x,i14,2g14.6,i14)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test0566 ( )
+subroutine test0566()
 
 !*****************************************************************************80
 !
@@ -4790,51 +4790,51 @@ subroutine test0566 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  integer ( kind = 4 ) x(sample_num)
-  integer ( kind = 4 ) xmax
-  integer ( kind = 4 ) xmin
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   integer(kind=4) x(sample_num)
+   integer(kind=4) xmax
+   integer(kind=4) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST0566'
-  write ( *, '(a)' ) '  For the English Word Length PDF:'
-  write ( *, '(a)' ) '  ENGLISH_WORD_LENGTH_MEAN computes the mean;'
-  write ( *, '(a)' ) '  ENGLISH_WORD_LENGTH_SAMPLE samples;'
-  write ( *, '(a)' ) '  ENGLISH_WORD_LENGTH_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST0566'
+   write (*, '(a)') '  For the English Word Length PDF:'
+   write (*, '(a)') '  ENGLISH_WORD_LENGTH_MEAN computes the mean;'
+   write (*, '(a)') '  ENGLISH_WORD_LENGTH_SAMPLE samples;'
+   write (*, '(a)') '  ENGLISH_WORD_LENGTH_VARIANCE computes the variance.'
 
-  call english_word_length_mean ( mean )
-  call english_word_length_variance ( variance )
+   call english_word_length_mean(mean)
+   call english_word_length_variance(variance)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call english_word_length_sample ( seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call english_word_length_sample(seed, x(i))
+   end do
 
-  call i4vec_mean ( sample_num, x, mean )
-  call i4vec_variance ( sample_num, x, variance )
-  call i4vec_max ( sample_num, x, xmax )
-  call i4vec_min ( sample_num, x, xmin )
+   call i4vec_mean(sample_num, x, mean)
+   call i4vec_variance(sample_num, x, variance)
+   call i4vec_max(sample_num, x, xmax)
+   call i4vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,i8)'    ) '  Sample maximum =  ', xmax
-  write ( *, '(a,i8)'    ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,i8)') '  Sample maximum =  ', xmax
+   write (*, '(a,i8)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test057 ( )
+subroutine test057()
 
 !*****************************************************************************80
 !
@@ -4852,63 +4852,63 @@ subroutine test057 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  integer ( kind = 4 ) c
-  real ( kind = 8 ) cdf
-  logical erlang_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   integer(kind=4) c
+   real(kind=8) cdf
+   logical erlang_check
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST057'
-  write ( *, '(a)' ) '  For the Erlang PDF:'
-  write ( *, '(a)' ) '  ERLANG_CDF evaluates the CDF.'
-  write ( *, '(a)' ) '  ERLANG_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  ERLANG_PDF evaluates the PDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST057'
+   write (*, '(a)') '  For the Erlang PDF:'
+   write (*, '(a)') '  ERLANG_CDF evaluates the CDF.'
+   write (*, '(a)') '  ERLANG_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  ERLANG_PDF evaluates the PDF.'
 
-  a = 1.0D+00
-  b = 2.0D+00
-  c = 3
+   a = 1.0D+00
+   b = 2.0D+00
+   c = 3
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A = ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B = ', b
-  write ( *, '(a,i8)'    ) '  PDF parameter C = ', c
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A = ', a
+   write (*, '(a,g14.6)') '  PDF parameter B = ', b
+   write (*, '(a,i8)') '  PDF parameter C = ', c
 
-  if ( .not. erlang_check ( a, b, c ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. erlang_check(a, b, c)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call erlang_sample ( a, b, c, seed, x )
+      call erlang_sample(a, b, c, seed, x)
 
-    call erlang_pdf ( x, a, b, c, pdf )
+      call erlang_pdf(x, a, b, c, pdf)
 
-    call erlang_cdf ( x, a, b, c, cdf )
+      call erlang_cdf(x, a, b, c, cdf)
 
-    call erlang_cdf_inv ( cdf, a, b, c, x2 )
+      call erlang_cdf_inv(cdf, a, b, c, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test058 ( )
+subroutine test058()
 
 !*****************************************************************************80
 !
@@ -4926,70 +4926,70 @@ subroutine test058 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  integer ( kind = 4 ) c
-  logical erlang_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   integer(kind=4) c
+   logical erlang_check
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST058'
-  write ( *, '(a)' ) '  For the Erlang PDF:'
-  write ( *, '(a)' ) '  ERLANG_MEAN computes the mean;'
-  write ( *, '(a)' ) '  ERLANG_SAMPLE samples;'
-  write ( *, '(a)' ) '  ERLANG_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST058'
+   write (*, '(a)') '  For the Erlang PDF:'
+   write (*, '(a)') '  ERLANG_MEAN computes the mean;'
+   write (*, '(a)') '  ERLANG_SAMPLE samples;'
+   write (*, '(a)') '  ERLANG_VARIANCE computes the variance.'
 
-  a = 1.0D+00
-  b = 2.0D+00
-  c = 3
+   a = 1.0D+00
+   b = 2.0D+00
+   c = 3
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =         ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =         ', b
-  write ( *, '(a,i8)'    ) '  PDF parameter C =         ', c
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =         ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =         ', b
+   write (*, '(a,i8)') '  PDF parameter C =         ', c
 
-  if ( .not. erlang_check ( a, b, c ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. erlang_check(a, b, c)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call erlang_mean ( a, b, c, mean )
-  call erlang_variance ( a, b, c, variance )
+   call erlang_mean(a, b, c, mean)
+   call erlang_variance(a, b, c, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =              ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =          ', variance
+   write (*, '(a,g14.6)') '  PDF mean =              ', mean
+   write (*, '(a,g14.6)') '  PDF variance =          ', variance
 
-  do i = 1, sample_num
-    call erlang_sample ( a, b, c, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call erlang_sample(a, b, c, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test059 ( )
+subroutine test059()
 
 !*****************************************************************************80
 !
@@ -5007,39 +5007,39 @@ subroutine test059 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) error_f
-  real ( kind = 8 ) error_f_inverse
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) r8_normal_01
-  integer ( kind = 4 ) seed
-  real ( kind = 8 ) x
-  real ( kind = 8 ) y
-  real ( kind = 8 ) z
+   real(kind=8) error_f
+   real(kind=8) error_f_inverse
+   integer(kind=4) i
+   real(kind=8) r8_normal_01
+   integer(kind=4) seed
+   real(kind=8) x
+   real(kind=8) y
+   real(kind=8) z
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST059'
-  write ( *, '(a)' ) '  ERROR_F evaluates the error function erf(x).'
-  write ( *, '(a)' ) '  ERROR_F_INVERSE inverts the error function.'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'X   -> Y = error_F(X) -> Z = error_f_inverse(Y)'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST059'
+   write (*, '(a)') '  ERROR_F evaluates the error function erf(x).'
+   write (*, '(a)') '  ERROR_F_INVERSE inverts the error function.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'X   -> Y = error_F(X) -> Z = error_f_inverse(Y)'
+   write (*, '(a)') ' '
 
-  seed = 123456789
+   seed = 123456789
 
-  do i = 1, 20
+   do i = 1, 20
 
-    call normal_01_sample ( seed, x )
-    y = error_f ( x )
-    z = error_f_inverse ( y )
-    write ( *, '(2x,g14.6,2x,g14.6,2x,g14.6)' ) x, y, z
+      call normal_01_sample(seed, x)
+      y = error_f(x)
+      z = error_f_inverse(y)
+      write (*, '(2x,g14.6,2x,g14.6,2x,g14.6)') x, y, z
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test060 ( )
+subroutine test060()
 
 !*****************************************************************************80
 !
@@ -5057,43 +5057,43 @@ subroutine test060 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST060'
-  write ( *, '(a)' ) '  For the Exponential 01 PDF:'
-  write ( *, '(a)' ) '  EXPONENTIAL_01_CDF evaluates the CDF.'
-  write ( *, '(a)' ) '  EXPONENTIAL_01_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  EXPONENTIAL_01_PDF evaluates the PDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST060'
+   write (*, '(a)') '  For the Exponential 01 PDF:'
+   write (*, '(a)') '  EXPONENTIAL_01_CDF evaluates the CDF.'
+   write (*, '(a)') '  EXPONENTIAL_01_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  EXPONENTIAL_01_PDF evaluates the PDF.'
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call exponential_01_sample ( seed, x )
+      call exponential_01_sample(seed, x)
 
-    call exponential_01_pdf ( x, pdf )
+      call exponential_01_pdf(x, pdf)
 
-    call exponential_01_cdf ( x, cdf )
+      call exponential_01_cdf(x, cdf)
 
-    call exponential_01_cdf_inv ( cdf, x2 )
+      call exponential_01_cdf_inv(cdf, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test061 ( )
+subroutine test061()
 
 !*****************************************************************************80
 !
@@ -5111,51 +5111,51 @@ subroutine test061 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  integer ( kind = 4 ) i
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) mean
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   integer(kind=4) i
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) mean
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST061'
-  write ( *, '(a)' ) '  For the Exponential 01_PDF:'
-  write ( *, '(a)' ) '  EXPONENTIAL_01_MEAN computes the mean;'
-  write ( *, '(a)' ) '  EXPONENTIAL_01_SAMPLE samples;'
-  write ( *, '(a)' ) '  EXPONENTIAL_01_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST061'
+   write (*, '(a)') '  For the Exponential 01_PDF:'
+   write (*, '(a)') '  EXPONENTIAL_01_MEAN computes the mean;'
+   write (*, '(a)') '  EXPONENTIAL_01_SAMPLE samples;'
+   write (*, '(a)') '  EXPONENTIAL_01_VARIANCE computes the variance.'
 
-  call exponential_01_mean ( mean )
-  call exponential_01_variance ( variance )
+   call exponential_01_mean(mean)
+   call exponential_01_variance(variance)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call exponential_01_sample ( seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call exponential_01_sample(seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test062 ( )
+subroutine test062()
 
 !*****************************************************************************80
 !
@@ -5173,60 +5173,60 @@ subroutine test062 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) cdf
-  logical exponential_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) cdf
+   logical exponential_check
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST062'
-  write ( *, '(a)' ) '  For the Exponential CDF:'
-  write ( *, '(a)' ) '  EXPONENTIAL_CDF evaluates the CDF.'
-  write ( *, '(a)' ) '  EXPONENTIAL_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  EXPONENTIAL_PDF evaluates the PDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST062'
+   write (*, '(a)') '  For the Exponential CDF:'
+   write (*, '(a)') '  EXPONENTIAL_CDF evaluates the CDF.'
+   write (*, '(a)') '  EXPONENTIAL_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  EXPONENTIAL_PDF evaluates the PDF.'
 
-  a = 1.0D+00
-  b = 2.0D+00
+   a = 1.0D+00
+   b = 2.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =         ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =         ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =         ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =         ', b
 
-  if ( .not. exponential_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. exponential_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call exponential_sample ( a, b, seed, x )
+      call exponential_sample(a, b, seed, x)
 
-    call exponential_pdf ( x, a, b, pdf )
+      call exponential_pdf(x, a, b, pdf)
 
-    call exponential_cdf ( x, a, b, cdf )
+      call exponential_cdf(x, a, b, cdf)
 
-    call exponential_cdf_inv ( cdf, a, b, x2 )
+      call exponential_cdf_inv(cdf, a, b, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test063 ( )
+subroutine test063()
 
 !*****************************************************************************80
 !
@@ -5244,67 +5244,67 @@ subroutine test063 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  logical exponential_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   logical exponential_check
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST063'
-  write ( *, '(a)' ) '  For the Exponential PDF:'
-  write ( *, '(a)' ) '  EXPONENTIAL_MEAN computes the mean;'
-  write ( *, '(a)' ) '  EXPONENTIAL_SAMPLE samples;'
-  write ( *, '(a)' ) '  EXPONENTIAL_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST063'
+   write (*, '(a)') '  For the Exponential PDF:'
+   write (*, '(a)') '  EXPONENTIAL_MEAN computes the mean;'
+   write (*, '(a)') '  EXPONENTIAL_SAMPLE samples;'
+   write (*, '(a)') '  EXPONENTIAL_VARIANCE computes the variance.'
 
-  a = 1.0D+00
-  b = 10.0D+00
+   a = 1.0D+00
+   b = 10.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =       ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =       ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
 
-  if ( .not. exponential_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. exponential_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call exponential_mean ( a, b, mean )
-  call exponential_variance ( a, b, variance )
+   call exponential_mean(a, b, mean)
+   call exponential_variance(a, b, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call exponential_sample ( a, b, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call exponential_sample(a, b, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test064 ( )
+subroutine test064()
 
 !*****************************************************************************80
 !
@@ -5322,60 +5322,60 @@ subroutine test064 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) cdf
-  logical extreme_values_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) cdf
+   logical extreme_values_check
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST064'
-  write ( *, '(a)' ) '  For the Extreme Values CDF:'
-  write ( *, '(a)' ) '  EXTREME_VALUES_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  EXTREME_VALUES_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  EXTREME_VALUES_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST064'
+   write (*, '(a)') '  For the Extreme Values CDF:'
+   write (*, '(a)') '  EXTREME_VALUES_CDF evaluates the CDF;'
+   write (*, '(a)') '  EXTREME_VALUES_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  EXTREME_VALUES_PDF evaluates the PDF;'
 
-  a = 2.0D+00
-  b = 3.0D+00
+   a = 2.0D+00
+   b = 3.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A = ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B = ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A = ', a
+   write (*, '(a,g14.6)') '  PDF parameter B = ', b
 
-  if ( .not. extreme_values_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. extreme_values_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call extreme_values_sample ( a, b, seed, x )
+      call extreme_values_sample(a, b, seed, x)
 
-    call extreme_values_pdf ( x, a, b, pdf )
+      call extreme_values_pdf(x, a, b, pdf)
 
-    call extreme_values_cdf ( x, a, b, cdf )
+      call extreme_values_cdf(x, a, b, cdf)
 
-    call extreme_values_cdf_inv ( cdf, a, b, x2 )
+      call extreme_values_cdf_inv(cdf, a, b, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test065 ( )
+subroutine test065()
 
 !*****************************************************************************80
 !
@@ -5393,67 +5393,67 @@ subroutine test065 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  logical extreme_values_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   logical extreme_values_check
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST065'
-  write ( *, '(a)' ) '  For the Extreme Values PDF:'
-  write ( *, '(a)' ) '  EXTREME_VALUES_MEAN computes the mean;'
-  write ( *, '(a)' ) '  EXTREME_VALUES_SAMPLE samples;'
-  write ( *, '(a)' ) '  EXTREME_VALUES_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST065'
+   write (*, '(a)') '  For the Extreme Values PDF:'
+   write (*, '(a)') '  EXTREME_VALUES_MEAN computes the mean;'
+   write (*, '(a)') '  EXTREME_VALUES_SAMPLE samples;'
+   write (*, '(a)') '  EXTREME_VALUES_VARIANCE computes the variance.'
 
-  a = 2.0D+00
-  b = 3.0D+00
+   a = 2.0D+00
+   b = 3.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A = ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B = ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A = ', a
+   write (*, '(a,g14.6)') '  PDF parameter B = ', b
 
-  if ( .not. extreme_values_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. extreme_values_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call extreme_values_mean ( a, b, mean )
-  call extreme_values_variance ( a, b, variance )
+   call extreme_values_mean(a, b, mean)
+   call extreme_values_variance(a, b, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =        ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =    ', variance
+   write (*, '(a,g14.6)') '  PDF mean =        ', mean
+   write (*, '(a,g14.6)') '  PDF variance =    ', variance
 
-  do i = 1, sample_num
-    call extreme_values_sample ( a, b, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call extreme_values_sample(a, b, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test066 ( )
+subroutine test066()
 
 !*****************************************************************************80
 !
@@ -5471,43 +5471,43 @@ subroutine test066 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ) a
-  integer ( kind = 4 ) b
-  real ( kind = 8 ) fx
-  real ( kind = 8 ) fx2
-  integer ( kind = 4 ) n_data
-  real ( kind = 8 ) x
+   integer(kind=4) a
+   integer(kind=4) b
+   real(kind=8) fx
+   real(kind=8) fx2
+   integer(kind=4) n_data
+   real(kind=8) x
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST066:'
-  write ( *, '(a)' ) '  F_CDF evaluates the F central CDF.'
-  write ( *, '(a)' ) '  F_CDF_VALUES returns some exact values.'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) &
-    '     A       B    X       Exact F       F_CDF(A,B,X)'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST066:'
+   write (*, '(a)') '  F_CDF evaluates the F central CDF.'
+   write (*, '(a)') '  F_CDF_VALUES returns some exact values.'
+   write (*, '(a)') ' '
+   write (*, '(a)') &
+      '     A       B    X       Exact F       F_CDF(A,B,X)'
+   write (*, '(a)') ' '
 
-  n_data = 0
+   n_data = 0
 
-  do
+   do
 
-    call f_cdf_values ( n_data, a, b, x, fx )
+      call f_cdf_values(n_data, a, b, x, fx)
 
-    if ( n_data == 0 ) then
-      exit
-    end if
+      if (n_data == 0) then
+         exit
+      end if
 
-    call f_cdf ( x, a, b, fx2 )
+      call f_cdf(x, a, b, fx2)
 
-    write ( *, '(2x,i8,2x,i8,2x,f8.4,2g14.6)' ) a, b, x, fx, fx2
+      write (*, '(2x,i8,2x,i8,2x,f8.4,2g14.6)') a, b, x, fx, fx2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test067 ( )
+subroutine test067()
 
 !*****************************************************************************80
 !
@@ -5525,57 +5525,57 @@ subroutine test067 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) cdf
-  logical f_check
-  integer ( kind = 4 ) i
-  integer ( kind = 4 ) m
-  integer ( kind = 4 ) n
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
+   real(kind=8) cdf
+   logical f_check
+   integer(kind=4) i
+   integer(kind=4) m
+   integer(kind=4) n
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST067'
-  write ( *, '(a)' ) '  For the central F PDF:'
-  write ( *, '(a)' ) '  F_CDF evaluates the CDF.'
-  write ( *, '(a)' ) '  F_PDF evaluates the PDF.'
-  write ( *, '(a)' ) '  F_SAMPLE samples the PDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST067'
+   write (*, '(a)') '  For the central F PDF:'
+   write (*, '(a)') '  F_CDF evaluates the CDF.'
+   write (*, '(a)') '  F_PDF evaluates the PDF.'
+   write (*, '(a)') '  F_SAMPLE samples the PDF.'
 
-  m = 1
-  n = 1
+   m = 1
+   n = 1
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  PDF parameter M = ', m
-  write ( *, '(a,i8)'    ) '  PDF parameter N = ', n
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  PDF parameter M = ', m
+   write (*, '(a,i8)') '  PDF parameter N = ', n
 
-  if ( .not. f_check ( m, n ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. f_check(m, n)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call f_sample ( m, n, seed, x )
+      call f_sample(m, n, seed, x)
 
-    call f_pdf ( x, m, n, pdf )
+      call f_pdf(x, m, n, pdf)
 
-    call f_cdf ( x, m, n, cdf )
+      call f_cdf(x, m, n, cdf)
 
-    write ( *, '(2x,g14.6,2x,g14.6,2x,g14.6)' ) x, pdf, cdf
+      write (*, '(2x,g14.6,2x,g14.6,2x,g14.6)') x, pdf, cdf
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test068 ( )
+subroutine test068()
 
 !*****************************************************************************80
 !
@@ -5593,67 +5593,67 @@ subroutine test068 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  logical f_check
-  integer ( kind = 4 ) i
-  integer ( kind = 4 ) m
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) n
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   logical f_check
+   integer(kind=4) i
+   integer(kind=4) m
+   real(kind=8) mean
+   integer(kind=4) n
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST068'
-  write ( *, '(a)' ) '  For the central F PDF:'
-  write ( *, '(a)' ) '  F_MEAN computes the mean;'
-  write ( *, '(a)' ) '  F_SAMPLE samples;'
-  write ( *, '(a)' ) '  F_VARIANCE computes the varianc.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST068'
+   write (*, '(a)') '  For the central F PDF:'
+   write (*, '(a)') '  F_MEAN computes the mean;'
+   write (*, '(a)') '  F_SAMPLE samples;'
+   write (*, '(a)') '  F_VARIANCE computes the varianc.'
 
-  m = 8
-  n = 6
+   m = 8
+   n = 6
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  PDF parameter M =             ', m
-  write ( *, '(a,i8)'    ) '  PDF parameter N =             ', n
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  PDF parameter M =             ', m
+   write (*, '(a,i8)') '  PDF parameter N =             ', n
 
-  if ( .not. f_check ( m, n ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. f_check(m, n)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call f_mean ( m, n, mean )
-  call f_variance ( m, n, variance )
+   call f_mean(m, n, mean)
+   call f_variance(m, n, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =          ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =          ', variance
 
-  do i = 1, sample_num
-    call f_sample ( m, n, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call f_sample(m, n, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)' ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test069 ( )
+subroutine test069()
 
 !*****************************************************************************80
 !
@@ -5671,33 +5671,33 @@ subroutine test069 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) f
-  real ( kind = 8 ) factorial_log
-  real ( kind = 8 ) g
-  real ( kind = 8 ) gamma_log_int
-  integer ( kind = 4 ) i
+   real(kind=8) f
+   real(kind=8) factorial_log
+   real(kind=8) g
+   real(kind=8) gamma_log_int
+   integer(kind=4) i
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST069'
-  write ( *, '(a)' ) &
-    '  FACTORIAL_LOG evaluates the log of the factorial function;'
-  write ( *, '(a)' ) '  GAMMA_LOG_INT evaluates the log for integer argument.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST069'
+   write (*, '(a)') &
+      '  FACTORIAL_LOG evaluates the log of the factorial function;'
+   write (*, '(a)') '  GAMMA_LOG_INT evaluates the log for integer argument.'
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'I    GAMMA_LOG_INT(I+1)   FACTORIAL_LOG(I)'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') 'I    GAMMA_LOG_INT(I+1)   FACTORIAL_LOG(I)'
+   write (*, '(a)') ' '
 
-  do i = 1, 20
-    g = gamma_log_int ( i + 1 )
-    f = factorial_log ( i )
-    write ( *, '(2x,i8,2x,g14.6,2x,g14.6)' ) i, g, f
-  end do
+   do i = 1, 20
+      g = gamma_log_int(i + 1)
+      f = factorial_log(i)
+      write (*, '(2x,i8,2x,g14.6,2x,g14.6)') i, g, f
+   end do
 
-  return
+   return
 end
-subroutine test070 ( )
+subroutine test070()
 
 !*****************************************************************************80
 !
@@ -5715,30 +5715,30 @@ subroutine test070 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ) i4_factorial
-  real ( kind = 8 ) factorial_stirling
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) value
+   integer(kind=4) i4_factorial
+   real(kind=8) factorial_stirling
+   integer(kind=4) i
+   real(kind=8) value
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST070'
-  write ( *, '(a)' ) '  FACTORIAL_STIRLING computes Stirling''s'
-  write ( *, '(a)' ) '  approximate factorial function;'
-  write ( *, '(a)' ) '  I4_FACTORIAL evaluates the factorial function;'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '  N        Stirling       N!'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST070'
+   write (*, '(a)') '  FACTORIAL_STIRLING computes Stirling''s'
+   write (*, '(a)') '  approximate factorial function;'
+   write (*, '(a)') '  I4_FACTORIAL evaluates the factorial function;'
+   write (*, '(a)') ' '
+   write (*, '(a)') '  N        Stirling       N!'
+   write (*, '(a)') ' '
 
-  do i = 0, 20
-    value = factorial_stirling ( i )
-    write ( *, '(2x,i8,2x,g14.6,2x,i20)' ) i, value, i4_factorial ( i )
-  end do
+   do i = 0, 20
+      value = factorial_stirling(i)
+      write (*, '(2x,i8,2x,g14.6,2x,i20)') i, value, i4_factorial(i)
+   end do
 
-  return
+   return
 end
-subroutine test07025 ( )
+subroutine test07025()
 
 !*****************************************************************************80
 !
@@ -5756,65 +5756,65 @@ subroutine test07025 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 10000
-  integer ( kind = 4 ), parameter :: test_num = 7
+   integer(kind=4), parameter :: sample_num = 10000
+   integer(kind=4), parameter :: test_num = 7
 
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) seed
-  integer ( kind = 4 ) test
-  real ( kind = 8 ) u
-  real ( kind = 8 ), dimension ( test_num ) :: u_test = (/ &
-   1.0D+00, 2.0D+00, 4.0D+00, 8.0D+00, 16.0D+00, &
-  32.0D+00, 1.0D+00  /)
-  real ( kind = 8 ) v
-  real ( kind = 8 ), dimension ( test_num ) :: v_test = (/ &
-   1.0D+00, 1.0D+00, 1.0D+00, 1.0D+00, 1.0D+00, &
-   1.0D+00, 0.25D+00  /)
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) z(sample_num)
-  real ( kind = 8 ) z_max
-  real ( kind = 8 ) z_min
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) seed
+   integer(kind=4) test
+   real(kind=8) u
+   real(kind=8), dimension(test_num) :: u_test = (/ &
+                                        1.0D+00, 2.0D+00, 4.0D+00, 8.0D+00, 16.0D+00, &
+                                        32.0D+00, 1.0D+00/)
+   real(kind=8) v
+   real(kind=8), dimension(test_num) :: v_test = (/ &
+                                        1.0D+00, 1.0D+00, 1.0D+00, 1.0D+00, 1.0D+00, &
+                                        1.0D+00, 0.25D+00/)
+   real(kind=8) variance
+   real(kind=8) z(sample_num)
+   real(kind=8) z_max
+   real(kind=8) z_min
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST07025'
-  write ( *, '(a)' ) '  Test FERMI_DIRAC_SAMPLE:'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST07025'
+   write (*, '(a)') '  Test FERMI_DIRAC_SAMPLE:'
 
-  do test = 1, test_num
+   do test = 1, test_num
 
-    u = u_test(test)
-    v = v_test(test)
-    seed = 123456789
+      u = u_test(test)
+      v = v_test(test)
+      seed = 123456789
 
-    write ( *, '(a)' ) ' '
-    write ( *, '(a,g14.6)' ) '  U =          ', u
-    write ( *, '(a,g14.6)' ) '  V =          ', v
-    write ( *, '(a,i8)'    ) '  SAMPLE_NUM = ', sample_num
-    write ( *, '(a,i12)'   ) '  SEED =       ', seed
+      write (*, '(a)') ' '
+      write (*, '(a,g14.6)') '  U =          ', u
+      write (*, '(a,g14.6)') '  V =          ', v
+      write (*, '(a,i8)') '  SAMPLE_NUM = ', sample_num
+      write (*, '(a,i12)') '  SEED =       ', seed
 
-    do i = 1, sample_num
-      call fermi_dirac_sample ( u, v, seed, z(i) )
-    end do
+      do i = 1, sample_num
+         call fermi_dirac_sample(u, v, seed, z(i))
+      end do
 
-    z_max = maxval ( z(1:sample_num) )
-    z_min = minval ( z(1:sample_num) )
+      z_max = maxval(z(1:sample_num))
+      z_min = minval(z(1:sample_num))
 
-    call r8vec_mean ( sample_num, z, mean )
-    call r8vec_variance ( sample_num, z, variance )
+      call r8vec_mean(sample_num, z, mean)
+      call r8vec_variance(sample_num, z, variance)
 
-    write ( *, '(a)' ) ' '
-    write ( *, '(a,g14.6)' ) '  Minimum value =   ', z_min
-    write ( *, '(a,g14.6)' ) '  Maximum value =   ', z_max
-    write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-    write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
+      write (*, '(a)') ' '
+      write (*, '(a,g14.6)') '  Minimum value =   ', z_min
+      write (*, '(a,g14.6)') '  Maximum value =   ', z_max
+      write (*, '(a,g14.6)') '  Sample mean =     ', mean
+      write (*, '(a,g14.6)') '  Sample variance = ', variance
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test0705 ( )
+subroutine test0705()
 
 !*****************************************************************************80
 !
@@ -5832,64 +5832,64 @@ subroutine test0705 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: n = 10
-  integer ( kind = 4 ), parameter :: test_num = 3
+   integer(kind=4), parameter :: n = 10
+   integer(kind=4), parameter :: test_num = 3
 
-  integer ( kind = 4 ) j
-  real ( kind = 8 ) kappa
-  real ( kind = 8 ) mu(3)
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) seed
-  integer ( kind = 4 ) test
-  real ( kind = 8 ) x(3,n)
+   integer(kind=4) j
+   real(kind=8) kappa
+   real(kind=8) mu(3)
+   real(kind=8) pdf
+   integer(kind=4) seed
+   integer(kind=4) test
+   real(kind=8) x(3, n)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST0705'
-  write ( *, '(a)' ) '  For the Fisher PDF:'
-  write ( *, '(a)' ) '  FISHER_SAMPLE samples the PDF.'
-  write ( *, '(a)' ) '  FISHER_PDF evaluates the PDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST0705'
+   write (*, '(a)') '  For the Fisher PDF:'
+   write (*, '(a)') '  FISHER_SAMPLE samples the PDF.'
+   write (*, '(a)') '  FISHER_PDF evaluates the PDF.'
 
-  do test = 1, test_num
+   do test = 1, test_num
 
-    if ( test == 1 ) then
-      kappa = 0.0D+00
-      mu = (/ 1.0D+00, 0.0D+00, 0.0D+00 /)
-    else if ( test == 2 ) then
-      kappa = 0.5D+00
-      mu = (/ 1.0D+00, 0.0D+00, 0.0D+00 /)
-    else if ( test == 3 ) then
-      kappa = 10.0D+00
-      mu = (/ 1.0D+00, 0.0D+00, 0.0D+00 /)
-    end if
+      if (test == 1) then
+         kappa = 0.0D+00
+         mu = (/1.0D+00, 0.0D+00, 0.0D+00/)
+      else if (test == 2) then
+         kappa = 0.5D+00
+         mu = (/1.0D+00, 0.0D+00, 0.0D+00/)
+      else if (test == 3) then
+         kappa = 10.0D+00
+         mu = (/1.0D+00, 0.0D+00, 0.0D+00/)
+      end if
 
-    write ( *, '(a)' ) ' '
-    write ( *, '(a,g14.6)' ) '  PDF parameters:'
-    write ( *, '(a,g14.6)' ) '    Concentration parameter KAPPA =      ', kappa
-    write ( *, '(a,3f8.4)' ) '    Direction MU(1:3) = ', mu(1:3)
+      write (*, '(a)') ' '
+      write (*, '(a,g14.6)') '  PDF parameters:'
+      write (*, '(a,g14.6)') '    Concentration parameter KAPPA =      ', kappa
+      write (*, '(a,3f8.4)') '    Direction MU(1:3) = ', mu(1:3)
 
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) '      X                         PDF'
-    write ( *, '(a)' ) ' '
+      write (*, '(a)') ' '
+      write (*, '(a)') '      X                         PDF'
+      write (*, '(a)') ' '
 
-    seed = 123456789
+      seed = 123456789
 
-    call fisher_sample ( kappa, mu, n, seed, x )
+      call fisher_sample(kappa, mu, n, seed, x)
 
-    do j = 1, n
+      do j = 1, n
 
-      call fisher_pdf ( x(1:3,j), kappa, mu, pdf )
+         call fisher_pdf(x(1:3, j), kappa, mu, pdf)
 
-      write ( *, '(2x,3f8.4,2x,g14.6)' ) x(1:3,j), pdf
+         write (*, '(2x,3f8.4,2x,g14.6)') x(1:3, j), pdf
 
-    end do
+      end do
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test071 ( )
+subroutine test071()
 
 !*****************************************************************************80
 !
@@ -5907,63 +5907,63 @@ subroutine test071 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) c
-  real ( kind = 8 ) cdf
-  logical fisk_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) c
+   real(kind=8) cdf
+   logical fisk_check
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST071'
-  write ( *, '(a)' ) '  For the Fisk PDF:'
-  write ( *, '(a)' ) '  FISK_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  FISK_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  FISK_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST071'
+   write (*, '(a)') '  For the Fisk PDF:'
+   write (*, '(a)') '  FISK_CDF evaluates the CDF;'
+   write (*, '(a)') '  FISK_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  FISK_PDF evaluates the PDF;'
 
-  a = 1.0D+00
-  b = 2.0D+00
-  c = 3.0D+00
+   a = 1.0D+00
+   b = 2.0D+00
+   c = 3.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
-  write ( *, '(a,g14.6)' ) '  PDF parameter C =             ', c
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
+   write (*, '(a,g14.6)') '  PDF parameter C =             ', c
 
-  if ( .not. fisk_check ( a, b, c ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. fisk_check(a, b, c)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call fisk_sample ( a, b, c, seed, x )
+      call fisk_sample(a, b, c, seed, x)
 
-    call fisk_pdf ( x, a, b, c, pdf )
+      call fisk_pdf(x, a, b, c, pdf)
 
-    call fisk_cdf ( x, a, b, c, cdf )
+      call fisk_cdf(x, a, b, c, cdf)
 
-    call fisk_cdf_inv ( cdf, a, b, c, x2 )
+      call fisk_cdf_inv(cdf, a, b, c, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test072 ( )
+subroutine test072()
 
 !*****************************************************************************80
 !
@@ -5981,70 +5981,70 @@ subroutine test072 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) c
-  logical fisk_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) c
+   logical fisk_check
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST072'
-  write ( *, '(a)' ) '  For the Fisk PDF:'
-  write ( *, '(a)' ) '  FISK_MEAN computes the mean;'
-  write ( *, '(a)' ) '  FISK_SAMPLE samples;'
-  write ( *, '(a)' ) '  FISK_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST072'
+   write (*, '(a)') '  For the Fisk PDF:'
+   write (*, '(a)') '  FISK_MEAN computes the mean;'
+   write (*, '(a)') '  FISK_SAMPLE samples;'
+   write (*, '(a)') '  FISK_VARIANCE computes the variance.'
 
-  a = 1.0D+00
-  b = 2.0D+00
-  c = 3.0D+00
+   a = 1.0D+00
+   b = 2.0D+00
+   c = 3.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
-  write ( *, '(a,g14.6)' ) '  PDF parameter C =             ', c
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
+   write (*, '(a,g14.6)') '  PDF parameter C =             ', c
 
-  if ( .not. fisk_check ( a, b, c ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. fisk_check(a, b, c)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call fisk_mean ( a, b, c, mean )
-  call fisk_variance ( a, b, c, variance )
+   call fisk_mean(a, b, c, mean)
+   call fisk_variance(a, b, c, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call fisk_sample ( a, b, c, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call fisk_sample(a, b, c, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test073 ( )
+subroutine test073()
 
 !*****************************************************************************80
 !
@@ -6062,60 +6062,60 @@ subroutine test073 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) cdf
-  logical folded_normal_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) cdf
+   logical folded_normal_check
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST073'
-  write ( *, '(a)' ) '  For the Folded Normal PDF:'
-  write ( *, '(a)' ) '  FOLDED_NORMAL_CDF evaluates the CDF.'
-  write ( *, '(a)' ) '  FOLDED_NORMAL_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  FOLDED_NORMAL_PDF evaluates the PDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST073'
+   write (*, '(a)') '  For the Folded Normal PDF:'
+   write (*, '(a)') '  FOLDED_NORMAL_CDF evaluates the CDF.'
+   write (*, '(a)') '  FOLDED_NORMAL_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  FOLDED_NORMAL_PDF evaluates the PDF.'
 
-  a = 2.0D+00
-  b = 3.0D+00
+   a = 2.0D+00
+   b = 3.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =         ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =         ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =         ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =         ', b
 
-  if ( .not. folded_normal_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. folded_normal_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call folded_normal_sample ( a, b, seed, x )
+      call folded_normal_sample(a, b, seed, x)
 
-    call folded_normal_pdf ( x, a, b, pdf )
+      call folded_normal_pdf(x, a, b, pdf)
 
-    call folded_normal_cdf ( x, a, b, cdf )
+      call folded_normal_cdf(x, a, b, cdf)
 
-    call folded_normal_cdf_inv ( cdf, a, b, x2 )
+      call folded_normal_cdf_inv(cdf, a, b, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test074 ( )
+subroutine test074()
 
 !*****************************************************************************80
 !
@@ -6133,67 +6133,67 @@ subroutine test074 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  logical folded_normal_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   logical folded_normal_check
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST074'
-  write ( *, '(a)' ) '  For the Folded Normal PDF:'
-  write ( *, '(a)' ) '  FOLDED_NORMAL_MEAN computes the mean;'
-  write ( *, '(a)' ) '  FOLDED_NORMAL_SAMPLE samples;'
-  write ( *, '(a)' ) '  FOLDED_NORMAL_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST074'
+   write (*, '(a)') '  For the Folded Normal PDF:'
+   write (*, '(a)') '  FOLDED_NORMAL_MEAN computes the mean;'
+   write (*, '(a)') '  FOLDED_NORMAL_SAMPLE samples;'
+   write (*, '(a)') '  FOLDED_NORMAL_VARIANCE computes the variance.'
 
-  a = 2.0D+00
-  b = 3.0D+00
+   a = 2.0D+00
+   b = 3.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
 
-  if ( .not. folded_normal_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. folded_normal_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call folded_normal_mean ( a, b, mean )
-  call folded_normal_variance ( a, b, variance )
+   call folded_normal_mean(a, b, mean)
+   call folded_normal_variance(a, b, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call folded_normal_sample ( a, b, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call folded_normal_sample(a, b, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test0744 ( )
+subroutine test0744()
 
 !*****************************************************************************80
 !
@@ -6215,49 +6215,49 @@ subroutine test0744 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) alpha
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) alpha
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST0744'
-  write ( *, '(a)' ) '  For the Frechet PDF:'
-  write ( *, '(a)' ) '  FRECHET_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  FRECHET_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  FRECHET_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST0744'
+   write (*, '(a)') '  For the Frechet PDF:'
+   write (*, '(a)') '  FRECHET_CDF evaluates the CDF;'
+   write (*, '(a)') '  FRECHET_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  FRECHET_PDF evaluates the PDF;'
 
-  alpha = 3.0D+00
+   alpha = 3.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter ALPHA =         ', alpha
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter ALPHA =         ', alpha
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call frechet_sample ( alpha, seed, x )
+      call frechet_sample(alpha, seed, x)
 
-    call frechet_pdf ( x, alpha, pdf )
+      call frechet_pdf(x, alpha, pdf)
 
-    call frechet_cdf ( x, alpha, cdf )
+      call frechet_cdf(x, alpha, cdf)
 
-    call frechet_cdf_inv ( cdf, alpha, x2 )
+      call frechet_cdf_inv(cdf, alpha, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test0745 ( )
+subroutine test0745()
 
 !*****************************************************************************80
 !
@@ -6275,56 +6275,56 @@ subroutine test0745 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) alpha
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) alpha
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST0745'
-  write ( *, '(a)' ) '  For the Frechet PDF:'
-  write ( *, '(a)' ) '  FRECHET_MEAN computes the mean;'
-  write ( *, '(a)' ) '  FRECHET_SAMPLE samples;'
-  write ( *, '(a)' ) '  FRECHET_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST0745'
+   write (*, '(a)') '  For the Frechet PDF:'
+   write (*, '(a)') '  FRECHET_MEAN computes the mean;'
+   write (*, '(a)') '  FRECHET_SAMPLE samples;'
+   write (*, '(a)') '  FRECHET_VARIANCE computes the variance.'
 
-  alpha = 3.0D+00
+   alpha = 3.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter ALPHA =         ', alpha
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter ALPHA =         ', alpha
 
-  call frechet_mean ( alpha, mean )
-  call frechet_variance ( alpha, variance )
+   call frechet_mean(alpha, mean)
+   call frechet_variance(alpha, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call frechet_sample ( alpha, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call frechet_sample(alpha, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test075 ( )
+subroutine test075()
 
 !*****************************************************************************80
 !
@@ -6342,44 +6342,44 @@ subroutine test075 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) i4_factorial
-  real ( kind = 8 ) g1
-  real ( kind = 8 ) g2
-  real ( kind = 8 ) g3
-  real ( kind = 8 ) g4
-  real ( kind = 8 ) gamma
-  real ( kind = 8 ) gamma_log
-  real ( kind = 8 ) gamma_log_int
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) x
+   real(kind=8) i4_factorial
+   real(kind=8) g1
+   real(kind=8) g2
+   real(kind=8) g3
+   real(kind=8) g4
+   real(kind=8) gamma
+   real(kind=8) gamma_log
+   real(kind=8) gamma_log_int
+   integer(kind=4) i
+   real(kind=8) x
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST075'
-  write ( *, '(a)' ) '  GAMMA evaluates the Gamma function;'
-  write ( *, '(a)' ) '  GAMMA_LOG evaluates the log of the Gamma function;'
-  write ( *, '(a)' ) '  GAMMA_LOG_INT evaluates the log for integer argument;'
-  write ( *, '(a)' ) '  I_FACTORIAL evaluates the factorial function.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST075'
+   write (*, '(a)') '  GAMMA evaluates the Gamma function;'
+   write (*, '(a)') '  GAMMA_LOG evaluates the log of the Gamma function;'
+   write (*, '(a)') '  GAMMA_LOG_INT evaluates the log for integer argument;'
+   write (*, '(a)') '  I_FACTORIAL evaluates the factorial function.'
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) &
-    '  X, GAMMA(X), Exp(GAMMA_LOG(X)), Exp(GAMMA_LOG_INT(X)) ' // &
-    'I_FACTORIAL(X+1)'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') &
+      '  X, GAMMA(X), Exp(GAMMA_LOG(X)), Exp(GAMMA_LOG_INT(X)) '// &
+      'I_FACTORIAL(X+1)'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
-    x = real ( i, kind = 8 )
-    g1 = gamma ( x )
-    g2 = exp ( gamma_log ( x ) )
-    g3 = exp ( gamma_log_int ( i ) )
-    g4 = i4_factorial ( i - 1 )
-    write ( *, '(2x,5g14.6)' ) x, g1, g2, g3, g4
-  end do
+   do i = 1, 10
+      x = real(i, kind=8)
+      g1 = gamma(x)
+      g2 = exp(gamma_log(x))
+      g3 = exp(gamma_log_int(i))
+      g4 = i4_factorial(i - 1)
+      write (*, '(2x,5g14.6)') x, g1, g2, g3, g4
+   end do
 
-  return
+   return
 end
-subroutine test076 ( )
+subroutine test076()
 
 !*****************************************************************************80
 !
@@ -6397,43 +6397,43 @@ subroutine test076 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) fx
-  real ( kind = 8 ) fx2
-  real ( kind = 8 ) gamma_inc
-  integer ( kind = 4 ) n_data
-  real ( kind = 8 ) x
+   real(kind=8) a
+   real(kind=8) fx
+   real(kind=8) fx2
+   real(kind=8) gamma_inc
+   integer(kind=4) n_data
+   real(kind=8) x
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST076:'
-  write ( *, '(a)' ) '  GAMMA_INC evaluates the normalized incomplete Gamma'
-  write ( *, '(a)' ) '  function P(A,X).'
-  write ( *, '(a)' ) '  GAMMA_INC_VALUES returns some exact values.'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '    A     X       Exact F      GAMMA_INC(A,X)'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST076:'
+   write (*, '(a)') '  GAMMA_INC evaluates the normalized incomplete Gamma'
+   write (*, '(a)') '  function P(A,X).'
+   write (*, '(a)') '  GAMMA_INC_VALUES returns some exact values.'
+   write (*, '(a)') ' '
+   write (*, '(a)') '    A     X       Exact F      GAMMA_INC(A,X)'
+   write (*, '(a)') ' '
 
-  n_data = 0
+   n_data = 0
 
-  do
+   do
 
-    call gamma_inc_values ( n_data, a, x, fx )
+      call gamma_inc_values(n_data, a, x, fx)
 
-    if ( n_data == 0 ) then
-      exit
-    end if
+      if (n_data == 0) then
+         exit
+      end if
 
-    fx2 = gamma_inc ( a, x )
+      fx2 = gamma_inc(a, x)
 
-    write ( *, '(2x,2f8.4,2g14.6)' ) a, x, fx, fx2
+      write (*, '(2x,2f8.4,2g14.6)') a, x, fx, fx2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test077 ( )
+subroutine test077()
 
 !*****************************************************************************80
 !
@@ -6451,62 +6451,62 @@ subroutine test077 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) c
-  real ( kind = 8 ) cdf
-  logical gamma_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) seed
-  real ( kind = 8 ) x
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) c
+   real(kind=8) cdf
+   logical gamma_check
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) seed
+   real(kind=8) x
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST077'
-  write ( *, '(a)' ) '  For the Gamma PDF:'
-  write ( *, '(a)' ) '  GAMMA_CDF evaluates the CDF.'
-  write ( *, '(a)' ) '  GAMMA_PDF evaluates the PDF.'
-  write ( *, '(a)' ) '  GAMMA_SAMPLE samples the PDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST077'
+   write (*, '(a)') '  For the Gamma PDF:'
+   write (*, '(a)') '  GAMMA_CDF evaluates the CDF.'
+   write (*, '(a)') '  GAMMA_PDF evaluates the PDF.'
+   write (*, '(a)') '  GAMMA_SAMPLE samples the PDF.'
 
-  a = 1.0D+00
-  b = 1.5D+00
-  c = 3.0D+00
+   a = 1.0D+00
+   b = 1.5D+00
+   c = 3.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
-  write ( *, '(a,g14.6)' ) '  PDF parameter C =             ', c
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
+   write (*, '(a,g14.6)') '  PDF parameter C =             ', c
 
-  if ( .not. gamma_check ( a, b, c ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. gamma_check(a, b, c)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  seed = 123456789
+   seed = 123456789
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '  X  PDF   CDF'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '  X  PDF   CDF'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call gamma_sample ( a, b, c, seed, x )
+      call gamma_sample(a, b, c, seed, x)
 
-    call gamma_cdf ( x, a, b, c, cdf )
+      call gamma_cdf(x, a, b, c, cdf)
 
-    call gamma_pdf ( x, a, b, c, pdf )
+      call gamma_pdf(x, a, b, c, pdf)
 
-    write ( *, '(2x,3g14.6)' ) x, pdf, cdf
+      write (*, '(2x,3g14.6)') x, pdf, cdf
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test078 ( )
+subroutine test078()
 
 !*****************************************************************************80
 !
@@ -6524,70 +6524,70 @@ subroutine test078 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) c
-  logical gamma_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) c
+   logical gamma_check
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST078'
-  write ( *, '(a)' ) '  For the Gamma PDF:'
-  write ( *, '(a)' ) '  GAMMA_MEAN computes the mean;'
-  write ( *, '(a)' ) '  GAMMA_SAMPLE samples;'
-  write ( *, '(a)' ) '  GAMMA_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST078'
+   write (*, '(a)') '  For the Gamma PDF:'
+   write (*, '(a)') '  GAMMA_MEAN computes the mean;'
+   write (*, '(a)') '  GAMMA_SAMPLE samples;'
+   write (*, '(a)') '  GAMMA_VARIANCE computes the variance.'
 
-  a = 1.0D+00
-  b = 3.0D+00
-  c = 2.0D+00
+   a = 1.0D+00
+   b = 3.0D+00
+   c = 2.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
-  write ( *, '(a,g14.6)' ) '  PDF parameter C =             ', c
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
+   write (*, '(a,g14.6)') '  PDF parameter C =             ', c
 
-  if ( .not. gamma_check ( a, b, c ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. gamma_check(a, b, c)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call gamma_mean ( a, b, c, mean )
-  call gamma_variance ( a, b, c, variance )
+   call gamma_mean(a, b, c, mean)
+   call gamma_variance(a, b, c, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call gamma_sample ( a, b, c, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call gamma_sample(a, b, c, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test079 ( )
+subroutine test079()
 
 !*****************************************************************************80
 !
@@ -6605,63 +6605,63 @@ subroutine test079 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) c
-  real ( kind = 8 ) cdf
-  logical genlogistic_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) c
+   real(kind=8) cdf
+   logical genlogistic_check
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST079'
-  write ( *, '(a)' ) '  For the Generalized Logistic PDF:'
-  write ( *, '(a)' ) '  GENLOGISTIC_PDF evaluates the PDF.'
-  write ( *, '(a)' ) '  GENLOGISTIC_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  GENLOGISTIC_CDF_INV inverts the CDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST079'
+   write (*, '(a)') '  For the Generalized Logistic PDF:'
+   write (*, '(a)') '  GENLOGISTIC_PDF evaluates the PDF.'
+   write (*, '(a)') '  GENLOGISTIC_CDF evaluates the CDF;'
+   write (*, '(a)') '  GENLOGISTIC_CDF_INV inverts the CDF.'
 
-  a = 1.0D+00
-  b = 2.0D+00
-  c = 3.0D+00
+   a = 1.0D+00
+   b = 2.0D+00
+   c = 3.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
-  write ( *, '(a,g14.6)' ) '  PDF parameter C =             ', c
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
+   write (*, '(a,g14.6)') '  PDF parameter C =             ', c
 
-  if ( .not. genlogistic_check ( a, b, c ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. genlogistic_check(a, b, c)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call genlogistic_sample ( a, b, c, seed, x )
+      call genlogistic_sample(a, b, c, seed, x)
 
-    call genlogistic_pdf ( x, a, b, c, pdf )
+      call genlogistic_pdf(x, a, b, c, pdf)
 
-    call genlogistic_cdf ( x, a, b, c, cdf )
+      call genlogistic_cdf(x, a, b, c, cdf)
 
-    call genlogistic_cdf_inv ( cdf, a, b, c, x2 )
+      call genlogistic_cdf_inv(cdf, a, b, c, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test080 ( )
+subroutine test080()
 
 !*****************************************************************************80
 !
@@ -6679,70 +6679,70 @@ subroutine test080 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) c
-  logical genlogistic_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) c
+   logical genlogistic_check
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST080'
-  write ( *, '(a)' ) '  For the Generalized Logistic PDF:'
-  write ( *, '(a)' ) '  GENLOGISTIC_MEAN computes the mean;'
-  write ( *, '(a)' ) '  GENLOGISTIC_SAMPLE samples;'
-  write ( *, '(a)' ) '  GENLOGISTIC_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST080'
+   write (*, '(a)') '  For the Generalized Logistic PDF:'
+   write (*, '(a)') '  GENLOGISTIC_MEAN computes the mean;'
+   write (*, '(a)') '  GENLOGISTIC_SAMPLE samples;'
+   write (*, '(a)') '  GENLOGISTIC_VARIANCE computes the variance.'
 
-  a = 1.0D+00
-  b = 2.0D+00
-  c = 3.0D+00
+   a = 1.0D+00
+   b = 2.0D+00
+   c = 3.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
-  write ( *, '(a,g14.6)' ) '  PDF parameter C =             ', c
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
+   write (*, '(a,g14.6)') '  PDF parameter C =             ', c
 
-  if ( .not. genlogistic_check ( a, b, c ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. genlogistic_check(a, b, c)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call genlogistic_mean ( a, b, c, mean )
-  call genlogistic_variance ( a, b, c, variance )
+   call genlogistic_mean(a, b, c, mean)
+   call genlogistic_variance(a, b, c, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call genlogistic_sample ( a, b, c, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call genlogistic_sample(a, b, c, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test081 ( )
+subroutine test081()
 
 !*****************************************************************************80
 !
@@ -6760,57 +6760,57 @@ subroutine test081 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) cdf
-  logical geometric_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  integer ( kind = 4 ) x
-  integer ( kind = 4 ) x2
+   real(kind=8) a
+   real(kind=8) cdf
+   logical geometric_check
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   integer(kind=4) x
+   integer(kind=4) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST081'
-  write ( *, '(a)' ) '  For the Geometric PDF:'
-  write ( *, '(a)' ) '  GEOMETRIC_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  GEOMETRIC_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  GEOMETRIC_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST081'
+   write (*, '(a)') '  For the Geometric PDF:'
+   write (*, '(a)') '  GEOMETRIC_CDF evaluates the CDF;'
+   write (*, '(a)') '  GEOMETRIC_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  GEOMETRIC_PDF evaluates the PDF;'
 
-  a = 0.25D+00
+   a = 0.25D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =      ', a
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =      ', a
 
-  if ( .not. geometric_check ( a ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. geometric_check(a)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call geometric_sample ( a, seed, x )
+      call geometric_sample(a, seed, x)
 
-    call geometric_pdf ( x, a, pdf )
+      call geometric_pdf(x, a, pdf)
 
-    call geometric_cdf ( x, a, cdf )
+      call geometric_cdf(x, a, cdf)
 
-    call geometric_cdf_inv ( cdf, a, x2 )
+      call geometric_cdf_inv(cdf, a, x2)
 
-    write ( *, '(2x,i14,2g14.6,i14)' ) x, pdf, cdf, x2
+      write (*, '(2x,i14,2g14.6,i14)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test082 ( )
+subroutine test082()
 
 !*****************************************************************************80
 !
@@ -6828,64 +6828,64 @@ subroutine test082 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  logical geometric_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  integer ( kind = 4 ) x(sample_num)
-  integer ( kind = 4 ) xmax
-  integer ( kind = 4 ) xmin
+   real(kind=8) a
+   logical geometric_check
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   integer(kind=4) x(sample_num)
+   integer(kind=4) xmax
+   integer(kind=4) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST082'
-  write ( *, '(a)' ) '  For the Geometric PDF:'
-  write ( *, '(a)' ) '  GEOMETRIC_MEAN computes the mean;'
-  write ( *, '(a)' ) '  GEOMETRIC_SAMPLE samples;'
-  write ( *, '(a)' ) '  GEOMETRIC_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST082'
+   write (*, '(a)') '  For the Geometric PDF:'
+   write (*, '(a)') '  GEOMETRIC_MEAN computes the mean;'
+   write (*, '(a)') '  GEOMETRIC_SAMPLE samples;'
+   write (*, '(a)') '  GEOMETRIC_VARIANCE computes the variance.'
 
-  a = 0.25D+00
+   a = 0.25D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
 
-  if ( .not. geometric_check ( a ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. geometric_check(a)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call geometric_mean ( a, mean )
-  call geometric_variance ( a, variance )
+   call geometric_mean(a, mean)
+   call geometric_variance(a, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call geometric_sample ( a, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call geometric_sample(a, seed, x(i))
+   end do
 
-  call i4vec_mean ( sample_num, x, mean )
-  call i4vec_variance ( sample_num, x, variance )
-  call i4vec_max ( sample_num, x, xmax )
-  call i4vec_min ( sample_num, x, xmin )
+   call i4vec_mean(sample_num, x, mean)
+   call i4vec_variance(sample_num, x, variance)
+   call i4vec_max(sample_num, x, xmax)
+   call i4vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,i8)'    ) '  Sample maximum =  ', xmax
-  write ( *, '(a,i8)'    ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,i8)') '  Sample maximum =  ', xmax
+   write (*, '(a,i8)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test083 ( )
+subroutine test083()
 
 !*****************************************************************************80
 !
@@ -6903,45 +6903,45 @@ subroutine test083 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) cdf
-  logical geometric_check
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) x
+   real(kind=8) a
+   real(kind=8) cdf
+   logical geometric_check
+   real(kind=8) pdf
+   integer(kind=4) x
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST083'
-  write ( *, '(a)' ) '  For the Geometric PDF:'
-  write ( *, '(a)' ) '  GEOMETRIC_PDF evaluates the PDF.'
-  write ( *, '(a)' ) '  GEOMETRIC_CDF evaluates the CDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST083'
+   write (*, '(a)') '  For the Geometric PDF:'
+   write (*, '(a)') '  GEOMETRIC_PDF evaluates the PDF.'
+   write (*, '(a)') '  GEOMETRIC_CDF evaluates the CDF.'
 
-  a = 0.25D+00
+   a = 0.25D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A = ', a
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A = ', a
 
-  if ( .not. geometric_check ( a ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. geometric_check(a)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '      X      PDF(X)      CDF(X)'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '      X      PDF(X)      CDF(X)'
+   write (*, '(a)') ' '
 
-  do x = 0, 10
-    call geometric_pdf ( x, a, pdf )
-    call geometric_cdf ( x, a, cdf )
-    write ( *, '(2x,i8,2g14.6)' ) x, pdf, cdf
-  end do
+   do x = 0, 10
+      call geometric_pdf(x, a, pdf)
+      call geometric_cdf(x, a, cdf)
+      write (*, '(2x,i8,2g14.6)') x, pdf, cdf
+   end do
 
-  return
+   return
 end
-subroutine test084 ( )
+subroutine test084()
 
 !*****************************************************************************80
 !
@@ -6959,60 +6959,60 @@ subroutine test084 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) cdf
-  logical gompertz_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) cdf
+   logical gompertz_check
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST084'
-  write ( *, '(a)' ) '  For the Gompertz PDF:'
-  write ( *, '(a)' ) '  GOMPERTZ_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  GOMPERTZ_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  GOMPERTZ_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST084'
+   write (*, '(a)') '  For the Gompertz PDF:'
+   write (*, '(a)') '  GOMPERTZ_CDF evaluates the CDF;'
+   write (*, '(a)') '  GOMPERTZ_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  GOMPERTZ_PDF evaluates the PDF;'
 
-  a = 2.0D+00
-  b = 3.0D+00
+   a = 2.0D+00
+   b = 3.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =       ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =       ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =       ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =       ', b
 
-  if ( .not. gompertz_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. gompertz_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call gompertz_sample ( a, b, seed, x )
+      call gompertz_sample(a, b, seed, x)
 
-    call gompertz_pdf ( x, a, b, pdf )
+      call gompertz_pdf(x, a, b, pdf)
 
-    call gompertz_cdf ( x, a, b, cdf )
+      call gompertz_cdf(x, a, b, cdf)
 
-    call gompertz_cdf_inv ( cdf, a, b, x2 )
+      call gompertz_cdf_inv(cdf, a, b, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test085 ( )
+subroutine test085()
 
 !*****************************************************************************80
 !
@@ -7030,59 +7030,59 @@ subroutine test085 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  logical gompertz_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   logical gompertz_check
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST085'
-  write ( *, '(a)' ) '  For the Gompertz PDF:'
-  write ( *, '(a)' ) '  GOMPERTZ_SAMPLE samples;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST085'
+   write (*, '(a)') '  For the Gompertz PDF:'
+   write (*, '(a)') '  GOMPERTZ_SAMPLE samples;'
 
-  a = 2.0D+00
-  b = 3.0D+00
+   a = 2.0D+00
+   b = 3.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =       ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =       ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =       ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =       ', b
 
-  if ( .not. gompertz_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. gompertz_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  do i = 1, sample_num
-    call gompertz_sample ( a, b, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call gompertz_sample(a, b, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test086 ( )
+subroutine test086()
 
 !*****************************************************************************80
 !
@@ -7100,43 +7100,43 @@ subroutine test086 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST086'
-  write ( *, '(a)' ) '  For the Gumbel PDF:'
-  write ( *, '(a)' ) '  GUMBEL_CDF evaluates the CDF.'
-  write ( *, '(a)' ) '  GUMBEL_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  GUMBEL_PDF evaluates the PDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST086'
+   write (*, '(a)') '  For the Gumbel PDF:'
+   write (*, '(a)') '  GUMBEL_CDF evaluates the CDF.'
+   write (*, '(a)') '  GUMBEL_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  GUMBEL_PDF evaluates the PDF.'
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call gumbel_sample ( seed, x )
+      call gumbel_sample(seed, x)
 
-    call gumbel_pdf ( x, pdf )
+      call gumbel_pdf(x, pdf)
 
-    call gumbel_cdf ( x, cdf )
+      call gumbel_cdf(x, cdf)
 
-    call gumbel_cdf_inv ( cdf, x2 )
+      call gumbel_cdf_inv(cdf, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test087 ( )
+subroutine test087()
 
 !*****************************************************************************80
 !
@@ -7154,52 +7154,52 @@ subroutine test087 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST087'
-  write ( *, '(a)' ) '  For the Gumbel PDF:'
-  write ( *, '(a)' ) '  GUMBEL_MEAN computes the mean;'
-  write ( *, '(a)' ) '  GUMBEL_SAMPLE samples;'
-  write ( *, '(a)' ) '  GUMBEL_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST087'
+   write (*, '(a)') '  For the Gumbel PDF:'
+   write (*, '(a)') '  GUMBEL_MEAN computes the mean;'
+   write (*, '(a)') '  GUMBEL_SAMPLE samples;'
+   write (*, '(a)') '  GUMBEL_VARIANCE computes the variance.'
 
-  call gumbel_mean ( mean )
+   call gumbel_mean(mean)
 
-  call gumbel_variance ( variance )
+   call gumbel_variance(variance)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF mean      =               ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF mean      =               ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call gumbel_sample ( seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call gumbel_sample(seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test088 ( )
+subroutine test088()
 
 !*****************************************************************************80
 !
@@ -7217,60 +7217,60 @@ subroutine test088 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) cdf
-  logical half_normal_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) cdf
+   logical half_normal_check
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST088'
-  write ( *, '(a)' ) '  For the Half Normal PDF:'
-  write ( *, '(a)' ) '  HALF_NORMAL_CDF evaluates the CDF.'
-  write ( *, '(a)' ) '  HALF_NORMAL_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  HALF_NORMAL_PDF evaluates the PDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST088'
+   write (*, '(a)') '  For the Half Normal PDF:'
+   write (*, '(a)') '  HALF_NORMAL_CDF evaluates the CDF.'
+   write (*, '(a)') '  HALF_NORMAL_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  HALF_NORMAL_PDF evaluates the PDF.'
 
-  a = 0.0D+00
-  b = 2.0D+00
+   a = 0.0D+00
+   b = 2.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =         ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =         ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =         ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =         ', b
 
-  if ( .not. half_normal_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. half_normal_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call half_normal_sample ( a, b, seed, x )
+      call half_normal_sample(a, b, seed, x)
 
-    call half_normal_pdf ( x, a, b, pdf )
+      call half_normal_pdf(x, a, b, pdf)
 
-    call half_normal_cdf ( x, a, b, cdf )
+      call half_normal_cdf(x, a, b, cdf)
 
-    call half_normal_cdf_inv ( cdf, a, b, x2 )
+      call half_normal_cdf_inv(cdf, a, b, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test089 ( )
+subroutine test089()
 
 !*****************************************************************************80
 !
@@ -7288,67 +7288,67 @@ subroutine test089 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  logical half_normal_check
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   logical half_normal_check
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST089'
-  write ( *, '(a)' ) '  For the Half Normal PDF:'
-  write ( *, '(a)' ) '  HALF_NORMAL_MEAN computes the mean;'
-  write ( *, '(a)' ) '  HALF_NORMAL_SAMPLE samples;'
-  write ( *, '(a)' ) '  HALF_NORMAL_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST089'
+   write (*, '(a)') '  For the Half Normal PDF:'
+   write (*, '(a)') '  HALF_NORMAL_MEAN computes the mean;'
+   write (*, '(a)') '  HALF_NORMAL_SAMPLE samples;'
+   write (*, '(a)') '  HALF_NORMAL_VARIANCE computes the variance.'
 
-  a = 0.0D+00
-  b = 10.0D+00
+   a = 0.0D+00
+   b = 10.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
 
-  if ( .not. half_normal_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. half_normal_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call half_normal_mean ( a, b, mean )
-  call half_normal_variance ( a, b, variance )
+   call half_normal_mean(a, b, mean)
+   call half_normal_variance(a, b, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call half_normal_sample ( a, b, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call half_normal_sample(a, b, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test090 ( )
+subroutine test090()
 
 !*****************************************************************************80
 !
@@ -7366,51 +7366,51 @@ subroutine test090 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) cdf
-  logical hypergeometric_check
-  integer ( kind = 4 ) l
-  integer ( kind = 4 ) m
-  integer ( kind = 4 ) n
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) x
+   real(kind=8) cdf
+   logical hypergeometric_check
+   integer(kind=4) l
+   integer(kind=4) m
+   integer(kind=4) n
+   real(kind=8) pdf
+   integer(kind=4) x
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST090'
-  write ( *, '(a)' ) '  For the Hypergeometric PDF:'
-  write ( *, '(a)' ) '  HYPERGEOMETRIC_CDF evaluates the CDF.'
-  write ( *, '(a)' ) '  HYPERGEOMETRIC_PDF evaluates the PDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST090'
+   write (*, '(a)') '  For the Hypergeometric PDF:'
+   write (*, '(a)') '  HYPERGEOMETRIC_CDF evaluates the CDF.'
+   write (*, '(a)') '  HYPERGEOMETRIC_PDF evaluates the PDF.'
 
-  x = 7
+   x = 7
 
-  n = 100
-  m = 70
-  l = 1000
+   n = 100
+   m = 70
+   l = 1000
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Total number of balls =         ', l
-  write ( *, '(a,i8)'    ) '  Number of white balls =         ', m
-  write ( *, '(a,i8)'    ) '  Number of balls taken =         ', n
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Total number of balls =         ', l
+   write (*, '(a,i8)') '  Number of white balls =         ', m
+   write (*, '(a,i8)') '  Number of balls taken =         ', n
 
-  if ( .not. hypergeometric_check ( n, m, l ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. hypergeometric_check(n, m, l)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call hypergeometric_pdf ( x, n, m, l, pdf )
+   call hypergeometric_pdf(x, n, m, l, pdf)
 
-  call hypergeometric_cdf ( x, n, m, l, cdf )
+   call hypergeometric_cdf(x, n, m, l, cdf)
 
-  write ( *, '(a,i8)'    ) '  PDF argument X =                ', x
-  write ( *, '(a,g14.6)' ) '  PDF value =                   = ', pdf
-  write ( *, '(a,g14.6)' ) '  CDF value =                   = ', cdf
+   write (*, '(a,i8)') '  PDF argument X =                ', x
+   write (*, '(a,g14.6)') '  PDF value =                   = ', pdf
+   write (*, '(a,g14.6)') '  CDF value =                   = ', cdf
 
-  return
+   return
 end
-subroutine test091 ( )
+subroutine test091()
 
 !*****************************************************************************80
 !
@@ -7428,74 +7428,74 @@ subroutine test091 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  logical hypergeometric_check
-  integer ( kind = 4 ) i
-  integer ( kind = 4 ) l
-  integer ( kind = 4 ) m
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) n
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  integer ( kind = 4 ) x(sample_num)
-  integer ( kind = 4 ) xmax
-  integer ( kind = 4 ) xmin
+   logical hypergeometric_check
+   integer(kind=4) i
+   integer(kind=4) l
+   integer(kind=4) m
+   real(kind=8) mean
+   integer(kind=4) n
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   integer(kind=4) x(sample_num)
+   integer(kind=4) xmax
+   integer(kind=4) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST091'
-  write ( *, '(a)' ) '  For the Hypergeometric PDF:'
-  write ( *, '(a)' ) '  HYPERGEOMETRIC_MEAN computes the mean;'
-  write ( *, '(a)' ) '  HYPERGEOMETRIC_SAMPLE samples;'
-  write ( *, '(a)' ) '  HYPERGEOMETRIC_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST091'
+   write (*, '(a)') '  For the Hypergeometric PDF:'
+   write (*, '(a)') '  HYPERGEOMETRIC_MEAN computes the mean;'
+   write (*, '(a)') '  HYPERGEOMETRIC_SAMPLE samples;'
+   write (*, '(a)') '  HYPERGEOMETRIC_VARIANCE computes the variance.'
 
-  n = 100
-  m = 70
-  l = 1000
+   n = 100
+   m = 70
+   l = 1000
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  PDF parameter N =             ', n
-  write ( *, '(a,i8)'    ) '  PDF parameter M =             ', m
-  write ( *, '(a,i8)'    ) '  PDF parameter L =             ', l
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  PDF parameter N =             ', n
+   write (*, '(a,i8)') '  PDF parameter M =             ', m
+   write (*, '(a,i8)') '  PDF parameter L =             ', l
 
-  if ( .not. hypergeometric_check ( n, m, l ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. hypergeometric_check(n, m, l)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call hypergeometric_mean ( n, m, l, mean )
-  call hypergeometric_variance ( n, m, l, variance )
+   call hypergeometric_mean(n, m, l, mean)
+   call hypergeometric_variance(n, m, l, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'THIS CALL IS TAKING FOREVER!'
-  return
+   write (*, '(a)') ' '
+   write (*, '(a)') 'THIS CALL IS TAKING FOREVER!'
+   return
 
-  do i = 1, sample_num
-    call hypergeometric_sample ( n, m, l, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call hypergeometric_sample(n, m, l, seed, x(i))
+   end do
 
-  call i4vec_mean ( sample_num, x, mean )
-  call i4vec_variance ( sample_num, x, variance )
-  call i4vec_max ( sample_num, x, xmax )
-  call i4vec_min ( sample_num, x, xmin )
+   call i4vec_mean(sample_num, x, mean)
+   call i4vec_variance(sample_num, x, variance)
+   call i4vec_max(sample_num, x, xmax)
+   call i4vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,i8)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,i8)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,i8)') '  Sample maximum =  ', xmax
+   write (*, '(a,i8)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test092 ( )
+subroutine test092()
 
 !*****************************************************************************80
 !
@@ -7513,29 +7513,29 @@ subroutine test092 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ) i
-  integer ( kind = 4 ) r8_ceiling
-  integer ( kind = 4 ) ival
-  real ( kind = 8 ) rval
+   integer(kind=4) i
+   integer(kind=4) r8_ceiling
+   integer(kind=4) ival
+   real(kind=8) rval
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST092'
-  write ( *, '(a)' ) '  R8_CEILING rounds an R8 up.'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X           R8_CEILING(X)'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST092'
+   write (*, '(a)') '  R8_CEILING rounds an R8 up.'
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X           R8_CEILING(X)'
+   write (*, '(a)') ' '
 
-  do i = -6, 6
-    rval = real ( i, kind = 8 ) / 5.0D+00
-    ival = r8_ceiling ( rval )
-    write ( *, '(2x,g14.6,i8)' ) rval, ival
-  end do
+   do i = -6, 6
+      rval = real(i, kind=8)/5.0D+00
+      ival = r8_ceiling(rval)
+      write (*, '(2x,g14.6,i8)') rval, ival
+   end do
 
-  return
+   return
 end
-subroutine test093 ( )
+subroutine test093()
 
 !*****************************************************************************80
 !
@@ -7553,56 +7553,56 @@ subroutine test093 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  logical inverse_gaussian_check
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) cdf
+   integer(kind=4) i
+   logical inverse_gaussian_check
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST093'
-  write ( *, '(a)' ) '  For the Inverse Gaussian PDF:'
-  write ( *, '(a)' ) '  INVERSE_GAUSSIAN_CDF evaluates the CDF.'
-  write ( *, '(a)' ) '  INVERSE_GAUSSIAN_PDF evaluates the PDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST093'
+   write (*, '(a)') '  For the Inverse Gaussian PDF:'
+   write (*, '(a)') '  INVERSE_GAUSSIAN_CDF evaluates the CDF.'
+   write (*, '(a)') '  INVERSE_GAUSSIAN_PDF evaluates the PDF.'
 
-  a = 5.0D+00
-  b = 2.0D+00
+   a = 5.0D+00
+   b = 2.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A = ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B = ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A = ', a
+   write (*, '(a,g14.6)') '  PDF parameter B = ', b
 
-  if ( .not. inverse_gaussian_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. inverse_gaussian_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call inverse_gaussian_sample ( a, b, seed, x )
+      call inverse_gaussian_sample(a, b, seed, x)
 
-    call inverse_gaussian_pdf ( x, a, b, pdf )
+      call inverse_gaussian_pdf(x, a, b, pdf)
 
-    call inverse_gaussian_cdf ( x, a, b, cdf )
+      call inverse_gaussian_cdf(x, a, b, cdf)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf
+      write (*, '(2x,4g14.6)') x, pdf, cdf
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test094 ( )
+subroutine test094()
 
 !*****************************************************************************80
 !
@@ -7620,67 +7620,67 @@ subroutine test094 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  integer ( kind = 4 ) i
-  logical inverse_gaussian_check
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   integer(kind=4) i
+   logical inverse_gaussian_check
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST094'
-  write ( *, '(a)' ) '  For the Inverse Gaussian PDF:'
-  write ( *, '(a)' ) '  INVERSE_GAUSSIAN_MEAN computes the mean;'
-  write ( *, '(a)' ) '  INVERSE_GAUSSIAN_SAMPLE samples;'
-  write ( *, '(a)' ) '  INVERSE_GAUSSIAN_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST094'
+   write (*, '(a)') '  For the Inverse Gaussian PDF:'
+   write (*, '(a)') '  INVERSE_GAUSSIAN_MEAN computes the mean;'
+   write (*, '(a)') '  INVERSE_GAUSSIAN_SAMPLE samples;'
+   write (*, '(a)') '  INVERSE_GAUSSIAN_VARIANCE computes the variance.'
 
-  a = 2.0D+00
-  b = 3.0D+00
+   a = 2.0D+00
+   b = 3.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
 
-  if ( .not. inverse_gaussian_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. inverse_gaussian_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call inverse_gaussian_mean ( a, b, mean )
-  call inverse_gaussian_variance ( a, b, variance )
+   call inverse_gaussian_mean(a, b, mean)
+   call inverse_gaussian_variance(a, b, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call inverse_gaussian_sample ( a, b, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call inverse_gaussian_sample(a, b, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test095 ( )
+subroutine test095()
 
 !*****************************************************************************80
 !
@@ -7698,60 +7698,60 @@ subroutine test095 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  logical laplace_check
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) cdf
+   integer(kind=4) i
+   logical laplace_check
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST095'
-  write ( *, '(a)' ) '  For the Laplace PDF:'
-  write ( *, '(a)' ) '  LAPLACE_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  LAPLACE_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  LAPLACE_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST095'
+   write (*, '(a)') '  For the Laplace PDF:'
+   write (*, '(a)') '  LAPLACE_CDF evaluates the CDF;'
+   write (*, '(a)') '  LAPLACE_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  LAPLACE_PDF evaluates the PDF;'
 
-  a = 1.0D+00
-  b = 2.0D+00
+   a = 1.0D+00
+   b = 2.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
 
-  if ( .not. laplace_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. laplace_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call laplace_sample ( a, b, seed, x )
+      call laplace_sample(a, b, seed, x)
 
-    call laplace_pdf ( x, a, b, pdf )
+      call laplace_pdf(x, a, b, pdf)
 
-    call laplace_cdf ( x, a, b, cdf )
+      call laplace_cdf(x, a, b, cdf)
 
-    call laplace_cdf_inv ( cdf, a, b, x2 )
+      call laplace_cdf_inv(cdf, a, b, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test096 ( )
+subroutine test096()
 
 !*****************************************************************************80
 !
@@ -7769,67 +7769,67 @@ subroutine test096 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  integer ( kind = 4 ) i
-  logical laplace_check
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   integer(kind=4) i
+   logical laplace_check
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST096'
-  write ( *, '(a)' ) '  For the Laplace PDF:'
-  write ( *, '(a)' ) '  LAPLACE_MEAN computes the mean;'
-  write ( *, '(a)' ) '  LAPLACE_SAMPLE samples;'
-  write ( *, '(a)' ) '  LAPLACE_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST096'
+   write (*, '(a)') '  For the Laplace PDF:'
+   write (*, '(a)') '  LAPLACE_MEAN computes the mean;'
+   write (*, '(a)') '  LAPLACE_SAMPLE samples;'
+   write (*, '(a)') '  LAPLACE_VARIANCE computes the variance.'
 
-  a = 1.0D+00
-  b = 2.0D+00
+   a = 1.0D+00
+   b = 2.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
 
-  if ( .not. laplace_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. laplace_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call laplace_mean ( a, b, mean )
-  call laplace_variance ( a, b, variance )
+   call laplace_mean(a, b, mean)
+   call laplace_variance(a, b, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call laplace_sample ( a, b, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call laplace_sample(a, b, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test0965 ( )
+subroutine test0965()
 
 !*****************************************************************************80
 !
@@ -7847,53 +7847,53 @@ subroutine test0965 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) cdf
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  integer ( kind = 4 ) test
-  integer ( kind = 4 ), parameter :: test_num = 10
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) cdf
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   integer(kind=4) test
+   integer(kind=4), parameter :: test_num = 10
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST0965'
-  write ( *, '(a)' ) '  For the Levy PDF:'
-  write ( *, '(a)' ) '  LEVY_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  LEVY_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  LEVY_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST0965'
+   write (*, '(a)') '  For the Levy PDF:'
+   write (*, '(a)') '  LEVY_CDF evaluates the CDF;'
+   write (*, '(a)') '  LEVY_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  LEVY_PDF evaluates the PDF;'
 
-  a = 1.0D+00
-  b = 2.0D+00
+   a = 1.0D+00
+   b = 2.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '    X              PDF           CDF          X2'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '    X              PDF           CDF          X2'
+   write (*, '(a)') ' '
 
-  do test = 1, test_num
+   do test = 1, test_num
 
-    call levy_sample ( a, b, seed, x )
+      call levy_sample(a, b, seed, x)
 
-    call levy_pdf ( x, a, b, pdf )
+      call levy_pdf(x, a, b, pdf)
 
-    call levy_cdf ( x, a, b, cdf )
+      call levy_cdf(x, a, b, cdf)
 
-    call levy_cdf_inv ( cdf, a, b, x2 )
+      call levy_cdf_inv(cdf, a, b, x2)
 
-    write ( *, '(2x,g12.6,2x,g12.6,2x,g12.6,2x,g12.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,g12.6,2x,g12.6,2x,g12.6,2x,g12.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test097 ( )
+subroutine test097()
 
 !*****************************************************************************80
 !
@@ -7911,60 +7911,60 @@ subroutine test097 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  logical logistic_check
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) cdf
+   integer(kind=4) i
+   logical logistic_check
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST097'
-  write ( *, '(a)' ) '  For the Logistic PDF:'
-  write ( *, '(a)' ) '  LOGISTIC_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  LOGISTIC_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  LOGISTIC_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST097'
+   write (*, '(a)') '  For the Logistic PDF:'
+   write (*, '(a)') '  LOGISTIC_CDF evaluates the CDF;'
+   write (*, '(a)') '  LOGISTIC_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  LOGISTIC_PDF evaluates the PDF;'
 
-  a = 1.0D+00
-  b = 2.0D+00
+   a = 1.0D+00
+   b = 2.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
 
-  if ( .not. logistic_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. logistic_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call logistic_sample ( a, b, seed, x )
+      call logistic_sample(a, b, seed, x)
 
-    call logistic_pdf ( x, a, b, pdf )
+      call logistic_pdf(x, a, b, pdf)
 
-    call logistic_cdf ( x, a, b, cdf )
+      call logistic_cdf(x, a, b, cdf)
 
-    call logistic_cdf_inv ( cdf, a, b, x2 )
+      call logistic_cdf_inv(cdf, a, b, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test098 ( )
+subroutine test098()
 
 !*****************************************************************************80
 !
@@ -7982,67 +7982,67 @@ subroutine test098 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  integer ( kind = 4 ) i
-  logical logistic_check
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   integer(kind=4) i
+   logical logistic_check
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST098'
-  write ( *, '(a)' ) '  For the Logistic PDF:'
-  write ( *, '(a)' ) '  LOGISTIC_MEAN computes the mean;'
-  write ( *, '(a)' ) '  LOGISTIC_SAMPLE samples;'
-  write ( *, '(a)' ) '  LOGISTIC_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST098'
+   write (*, '(a)') '  For the Logistic PDF:'
+   write (*, '(a)') '  LOGISTIC_MEAN computes the mean;'
+   write (*, '(a)') '  LOGISTIC_SAMPLE samples;'
+   write (*, '(a)') '  LOGISTIC_VARIANCE computes the variance.'
 
-  a = 2.0D+00
-  b = 3.0D+00
+   a = 2.0D+00
+   b = 3.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
 
-  if ( .not. logistic_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. logistic_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call logistic_mean ( a, b, mean )
-  call logistic_variance ( a, b, variance )
+   call logistic_mean(a, b, mean)
+   call logistic_variance(a, b, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call logistic_sample ( a, b, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call logistic_sample(a, b, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test099 ( )
+subroutine test099()
 
 !*****************************************************************************80
 !
@@ -8060,60 +8060,60 @@ subroutine test099 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  logical log_normal_check
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) cdf
+   integer(kind=4) i
+   logical log_normal_check
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST099'
-  write ( *, '(a)' ) '  For the Lognormal PDF:'
-  write ( *, '(a)' ) '  LOG_NORMAL_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  LOG_NORMAL_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  LOG_NORMAL_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST099'
+   write (*, '(a)') '  For the Lognormal PDF:'
+   write (*, '(a)') '  LOG_NORMAL_CDF evaluates the CDF;'
+   write (*, '(a)') '  LOG_NORMAL_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  LOG_NORMAL_PDF evaluates the PDF;'
 
-  a = 10.0D+00
-  b = 2.25D+00
+   a = 10.0D+00
+   b = 2.25D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
 
-  if ( .not. log_normal_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. log_normal_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call log_normal_sample ( a, b, seed, x )
+      call log_normal_sample(a, b, seed, x)
 
-    call log_normal_pdf ( x, a, b, pdf )
+      call log_normal_pdf(x, a, b, pdf)
 
-    call log_normal_cdf ( x, a, b, cdf )
+      call log_normal_cdf(x, a, b, cdf)
 
-    call log_normal_cdf_inv ( cdf, a, b, x2 )
+      call log_normal_cdf_inv(cdf, a, b, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test100 ( )
+subroutine test100()
 
 !*****************************************************************************80
 !
@@ -8131,67 +8131,67 @@ subroutine test100 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  integer ( kind = 4 ) i
-  logical log_normal_check
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   integer(kind=4) i
+   logical log_normal_check
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST100'
-  write ( *, '(a)' ) '  For the Lognormal PDF:'
-  write ( *, '(a)' ) '  LOG_NORMAL_MEAN computes the mean;'
-  write ( *, '(a)' ) '  LOG_NORMAL_SAMPLE samples;'
-  write ( *, '(a)' ) '  LOG_NORMAL_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST100'
+   write (*, '(a)') '  For the Lognormal PDF:'
+   write (*, '(a)') '  LOG_NORMAL_MEAN computes the mean;'
+   write (*, '(a)') '  LOG_NORMAL_SAMPLE samples;'
+   write (*, '(a)') '  LOG_NORMAL_VARIANCE computes the variance.'
 
-  a = 1.0D+00
-  b = 2.0D+00
+   a = 1.0D+00
+   b = 2.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
 
-  if ( .not. log_normal_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST100 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. log_normal_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST100 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call log_normal_mean ( a, b, mean )
-  call log_normal_variance ( a, b, variance )
+   call log_normal_mean(a, b, mean)
+   call log_normal_variance(a, b, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call log_normal_sample ( a, b, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call log_normal_sample(a, b, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test101 ( )
+subroutine test101()
 
 !*****************************************************************************80
 !
@@ -8209,57 +8209,57 @@ subroutine test101 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  logical log_series_check
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  integer ( kind = 4 ) x
-  integer ( kind = 4 ) x2
+   real(kind=8) a
+   real(kind=8) cdf
+   integer(kind=4) i
+   logical log_series_check
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   integer(kind=4) x
+   integer(kind=4) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST101'
-  write ( *, '(a)' ) '  For the Logseries PDF,'
-  write ( *, '(a)' ) '  LOG_SERIES_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  LOG_SERIES_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  LOG_SERIES_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST101'
+   write (*, '(a)') '  For the Logseries PDF,'
+   write (*, '(a)') '  LOG_SERIES_CDF evaluates the CDF;'
+   write (*, '(a)') '  LOG_SERIES_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  LOG_SERIES_PDF evaluates the PDF;'
 
-  a = 0.25D+00
+   a = 0.25D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =  ', a
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =  ', a
 
-  if ( .not. log_series_check ( a ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST101 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. log_series_check(a)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST101 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call log_series_sample ( a, seed, x )
+      call log_series_sample(a, seed, x)
 
-    call log_series_pdf ( x, a, pdf )
+      call log_series_pdf(x, a, pdf)
 
-    call log_series_cdf ( x, a, cdf )
+      call log_series_cdf(x, a, cdf)
 
-    call log_series_cdf_inv ( cdf, a, x2 )
+      call log_series_cdf_inv(cdf, a, x2)
 
-    write ( *, '(2x,i14,2g14.6,i14)' ) x, pdf, cdf, x2
+      write (*, '(2x,i14,2g14.6,i14)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test102 ( )
+subroutine test102()
 
 !*****************************************************************************80
 !
@@ -8277,47 +8277,47 @@ subroutine test102 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) cdf
-  logical log_series_check
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) x
+   real(kind=8) a
+   real(kind=8) cdf
+   logical log_series_check
+   real(kind=8) pdf
+   integer(kind=4) x
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST102'
-  write ( *, '(a)' ) '  For the Logseries PDF:'
-  write ( *, '(a)' ) '  LOG_SERIES_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  LOG_SERIES_PDF evaluates the PDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST102'
+   write (*, '(a)') '  For the Logseries PDF:'
+   write (*, '(a)') '  LOG_SERIES_CDF evaluates the CDF;'
+   write (*, '(a)') '  LOG_SERIES_PDF evaluates the PDF.'
 
-  x = 2
+   x = 2
 
-  a = 0.25D+00
+   a = 0.25D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A  = ', a
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A  = ', a
 
-  if ( .not. log_series_check ( a ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST102 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. log_series_check(a)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST102 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '  X   PDF(X)       CDF(X)'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '  X   PDF(X)       CDF(X)'
+   write (*, '(a)') ' '
 
-  do x = 1, 10
-    call log_series_pdf ( x, a, pdf )
-    call log_series_cdf ( x, a, cdf )
-    write ( *, '(2x,i8,2g14.6)' ) x, pdf, cdf
-  end do
+   do x = 1, 10
+      call log_series_pdf(x, a, pdf)
+      call log_series_cdf(x, a, cdf)
+      write (*, '(2x,i8,2g14.6)') x, pdf, cdf
+   end do
 
-  return
+   return
 end
-subroutine test103 ( )
+subroutine test103()
 
 !*****************************************************************************80
 !
@@ -8335,64 +8335,64 @@ subroutine test103 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  integer ( kind = 4 ) i
-  logical log_series_check
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  integer ( kind = 4 ) x(sample_num)
-  integer ( kind = 4 ) xmax
-  integer ( kind = 4 ) xmin
+   real(kind=8) a
+   integer(kind=4) i
+   logical log_series_check
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   integer(kind=4) x(sample_num)
+   integer(kind=4) xmax
+   integer(kind=4) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST103'
-  write ( *, '(a)' ) '  For the Logseries PDF:'
-  write ( *, '(a)' ) '  LOG_SERIES_MEAN computes the mean;'
-  write ( *, '(a)' ) '  LOG_SERIES_VARIANCE computes the variance;'
-  write ( *, '(a)' ) '  LOG_SERIES_SAMPLE samples.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST103'
+   write (*, '(a)') '  For the Logseries PDF:'
+   write (*, '(a)') '  LOG_SERIES_MEAN computes the mean;'
+   write (*, '(a)') '  LOG_SERIES_VARIANCE computes the variance;'
+   write (*, '(a)') '  LOG_SERIES_SAMPLE samples.'
 
-  a = 0.25D+00
+   a = 0.25D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
 
-  if ( .not. log_series_check ( a ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST103 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. log_series_check(a)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST103 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call log_series_mean ( a, mean )
-  call log_series_variance ( a, variance )
+   call log_series_mean(a, mean)
+   call log_series_variance(a, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call log_series_sample ( a, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call log_series_sample(a, seed, x(i))
+   end do
 
-  call i4vec_mean ( sample_num, x, mean )
-  call i4vec_variance ( sample_num, x, variance )
-  call i4vec_max ( sample_num, x, xmax )
-  call i4vec_min ( sample_num, x, xmin )
+   call i4vec_mean(sample_num, x, mean)
+   call i4vec_variance(sample_num, x, variance)
+   call i4vec_max(sample_num, x, xmax)
+   call i4vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,i8)'    ) '  Sample maximum =  ', xmax
-  write ( *, '(a,i8)'    ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,i8)') '  Sample maximum =  ', xmax
+   write (*, '(a,i8)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test104 ( )
+subroutine test104()
 
 !*****************************************************************************80
 !
@@ -8410,60 +8410,60 @@ subroutine test104 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  logical log_uniform_check
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) cdf
+   integer(kind=4) i
+   logical log_uniform_check
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST104'
-  write ( *, '(a)' ) '  For the Log Uniform PDF:'
-  write ( *, '(a)' ) '  LOG_UNIFORM_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  LOG_UNIFORM_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  LOG_UNIFORM_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST104'
+   write (*, '(a)') '  For the Log Uniform PDF:'
+   write (*, '(a)') '  LOG_UNIFORM_CDF evaluates the CDF;'
+   write (*, '(a)') '  LOG_UNIFORM_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  LOG_UNIFORM_PDF evaluates the PDF;'
 
-  a = 2.0D+00
-  b = 20.0D+00
+   a = 2.0D+00
+   b = 20.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
 
-  if ( .not. log_uniform_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST104 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. log_uniform_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST104 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call log_uniform_sample ( a, b, seed, x )
+      call log_uniform_sample(a, b, seed, x)
 
-    call log_uniform_pdf ( x, a, b, pdf )
+      call log_uniform_pdf(x, a, b, pdf)
 
-    call log_uniform_cdf ( x, a, b, cdf )
+      call log_uniform_cdf(x, a, b, cdf)
 
-    call log_uniform_cdf_inv ( cdf, a, b, x2 )
+      call log_uniform_cdf_inv(cdf, a, b, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test105 ( )
+subroutine test105()
 
 !*****************************************************************************80
 !
@@ -8481,64 +8481,64 @@ subroutine test105 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  integer ( kind = 4 ) i
-  logical log_uniform_check
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   integer(kind=4) i
+   logical log_uniform_check
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST105'
-  write ( *, '(a)' ) '  For the Log Uniform PDF:'
-  write ( *, '(a)' ) '  LOG_UNIFORM_MEAN computes the mean;'
-  write ( *, '(a)' ) '  LOG_UNIFORM_SAMPLE samples;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST105'
+   write (*, '(a)') '  For the Log Uniform PDF:'
+   write (*, '(a)') '  LOG_UNIFORM_MEAN computes the mean;'
+   write (*, '(a)') '  LOG_UNIFORM_SAMPLE samples;'
 
-  a = 2.0D+00
-  b = 20.0D+00
+   a = 2.0D+00
+   b = 20.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
 
-  if ( .not. log_uniform_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST105 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. log_uniform_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST105 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call log_uniform_mean ( a, b, mean )
+   call log_uniform_mean(a, b, mean)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
 
-  do i = 1, sample_num
-    call log_uniform_sample ( a, b, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call log_uniform_sample(a, b, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test106 ( )
+subroutine test106()
 
 !*****************************************************************************80
 !
@@ -8556,43 +8556,43 @@ subroutine test106 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST106'
-  write ( *, '(a)' ) '  For the Lorentz PDF:'
-  write ( *, '(a)' ) '  LORENTZ_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  LORENTZ_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  LORENTZ_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST106'
+   write (*, '(a)') '  For the Lorentz PDF:'
+   write (*, '(a)') '  LORENTZ_CDF evaluates the CDF;'
+   write (*, '(a)') '  LORENTZ_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  LORENTZ_PDF evaluates the PDF;'
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call lorentz_sample ( seed, x )
+      call lorentz_sample(seed, x)
 
-    call lorentz_pdf ( x, pdf )
+      call lorentz_pdf(x, pdf)
 
-    call lorentz_cdf ( x, cdf )
+      call lorentz_cdf(x, cdf)
 
-    call lorentz_cdf_inv ( cdf, x2 )
+      call lorentz_cdf_inv(cdf, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test107 ( )
+subroutine test107()
 
 !*****************************************************************************80
 !
@@ -8610,51 +8610,51 @@ subroutine test107 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST107'
-  write ( *, '(a)' ) '  For the Lorentz PDF:'
-  write ( *, '(a)' ) '  LORENTZ_MEAN computes the mean;'
-  write ( *, '(a)' ) '  LORENTZ_VARIANCE computes the variance;'
-  write ( *, '(a)' ) '  LORENTZ_SAMPLE samples.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST107'
+   write (*, '(a)') '  For the Lorentz PDF:'
+   write (*, '(a)') '  LORENTZ_MEAN computes the mean;'
+   write (*, '(a)') '  LORENTZ_VARIANCE computes the variance;'
+   write (*, '(a)') '  LORENTZ_SAMPLE samples.'
 
-  call lorentz_mean ( mean )
-  call lorentz_variance ( variance )
+   call lorentz_mean(mean)
+   call lorentz_variance(variance)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call lorentz_sample ( seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call lorentz_sample(seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test108 ( )
+subroutine test108()
 
 !*****************************************************************************80
 !
@@ -8672,57 +8672,57 @@ subroutine test108 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  logical maxwell_check
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) cdf
+   integer(kind=4) i
+   logical maxwell_check
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST108'
-  write ( *, '(a)' ) '  For the Maxwell CDF:'
-  write ( *, '(a)' ) '  MAXWELL_CDF evaluates the CDF.'
-  write ( *, '(a)' ) '  MAXWELL_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  MAXWELL_PDF evaluates the PDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST108'
+   write (*, '(a)') '  For the Maxwell CDF:'
+   write (*, '(a)') '  MAXWELL_CDF evaluates the CDF.'
+   write (*, '(a)') '  MAXWELL_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  MAXWELL_PDF evaluates the PDF.'
 
-  a = 2.0D+00
+   a = 2.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =         ', a
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =         ', a
 
-  if ( .not. maxwell_check ( a ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST108 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. maxwell_check(a)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST108 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call maxwell_sample ( a, seed, x )
+      call maxwell_sample(a, seed, x)
 
-    call maxwell_pdf ( x, a, pdf )
+      call maxwell_pdf(x, a, pdf)
 
-    call maxwell_cdf ( x, a, cdf )
+      call maxwell_cdf(x, a, cdf)
 
-    call maxwell_cdf_inv ( cdf, a, x2 )
+      call maxwell_cdf_inv(cdf, a, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test109 ( )
+subroutine test109()
 
 !*****************************************************************************80
 !
@@ -8740,64 +8740,64 @@ subroutine test109 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  integer ( kind = 4 ) i
-  logical maxwell_check
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   integer(kind=4) i
+   logical maxwell_check
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST109'
-  write ( *, '(a)' ) '  For the Maxwell PDF:'
-  write ( *, '(a)' ) '  MAXWELL_MEAN computes the mean;'
-  write ( *, '(a)' ) '  MAXWELL_VARIANCE computes the variance;'
-  write ( *, '(a)' ) '  MAXWELL_SAMPLE samples.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST109'
+   write (*, '(a)') '  For the Maxwell PDF:'
+   write (*, '(a)') '  MAXWELL_MEAN computes the mean;'
+   write (*, '(a)') '  MAXWELL_VARIANCE computes the variance;'
+   write (*, '(a)') '  MAXWELL_SAMPLE samples.'
 
-  a = 2.0D+00
+   a = 2.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
 
-  if ( .not. maxwell_check ( a ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST109 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. maxwell_check(a)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST109 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call maxwell_mean ( a, mean )
-  call maxwell_variance ( a, variance )
+   call maxwell_mean(a, mean)
+   call maxwell_variance(a, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF mean =                    ', variance
 
-  do i = 1, sample_num
-    call maxwell_sample ( a, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call maxwell_sample(a, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test110 ( )
+subroutine test110()
 
 !*****************************************************************************80
 !
@@ -8815,76 +8815,76 @@ subroutine test110 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: maxfactor = 5
+   integer(kind=4), parameter :: maxfactor = 5
 
-  integer ( kind = 4 ) factor(maxfactor)
-  integer ( kind = 4 ) i
-  integer ( kind = 4 ) j
-  integer ( kind = 4 ) n
-  integer ( kind = 4 ) ncomb1
-  integer ( kind = 4 ) ncomb2
-  integer ( kind = 4 ) nfactor
+   integer(kind=4) factor(maxfactor)
+   integer(kind=4) i
+   integer(kind=4) j
+   integer(kind=4) n
+   integer(kind=4) ncomb1
+   integer(kind=4) ncomb2
+   integer(kind=4) nfactor
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST110'
-  write ( *, '(a)' ) '  MULTINOMIAL_COEF1 computes multinomial'
-  write ( *, '(a)' ) '    coefficients using the Gamma function;'
-  write ( *, '(a)' ) '  MULTINOMIAL_COEF2 computes multinomial'
-  write ( *, '(a)' ) '    coefficients directly.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST110'
+   write (*, '(a)') '  MULTINOMIAL_COEF1 computes multinomial'
+   write (*, '(a)') '    coefficients using the Gamma function;'
+   write (*, '(a)') '  MULTINOMIAL_COEF2 computes multinomial'
+   write (*, '(a)') '    coefficients directly.'
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '  Line 10 of the BINOMIAL table:'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '  Line 10 of the BINOMIAL table:'
+   write (*, '(a)') ' '
 
-  n = 10
-  nfactor = 2
+   n = 10
+   nfactor = 2
 
-  do i = 0, n
+   do i = 0, n
 
-    factor(1) = i
-    factor(2) = n - i
+      factor(1) = i
+      factor(2) = n - i
 
-    call multinomial_coef1 ( nfactor, factor, ncomb1 )
+      call multinomial_coef1(nfactor, factor, ncomb1)
 
-    call multinomial_coef2 ( nfactor, factor, ncomb2 )
+      call multinomial_coef2(nfactor, factor, ncomb2)
 
-    write ( *, '(i4,i4,3x,i5,i5)' ) factor(1), factor(2), ncomb1, ncomb2
+      write (*, '(i4,i4,3x,i5,i5)') factor(1), factor(2), ncomb1, ncomb2
 
-  end do
+   end do
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '  Level 5 of the TRINOMIAL coefficients:'
+   write (*, '(a)') ' '
+   write (*, '(a)') '  Level 5 of the TRINOMIAL coefficients:'
 
-  n = 5
-  nfactor = 3
+   n = 5
+   nfactor = 3
 
-  do i = 0, n
+   do i = 0, n
 
-    factor(1) = i
+      factor(1) = i
 
-    write ( *, '(a)' ) ' '
+      write (*, '(a)') ' '
 
-    do j = 0, n - factor(1)
+      do j = 0, n - factor(1)
 
-      factor(2) = j
-      factor(3) = n - factor(1) - factor(2)
+         factor(2) = j
+         factor(3) = n - factor(1) - factor(2)
 
-      call multinomial_coef1 ( nfactor, factor, ncomb1 )
+         call multinomial_coef1(nfactor, factor, ncomb1)
 
-      call multinomial_coef2 ( nfactor, factor, ncomb2 )
+         call multinomial_coef2(nfactor, factor, ncomb2)
 
-      write ( *, '(i4,i4,i4,3x,i5,i5)' ) factor(1), factor(2), factor(3), &
-        ncomb1, ncomb2
+         write (*, '(i4,i4,i4,3x,i5,i5)') factor(1), factor(2), factor(3), &
+            ncomb1, ncomb2
 
-    end do
+      end do
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test111 ( )
+subroutine test111()
 
 !*****************************************************************************80
 !
@@ -8902,70 +8902,70 @@ subroutine test111 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: b = 3
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: b = 3
+   integer(kind=4), parameter :: sample_num = 1000
 
-  integer ( kind = 4 ) a
-  real ( kind = 8 ) c(b)
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean(b)
-  logical multinomial_check
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance(b)
-  integer ( kind = 4 ) x(b,sample_num)
-  integer ( kind = 4 ) xmax(b)
-  integer ( kind = 4 ) xmin(b)
+   integer(kind=4) a
+   real(kind=8) c(b)
+   integer(kind=4) i
+   real(kind=8) mean(b)
+   logical multinomial_check
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance(b)
+   integer(kind=4) x(b, sample_num)
+   integer(kind=4) xmax(b)
+   integer(kind=4) xmin(b)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST111'
-  write ( *, '(a)' ) '  For the Multinomial PDF:'
-  write ( *, '(a)' ) '  MULTINOMIAL_MEAN computes the mean;'
-  write ( *, '(a)' ) '  MULTINOMIAL_SAMPLE samples;'
-  write ( *, '(a)' ) '  MULTINOMIAL_VARIANCE computes the variance;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST111'
+   write (*, '(a)') '  For the Multinomial PDF:'
+   write (*, '(a)') '  MULTINOMIAL_MEAN computes the mean;'
+   write (*, '(a)') '  MULTINOMIAL_SAMPLE samples;'
+   write (*, '(a)') '  MULTINOMIAL_VARIANCE computes the variance;'
 
-  a = 5
+   a = 5
 
-  c(1:3) = (/ 0.125D+00, 0.500D+00, 0.375D+00 /)
+   c(1:3) = (/0.125D+00, 0.500D+00, 0.375D+00/)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,i8)' ) '  PDF parameter B =             ', b
-  call r8vec_print ( b, c, '  PDF parameter C = ' )
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  PDF parameter A =             ', a
+   write (*, '(a,i8)') '  PDF parameter B =             ', b
+   call r8vec_print(b, c, '  PDF parameter C = ')
 
-  if ( .not. multinomial_check ( a, b, c ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST111 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. multinomial_check(a, b, c)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST111 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call multinomial_mean ( a, b, c, mean )
-  call multinomial_variance ( a, b, c, variance )
+   call multinomial_mean(a, b, c, mean)
+   call multinomial_variance(a, b, c, variance)
 
-  call r8vec_print ( b, mean, '  PDF means: ' )
-  call r8vec_print ( b, variance, '  PDF variances:' )
+   call r8vec_print(b, mean, '  PDF means: ')
+   call r8vec_print(b, variance, '  PDF variances:')
 
-  do i = 1, sample_num
-    call multinomial_sample ( a, b, c, seed, x(1,i) )
-  end do
+   do i = 1, sample_num
+      call multinomial_sample(a, b, c, seed, x(1, i))
+   end do
 
-  call i4row_max ( b, sample_num, x, xmax )
-  call i4row_min ( b, sample_num, x, xmin )
-  call i4row_mean ( b, sample_num, x, mean )
-  call i4row_variance ( b, sample_num, x, variance )
+   call i4row_max(b, sample_num, x, xmax)
+   call i4row_min(b, sample_num, x, xmin)
+   call i4row_mean(b, sample_num, x, mean)
+   call i4row_variance(b, sample_num, x, variance)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)' ) '  Sample size = ', sample_num
-  write ( *, '(a)' ) '  Component Mean, Variance, Min, Max:'
-  do i = 1, b
-    write ( *, '(2x,i8,2g14.6,2i8)' ) i, mean(i), variance(i), xmin(i), xmax(i)
-  end do
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size = ', sample_num
+   write (*, '(a)') '  Component Mean, Variance, Min, Max:'
+   do i = 1, b
+      write (*, '(2x,i8,2g14.6,2i8)') i, mean(i), variance(i), xmin(i), xmax(i)
+   end do
 
-  return
+   return
 end
-subroutine test112 ( )
+subroutine test112()
 
 !*****************************************************************************80
 !
@@ -8983,53 +8983,53 @@ subroutine test112 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: b = 3
+   integer(kind=4), parameter :: b = 3
 
-  integer ( kind = 4 ) a
-  real ( kind = 8 ) c(b)
-  integer ( kind = 4 ) i
-  logical multinomial_check
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) x(b)
+   integer(kind=4) a
+   real(kind=8) c(b)
+   integer(kind=4) i
+   logical multinomial_check
+   real(kind=8) pdf
+   integer(kind=4) x(b)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST112'
-  write ( *, '(a)' ) '  For the Multinomial PDF:'
-  write ( *, '(a)' ) '  MULTINOMIAL_PDF evaluates the PDF.'
-  a = 5
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST112'
+   write (*, '(a)') '  For the Multinomial PDF:'
+   write (*, '(a)') '  MULTINOMIAL_PDF evaluates the PDF.'
+   a = 5
 
-  c(1:3) = (/ 0.10D+00, 0.50D+00, 0.40D+00 /)
+   c(1:3) = (/0.10D+00, 0.50D+00, 0.40D+00/)
 
-  write ( *, '(a,i8)' ) '  PDF parameter A = ', a
-  write ( *, '(a,i8)' ) '  PDF parameter B = ', b
-  call r8vec_print ( b, c, '  PDF parameter C:' )
+   write (*, '(a,i8)') '  PDF parameter A = ', a
+   write (*, '(a,i8)') '  PDF parameter B = ', b
+   call r8vec_print(b, c, '  PDF parameter C:')
 
-  if ( .not. multinomial_check ( a, b, c ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST112 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. multinomial_check(a, b, c)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST112 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  x(1:3) = (/ 0, 2, 3 /)
+   x(1:3) = (/0, 2, 3/)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '  PDF argument X:'
-  write ( *, '(a)' ) ' '
-  do i = 1, b
-    write ( *, '(2x,i8)' ) x(i)
-  end do
+   write (*, '(a)') ' '
+   write (*, '(a)') '  PDF argument X:'
+   write (*, '(a)') ' '
+   do i = 1, b
+      write (*, '(2x,i8)') x(i)
+   end do
 
-  call multinomial_pdf ( x, a, b, c, pdf )
+   call multinomial_pdf(x, a, b, c, pdf)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF value =     ', pdf
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF value =     ', pdf
 
-  return
+   return
 end
-subroutine test113 ( )
+subroutine test113()
 
 !*****************************************************************************80
 !
@@ -9047,51 +9047,51 @@ subroutine test113 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) c
-  real ( kind = 8 ) cdf
-  logical nakagami_check
-  real ( kind = 8 ) pdf
-  real ( kind = 8 ) x
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) c
+   real(kind=8) cdf
+   logical nakagami_check
+   real(kind=8) pdf
+   real(kind=8) x
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST113'
-  write ( *, '(a)' ) '  For the Nakagami PDF:'
-  write ( *, '(a)' ) '  NAKAGAMI_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  NAKAGAMI_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST113'
+   write (*, '(a)') '  For the Nakagami PDF:'
+   write (*, '(a)') '  NAKAGAMI_CDF evaluates the CDF;'
+   write (*, '(a)') '  NAKAGAMI_PDF evaluates the PDF;'
 
-  x = 1.25D+00
+   x = 1.25D+00
 
-  a = 1.0D+00
-  b = 2.0D+00
-  c = 3.0D+00
+   a = 1.0D+00
+   b = 2.0D+00
+   c = 3.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
-  write ( *, '(a,g14.6)' ) '  PDF parameter C =             ', c
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
+   write (*, '(a,g14.6)') '  PDF parameter C =             ', c
 
-  if ( .not. nakagami_check ( a, b, c ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST113 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. nakagami_check(a, b, c)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST113 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call nakagami_pdf ( x, a, b, c, pdf )
+   call nakagami_pdf(x, a, b, c, pdf)
 
-  call nakagami_cdf ( x, a, b, c, cdf )
+   call nakagami_cdf(x, a, b, c, cdf)
 
-  write ( *, '(a,g14.6)' ) '  PDF argument X =              ', x
-  write ( *, '(a,g14.6)' ) '  PDF value =                   ', pdf
-  write ( *, '(a,g14.6)' ) '  CDF value =                   ', cdf
+   write (*, '(a,g14.6)') '  PDF argument X =              ', x
+   write (*, '(a,g14.6)') '  PDF value =                   ', pdf
+   write (*, '(a,g14.6)') '  CDF value =                   ', cdf
 
-  return
+   return
 end
-subroutine test114 ( )
+subroutine test114()
 
 !*****************************************************************************80
 !
@@ -9109,46 +9109,46 @@ subroutine test114 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) c
-  real ( kind = 8 ) mean
-  logical nakagami_check
-  real ( kind = 8 ) variance
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) c
+   real(kind=8) mean
+   logical nakagami_check
+   real(kind=8) variance
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST114'
-  write ( *, '(a)' ) '  For the Nakagami PDF:'
-  write ( *, '(a)' ) '  NAKAGAMI_MEAN computes the mean;'
-  write ( *, '(a)' ) '  NAKAGAMI_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST114'
+   write (*, '(a)') '  For the Nakagami PDF:'
+   write (*, '(a)') '  NAKAGAMI_MEAN computes the mean;'
+   write (*, '(a)') '  NAKAGAMI_VARIANCE computes the variance.'
 
-  a = 1.0D+00
-  b = 2.0D+00
-  c = 3.0D+00
+   a = 1.0D+00
+   b = 2.0D+00
+   c = 3.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
-  write ( *, '(a,g14.6)' ) '  PDF parameter C =             ', c
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
+   write (*, '(a,g14.6)') '  PDF parameter C =             ', c
 
-  if ( .not. nakagami_check ( a, b, c ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST114 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. nakagami_check(a, b, c)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST114 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call nakagami_mean ( a, b, c, mean )
-  call nakagami_variance ( a, b, c, variance )
+   call nakagami_mean(a, b, c, mean)
+   call nakagami_variance(a, b, c, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  return
+   return
 end
-subroutine test1145 ( )
+subroutine test1145()
 
 !*****************************************************************************80
 !
@@ -9166,60 +9166,60 @@ subroutine test1145 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  logical negative_binomial_check
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  integer ( kind = 4 ) x
-  integer ( kind = 4 ) x2
+   integer(kind=4) a
+   real(kind=8) b
+   real(kind=8) cdf
+   integer(kind=4) i
+   logical negative_binomial_check
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   integer(kind=4) x
+   integer(kind=4) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST1145'
-  write ( *, '(a)' ) '  For the Negative Binomial PDF:'
-  write ( *, '(a)' ) '  NEGATIVE_BINOMIAL_CDF evaluates the CDF.'
-  write ( *, '(a)' ) '  NEGATIVE_BINOMIAL_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  NEGATIVE_BINOMIAL_PDF evaluates the PDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST1145'
+   write (*, '(a)') '  For the Negative Binomial PDF:'
+   write (*, '(a)') '  NEGATIVE_BINOMIAL_CDF evaluates the CDF.'
+   write (*, '(a)') '  NEGATIVE_BINOMIAL_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  NEGATIVE_BINOMIAL_PDF evaluates the PDF.'
 
-  a = 2
-  b = 0.25D+00
+   a = 2
+   b = 0.25D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  PDF parameter A = ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B = ', b
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  PDF parameter A = ', a
+   write (*, '(a,g14.6)') '  PDF parameter B = ', b
 
-  if ( .not. negative_binomial_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST1145 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. negative_binomial_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST1145 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call negative_binomial_sample ( a, b, seed, x )
+      call negative_binomial_sample(a, b, seed, x)
 
-    call negative_binomial_pdf ( x, a, b, pdf )
+      call negative_binomial_pdf(x, a, b, pdf)
 
-    call negative_binomial_cdf ( x, a, b, cdf )
+      call negative_binomial_cdf(x, a, b, cdf)
 
-    call negative_binomial_cdf_inv ( cdf, a, b, x2 )
+      call negative_binomial_cdf_inv(cdf, a, b, x2)
 
-    write ( *, '(2x,i14,2g14.6,i14)' ) x, pdf, cdf, x2
+      write (*, '(2x,i14,2g14.6,i14)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test1146 ( )
+subroutine test1146()
 
 !*****************************************************************************80
 !
@@ -9237,67 +9237,67 @@ subroutine test1146 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  integer ( kind = 4 ) a
-  real ( kind = 8 ) b
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  logical negative_binomial_check
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  integer ( kind = 4 ) x(sample_num)
-  integer ( kind = 4 ) xmax
-  integer ( kind = 4 ) xmin
+   integer(kind=4) a
+   real(kind=8) b
+   integer(kind=4) i
+   real(kind=8) mean
+   logical negative_binomial_check
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   integer(kind=4) x(sample_num)
+   integer(kind=4) xmax
+   integer(kind=4) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST1146'
-  write ( *, '(a)' ) '  For the Negative Binomial PDF:'
-  write ( *, '(a)' ) '  NEGATIVE_BINOMIAL_MEAN computes the mean;'
-  write ( *, '(a)' ) '  NEGATIVE_BINOMIAL_SAMPLE samples;'
-  write ( *, '(a)' ) '  NEGATIVE_BINOMIAL_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST1146'
+   write (*, '(a)') '  For the Negative Binomial PDF:'
+   write (*, '(a)') '  NEGATIVE_BINOMIAL_MEAN computes the mean;'
+   write (*, '(a)') '  NEGATIVE_BINOMIAL_SAMPLE samples;'
+   write (*, '(a)') '  NEGATIVE_BINOMIAL_VARIANCE computes the variance.'
 
-  a = 2
-  b = 0.75D+00
+   a = 2
+   b = 0.75D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
 
-  if ( .not. negative_binomial_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST1146 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. negative_binomial_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST1146 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call negative_binomial_mean ( a, b, mean )
-  call negative_binomial_variance ( a, b, variance )
+   call negative_binomial_mean(a, b, mean)
+   call negative_binomial_variance(a, b, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call negative_binomial_sample ( a, b, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call negative_binomial_sample(a, b, seed, x(i))
+   end do
 
-  call i4vec_mean ( sample_num, x, mean )
-  call i4vec_variance ( sample_num, x, variance )
-  call i4vec_max ( sample_num, x, xmax )
-  call i4vec_min ( sample_num, x, xmin )
+   call i4vec_mean(sample_num, x, mean)
+   call i4vec_variance(sample_num, x, variance)
+   call i4vec_max(sample_num, x, xmax)
+   call i4vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,i8)'    ) '  Sample maximum =  ', xmax
-  write ( *, '(a,i8)'    ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,i8)') '  Sample maximum =  ', xmax
+   write (*, '(a,i8)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test115 ( )
+subroutine test115()
 
 !*****************************************************************************80
 !
@@ -9315,43 +9315,43 @@ subroutine test115 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) cdf
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) i
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) cdf
+   real(kind=8) pdf
+   integer(kind=4) i
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST115'
-  write ( *, '(a)' ) '  For the Normal 01 PDF:'
-  write ( *, '(a)' ) '  NORMAL_01_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  NORMAL_01_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  NORMAL_01_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST115'
+   write (*, '(a)') '  For the Normal 01 PDF:'
+   write (*, '(a)') '  NORMAL_01_CDF evaluates the CDF;'
+   write (*, '(a)') '  NORMAL_01_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  NORMAL_01_PDF evaluates the PDF;'
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call normal_01_sample ( seed, x )
+      call normal_01_sample(seed, x)
 
-    call normal_01_pdf ( x, pdf )
+      call normal_01_pdf(x, pdf)
 
-    call normal_01_cdf ( x, cdf )
+      call normal_01_cdf(x, cdf)
 
-    call normal_01_cdf_inv ( cdf, x2 )
+      call normal_01_cdf_inv(cdf, x2)
 
-    write ( *, '(2x,g24.16,2x,g14.6,2x,g14.6,2x,g24.16)' ) x, pdf, cdf, x2
+      write (*, '(2x,g24.16,2x,g14.6,2x,g14.6,2x,g24.16)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test116 ( )
+subroutine test116()
 
 !*****************************************************************************80
 !
@@ -9369,51 +9369,51 @@ subroutine test116 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST116'
-  write ( *, '(a)' ) '  For the Normal 01 PDF:'
-  write ( *, '(a)' ) '  NORMAL_01_MEAN computes the mean;'
-  write ( *, '(a)' ) '  NORMAL_01_SAMPLE samples the PDF;'
-  write ( *, '(a)' ) '  NORMAL_01_VARIANCE returns the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST116'
+   write (*, '(a)') '  For the Normal 01 PDF:'
+   write (*, '(a)') '  NORMAL_01_MEAN computes the mean;'
+   write (*, '(a)') '  NORMAL_01_SAMPLE samples the PDF;'
+   write (*, '(a)') '  NORMAL_01_VARIANCE returns the variance.'
 
-  call normal_01_mean ( mean )
-  call normal_01_variance ( variance )
+   call normal_01_mean(mean)
+   call normal_01_variance(variance)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call normal_01_sample ( seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call normal_01_sample(seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test117 ( )
+subroutine test117()
 
 !*****************************************************************************80
 !
@@ -9431,60 +9431,60 @@ subroutine test117 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  logical normal_check
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) cdf
+   integer(kind=4) i
+   logical normal_check
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST117'
-  write ( *, '(a)' ) '  For the Normal PDF:'
-  write ( *, '(a)' ) '  NORMAL_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  NORMAL_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  NORMAL_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST117'
+   write (*, '(a)') '  For the Normal PDF:'
+   write (*, '(a)') '  NORMAL_CDF evaluates the CDF;'
+   write (*, '(a)') '  NORMAL_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  NORMAL_PDF evaluates the PDF;'
 
-  a = 100.0D+00
-  b = 15.0D+00
+   a = 100.0D+00
+   b = 15.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
 
-  if ( .not. normal_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST117 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. normal_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST117 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call normal_sample ( a, b, seed, x )
+      call normal_sample(a, b, seed, x)
 
-    call normal_pdf ( x, a, b, pdf )
+      call normal_pdf(x, a, b, pdf)
 
-    call normal_cdf ( x, a, b, cdf )
+      call normal_cdf(x, a, b, cdf)
 
-    call normal_cdf_inv ( cdf, a, b, x2 )
+      call normal_cdf_inv(cdf, a, b, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test118 ( )
+subroutine test118()
 
 !*****************************************************************************80
 !
@@ -9502,67 +9502,67 @@ subroutine test118 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  integer ( kind = 4 ) i
-  logical normal_check
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   integer(kind=4) i
+   logical normal_check
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST118'
-  write ( *, '(a)' ) '  For the Normal PDF:'
-  write ( *, '(a)' ) '  NORMAL_MEAN computes the mean;'
-  write ( *, '(a)' ) '  NORMAL_SAMPLE samples;'
-  write ( *, '(a)' ) '  NORMAL_VARIANCE returns the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST118'
+   write (*, '(a)') '  For the Normal PDF:'
+   write (*, '(a)') '  NORMAL_MEAN computes the mean;'
+   write (*, '(a)') '  NORMAL_SAMPLE samples;'
+   write (*, '(a)') '  NORMAL_VARIANCE returns the variance.'
 
-  a = 100.0D+00
-  b = 15.0D+00
+   a = 100.0D+00
+   b = 15.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
 
-  if ( .not. normal_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST118 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. normal_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST118 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call normal_mean ( a, b, mean )
-  call normal_variance ( a, b, variance )
+   call normal_mean(a, b, mean)
+   call normal_variance(a, b, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =        ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =        ', variance
 
-  do i = 1, sample_num
-    call normal_sample ( a, b, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call normal_sample(a, b, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test1184 ( )
+subroutine test1184()
 
 !*****************************************************************************80
 !
@@ -9580,58 +9580,58 @@ subroutine test1184 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mu
-  real ( kind = 8 ) pdf
-  real ( kind = 8 ) s
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) mu
+   real(kind=8) pdf
+   real(kind=8) s
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  a = 50.0D+00
-  b = 150.0D+00
-  mu = 100.0D+00
-  s = 25.0D+00
+   a = 50.0D+00
+   b = 150.0D+00
+   mu = 100.0D+00
+   s = 25.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST1184'
-  write ( *, '(a)' ) '  For the Truncated Normal PDF:'
-  write ( *, '(a)' ) '  NORMAL_TRUNCATED_AB_CDF evaluates the CDF.'
-  write ( *, '(a)' ) '  NORMAL_TRUNCATED_AB_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  NORMAL_TRUNCATED_AB_PDF evaluates the PDF.'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '  The "parent" normal distribution has'
-  write ( *, '(a,g14.6)' ) '    mean =               ', mu
-  write ( *, '(a,g14.6)' ) '    standard deviation = ', s
-  write ( *, '(a)' ) '  The parent distribution is truncated to'
-  write ( *, '(a,g14.6,a,g14.6,a)' ) '  the interval [', a, ',', b, ']'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST1184'
+   write (*, '(a)') '  For the Truncated Normal PDF:'
+   write (*, '(a)') '  NORMAL_TRUNCATED_AB_CDF evaluates the CDF.'
+   write (*, '(a)') '  NORMAL_TRUNCATED_AB_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  NORMAL_TRUNCATED_AB_PDF evaluates the PDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') '  The "parent" normal distribution has'
+   write (*, '(a,g14.6)') '    mean =               ', mu
+   write (*, '(a,g14.6)') '    standard deviation = ', s
+   write (*, '(a)') '  The parent distribution is truncated to'
+   write (*, '(a,g14.6,a,g14.6,a)') '  the interval [', a, ',', b, ']'
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call normal_truncated_ab_sample ( mu, s, a, b, seed, x )
+      call normal_truncated_ab_sample(mu, s, a, b, seed, x)
 
-    call normal_truncated_ab_pdf ( x, mu, s, a, b, pdf )
+      call normal_truncated_ab_pdf(x, mu, s, a, b, pdf)
 
-    call normal_truncated_ab_cdf ( x, mu, s, a, b, cdf )
+      call normal_truncated_ab_cdf(x, mu, s, a, b, cdf)
 
-    call normal_truncated_ab_cdf_inv ( cdf, mu, s, a, b, x2 )
+      call normal_truncated_ab_cdf_inv(cdf, mu, s, a, b, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test1185 ( )
+subroutine test1185()
 
 !*****************************************************************************80
 !
@@ -9649,67 +9649,67 @@ subroutine test1185 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  real ( kind = 8 ) mu
-  real ( kind = 8 ) s
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   integer(kind=4) i
+   real(kind=8) mean
+   real(kind=8) mu
+   real(kind=8) s
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  a = 50.0D+00
-  b = 150.0D+00
-  mu = 100.0D+00
-  s = 25.0D+00
+   a = 50.0D+00
+   b = 150.0D+00
+   mu = 100.0D+00
+   s = 25.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST1185'
-  write ( *, '(a)' ) '  For the Truncated Normal PDF:'
-  write ( *, '(a)' ) '  NORMAL_TRUNCATED_AB_MEAN computes the mean;'
-  write ( *, '(a)' ) '  NORMAL_TRUNCATED_AB_SAMPLE samples;'
-  write ( *, '(a)' ) '  NORMAL_TRUNCATED_AB_VARIANCE computes the variance.'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '  The "parent" normal distribution has'
-  write ( *, '(a,g14.6)' ) '    mean =               ', mu
-  write ( *, '(a,g14.6)' ) '    standard deviation = ', s
-  write ( *, '(a)' ) '  The parent distribution is truncated to'
-  write ( *, '(a,g14.6,a,g14.6,a)' ) '  the interval [', a, ',', b, ']'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST1185'
+   write (*, '(a)') '  For the Truncated Normal PDF:'
+   write (*, '(a)') '  NORMAL_TRUNCATED_AB_MEAN computes the mean;'
+   write (*, '(a)') '  NORMAL_TRUNCATED_AB_SAMPLE samples;'
+   write (*, '(a)') '  NORMAL_TRUNCATED_AB_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') '  The "parent" normal distribution has'
+   write (*, '(a,g14.6)') '    mean =               ', mu
+   write (*, '(a,g14.6)') '    standard deviation = ', s
+   write (*, '(a)') '  The parent distribution is truncated to'
+   write (*, '(a,g14.6,a,g14.6,a)') '  the interval [', a, ',', b, ']'
 
-  call normal_truncated_ab_mean ( mu, s, a, b, mean )
+   call normal_truncated_ab_mean(mu, s, a, b, mean)
 
-  call normal_truncated_ab_variance ( mu, s, a, b, variance )
+   call normal_truncated_ab_variance(mu, s, a, b, variance)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF mean      =               ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF mean      =               ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call normal_truncated_ab_sample ( mu, s, a, b, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call normal_truncated_ab_sample(mu, s, a, b, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test1186 ( )
+subroutine test1186()
 
 !*****************************************************************************80
 !
@@ -9727,56 +9727,56 @@ subroutine test1186 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mu
-  real ( kind = 8 ) pdf
-  real ( kind = 8 ) s
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) mu
+   real(kind=8) pdf
+   real(kind=8) s
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  a = 50.0D+00
-  mu = 100.0D+00
-  s = 25.0D+00
+   a = 50.0D+00
+   mu = 100.0D+00
+   s = 25.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST1186'
-  write ( *, '(a)' ) '  For the Lower Truncated Normal PDF:'
-  write ( *, '(a)' ) '  NORMAL_TRUNCATED_A_CDF evaluates the CDF.'
-  write ( *, '(a)' ) '  NORMAL_TRUNCATED_A_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  NORMAL_TRUNCATED_A_PDF evaluates the PDF.'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '  The "parent" normal distribution has'
-  write ( *, '(a,g14.6)' ) '    mean =               ', mu
-  write ( *, '(a,g14.6)' ) '    standard deviation = ', s
-  write ( *, '(a)' ) '  The parent distribution is truncated to'
-  write ( *, '(a,g14.6,a)' ) '  the interval [', a, ',+oo]'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST1186'
+   write (*, '(a)') '  For the Lower Truncated Normal PDF:'
+   write (*, '(a)') '  NORMAL_TRUNCATED_A_CDF evaluates the CDF.'
+   write (*, '(a)') '  NORMAL_TRUNCATED_A_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  NORMAL_TRUNCATED_A_PDF evaluates the PDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') '  The "parent" normal distribution has'
+   write (*, '(a,g14.6)') '    mean =               ', mu
+   write (*, '(a,g14.6)') '    standard deviation = ', s
+   write (*, '(a)') '  The parent distribution is truncated to'
+   write (*, '(a,g14.6,a)') '  the interval [', a, ',+oo]'
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call normal_truncated_a_sample ( mu, s, a, seed, x )
+      call normal_truncated_a_sample(mu, s, a, seed, x)
 
-    call normal_truncated_a_pdf ( x, mu, s, a, pdf )
+      call normal_truncated_a_pdf(x, mu, s, a, pdf)
 
-    call normal_truncated_a_cdf ( x, mu, s, a, cdf )
+      call normal_truncated_a_cdf(x, mu, s, a, cdf)
 
-    call normal_truncated_a_cdf_inv ( cdf, mu, s, a, x2 )
+      call normal_truncated_a_cdf_inv(cdf, mu, s, a, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test1187 ( )
+subroutine test1187()
 
 !*****************************************************************************80
 !
@@ -9794,65 +9794,65 @@ subroutine test1187 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  real ( kind = 8 ) mu
-  real ( kind = 8 ) s
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   integer(kind=4) i
+   real(kind=8) mean
+   real(kind=8) mu
+   real(kind=8) s
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  a = 50.0D+00
-  mu = 100.0D+00
-  s = 25.0D+00
+   a = 50.0D+00
+   mu = 100.0D+00
+   s = 25.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST1187'
-  write ( *, '(a)' ) '  For the Lower Truncated Normal PDF:'
-  write ( *, '(a)' ) '  NORMAL_TRUNCATED_A_MEAN computes the mean;'
-  write ( *, '(a)' ) '  NORMAL_TRUNCATED_A_SAMPLE samples;'
-  write ( *, '(a)' ) '  NORMAL_TRUNCATED_A_VARIANCE computes the variance.'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '  The "parent" normal distribution has'
-  write ( *, '(a,g14.6)' ) '    mean =               ', mu
-  write ( *, '(a,g14.6)' ) '    standard deviation = ', s
-  write ( *, '(a)' ) '  The parent distribution is truncated to'
-  write ( *, '(a,g14.6,a)' ) '  the interval [', a, ',+oo]'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST1187'
+   write (*, '(a)') '  For the Lower Truncated Normal PDF:'
+   write (*, '(a)') '  NORMAL_TRUNCATED_A_MEAN computes the mean;'
+   write (*, '(a)') '  NORMAL_TRUNCATED_A_SAMPLE samples;'
+   write (*, '(a)') '  NORMAL_TRUNCATED_A_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') '  The "parent" normal distribution has'
+   write (*, '(a,g14.6)') '    mean =               ', mu
+   write (*, '(a,g14.6)') '    standard deviation = ', s
+   write (*, '(a)') '  The parent distribution is truncated to'
+   write (*, '(a,g14.6,a)') '  the interval [', a, ',+oo]'
 
-  call normal_truncated_a_mean ( mu, s, a, mean )
+   call normal_truncated_a_mean(mu, s, a, mean)
 
-  call normal_truncated_a_variance ( mu, s, a, variance )
+   call normal_truncated_a_variance(mu, s, a, variance)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF mean      =               ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF mean      =               ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call normal_truncated_a_sample ( mu, s, a, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call normal_truncated_a_sample(mu, s, a, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test1188 ( )
+subroutine test1188()
 
 !*****************************************************************************80
 !
@@ -9870,56 +9870,56 @@ subroutine test1188 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) b
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mu
-  real ( kind = 8 ) pdf
-  real ( kind = 8 ) s
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) b
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) mu
+   real(kind=8) pdf
+   real(kind=8) s
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  b = 150.0D+00
-  mu = 100.0D+00
-  s = 25.0D+00
+   b = 150.0D+00
+   mu = 100.0D+00
+   s = 25.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST1188'
-  write ( *, '(a)' ) '  For the Upper Truncated Normal PDF:'
-  write ( *, '(a)' ) '  NORMAL_TRUNCATED_B_CDF evaluates the CDF.'
-  write ( *, '(a)' ) '  NORMAL_TRUNCATED_B_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  NORMAL_TRUNCATED_B_PDF evaluates the PDF.'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '  The "parent" normal distribution has'
-  write ( *, '(a,g14.6)' ) '    mean =               ', mu
-  write ( *, '(a,g14.6)' ) '    standard deviation = ', s
-  write ( *, '(a)' ) '  The parent distribution is truncated to'
-  write ( *, '(a,g14.6,a)' ) '  the interval [-oo,', b, ']'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST1188'
+   write (*, '(a)') '  For the Upper Truncated Normal PDF:'
+   write (*, '(a)') '  NORMAL_TRUNCATED_B_CDF evaluates the CDF.'
+   write (*, '(a)') '  NORMAL_TRUNCATED_B_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  NORMAL_TRUNCATED_B_PDF evaluates the PDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') '  The "parent" normal distribution has'
+   write (*, '(a,g14.6)') '    mean =               ', mu
+   write (*, '(a,g14.6)') '    standard deviation = ', s
+   write (*, '(a)') '  The parent distribution is truncated to'
+   write (*, '(a,g14.6,a)') '  the interval [-oo,', b, ']'
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call normal_truncated_b_sample ( mu, s, b, seed, x )
+      call normal_truncated_b_sample(mu, s, b, seed, x)
 
-    call normal_truncated_b_pdf ( x, mu, s, b, pdf )
+      call normal_truncated_b_pdf(x, mu, s, b, pdf)
 
-    call normal_truncated_b_cdf ( x, mu, s, b, cdf )
+      call normal_truncated_b_cdf(x, mu, s, b, cdf)
 
-    call normal_truncated_b_cdf_inv ( cdf, mu, s, b, x2 )
+      call normal_truncated_b_cdf_inv(cdf, mu, s, b, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test1189 ( )
+subroutine test1189()
 
 !*****************************************************************************80
 !
@@ -9937,65 +9937,65 @@ subroutine test1189 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) b
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  real ( kind = 8 ) mu
-  real ( kind = 8 ) s
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) b
+   integer(kind=4) i
+   real(kind=8) mean
+   real(kind=8) mu
+   real(kind=8) s
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  b = 150.0D+00
-  mu = 100.0D+00
-  s = 25.0D+00
+   b = 150.0D+00
+   mu = 100.0D+00
+   s = 25.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST1189'
-  write ( *, '(a)' ) '  For the Upper Truncated Normal PDF:'
-  write ( *, '(a)' ) '  NORMAL_TRUNCATED_B_MEAN computes the mean;'
-  write ( *, '(a)' ) '  NORMAL_TRUNCATED_B_SAMPLE samples;'
-  write ( *, '(a)' ) '  NORMAL_TRUNCATED_B_VARIANCE computes the variance.'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '  The "parent" normal distribution has'
-  write ( *, '(a,g14.6)' ) '    mean =               ', mu
-  write ( *, '(a,g14.6)' ) '    standard deviation = ', s
-  write ( *, '(a)' ) '  The parent distribution is truncated to'
-  write ( *, '(a,g14.6,a)' ) '  the interval [-oo,', b, ']'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST1189'
+   write (*, '(a)') '  For the Upper Truncated Normal PDF:'
+   write (*, '(a)') '  NORMAL_TRUNCATED_B_MEAN computes the mean;'
+   write (*, '(a)') '  NORMAL_TRUNCATED_B_SAMPLE samples;'
+   write (*, '(a)') '  NORMAL_TRUNCATED_B_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') '  The "parent" normal distribution has'
+   write (*, '(a,g14.6)') '    mean =               ', mu
+   write (*, '(a,g14.6)') '    standard deviation = ', s
+   write (*, '(a)') '  The parent distribution is truncated to'
+   write (*, '(a,g14.6,a)') '  the interval [-oo,', b, ']'
 
-  call normal_truncated_b_mean ( mu, s, b, mean )
+   call normal_truncated_b_mean(mu, s, b, mean)
 
-  call normal_truncated_b_variance ( mu, s, b, variance )
+   call normal_truncated_b_variance(mu, s, b, variance)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF mean      =               ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF mean      =               ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call normal_truncated_b_sample ( mu, s, b, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call normal_truncated_b_sample(mu, s, b, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test119 ( )
+subroutine test119()
 
 !*****************************************************************************80
 !
@@ -10013,58 +10013,58 @@ subroutine test119 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  logical pareto_check
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) cdf
+   integer(kind=4) i
+   logical pareto_check
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST119'
-  write ( *, '(a)' ) '  For the Pareto PDF:'
-  write ( *, '(a)' ) '  PARETO_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  PARETO_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  PARETO_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST119'
+   write (*, '(a)') '  For the Pareto PDF:'
+   write (*, '(a)') '  PARETO_CDF evaluates the CDF;'
+   write (*, '(a)') '  PARETO_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  PARETO_PDF evaluates the PDF;'
 
-  a = 2.0D+00
-  b = 3.0D+00
+   a = 2.0D+00
+   b = 3.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
 
-  if ( .not. pareto_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST119 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. pareto_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST119 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call pareto_sample ( a, b, seed, x )
+      call pareto_sample(a, b, seed, x)
 
-    call pareto_pdf ( x, a, b, pdf )
+      call pareto_pdf(x, a, b, pdf)
 
-    call pareto_cdf ( x, a, b, cdf )
+      call pareto_cdf(x, a, b, cdf)
 
-    call pareto_cdf_inv ( cdf, a, b, x2 )
+      call pareto_cdf_inv(cdf, a, b, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
 subroutine test120
 
@@ -10084,67 +10084,67 @@ subroutine test120
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  logical pareto_check
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   integer(kind=4) i
+   real(kind=8) mean
+   logical pareto_check
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST120'
-  write ( *, '(a)' ) '  For the Pareto PDF:'
-  write ( *, '(a)' ) '  PARETO_MEAN computes the mean;'
-  write ( *, '(a)' ) '  PARETO_SAMPLE samples;'
-  write ( *, '(a)' ) '  PARETO_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST120'
+   write (*, '(a)') '  For the Pareto PDF:'
+   write (*, '(a)') '  PARETO_MEAN computes the mean;'
+   write (*, '(a)') '  PARETO_SAMPLE samples;'
+   write (*, '(a)') '  PARETO_VARIANCE computes the variance.'
 
-  a = 2.0D+00
-  b = 3.0D+00
+   a = 2.0D+00
+   b = 3.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
 
-  if ( .not. pareto_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST120 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. pareto_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST120 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call pareto_mean ( a, b, mean )
-  call pareto_variance ( a, b, variance )
+   call pareto_mean(a, b, mean)
+   call pareto_variance(a, b, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call pareto_sample ( a, b, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call pareto_sample(a, b, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test123 ( )
+subroutine test123()
 
 !*****************************************************************************80
 !
@@ -10162,48 +10162,48 @@ subroutine test123 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) c
-  real ( kind = 8 ) pdf
-  logical pearson_05_check
-  real ( kind = 8 ) x
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) c
+   real(kind=8) pdf
+   logical pearson_05_check
+   real(kind=8) x
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST123'
-  write ( *, '(a)' ) '  For the Pearson 05 PDF:'
-  write ( *, '(a)' ) '  PEARSON_05_PDF evaluates the PDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST123'
+   write (*, '(a)') '  For the Pearson 05 PDF:'
+   write (*, '(a)') '  PEARSON_05_PDF evaluates the PDF.'
 
-  x = 5.0D+00
+   x = 5.0D+00
 
-  a = 1.0D+00
-  b = 2.0D+00
-  c = 3.0D+00
+   a = 1.0D+00
+   b = 2.0D+00
+   c = 3.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A = ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B = ', b
-  write ( *, '(a,g14.6)' ) '  PDF parameter C = ', c
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A = ', a
+   write (*, '(a,g14.6)') '  PDF parameter B = ', b
+   write (*, '(a,g14.6)') '  PDF parameter C = ', c
 
-  if ( .not. pearson_05_check ( a, b, c ) ) then
+   if (.not. pearson_05_check(a, b, c)) then
 
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST123 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST123 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call pearson_05_pdf ( x, a, b, c, pdf )
+   call pearson_05_pdf(x, a, b, c, pdf)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF argument X =  ', x
-  write ( *, '(a,g14.6)' ) '  PDF value =       ', pdf
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF argument X =  ', x
+   write (*, '(a,g14.6)') '  PDF value =       ', pdf
 
-  return
+   return
 end
-subroutine test124 ( )
+subroutine test124()
 
 !*****************************************************************************80
 !
@@ -10221,54 +10221,53 @@ subroutine test124 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  logical planck_check
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
+   real(kind=8) a
+   real(kind=8) b
+   integer(kind=4) i
+   real(kind=8) pdf
+   logical planck_check
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST124'
-  write ( *, '(a)' ) '  For the Planck PDF:'
-  write ( *, '(a)' ) '  PLANCK_PDF evaluates the PDF.'
-  write ( *, '(a)' ) '  PLANCK_SAMPLE samples the PDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST124'
+   write (*, '(a)') '  For the Planck PDF:'
+   write (*, '(a)') '  PLANCK_PDF evaluates the PDF.'
+   write (*, '(a)') '  PLANCK_SAMPLE samples the PDF.'
 
-  a = 2.0D+00;
-  b = 3.0D+00;
+   a = 2.0D+00; 
+   b = 3.0D+00; 
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A = ', a
+   write (*, '(a,g14.6)') '  PDF parameter B = ', b
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A = ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B = ', b
+   if (.not. planck_check(a, b)) then
 
-  if ( .not. planck_check ( a, b ) ) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST124 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST124 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF'
+   write (*, '(a)') ' '
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF'
-  write ( *, '(a)' ) ' '
+   do i = 1, 10
 
-  do i = 1, 10
+      call planck_sample(a, b, seed, x)
 
-    call planck_sample ( a, b, seed, x )
+      call planck_pdf(x, a, b, pdf)
 
-    call planck_pdf ( x, a, b, pdf )
+      write (*, '(2x,2g14.6)') x, pdf
 
-    write ( *, '(2x,2g14.6)' ) x, pdf
+   end do
 
-  end do
-
-  return
+   return
 end
-subroutine test125 ( )
+subroutine test125()
 
 !*****************************************************************************80
 !
@@ -10286,70 +10285,69 @@ subroutine test125 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  logical planck_check
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   integer(kind=4) i
+   real(kind=8) mean
+   logical planck_check
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST125'
-  write ( *, '(a)' ) '  For the Planck PDF:'
-  write ( *, '(a)' ) '  PLANCK_MEAN computes the mean.'
-  write ( *, '(a)' ) '  PLANCK_SAMPLE samples.'
-  write ( *, '(a)' ) '  PLANCK_VARIANCE computes the variance.'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST125'
+   write (*, '(a)') '  For the Planck PDF:'
+   write (*, '(a)') '  PLANCK_MEAN computes the mean.'
+   write (*, '(a)') '  PLANCK_SAMPLE samples.'
+   write (*, '(a)') '  PLANCK_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
 
-  a = 2.0D+00;
-  b = 3.0D+00;
+   a = 2.0D+00; 
+   b = 3.0D+00; 
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A = ', a
+   write (*, '(a,g14.6)') '  PDF parameter B = ', b
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A = ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B = ', b
+   if (.not. planck_check(a, b)) then
 
-  if ( .not. planck_check ( a, b ) ) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST125 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST125 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   call planck_mean(a, b, mean)
+   call planck_variance(a, b, variance)
 
-  call planck_mean ( a, b, mean )
-  call planck_variance ( a, b, variance )
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF mean =     ', mean
+   write (*, '(a,g14.6)') '  PDF variance = ', variance
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance = ', variance
+   do i = 1, sample_num
+      call planck_sample(a, b, seed, x(i))
+   end do
 
-  do i = 1, sample_num
-    call planck_sample ( a, b, seed, x(i) )
-  end do
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
-
-  return
+   return
 end
-subroutine test126 ( )
+subroutine test126()
 
 !*****************************************************************************80
 !
@@ -10367,48 +10365,48 @@ subroutine test126 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) fx
-  real ( kind = 8 ) fx2
-  integer ( kind = 4 ) n_data
-  integer ( kind = 4 ) x
+   real(kind=8) a
+   real(kind=8) fx
+   real(kind=8) fx2
+   integer(kind=4) n_data
+   integer(kind=4) x
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST126:'
-  write ( *, '(a)' ) '  POISSON_CDF evaluates the cumulative distribution'
-  write ( *, '(a)' ) '    function for the discrete Poisson probability'
-  write ( *, '(a)' ) '    density function.'
-  write ( *, '(a)' ) '  POISSON_CDF_VALUES returns some exact values.'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '  A is the expected mean number of successes per unit time;'
-  write ( *, '(a)' ) '  X is the number of successes;'
-  write ( *, '(a)' ) '  POISSON_CDF is the probability of having up to X'
-  write ( *, '(a)' ) '  successes in unit time.'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '   A          X   Exact F     POISSON_CDF(A,X)'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST126:'
+   write (*, '(a)') '  POISSON_CDF evaluates the cumulative distribution'
+   write (*, '(a)') '    function for the discrete Poisson probability'
+   write (*, '(a)') '    density function.'
+   write (*, '(a)') '  POISSON_CDF_VALUES returns some exact values.'
+   write (*, '(a)') ' '
+   write (*, '(a)') '  A is the expected mean number of successes per unit time;'
+   write (*, '(a)') '  X is the number of successes;'
+   write (*, '(a)') '  POISSON_CDF is the probability of having up to X'
+   write (*, '(a)') '  successes in unit time.'
+   write (*, '(a)') ' '
+   write (*, '(a)') '   A          X   Exact F     POISSON_CDF(A,X)'
+   write (*, '(a)') ' '
 
-  n_data = 0
+   n_data = 0
 
-  do
+   do
 
-    call poisson_cdf_values ( n_data, a, x, fx )
+      call poisson_cdf_values(n_data, a, x, fx)
 
-    if ( n_data == 0 ) then
-      exit
-    end if
+      if (n_data == 0) then
+         exit
+      end if
 
-    call poisson_cdf ( x, a, fx2 )
+      call poisson_cdf(x, a, fx2)
 
-    write ( *, '(2x,f8.4,i8,2g14.6)' ) a, x, fx, fx2
+      write (*, '(2x,f8.4,i8,2g14.6)') a, x, fx, fx2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test127 ( )
+subroutine test127()
 
 !*****************************************************************************80
 !
@@ -10426,57 +10424,57 @@ subroutine test127 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  logical poisson_check
-  integer ( kind = 4 ) :: seed = 123456789
-  integer ( kind = 4 ) x
-  integer ( kind = 4 ) x2
+   real(kind=8) a
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) pdf
+   logical poisson_check
+   integer(kind=4) :: seed = 123456789
+   integer(kind=4) x
+   integer(kind=4) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST127'
-  write ( *, '(a)' ) '  For the Poisson PDF:'
-  write ( *, '(a)' ) '  POISSON_CDF evaluates the CDF,'
-  write ( *, '(a)' ) '  POISSON_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  POISSON_PDF evaluates the PDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST127'
+   write (*, '(a)') '  For the Poisson PDF:'
+   write (*, '(a)') '  POISSON_CDF evaluates the CDF,'
+   write (*, '(a)') '  POISSON_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  POISSON_PDF evaluates the PDF.'
 
-  a = 10.0D+00
+   a = 10.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =  ', a
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =  ', a
 
-  if ( .not. poisson_check ( a ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST127 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. poisson_check(a)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST127 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call poisson_sample ( a, seed, x )
+      call poisson_sample(a, seed, x)
 
-    call poisson_pdf ( x, a, pdf )
+      call poisson_pdf(x, a, pdf)
 
-    call poisson_cdf ( x, a, cdf )
+      call poisson_cdf(x, a, cdf)
 
-    call poisson_cdf_inv ( cdf, a, x2 )
+      call poisson_cdf_inv(cdf, a, x2)
 
-    write ( *, '(2x,i14,2g14.6,i14)' ) x, pdf, cdf, x2
+      write (*, '(2x,i14,2g14.6,i14)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test128 ( )
+subroutine test128()
 
 !*****************************************************************************80
 !
@@ -10494,64 +10492,64 @@ subroutine test128 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  logical poisson_check
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  integer ( kind = 4 ) x(sample_num)
-  integer ( kind = 4 ) xmax
-  integer ( kind = 4 ) xmin
+   real(kind=8) a
+   integer(kind=4) i
+   real(kind=8) mean
+   logical poisson_check
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   integer(kind=4) x(sample_num)
+   integer(kind=4) xmax
+   integer(kind=4) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST128'
-  write ( *, '(a)' ) '  For the Poisson PDF:'
-  write ( *, '(a)' ) '  POISSON_MEAN computes the mean;'
-  write ( *, '(a)' ) '  POISSON_SAMPLE samples;'
-  write ( *, '(a)' ) '  POISSON_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST128'
+   write (*, '(a)') '  For the Poisson PDF:'
+   write (*, '(a)') '  POISSON_MEAN computes the mean;'
+   write (*, '(a)') '  POISSON_SAMPLE samples;'
+   write (*, '(a)') '  POISSON_VARIANCE computes the variance.'
 
-  a = 10.0D+00
+   a = 10.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
 
-  if ( .not. poisson_check ( a ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST128 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. poisson_check(a)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST128 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call poisson_mean ( a, mean )
-  call poisson_variance ( a, variance )
+   call poisson_mean(a, mean)
+   call poisson_variance(a, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call poisson_sample ( a, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call poisson_sample(a, seed, x(i))
+   end do
 
-  call i4vec_mean ( sample_num, x, mean )
-  call i4vec_variance ( sample_num, x, variance )
-  call i4vec_max ( sample_num, x, xmax )
-  call i4vec_min ( sample_num, x, xmin )
+   call i4vec_mean(sample_num, x, mean)
+   call i4vec_variance(sample_num, x, variance)
+   call i4vec_max(sample_num, x, xmax)
+   call i4vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,i8)'    ) '  Sample maximum =  ', xmax
-  write ( *, '(a,i8)'    ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,i8)') '  Sample maximum =  ', xmax
+   write (*, '(a,i8)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test129 ( )
+subroutine test129()
 
 !*****************************************************************************80
 !
@@ -10569,60 +10567,60 @@ subroutine test129 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  logical power_check
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) pdf
+   logical power_check
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST129'
-  write ( *, '(a)' ) '  For the Power PDF:'
-  write ( *, '(a)' ) '  POWER_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  POWER_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  POWER_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST129'
+   write (*, '(a)') '  For the Power PDF:'
+   write (*, '(a)') '  POWER_CDF evaluates the CDF;'
+   write (*, '(a)') '  POWER_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  POWER_PDF evaluates the PDF;'
 
-  a = 2.0D+00
-  b = 3.0D+00
+   a = 2.0D+00
+   b = 3.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =       ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =       ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =       ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =       ', b
 
-  if ( .not. power_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST129 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. power_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST129 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call power_sample ( a, b, seed, x )
+      call power_sample(a, b, seed, x)
 
-    call power_pdf ( x, a, b, pdf )
+      call power_pdf(x, a, b, pdf)
 
-    call power_cdf ( x, a, b, cdf )
+      call power_cdf(x, a, b, cdf)
 
-    call power_cdf_inv ( cdf, a, b, x2 )
+      call power_cdf_inv(cdf, a, b, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test130 ( )
+subroutine test130()
 
 !*****************************************************************************80
 !
@@ -10640,67 +10638,67 @@ subroutine test130 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  logical power_check
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   integer(kind=4) i
+   real(kind=8) mean
+   logical power_check
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST130'
-  write ( *, '(a)' ) '  For the Power PDF:'
-  write ( *, '(a)' ) '  POWER_MEAN computes the mean;'
-  write ( *, '(a)' ) '  POWER_SAMPLE samples;'
-  write ( *, '(a)' ) '  POWER_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST130'
+   write (*, '(a)') '  For the Power PDF:'
+   write (*, '(a)') '  POWER_MEAN computes the mean;'
+   write (*, '(a)') '  POWER_SAMPLE samples;'
+   write (*, '(a)') '  POWER_VARIANCE computes the variance.'
 
-  a = 2.0D+00
-  b = 3.0D+00
+   a = 2.0D+00
+   b = 3.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
 
-  if ( .not. power_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST130 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. power_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST130 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call power_mean ( a, b, mean )
-  call power_variance ( a, b, variance )
+   call power_mean(a, b, mean)
+   call power_variance(a, b, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call power_sample ( a, b, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call power_sample(a, b, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test1304 ( )
+subroutine test1304()
 
 !*****************************************************************************80
 !
@@ -10718,60 +10716,60 @@ subroutine test1304 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  logical quasigeometric_check
-  integer ( kind = 4 ) :: seed = 123456789
-  integer ( kind = 4 ) x
-  integer ( kind = 4 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) pdf
+   logical quasigeometric_check
+   integer(kind=4) :: seed = 123456789
+   integer(kind=4) x
+   integer(kind=4) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST1304'
-  write ( *, '(a)' ) '  For the Quasigeometric PDF:'
-  write ( *, '(a)' ) '  QUASIGEOMETRIC_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  QUASIGEOMETRIC_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  QUASIGEOMETRIC_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST1304'
+   write (*, '(a)') '  For the Quasigeometric PDF:'
+   write (*, '(a)') '  QUASIGEOMETRIC_CDF evaluates the CDF;'
+   write (*, '(a)') '  QUASIGEOMETRIC_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  QUASIGEOMETRIC_PDF evaluates the PDF;'
 
-  a = 0.4825D+00
-  b = 0.5893D+00
+   a = 0.4825D+00
+   b = 0.5893D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =      ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =      ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =      ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =      ', b
 
-  if ( .not. quasigeometric_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. quasigeometric_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call quasigeometric_sample ( a, b, seed, x )
+      call quasigeometric_sample(a, b, seed, x)
 
-    call quasigeometric_pdf ( x, a, b, pdf )
+      call quasigeometric_pdf(x, a, b, pdf)
 
-    call quasigeometric_cdf ( x, a, b, cdf )
+      call quasigeometric_cdf(x, a, b, cdf)
 
-    call quasigeometric_cdf_inv ( cdf, a, b, x2 )
+      call quasigeometric_cdf_inv(cdf, a, b, x2)
 
-    write ( *, '(2x,i14,2g14.6,i14)' ) x, pdf, cdf, x2
+      write (*, '(2x,i14,2g14.6,i14)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test1306 ( )
+subroutine test1306()
 
 !*****************************************************************************80
 !
@@ -10789,67 +10787,67 @@ subroutine test1306 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  logical quasigeometric_check
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  integer ( kind = 4 ) x(sample_num)
-  integer ( kind = 4 ) xmax
-  integer ( kind = 4 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   integer(kind=4) i
+   real(kind=8) mean
+   logical quasigeometric_check
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   integer(kind=4) x(sample_num)
+   integer(kind=4) xmax
+   integer(kind=4) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST1306'
-  write ( *, '(a)' ) '  For the Quasigeometric PDF:'
-  write ( *, '(a)' ) '  QUASIGEOMETRIC_MEAN computes the mean;'
-  write ( *, '(a)' ) '  QUASIGEOMETRIC_SAMPLE samples;'
-  write ( *, '(a)' ) '  QUASIGEOMETRIC_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST1306'
+   write (*, '(a)') '  For the Quasigeometric PDF:'
+   write (*, '(a)') '  QUASIGEOMETRIC_MEAN computes the mean;'
+   write (*, '(a)') '  QUASIGEOMETRIC_SAMPLE samples;'
+   write (*, '(a)') '  QUASIGEOMETRIC_VARIANCE computes the variance.'
 
-  a = 0.4825D+00
-  b = 0.5893D+00
+   a = 0.4825D+00
+   b = 0.5893D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =      ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =      ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =      ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =      ', b
 
-  if ( .not. quasigeometric_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. quasigeometric_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call quasigeometric_mean ( a, b, mean )
-  call quasigeometric_variance ( a, b, variance )
+   call quasigeometric_mean(a, b, mean)
+   call quasigeometric_variance(a, b, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call quasigeometric_sample ( a, b, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call quasigeometric_sample(a, b, seed, x(i))
+   end do
 
-  call i4vec_mean ( sample_num, x, mean )
-  call i4vec_variance ( sample_num, x, variance )
-  call i4vec_max ( sample_num, x, xmax )
-  call i4vec_min ( sample_num, x, xmin )
+   call i4vec_mean(sample_num, x, mean)
+   call i4vec_variance(sample_num, x, variance)
+   call i4vec_max(sample_num, x, xmax)
+   call i4vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,i8)'    ) '  Sample maximum =  ', xmax
-  write ( *, '(a,i8)'    ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,i8)') '  Sample maximum =  ', xmax
+   write (*, '(a,i8)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test131 ( )
+subroutine test131()
 
 !*****************************************************************************80
 !
@@ -10867,57 +10865,57 @@ subroutine test131 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  logical rayleigh_check
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) pdf
+   logical rayleigh_check
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST131'
-  write ( *, '(a)' ) '  For the Rayleigh PDF:'
-  write ( *, '(a)' ) '  RAYLEIGH_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  RAYLEIGH_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  RAYLEIGH_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST131'
+   write (*, '(a)') '  For the Rayleigh PDF:'
+   write (*, '(a)') '  RAYLEIGH_CDF evaluates the CDF;'
+   write (*, '(a)') '  RAYLEIGH_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  RAYLEIGH_PDF evaluates the PDF;'
 
-  a = 2.0D+00
+   a = 2.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
 
-  if ( .not. rayleigh_check ( a ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST131 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. rayleigh_check(a)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST131 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call rayleigh_sample ( a, seed, x )
+      call rayleigh_sample(a, seed, x)
 
-    call rayleigh_pdf ( x, a, pdf )
+      call rayleigh_pdf(x, a, pdf)
 
-    call rayleigh_cdf ( x, a, cdf )
+      call rayleigh_cdf(x, a, cdf)
 
-    call rayleigh_cdf_inv ( cdf, a, x2 )
+      call rayleigh_cdf_inv(cdf, a, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test132 ( )
+subroutine test132()
 
 !*****************************************************************************80
 !
@@ -10935,64 +10933,64 @@ subroutine test132 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  logical rayleigh_check
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   integer(kind=4) i
+   real(kind=8) mean
+   logical rayleigh_check
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST132'
-  write ( *, '(a)' ) '  For the Rayleigh PDF:'
-  write ( *, '(a)' ) '  RAYLEIGH_MEAN computes the mean;'
-  write ( *, '(a)' ) '  RAYLEIGH_SAMPLE samples;'
-  write ( *, '(a)' ) '  RAYLEIGH_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST132'
+   write (*, '(a)') '  For the Rayleigh PDF:'
+   write (*, '(a)') '  RAYLEIGH_MEAN computes the mean;'
+   write (*, '(a)') '  RAYLEIGH_SAMPLE samples;'
+   write (*, '(a)') '  RAYLEIGH_VARIANCE computes the variance.'
 
-  a = 2.0D+00
+   a = 2.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
 
-  if ( .not. rayleigh_check ( a ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST132 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. rayleigh_check(a)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST132 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call rayleigh_mean ( a, mean )
-  call rayleigh_variance ( a, variance )
+   call rayleigh_mean(a, mean)
+   call rayleigh_variance(a, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call rayleigh_sample ( a, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call rayleigh_sample(a, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test133 ( )
+subroutine test133()
 
 !*****************************************************************************80
 !
@@ -11010,60 +11008,60 @@ subroutine test133 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  logical reciprocal_check
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) pdf
+   logical reciprocal_check
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST133'
-  write ( *, '(a)' ) '  For the Reciprocal PDF:'
-  write ( *, '(a)' ) '  RECIPROCAL_CDF evaluates the CDF.'
-  write ( *, '(a)' ) '  RECIPROCAL_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  RECIPROCAL_PDF evaluates the PDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST133'
+   write (*, '(a)') '  For the Reciprocal PDF:'
+   write (*, '(a)') '  RECIPROCAL_CDF evaluates the CDF.'
+   write (*, '(a)') '  RECIPROCAL_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  RECIPROCAL_PDF evaluates the PDF.'
 
-  a = 1.0D+00
-  b = 3.0D+00
+   a = 1.0D+00
+   b = 3.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =         ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =         ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =         ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =         ', b
 
-  if ( .not. reciprocal_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST133 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. reciprocal_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST133 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call reciprocal_sample ( a, b, seed, x )
+      call reciprocal_sample(a, b, seed, x)
 
-    call reciprocal_pdf ( x, a, b, pdf )
+      call reciprocal_pdf(x, a, b, pdf)
 
-    call reciprocal_cdf ( x, a, b, cdf )
+      call reciprocal_cdf(x, a, b, cdf)
 
-    call reciprocal_cdf_inv ( cdf, a, b, x2 )
+      call reciprocal_cdf_inv(cdf, a, b, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test134 ( )
+subroutine test134()
 
 !*****************************************************************************80
 !
@@ -11081,67 +11079,67 @@ subroutine test134 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  logical reciprocal_check
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   integer(kind=4) i
+   real(kind=8) mean
+   logical reciprocal_check
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST134'
-  write ( *, '(a)' ) '  For the Reciprocal PDF:'
-  write ( *, '(a)' ) '  RECIPROCAL_MEAN computes the mean;'
-  write ( *, '(a)' ) '  RECIPROCAL_SAMPLE samples;'
-  write ( *, '(a)' ) '  RECIPROCAL_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST134'
+   write (*, '(a)') '  For the Reciprocal PDF:'
+   write (*, '(a)') '  RECIPROCAL_MEAN computes the mean;'
+   write (*, '(a)') '  RECIPROCAL_SAMPLE samples;'
+   write (*, '(a)') '  RECIPROCAL_VARIANCE computes the variance.'
 
-  a = 1.0D+00
-  b = 3.0D+00
+   a = 1.0D+00
+   b = 3.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A = ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B = ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A = ', a
+   write (*, '(a,g14.6)') '  PDF parameter B = ', b
 
-  if ( .not. reciprocal_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST134 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. reciprocal_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST134 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call reciprocal_mean ( a, b, mean )
-  call reciprocal_variance ( a, b, variance )
+   call reciprocal_mean(a, b, mean)
+   call reciprocal_variance(a, b, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call reciprocal_sample ( a, b, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call reciprocal_sample(a, b, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test1341 ( )
+subroutine test1341()
 
 !*****************************************************************************80
 !
@@ -11159,66 +11157,66 @@ subroutine test1341 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: nb_max = 10
+   integer(kind=4), parameter :: nb_max = 10
 
-  real ( kind = 8 ) alpha
-  real ( kind = 8 ) alpha_frac
-  real ( kind = 8 ) b(nb_max)
-  real ( kind = 8 ) fx
-  real ( kind = 8 ) fx2
-  integer ( kind = 4 ) ize
-  integer ( kind = 4 ) n_data
-  integer ( kind = 4 ) nb
-  integer ( kind = 4 ) ncalc
-  real ( kind = 8 ) x
+   real(kind=8) alpha
+   real(kind=8) alpha_frac
+   real(kind=8) b(nb_max)
+   real(kind=8) fx
+   real(kind=8) fx2
+   integer(kind=4) ize
+   integer(kind=4) n_data
+   integer(kind=4) nb
+   integer(kind=4) ncalc
+   real(kind=8) x
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST1341:'
-  write ( *, '(a)' ) '  RIBESL computes values of Bessel functions'
-  write ( *, '(a)' ) '  of NONINTEGER order.'
-  write ( *, '(a)' ) '  BESSEL_IX_VALUES returns selected values of the'
-  write ( *, '(a)' ) '  Bessel function In for NONINTEGER order.'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '      ALPHA         X             FX' // &
-    '                        FX2'
-  write ( *, '(a)' ) '                                  (table)' // &
-    '                   (RIBESL)'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST1341:'
+   write (*, '(a)') '  RIBESL computes values of Bessel functions'
+   write (*, '(a)') '  of NONINTEGER order.'
+   write (*, '(a)') '  BESSEL_IX_VALUES returns selected values of the'
+   write (*, '(a)') '  Bessel function In for NONINTEGER order.'
+   write (*, '(a)') ' '
+   write (*, '(a)') '      ALPHA         X             FX'// &
+      '                        FX2'
+   write (*, '(a)') '                                  (table)'// &
+      '                   (RIBESL)'
+   write (*, '(a)') ' '
 
-  n_data = 0
+   n_data = 0
 
-  do
+   do
 
-    call bessel_ix_values ( n_data, alpha, x, fx )
+      call bessel_ix_values(n_data, alpha, x, fx)
 
-    if ( n_data == 0 ) then
-      exit
-    end if
+      if (n_data == 0) then
+         exit
+      end if
 
-    ize = 1
+      ize = 1
 
-    nb = int ( alpha ) + 1
+      nb = int(alpha) + 1
 
-    if ( nb_max < nb ) then
-      write ( *, * ) '  [Skipping calculation, NB_MAX too small.]'
-      cycle
-    end if
+      if (nb_max < nb) then
+         write (*, *) '  [Skipping calculation, NB_MAX too small.]'
+         cycle
+      end if
 
-    alpha_frac = alpha - real ( int ( alpha ), kind = 8 )
+      alpha_frac = alpha - real(int(alpha), kind=8)
 
-    call ribesl ( x, alpha_frac, nb, ize, b, ncalc )
+      call ribesl(x, alpha_frac, nb, ize, b, ncalc)
 
-    fx2 = b(nb)
+      fx2 = b(nb)
 
-    write ( *, '(2x,f12.8,2x,f12.8,2x,g24.16,2x,g24.16)' ) alpha, x, fx, fx2
+      write (*, '(2x,f12.8,2x,f12.8,2x,g24.16,2x,g24.16)') alpha, x, fx, fx2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test1342 ( )
+subroutine test1342()
 
 !*****************************************************************************80
 !
@@ -11236,48 +11234,48 @@ subroutine test1342 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ) m
-  integer ( kind = 4 ) n
-  real ( kind = 8 ) pdf
-  real ( kind = 8 ) pdf_total
-  integer ( kind = 4 ) r
+   integer(kind=4) m
+   integer(kind=4) n
+   real(kind=8) pdf
+   real(kind=8) pdf_total
+   integer(kind=4) r
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST1342'
-  write ( *, '(a)' ) '  For the RUNS PDF:'
-  write ( *, '(a)' ) '  RUNS_PDF evaluates the PDF;'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '  M is the number of symbols of one kind,'
-  write ( *, '(a)' ) '  N is the number of symbols of the other kind,'
-  write ( *, '(a)' ) '  R is the number of runs (sequences of one symbol)'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '         M         N         R      PDF'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST1342'
+   write (*, '(a)') '  For the RUNS PDF:'
+   write (*, '(a)') '  RUNS_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') '  M is the number of symbols of one kind,'
+   write (*, '(a)') '  N is the number of symbols of the other kind,'
+   write (*, '(a)') '  R is the number of runs (sequences of one symbol)'
+   write (*, '(a)') ' '
+   write (*, '(a)') '         M         N         R      PDF'
+   write (*, '(a)') ' '
 
-  m = 6
+   m = 6
 
-  do n = 0, 8
+   do n = 0, 8
 
-    write ( *, '(a)' ) ' '
-    pdf_total = 0.0D+00
+      write (*, '(a)') ' '
+      pdf_total = 0.0D+00
 
-    do r = 1, 2 * min ( m, n ) + 2
+      do r = 1, 2*min(m, n) + 2
 
-      call runs_pdf ( m, n, r, pdf )
-      write ( *, '(2x,i8,2x,i8,2x,i8,2x,g14.6)' ) m, n, r, pdf
-      pdf_total = pdf_total + pdf
+         call runs_pdf(m, n, r, pdf)
+         write (*, '(2x,i8,2x,i8,2x,i8,2x,g14.6)') m, n, r, pdf
+         pdf_total = pdf_total + pdf
 
-    end do
+      end do
 
-    write ( *, '(2x,i8,2x,8x,2x,8x,2x,g14.6)' ) m, pdf_total
+      write (*, '(2x,i8,2x,8x,2x,8x,2x,g14.6)') m, pdf_total
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test1344 ( )
+subroutine test1344()
 
 !*****************************************************************************80
 !
@@ -11295,61 +11293,60 @@ subroutine test1344 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  integer ( kind = 4 ) i
-  integer ( kind = 4 ) m
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) n
-  integer ( kind = 4 ) r(sample_num)
-  integer ( kind = 4 ) rmax
-  integer ( kind = 4 ) rmin
-  integer ( kind = 4 ) seed
-  real ( kind = 8 ) variance
+   integer(kind=4) i
+   integer(kind=4) m
+   real(kind=8) mean
+   integer(kind=4) n
+   integer(kind=4) r(sample_num)
+   integer(kind=4) rmax
+   integer(kind=4) rmin
+   integer(kind=4) seed
+   real(kind=8) variance
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST1344'
-  write ( *, '(a)' ) '  For the RUNS PDF:'
-  write ( *, '(a)' ) '  RUNS_MEAN computes the mean;'
-  write ( *, '(a)' ) '  RUNS_VARIANCE computes the variance'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST1344'
+   write (*, '(a)') '  For the RUNS PDF:'
+   write (*, '(a)') '  RUNS_MEAN computes the mean;'
+   write (*, '(a)') '  RUNS_VARIANCE computes the variance'
 
-  m = 10
-  n = 5
+   m = 10
+   n = 5
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter M = ', m
-  write ( *, '(a,g14.6)' ) '  PDF parameter N = ', n
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter M = ', m
+   write (*, '(a,g14.6)') '  PDF parameter N = ', n
 
-  call runs_mean ( m, n, mean )
-  call runs_variance ( m, n, variance )
+   call runs_mean(m, n, mean)
+   call runs_variance(m, n, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =        ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =    ', variance
+   write (*, '(a,g14.6)') '  PDF mean =        ', mean
+   write (*, '(a,g14.6)') '  PDF variance =    ', variance
 
-  seed = 123456789
+   seed = 123456789
 
-  do i = 1, sample_num
-    call runs_sample ( m, n, seed, r(i) )
-  end do
+   do i = 1, sample_num
+      call runs_sample(m, n, seed, r(i))
+   end do
 
-  call i4vec_mean ( sample_num, r, mean )
-  call i4vec_variance ( sample_num, r, variance )
-  call i4vec_max ( sample_num, r, rmax )
-  call i4vec_min ( sample_num, r, rmin )
+   call i4vec_mean(sample_num, r, mean)
+   call i4vec_variance(sample_num, r, variance)
+   call i4vec_max(sample_num, r, rmax)
+   call i4vec_min(sample_num, r, rmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,i8)'    ) '  Sample maximum =  ', rmax
-  write ( *, '(a,i8)'    ) '  Sample minimum =  ', rmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,i8)') '  Sample maximum =  ', rmax
+   write (*, '(a,i8)') '  Sample minimum =  ', rmin
 
-
-  return
+   return
 end
-subroutine test135 ( )
+subroutine test135()
 
 !*****************************************************************************80
 !
@@ -11367,60 +11364,60 @@ subroutine test135 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  logical sech_check
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) pdf
+   logical sech_check
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST135'
-  write ( *, '(a)' ) '  For the Hyperbolic Secant PDF:'
-  write ( *, '(a)' ) '  SECH_CDF evaluates the CDF.'
-  write ( *, '(a)' ) '  SECH_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  SECH_PDF evaluates the PDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST135'
+   write (*, '(a)') '  For the Hyperbolic Secant PDF:'
+   write (*, '(a)') '  SECH_CDF evaluates the CDF.'
+   write (*, '(a)') '  SECH_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  SECH_PDF evaluates the PDF.'
 
-  a = 3.0D+00
-  b = 2.0D+00
+   a = 3.0D+00
+   b = 2.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =         ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =         ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =         ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =         ', b
 
-  if ( .not. sech_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST135 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. sech_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST135 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call sech_sample ( a, b, seed, x )
+      call sech_sample(a, b, seed, x)
 
-    call sech_pdf ( x, a, b, pdf )
+      call sech_pdf(x, a, b, pdf)
 
-    call sech_cdf ( x, a, b, cdf )
+      call sech_cdf(x, a, b, cdf)
 
-    call sech_cdf_inv ( cdf, a, b, x2 )
+      call sech_cdf_inv(cdf, a, b, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test136 ( )
+subroutine test136()
 
 !*****************************************************************************80
 !
@@ -11438,67 +11435,67 @@ subroutine test136 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  logical sech_check
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   integer(kind=4) i
+   real(kind=8) mean
+   logical sech_check
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST136'
-  write ( *, '(a)' ) '  For the Hyperbolic Secant PDF:'
-  write ( *, '(a)' ) '  SECH_MEAN computes the mean;'
-  write ( *, '(a)' ) '  SECH_SAMPLE samples;'
-  write ( *, '(a)' ) '  SECH_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST136'
+   write (*, '(a)') '  For the Hyperbolic Secant PDF:'
+   write (*, '(a)') '  SECH_MEAN computes the mean;'
+   write (*, '(a)') '  SECH_SAMPLE samples;'
+   write (*, '(a)') '  SECH_VARIANCE computes the variance.'
 
-  a = 3.0D+00
-  b = 2.0D+00
+   a = 3.0D+00
+   b = 2.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
 
-  if ( .not. sech_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST136 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. sech_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST136 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call sech_mean ( a, b, mean )
-  call sech_variance ( a, b, variance )
+   call sech_mean(a, b, mean)
+   call sech_variance(a, b, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call sech_sample ( a, b, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call sech_sample(a, b, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test137 ( )
+subroutine test137()
 
 !*****************************************************************************80
 !
@@ -11516,60 +11513,60 @@ subroutine test137 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  logical semicircular_check
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   logical semicircular_check
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST137'
-  write ( *, '(a)' ) '  For the Semicircular PDF:'
-  write ( *, '(a)' ) '  SEMICIRCULAR_CDF evaluates the CDF.'
-  write ( *, '(a)' ) '  SEMICIRCULAR_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  SEMICIRCULAR_PDF evaluates the PDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST137'
+   write (*, '(a)') '  For the Semicircular PDF:'
+   write (*, '(a)') '  SEMICIRCULAR_CDF evaluates the CDF.'
+   write (*, '(a)') '  SEMICIRCULAR_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  SEMICIRCULAR_PDF evaluates the PDF.'
 
-  a = 3.0D+00
-  b = 2.0D+00
+   a = 3.0D+00
+   b = 2.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =         ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =         ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =         ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =         ', b
 
-  if ( .not. semicircular_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST137 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. semicircular_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST137 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call semicircular_sample ( a, b, seed, x )
+      call semicircular_sample(a, b, seed, x)
 
-    call semicircular_pdf ( x, a, b, pdf )
+      call semicircular_pdf(x, a, b, pdf)
 
-    call semicircular_cdf ( x, a, b, cdf )
+      call semicircular_cdf(x, a, b, cdf)
 
-    call semicircular_cdf_inv ( cdf, a, b, x2 )
+      call semicircular_cdf_inv(cdf, a, b, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test138 ( )
+subroutine test138()
 
 !*****************************************************************************80
 !
@@ -11587,67 +11584,67 @@ subroutine test138 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  logical semicircular_check
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   logical semicircular_check
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST138'
-  write ( *, '(a)' ) '  For the Semicircular PDF:'
-  write ( *, '(a)' ) '  SEMICIRCULAR_MEAN computes the mean;'
-  write ( *, '(a)' ) '  SEMICIRCULAR_SAMPLE samples;'
-  write ( *, '(a)' ) '  SEMICIRCULAR_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST138'
+   write (*, '(a)') '  For the Semicircular PDF:'
+   write (*, '(a)') '  SEMICIRCULAR_MEAN computes the mean;'
+   write (*, '(a)') '  SEMICIRCULAR_SAMPLE samples;'
+   write (*, '(a)') '  SEMICIRCULAR_VARIANCE computes the variance.'
 
-  a = 3.0D+00
-  b = 2.0D+00
+   a = 3.0D+00
+   b = 2.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
 
-  if ( .not. semicircular_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST138 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. semicircular_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST138 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call semicircular_mean ( a, b, mean )
-  call semicircular_variance ( a, b, variance )
+   call semicircular_mean(a, b, mean)
+   call semicircular_variance(a, b, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call semicircular_sample ( a, b, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call semicircular_sample(a, b, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test139 ( )
+subroutine test139()
 
 !*****************************************************************************80
 !
@@ -11665,49 +11662,49 @@ subroutine test139 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) c
-  real ( kind = 8 ) fx
-  real ( kind = 8 ) fx2
-  integer ( kind = 4 ) n_data
-  real ( kind = 8 ) x
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) c
+   real(kind=8) fx
+   real(kind=8) fx2
+   integer(kind=4) n_data
+   real(kind=8) x
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST139:'
-  write ( *, '(a)' ) '  STUDENT_CDF evaluates the cumulative'
-  write ( *, '(a)' ) '  distribution function for the Student''s central T'
-  write ( *, '(a)' ) '  probability density function.'
-  write ( *, '(a)' ) '  STUDENT_CDF_VALUES returns some exact values.'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '   A       B       C       X       Exact F ' // &
-    '    STUDENT_CDF(A,B,C,X)'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST139:'
+   write (*, '(a)') '  STUDENT_CDF evaluates the cumulative'
+   write (*, '(a)') '  distribution function for the Student''s central T'
+   write (*, '(a)') '  probability density function.'
+   write (*, '(a)') '  STUDENT_CDF_VALUES returns some exact values.'
+   write (*, '(a)') ' '
+   write (*, '(a)') '   A       B       C       X       Exact F '// &
+      '    STUDENT_CDF(A,B,C,X)'
+   write (*, '(a)') ' '
 
-  n_data = 0
+   n_data = 0
 
-  do
+   do
 
-    call student_cdf_values ( n_data, c, x, fx )
+      call student_cdf_values(n_data, c, x, fx)
 
-    if ( n_data == 0 ) then
-      exit
-    end if
+      if (n_data == 0) then
+         exit
+      end if
 
-    a = 0.0D+00
-    b = 1.0D+00
+      a = 0.0D+00
+      b = 1.0D+00
 
-    call student_cdf ( x, a, b, c, fx2 )
+      call student_cdf(x, a, b, c, fx2)
 
-    write ( *, '(4f8.4,2g14.6)' ) a, b, c, x, fx, fx2
+      write (*, '(4f8.4,2g14.6)') a, b, c, x, fx, fx2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test140 ( )
+subroutine test140()
 
 !*****************************************************************************80
 !
@@ -11725,62 +11722,62 @@ subroutine test140 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) c
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) seed
-  logical student_check
-  real ( kind = 8 ) x
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) c
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) seed
+   logical student_check
+   real(kind=8) x
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST140'
-  write ( *, '(a)' ) '  For the central Student PDF:'
-  write ( *, '(a)' ) '  STUDENT_CDF evaluates the CDF.'
-  write ( *, '(a)' ) '  STUDENT_PDF evaluates the PDF.'
-  write ( *, '(a)' ) '  STUDENT_SAMPLE samples the PDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST140'
+   write (*, '(a)') '  For the central Student PDF:'
+   write (*, '(a)') '  STUDENT_CDF evaluates the CDF.'
+   write (*, '(a)') '  STUDENT_PDF evaluates the PDF.'
+   write (*, '(a)') '  STUDENT_SAMPLE samples the PDF.'
 
-  a = 0.5D+00
-  b = 2.0D+00
-  c = 6.0D+00
+   a = 0.5D+00
+   b = 2.0D+00
+   c = 6.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =   ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =   ', b
-  write ( *, '(a,g14.6)' ) '  PDF parameter C =   ', c
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =   ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =   ', b
+   write (*, '(a,g14.6)') '  PDF parameter C =   ', c
 
-  if ( .not. student_check ( a, b, c ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST140 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. student_check(a, b, c)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST140 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF'
+   write (*, '(a)') ' '
 
-  seed = 123456789
+   seed = 123456789
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call student_sample ( a, b, c, seed, x )
+      call student_sample(a, b, c, seed, x)
 
-    call student_pdf ( x, a, b, c, pdf )
+      call student_pdf(x, a, b, c, pdf)
 
-    call student_cdf ( x, a, b, c, cdf )
+      call student_cdf(x, a, b, c, cdf)
 
-    write ( *, '(2x,g14.6,2x,g14.6,2x,g14.6)' ) x, pdf, cdf
+      write (*, '(2x,g14.6,2x,g14.6,2x,g14.6)') x, pdf, cdf
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test141 ( )
+subroutine test141()
 
 !*****************************************************************************80
 !
@@ -11798,70 +11795,70 @@ subroutine test141 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) c
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  logical student_check
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) c
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   logical student_check
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST141'
-  write ( *, '(a)' ) '  For the central Student PDF:'
-  write ( *, '(a)' ) '  STUDENT_MEAN computes the mean;'
-  write ( *, '(a)' ) '  STUDENT_SAMPLE samples;'
-  write ( *, '(a)' ) '  STUDENT_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST141'
+   write (*, '(a)') '  For the central Student PDF:'
+   write (*, '(a)') '  STUDENT_MEAN computes the mean;'
+   write (*, '(a)') '  STUDENT_SAMPLE samples;'
+   write (*, '(a)') '  STUDENT_VARIANCE computes the variance.'
 
-  a = 0.5D+00
-  b = 2.0D+00
-  c = 6.0D+00
+   a = 0.5D+00
+   b = 2.0D+00
+   c = 6.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
-  write ( *, '(a,g14.6)' ) '  PDF parameter C =             ', c
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
+   write (*, '(a,g14.6)') '  PDF parameter C =             ', c
 
-  if ( .not. student_check ( a, b, c ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST141 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. student_check(a, b, c)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST141 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call student_mean ( a, b, c, mean )
-  call student_variance ( a, b, c, variance )
+   call student_mean(a, b, c, mean)
+   call student_variance(a, b, c, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call student_sample ( a, b, c, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call student_sample(a, b, c, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test142 ( )
+subroutine test142()
 
 !*****************************************************************************80
 !
@@ -11879,34 +11876,34 @@ subroutine test142 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) b
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) idf
-  real ( kind = 8 ) x
+   real(kind=8) b
+   real(kind=8) cdf
+   integer(kind=4) idf
+   real(kind=8) x
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST142'
-  write ( *, '(a)' ) '  For the Noncentral Student PDF:'
-  write ( *, '(a)' ) '  STUDENT_NONCENTRAL_CDF evaluates the CDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST142'
+   write (*, '(a)') '  For the Noncentral Student PDF:'
+   write (*, '(a)') '  STUDENT_NONCENTRAL_CDF evaluates the CDF;'
 
-  x = 0.50D+00
+   x = 0.50D+00
 
-  idf = 10
-  b = 1.0D+00
+   idf = 10
+   b = 1.0D+00
 
-  call student_noncentral_cdf ( x, idf, b, cdf )
+   call student_noncentral_cdf(x, idf, b, cdf)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF argument X =              ', x
-  write ( *, '(a,i8)' ) '  PDF parameter IDF =           ', idf
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
-  write ( *, '(a,g14.6)' ) '  CDF value =                   ', cdf
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF argument X =              ', x
+   write (*, '(a,i8)') '  PDF parameter IDF =           ', idf
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
+   write (*, '(a,g14.6)') '  CDF value =                   ', cdf
 
-  return
+   return
 end
-subroutine test1425 ( )
+subroutine test1425()
 
 !*****************************************************************************80
 !
@@ -11924,43 +11921,43 @@ subroutine test1425 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) h
-  integer ( kind = 4 ) n_data
-  real ( kind = 8 ) t
-  real ( kind = 8 ) t2
-  real ( kind = 8 ) tfn
+   real(kind=8) a
+   real(kind=8) h
+   integer(kind=4) n_data
+   real(kind=8) t
+   real(kind=8) t2
+   real(kind=8) tfn
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST1425'
-  write ( *, '(a)' ) '  TFN evaluates Owen''s T function;'
-  write ( *, '(a)' ) '  OWEN_VALUES stores some exact values.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST1425'
+   write (*, '(a)') '  TFN evaluates Owen''s T function;'
+   write (*, '(a)') '  OWEN_VALUES stores some exact values.'
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '      H             A           T(H,A)      Exact'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '      H             A           T(H,A)      Exact'
+   write (*, '(a)') ' '
 
-  n_data = 0
+   n_data = 0
 
-  do
+   do
 
-    call owen_values ( n_data, h, a, t )
+      call owen_values(n_data, h, a, t)
 
-    if ( n_data <= 0 ) then
-      exit
-    end if
+      if (n_data <= 0) then
+         exit
+      end if
 
-    t2 = tfn ( h, a )
+      t2 = tfn(h, a)
 
-    write ( *, '(2x,g14.6,2x,g14.6,2x,g14.6,2x,g14.6)' ) h, a, t2, t
+      write (*, '(2x,g14.6,2x,g14.6,2x,g14.6,2x,g14.6)') h, a, t2, t
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test143 ( )
+subroutine test143()
 
 !*****************************************************************************80
 !
@@ -11978,63 +11975,63 @@ subroutine test143 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) c
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  logical triangle_check
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) c
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   logical triangle_check
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST143'
-  write ( *, '(a)' ) '  For the Triangle PDF:'
-  write ( *, '(a)' ) '  TRIANGLE_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  TRIANGLE_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  TRIANGLE_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST143'
+   write (*, '(a)') '  For the Triangle PDF:'
+   write (*, '(a)') '  TRIANGLE_CDF evaluates the CDF;'
+   write (*, '(a)') '  TRIANGLE_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  TRIANGLE_PDF evaluates the PDF;'
 
-  a = 1.0D+00
-  b = 3.0D+00
-  c = 10.0D+00
+   a = 1.0D+00
+   b = 3.0D+00
+   c = 10.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =      ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =      ', b
-  write ( *, '(a,g14.6)' ) '  PDF parameter C =      ', c
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =      ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =      ', b
+   write (*, '(a,g14.6)') '  PDF parameter C =      ', c
 
-  if ( .not. triangle_check ( a, b, c ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST143 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. triangle_check(a, b, c)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST143 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call triangle_sample ( a, b, c, seed, x )
+      call triangle_sample(a, b, c, seed, x)
 
-    call triangle_pdf ( x, a, b, c, pdf )
+      call triangle_pdf(x, a, b, c, pdf)
 
-    call triangle_cdf ( x, a, b, c, cdf )
+      call triangle_cdf(x, a, b, c, cdf)
 
-    call triangle_cdf_inv ( cdf, a, b, c, x2 )
+      call triangle_cdf_inv(cdf, a, b, c, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test144 ( )
+subroutine test144()
 
 !*****************************************************************************80
 !
@@ -12052,71 +12049,71 @@ subroutine test144 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) c
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  logical triangle_check
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) c
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   logical triangle_check
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST144'
-  write ( *, '(a)' ) '  For the Triangle PDF:'
-  write ( *, '(a)' ) '  TRIANGLE_MEAN returns the mean;'
-  write ( *, '(a)' ) '  TRIANGLE_SAMPLE samples;'
-  write ( *, '(a)' ) '  TRIANGLE_VARIANCE returns the variance;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST144'
+   write (*, '(a)') '  For the Triangle PDF:'
+   write (*, '(a)') '  TRIANGLE_MEAN returns the mean;'
+   write (*, '(a)') '  TRIANGLE_SAMPLE samples;'
+   write (*, '(a)') '  TRIANGLE_VARIANCE returns the variance;'
 
-  a = 1.0D+00
-  b = 3.0D+00
-  c = 10.0D+00
+   a = 1.0D+00
+   b = 3.0D+00
+   c = 10.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
-  write ( *, '(a,g14.6)' ) '  PDF parameter C =             ', c
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
+   write (*, '(a,g14.6)') '  PDF parameter C =             ', c
 
-  if ( .not. triangle_check ( a, b, c ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST144 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. triangle_check(a, b, c)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST144 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call triangle_mean ( a, b, c, mean )
-  call triangle_variance ( a, b, c, variance )
+   call triangle_mean(a, b, c, mean)
+   call triangle_variance(a, b, c, variance)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter MEAN =          ', mean
-  write ( *, '(a,g14.6)' ) '  PDF parameter VARIANCE =      ', variance
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter MEAN =          ', mean
+   write (*, '(a,g14.6)') '  PDF parameter VARIANCE =      ', variance
 
-  do i = 1, sample_num
-    call triangle_sample ( a, b, c, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call triangle_sample(a, b, c, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test145 ( )
+subroutine test145()
 
 !*****************************************************************************80
 !
@@ -12134,60 +12131,60 @@ subroutine test145 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  logical triangular_check
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   logical triangular_check
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST145'
-  write ( *, '(a)' ) '  For the Triangular PDF:'
-  write ( *, '(a)' ) '  TRIANGULAR_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  TRIANGULAR_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  TRIANGULAR_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST145'
+   write (*, '(a)') '  For the Triangular PDF:'
+   write (*, '(a)') '  TRIANGULAR_CDF evaluates the CDF;'
+   write (*, '(a)') '  TRIANGULAR_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  TRIANGULAR_PDF evaluates the PDF;'
 
-  a = 1.0D+00
-  b = 10.0D+00
+   a = 1.0D+00
+   b = 10.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =      ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =      ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =      ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =      ', b
 
-  if ( .not. triangular_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST145 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. triangular_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST145 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call triangular_sample ( a, b, seed, x )
+      call triangular_sample(a, b, seed, x)
 
-    call triangular_pdf ( x, a, b, pdf )
+      call triangular_pdf(x, a, b, pdf)
 
-    call triangular_cdf ( x, a, b, cdf )
+      call triangular_cdf(x, a, b, cdf)
 
-    call triangular_cdf_inv ( cdf, a, b, x2 )
+      call triangular_cdf_inv(cdf, a, b, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test146 ( )
+subroutine test146()
 
 !*****************************************************************************80
 !
@@ -12205,67 +12202,67 @@ subroutine test146 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  logical triangular_check
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   logical triangular_check
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST146'
-  write ( *, '(a)' ) '  For the Triangular PDF:'
-  write ( *, '(a)' ) '  TRIANGULAR_MEAN computes mean;'
-  write ( *, '(a)' ) '  TRIANGULAR_SAMPLE samples;'
-  write ( *, '(a)' ) '  TRIANGULAR_VARIANCE computes variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST146'
+   write (*, '(a)') '  For the Triangular PDF:'
+   write (*, '(a)') '  TRIANGULAR_MEAN computes mean;'
+   write (*, '(a)') '  TRIANGULAR_SAMPLE samples;'
+   write (*, '(a)') '  TRIANGULAR_VARIANCE computes variance.'
 
-  a = 1.0D+00
-  b = 10.0D+00
+   a = 1.0D+00
+   b = 10.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
 
-  if ( .not. triangular_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST146 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. triangular_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST146 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call triangular_mean ( a, b, mean )
-  call triangular_variance ( a, b, variance )
+   call triangular_mean(a, b, mean)
+   call triangular_variance(a, b, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call triangular_sample ( a, b, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call triangular_sample(a, b, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test147 ( )
+subroutine test147()
 
 !*****************************************************************************80
 !
@@ -12283,33 +12280,33 @@ subroutine test147 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: n = 10
+   integer(kind=4), parameter :: n = 10
 
-  integer ( kind = 4 ) i
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x(n)
+   integer(kind=4) i
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x(n)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST147'
-  write ( *, '(a)' ) '  For the Uniform 01 Order PDF:'
-  write ( *, '(a)' ) '  UNIFORM_ORDER_SAMPLE samples.'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST147'
+   write (*, '(a)') '  For the Uniform 01 Order PDF:'
+   write (*, '(a)') '  UNIFORM_ORDER_SAMPLE samples.'
+   write (*, '(a)') ' '
 
-  call uniform_01_order_sample ( n, seed, x )
+   call uniform_01_order_sample(n, seed, x)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '  Ordered sample:'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '  Ordered sample:'
+   write (*, '(a)') ' '
 
-  do i = 1, n
-    write ( *, '(2x,i8,g14.6)' ) i, x(i)
-  end do
+   do i = 1, n
+      write (*, '(2x,i8,g14.6)') i, x(i)
+   end do
 
-  return
+   return
 end
-subroutine test148 ( )
+subroutine test148()
 
 !*****************************************************************************80
 !
@@ -12327,33 +12324,33 @@ subroutine test148 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: n = 3
+   integer(kind=4), parameter :: n = 3
 
-  integer ( kind = 4 ) i
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) x(n)
+   integer(kind=4) i
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) x(n)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST148'
-  write ( *, '(a)' ) '  For the Uniform PDF on the N-Sphere:'
-  write ( *, '(a)' ) '  UNIFORM_NSPHERE_SAMPLE samples.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST148'
+   write (*, '(a)') '  For the Uniform PDF on the N-Sphere:'
+   write (*, '(a)') '  UNIFORM_NSPHERE_SAMPLE samples.'
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)' ) '  Dimension N of sphere =       ', n
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '  Points on the sphere:'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Dimension N of sphere =       ', n
+   write (*, '(a)') ' '
+   write (*, '(a)') '  Points on the sphere:'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
-    call uniform_nsphere_sample ( n, seed, x )
-    write ( *, '(2x,i8,3g14.6)' ) i, x(1:n)
-  end do
+   do i = 1, 10
+      call uniform_nsphere_sample(n, seed, x)
+      write (*, '(2x,i8,3g14.6)') i, x(1:n)
+   end do
 
-  return
+   return
 end
-subroutine test1485 ( )
+subroutine test1485()
 
 !*****************************************************************************80
 !
@@ -12371,44 +12368,44 @@ subroutine test1485 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) uniform_01_sample
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) uniform_01_sample
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST1485'
-  write ( *, '(a)' ) '  For the Uniform 01 PDF:'
-  write ( *, '(a)' ) '  UNIFORM_01_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  UNIFORM_01_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  UNIFORM_01_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST1485'
+   write (*, '(a)') '  For the Uniform 01 PDF:'
+   write (*, '(a)') '  UNIFORM_01_CDF evaluates the CDF;'
+   write (*, '(a)') '  UNIFORM_01_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  UNIFORM_01_PDF evaluates the PDF;'
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    x = uniform_01_sample ( seed )
+      x = uniform_01_sample(seed)
 
-    call uniform_01_pdf ( x, pdf )
+      call uniform_01_pdf(x, pdf)
 
-    call uniform_01_cdf ( x, cdf )
+      call uniform_01_cdf(x, cdf)
 
-    call uniform_01_cdf_inv ( cdf, x2 )
+      call uniform_01_cdf_inv(cdf, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test1486 ( )
+subroutine test1486()
 
 !*****************************************************************************80
 !
@@ -12426,52 +12423,52 @@ subroutine test1486 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) uniform_01_sample
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) uniform_01_sample
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST1486'
-  write ( *, '(a)' ) '  For the Uniform 01 PDF:'
-  write ( *, '(a)' ) '  UNIFORM_01_MEAN computes mean;'
-  write ( *, '(a)' ) '  UNIFORM_01_SAMPLE samples;'
-  write ( *, '(a)' ) '  UNIFORM_01_VARIANCE computes variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST1486'
+   write (*, '(a)') '  For the Uniform 01 PDF:'
+   write (*, '(a)') '  UNIFORM_01_MEAN computes mean;'
+   write (*, '(a)') '  UNIFORM_01_SAMPLE samples;'
+   write (*, '(a)') '  UNIFORM_01_VARIANCE computes variance.'
 
-  call uniform_01_mean ( mean )
-  call uniform_01_variance ( variance )
+   call uniform_01_mean(mean)
+   call uniform_01_variance(variance)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF mean =            ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =        ', variance
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF mean =            ', mean
+   write (*, '(a,g14.6)') '  PDF variance =        ', variance
 
-  do i = 1, sample_num
-    x(i) = uniform_01_sample ( seed )
-  end do
+   do i = 1, sample_num
+      x(i) = uniform_01_sample(seed)
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test149 ( )
+subroutine test149()
 
 !*****************************************************************************80
 !
@@ -12489,60 +12486,60 @@ subroutine test149 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  logical uniform_check
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   logical uniform_check
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST149'
-  write ( *, '(a)' ) '  For the Uniform PDF:'
-  write ( *, '(a)' ) '  UNIFORM_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  UNIFORM_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  UNIFORM_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST149'
+   write (*, '(a)') '  For the Uniform PDF:'
+   write (*, '(a)') '  UNIFORM_CDF evaluates the CDF;'
+   write (*, '(a)') '  UNIFORM_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  UNIFORM_PDF evaluates the PDF;'
 
-  a = 1.0D+00
-  b = 10.0D+00
+   a = 1.0D+00
+   b = 10.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =      ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =      ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =      ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =      ', b
 
-  if ( .not. uniform_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST149 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. uniform_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST149 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call uniform_sample ( a, b, seed, x )
+      call uniform_sample(a, b, seed, x)
 
-    call uniform_pdf ( x, a, b, pdf )
+      call uniform_pdf(x, a, b, pdf)
 
-    call uniform_cdf ( x, a, b, cdf )
+      call uniform_cdf(x, a, b, cdf)
 
-    call uniform_cdf_inv ( cdf, a, b, x2 )
+      call uniform_cdf_inv(cdf, a, b, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test150 ( )
+subroutine test150()
 
 !*****************************************************************************80
 !
@@ -12560,67 +12557,67 @@ subroutine test150 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  logical uniform_check
-  real ( kind = 8 ) variance
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   logical uniform_check
+   real(kind=8) variance
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST150'
-  write ( *, '(a)' ) '  For the Uniform PDF:'
-  write ( *, '(a)' ) '  UNIFORM_MEAN computes mean;'
-  write ( *, '(a)' ) '  UNIFORM_SAMPLE samples;'
-  write ( *, '(a)' ) '  UNIFORM_VARIANCE computes variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST150'
+   write (*, '(a)') '  For the Uniform PDF:'
+   write (*, '(a)') '  UNIFORM_MEAN computes mean;'
+   write (*, '(a)') '  UNIFORM_SAMPLE samples;'
+   write (*, '(a)') '  UNIFORM_VARIANCE computes variance.'
 
-  a = 1.0D+00
-  b = 10.0D+00
+   a = 1.0D+00
+   b = 10.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
 
-  if ( .not. uniform_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST150 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. uniform_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST150 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call uniform_mean ( a, b, mean )
-  call uniform_variance ( a, b, variance )
+   call uniform_mean(a, b, mean)
+   call uniform_variance(a, b, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =        ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =        ', variance
 
-  do i = 1, sample_num
-    call uniform_sample ( a, b, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call uniform_sample(a, b, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test151 ( )
+subroutine test151()
 
 !*****************************************************************************80
 !
@@ -12638,60 +12635,60 @@ subroutine test151 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ) a
-  integer ( kind = 4 ) b
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  logical uniform_discrete_check
-  integer ( kind = 4 ) x
-  integer ( kind = 4 ) x2
+   integer(kind=4) a
+   integer(kind=4) b
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   logical uniform_discrete_check
+   integer(kind=4) x
+   integer(kind=4) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST151'
-  write ( *, '(a)' ) '  For the Uniform Discrete PDF:'
-  write ( *, '(a)' ) '  UNIFORM_DISCRETE_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  UNIFORM_DISCRETE_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  UNIFORM_DISCRETE_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST151'
+   write (*, '(a)') '  For the Uniform Discrete PDF:'
+   write (*, '(a)') '  UNIFORM_DISCRETE_CDF evaluates the CDF;'
+   write (*, '(a)') '  UNIFORM_DISCRETE_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  UNIFORM_DISCRETE_PDF evaluates the PDF;'
 
-  a = 1
-  b = 6
+   a = 1
+   b = 6
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  PDF parameter A =             ', a
-  write ( *, '(a,i8)'    ) '  PDF parameter B =             ', b
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  PDF parameter A =             ', a
+   write (*, '(a,i8)') '  PDF parameter B =             ', b
 
-  if ( .not. uniform_discrete_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST151 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. uniform_discrete_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST151 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call uniform_discrete_sample ( a, b, seed, x )
+      call uniform_discrete_sample(a, b, seed, x)
 
-    call uniform_discrete_pdf ( x, a, b, pdf )
+      call uniform_discrete_pdf(x, a, b, pdf)
 
-    call uniform_discrete_cdf ( x, a, b, cdf )
+      call uniform_discrete_cdf(x, a, b, cdf)
 
-    call uniform_discrete_cdf_inv ( cdf, a, b, x2 )
+      call uniform_discrete_cdf_inv(cdf, a, b, x2)
 
-    write ( *, '(2x,i14,2g14.6,i14)' ) x, pdf, cdf, x2
+      write (*, '(2x,i14,2g14.6,i14)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test152 ( )
+subroutine test152()
 
 !*****************************************************************************80
 !
@@ -12709,67 +12706,67 @@ subroutine test152 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  integer ( kind = 4 ) a
-  integer ( kind = 4 ) b
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  logical uniform_discrete_check
-  real ( kind = 8 ) variance
-  integer ( kind = 4 ) x(sample_num)
-  integer ( kind = 4 ) xmax
-  integer ( kind = 4 ) xmin
+   integer(kind=4) a
+   integer(kind=4) b
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   logical uniform_discrete_check
+   real(kind=8) variance
+   integer(kind=4) x(sample_num)
+   integer(kind=4) xmax
+   integer(kind=4) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST152'
-  write ( *, '(a)' ) '  For the Uniform discrete PDF:'
-  write ( *, '(a)' ) '  UNIFORM_DISCRETE_MEAN computes the mean;'
-  write ( *, '(a)' ) '  UNIFORM_DISCRETE_SAMPLE samples;'
-  write ( *, '(a)' ) '  UNIFORM_DISCRETE_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST152'
+   write (*, '(a)') '  For the Uniform discrete PDF:'
+   write (*, '(a)') '  UNIFORM_DISCRETE_MEAN computes the mean;'
+   write (*, '(a)') '  UNIFORM_DISCRETE_SAMPLE samples;'
+   write (*, '(a)') '  UNIFORM_DISCRETE_VARIANCE computes the variance.'
 
-  a = 1
-  b = 6
+   a = 1
+   b = 6
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  PDF parameter A =             ', a
-  write ( *, '(a,i8)'    ) '  PDF parameter B =             ', b
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  PDF parameter A =             ', a
+   write (*, '(a,i8)') '  PDF parameter B =             ', b
 
-  if ( .not. uniform_discrete_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST143 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. uniform_discrete_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST143 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call uniform_discrete_mean ( a, b, mean )
-  call uniform_discrete_variance ( a, b, variance )
+   call uniform_discrete_mean(a, b, mean)
+   call uniform_discrete_variance(a, b, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call uniform_discrete_sample ( a, b, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call uniform_discrete_sample(a, b, seed, x(i))
+   end do
 
-  call i4vec_mean ( sample_num, x, mean )
-  call i4vec_variance ( sample_num, x, variance )
-  call i4vec_max ( sample_num, x, xmax )
-  call i4vec_min ( sample_num, x, xmin )
+   call i4vec_mean(sample_num, x, mean)
+   call i4vec_variance(sample_num, x, variance)
+   call i4vec_max(sample_num, x, xmax)
+   call i4vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,i8)'    ) '  Sample maximum =  ', xmax
-  write ( *, '(a,i8)'    ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,i8)') '  Sample maximum =  ', xmax
+   write (*, '(a,i8)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end
-subroutine test153 ( )
+subroutine test153()
 
 !*****************************************************************************80
 !
@@ -12787,49 +12784,49 @@ subroutine test153 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ) a
-  integer ( kind = 4 ) b
-  real ( kind = 8 ) cdf
-  real ( kind = 8 ) pdf
-  logical uniform_discrete_check
-  integer ( kind = 4 ) x
+   integer(kind=4) a
+   integer(kind=4) b
+   real(kind=8) cdf
+   real(kind=8) pdf
+   logical uniform_discrete_check
+   integer(kind=4) x
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST153'
-  write ( *, '(a)' ) '  For the Uniform discrete PDF.'
-  write ( *, '(a)' ) '  UNIFORM_DISCRETE_PDF evaluates the PDF.'
-  write ( *, '(a)' ) '  UNIFORM_DISCRETE_CDF evaluates the CDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST153'
+   write (*, '(a)') '  For the Uniform discrete PDF.'
+   write (*, '(a)') '  UNIFORM_DISCRETE_PDF evaluates the PDF.'
+   write (*, '(a)') '  UNIFORM_DISCRETE_CDF evaluates the CDF.'
 
-  a = 1
-  b = 6
+   a = 1
+   b = 6
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,i8)' ) '  PDF parameter B =             ', b
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  PDF parameter A =             ', a
+   write (*, '(a,i8)') '  PDF parameter B =             ', b
 
-  if ( .not. uniform_discrete_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST153 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. uniform_discrete_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST153 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '      X      PDF(X)      CDF(X)'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '      X      PDF(X)      CDF(X)'
+   write (*, '(a)') ' '
 
-  do x = 0, 6
-    call uniform_discrete_pdf ( x, a, b, pdf )
-    call uniform_discrete_cdf ( x, a, b, cdf )
-    write ( *, '(2x,i8,2g14.6)' ) x, pdf, cdf
-  end do
+   do x = 0, 6
+      call uniform_discrete_pdf(x, a, b, pdf)
+      call uniform_discrete_cdf(x, a, b, cdf)
+      write (*, '(2x,i8,2g14.6)') x, pdf, cdf
+   end do
 
-  return
+   return
 end
 
-subroutine test154 ( )
+subroutine test154()
 
 !*****************************************************************************80
 !
@@ -12847,60 +12844,60 @@ subroutine test154 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  logical von_mises_check
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   logical von_mises_check
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST154'
-  write ( *, '(a)' ) '  For the Von Mises PDF:'
-  write ( *, '(a)' ) '  VON_MISES_CDF evaluates the CDF.'
-  write ( *, '(a)' ) '  VON_MISES_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  VON_MISES_PDF evaluates the PDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST154'
+   write (*, '(a)') '  For the Von Mises PDF:'
+   write (*, '(a)') '  VON_MISES_CDF evaluates the CDF.'
+   write (*, '(a)') '  VON_MISES_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  VON_MISES_PDF evaluates the PDF.'
 
-  a = 1.0D+00
-  b = 2.0D+00
+   a = 1.0D+00
+   b = 2.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =      ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =      ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =      ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =      ', b
 
-  if ( .not. von_mises_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST154 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. von_mises_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST154 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call von_mises_sample ( a, b, seed, x )
+      call von_mises_sample(a, b, seed, x)
 
-    call von_mises_pdf ( x, a, b, pdf )
+      call von_mises_pdf(x, a, b, pdf)
 
-    call von_mises_cdf ( x, a, b, cdf )
+      call von_mises_cdf(x, a, b, cdf)
 
-    call von_mises_cdf_inv ( cdf, a, b, x2 )
+      call von_mises_cdf_inv(cdf, a, b, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test155 ( )
+subroutine test155()
 
 !*****************************************************************************80
 !
@@ -12918,68 +12915,68 @@ subroutine test155 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) circular_variance
-  logical von_mises_check
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) circular_variance
+   logical von_mises_check
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST155'
-  write ( *, '(a)' ) '  For the Von Mises PDF:'
-  write ( *, '(a)' ) '  VON_MISES_MEAN computes the mean;'
-  write ( *, '(a)' ) '  VON_MISES_SAMPLE samples.'
-  write ( *, '(a)' ) &
-    '  VON_MISES_CIRCULAR_VARIANCE computes the circular_variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST155'
+   write (*, '(a)') '  For the Von Mises PDF:'
+   write (*, '(a)') '  VON_MISES_MEAN computes the mean;'
+   write (*, '(a)') '  VON_MISES_SAMPLE samples.'
+   write (*, '(a)') &
+      '  VON_MISES_CIRCULAR_VARIANCE computes the circular_variance.'
 
-  a = 1.0D+00
-  b = 2.0D+00
+   a = 1.0D+00
+   b = 2.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
 
-  if ( .not. von_mises_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST155 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. von_mises_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST155 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call von_mises_mean ( a, b, mean )
-  call von_mises_circular_variance ( a, b, circular_variance )
+   call von_mises_mean(a, b, mean)
+   call von_mises_circular_variance(a, b, circular_variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF circular variance =       ', circular_variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF circular variance =       ', circular_variance
 
-  do i = 1, sample_num
-    call von_mises_sample ( a, b, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call von_mises_sample(a, b, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_circular_variance ( sample_num, x, circular_variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_circular_variance(sample_num, x, circular_variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =              ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =              ', mean
-  write ( *, '(a,g14.6)' ) '  Sample circular variance = ', circular_variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =           ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =           ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =              ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =              ', mean
+   write (*, '(a,g14.6)') '  Sample circular variance = ', circular_variance
+   write (*, '(a,g14.6)') '  Sample maximum =           ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =           ', xmin
 
-  return
+   return
 end
-subroutine test1555 ( )
+subroutine test1555()
 
 !*****************************************************************************80
 !
@@ -12997,48 +12994,48 @@ subroutine test1555 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) fx
-  real ( kind = 8 ) fx2
-  integer ( kind = 4 ) n_data
-  real ( kind = 8 ) x
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) fx
+   real(kind=8) fx2
+   integer(kind=4) n_data
+   real(kind=8) x
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST1555:'
-  write ( *, '(a)' ) '  VON_MISES_CDF evaluates the cumulative distribution'
-  write ( *, '(a)' ) '  function for the von Mises PDF.'
-  write ( *, '(a)' ) '  VON_MISES_CDF_VALUES returns some exact values.'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '  A is the dominant angle;'
-  write ( *, '(a)' ) '  B is a measure of spread;'
-  write ( *, '(a)' ) '  X is the angle;'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) &
-    '         A         B         X          Exact F                Computed F'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST1555:'
+   write (*, '(a)') '  VON_MISES_CDF evaluates the cumulative distribution'
+   write (*, '(a)') '  function for the von Mises PDF.'
+   write (*, '(a)') '  VON_MISES_CDF_VALUES returns some exact values.'
+   write (*, '(a)') ' '
+   write (*, '(a)') '  A is the dominant angle;'
+   write (*, '(a)') '  B is a measure of spread;'
+   write (*, '(a)') '  X is the angle;'
+   write (*, '(a)') ' '
+   write (*, '(a)') &
+      '         A         B         X          Exact F                Computed F'
+   write (*, '(a)') ' '
 
-  n_data = 0
+   n_data = 0
 
-  do
+   do
 
-    call von_mises_cdf_values ( n_data, a, b, x, fx )
+      call von_mises_cdf_values(n_data, a, b, x, fx)
 
-    if ( n_data == 0 ) then
-      exit
-    end if
+      if (n_data == 0) then
+         exit
+      end if
 
-    call von_mises_cdf ( x, a, b, fx2 )
+      call von_mises_cdf(x, a, b, fx2)
 
-    write ( *, '(2x,f8.4,2x,f8.4,2x,f8.4,g24.16,g24.16)' ) a, b, x, fx, fx2
+      write (*, '(2x,f8.4,2x,f8.4,2x,f8.4,g24.16,g24.16)') a, b, x, fx, fx2
 
-  end do
+   end do
 
-  return
+   return
 end
-subroutine test156 ( )
+subroutine test156()
 
 !*****************************************************************************80
 !
@@ -13056,65 +13053,65 @@ subroutine test156 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) c
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  logical weibull_check
-  real ( kind = 8 ) x
-  real ( kind = 8 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) c
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   logical weibull_check
+   real(kind=8) x
+   real(kind=8) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST156'
-  write ( *, '(a)' ) '  For the Weibull PDF:'
-  write ( *, '(a)' ) '  WEIBULL_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  WEIBULL_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  WEIBULL_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST156'
+   write (*, '(a)') '  For the Weibull PDF:'
+   write (*, '(a)') '  WEIBULL_CDF evaluates the CDF;'
+   write (*, '(a)') '  WEIBULL_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  WEIBULL_PDF evaluates the PDF;'
 
-  x = 3.0D+00
+   x = 3.0D+00
 
-  a = 2.0D+00
-  b = 3.0D+00
-  c = 4.0D+00
+   a = 2.0D+00
+   b = 3.0D+00
+   c = 4.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
-  write ( *, '(a,g14.6)' ) '  PDF parameter C =             ', c
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
+   write (*, '(a,g14.6)') '  PDF parameter C =             ', c
 
-  if ( .not. weibull_check ( a, b, c ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST156 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. weibull_check(a, b, c)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST156 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call weibull_sample ( a, b, c, seed, x )
+      call weibull_sample(a, b, c, seed, x)
 
-    call weibull_pdf ( x, a, b, c, pdf )
+      call weibull_pdf(x, a, b, c, pdf)
 
-    call weibull_cdf ( x, a, b, c, cdf )
+      call weibull_cdf(x, a, b, c, cdf)
 
-    call weibull_cdf_inv ( cdf, a, b, c, x2 )
+      call weibull_cdf_inv(cdf, a, b, c, x2)
 
-    write ( *, '(2x,4g14.6)' ) x, pdf, cdf, x2
+      write (*, '(2x,4g14.6)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end subroutine
-subroutine test157 ( )
+subroutine test157()
 
 !*****************************************************************************80
 !
@@ -13132,70 +13129,70 @@ subroutine test157 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) c
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  logical weibull_check
-  real ( kind = 8 ) x(sample_num)
-  real ( kind = 8 ) xmax
-  real ( kind = 8 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) c
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   logical weibull_check
+   real(kind=8) x(sample_num)
+   real(kind=8) xmax
+   real(kind=8) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST157'
-  write ( *, '(a)' ) '  For the Weibull PDF:'
-  write ( *, '(a)' ) '  WEIBULL_MEAN computes the mean;'
-  write ( *, '(a)' ) '  WEIBULL_SAMPLE samples;'
-  write ( *, '(a)' ) '  WEIBULL_VARIANCE computes the variance.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST157'
+   write (*, '(a)') '  For the Weibull PDF:'
+   write (*, '(a)') '  WEIBULL_MEAN computes the mean;'
+   write (*, '(a)') '  WEIBULL_SAMPLE samples;'
+   write (*, '(a)') '  WEIBULL_VARIANCE computes the variance.'
 
-  a = 2.0D+00
-  b = 3.0D+00
-  c = 4.0D+00
+   a = 2.0D+00
+   b = 3.0D+00
+   c = 4.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =       ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
-  write ( *, '(a,g14.6)' ) '  PDF parameter C =             ', c
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =       ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
+   write (*, '(a,g14.6)') '  PDF parameter C =             ', c
 
-  if ( .not. weibull_check ( a, b, c ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST157 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. weibull_check(a, b, c)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST157 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call weibull_mean ( a, b, c, mean )
-  call weibull_variance ( a, b, c, variance )
+   call weibull_mean(a, b, c, mean)
+   call weibull_variance(a, b, c, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call weibull_sample ( a, b, c, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call weibull_sample(a, b, c, seed, x(i))
+   end do
 
-  call r8vec_mean ( sample_num, x, mean )
-  call r8vec_variance ( sample_num, x, variance )
-  call r8vec_max ( sample_num, x, xmax )
-  call r8vec_min ( sample_num, x, xmin )
+   call r8vec_mean(sample_num, x, mean)
+   call r8vec_variance(sample_num, x, variance)
+   call r8vec_max(sample_num, x, xmax)
+   call r8vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,g14.6)' ) '  Sample maximum =  ', xmax
-  write ( *, '(a,g14.6)' ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,g14.6)') '  Sample maximum =  ', xmax
+   write (*, '(a,g14.6)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end subroutine
-subroutine test158 ( )
+subroutine test158()
 
 !*****************************************************************************80
 !
@@ -13213,60 +13210,60 @@ subroutine test158 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) cdf
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) :: seed = 123456789
-  logical weibull_discrete_check
-  integer ( kind = 4 ) x
-  integer ( kind = 4 ) x2
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) cdf
+   integer(kind=4) i
+   real(kind=8) pdf
+   integer(kind=4) :: seed = 123456789
+   logical weibull_discrete_check
+   integer(kind=4) x
+   integer(kind=4) x2
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST158'
-  write ( *, '(a)' ) '  For the Weibull Discrete PDF,'
-  write ( *, '(a)' ) '  WEIBULL_DISCRETE_CDF evaluates the CDF;'
-  write ( *, '(a)' ) '  WEIBULL_DISCRETE_CDF_INV inverts the CDF.'
-  write ( *, '(a)' ) '  WEIBULL_DISCRETE_PDF evaluates the PDF;'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST158'
+   write (*, '(a)') '  For the Weibull Discrete PDF,'
+   write (*, '(a)') '  WEIBULL_DISCRETE_CDF evaluates the CDF;'
+   write (*, '(a)') '  WEIBULL_DISCRETE_CDF_INV inverts the CDF.'
+   write (*, '(a)') '  WEIBULL_DISCRETE_PDF evaluates the PDF;'
 
-  a = 0.50D+00
-  b = 1.5D+00
+   a = 0.50D+00
+   b = 1.5D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =             ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =             ', b
 
-  if ( .not. weibull_discrete_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST158 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. weibull_discrete_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST158 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '       X            PDF           CDF            CDF_INV'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '       X            PDF           CDF            CDF_INV'
+   write (*, '(a)') ' '
 
-  do i = 1, 10
+   do i = 1, 10
 
-    call weibull_discrete_sample ( a, b, seed, x )
+      call weibull_discrete_sample(a, b, seed, x)
 
-    call weibull_discrete_pdf ( x, a, b, pdf )
+      call weibull_discrete_pdf(x, a, b, pdf)
 
-    call weibull_discrete_cdf ( x, a, b, cdf )
+      call weibull_discrete_cdf(x, a, b, cdf)
 
-    call weibull_discrete_cdf_inv ( cdf, a, b, x2 )
+      call weibull_discrete_cdf_inv(cdf, a, b, x2)
 
-    write ( *, '(2x,i14,2g14.6,i14)' ) x, pdf, cdf, x2
+      write (*, '(2x,i14,2g14.6,i14)') x, pdf, cdf, x2
 
-  end do
+   end do
 
-  return
+   return
 end subroutine
-subroutine test159 ( )
+subroutine test159()
 
 !*****************************************************************************80
 !
@@ -13284,48 +13281,48 @@ subroutine test159 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) cdf
-  real ( kind = 8 ) pdf
-  logical weibull_discrete_check
-  integer ( kind = 4 ) x
+   real(kind=8) a
+   real(kind=8) b
+   real(kind=8) cdf
+   real(kind=8) pdf
+   logical weibull_discrete_check
+   integer(kind=4) x
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST159'
-  write ( *, '(a)' ) '  For the Weibull Discrete PDF:'
-  write ( *, '(a)' ) '  WEIBULL_DISCRETE_PDF evaluates the PDF;'
-  write ( *, '(a)' ) '  WEIBULL_DISCRETE_CDF evaluates the CDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST159'
+   write (*, '(a)') '  For the Weibull Discrete PDF:'
+   write (*, '(a)') '  WEIBULL_DISCRETE_PDF evaluates the PDF;'
+   write (*, '(a)') '  WEIBULL_DISCRETE_CDF evaluates the CDF.'
 
-  a = 0.50D+00
-  b = 1.5D+00
+   a = 0.50D+00
+   b = 1.5D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =     ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =     ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =     ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =     ', b
 
-  if ( .not. weibull_discrete_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST159 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. weibull_discrete_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST159 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '      X      PDF(X)      CDF(X)'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '      X      PDF(X)      CDF(X)'
+   write (*, '(a)') ' '
 
-  do x = 0, 10
-    call weibull_discrete_pdf ( x, a, b, pdf )
-    call weibull_discrete_cdf ( x, a, b, cdf )
-    write ( *, '(2x,i8,2g14.6)' ) x, pdf, cdf
-  end do
+   do x = 0, 10
+      call weibull_discrete_pdf(x, a, b, pdf)
+      call weibull_discrete_cdf(x, a, b, cdf)
+      write (*, '(2x,i8,2g14.6)') x, pdf, cdf
+   end do
 
-  return
+   return
 end subroutine
-subroutine test160 ( )
+subroutine test160()
 
 !*****************************************************************************80
 !
@@ -13343,59 +13340,59 @@ subroutine test160 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  logical weibull_discrete_check
-  integer ( kind = 4 ) x(sample_num)
-  integer ( kind = 4 ) xmax
-  integer ( kind = 4 ) xmin
+   real(kind=8) a
+   real(kind=8) b
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   logical weibull_discrete_check
+   integer(kind=4) x(sample_num)
+   integer(kind=4) xmax
+   integer(kind=4) xmin
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST160'
-  write ( *, '(a)' ) '  For the discrete Weibull PDF:'
-  write ( *, '(a)' ) '  WEIBULL_DISCRETE_SAMPLE samples.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST160'
+   write (*, '(a)') '  For the discrete Weibull PDF:'
+   write (*, '(a)') '  WEIBULL_DISCRETE_SAMPLE samples.'
 
-  a = 0.5D+00
-  b = 1.5D+00
+   a = 0.5D+00
+   b = 1.5D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =     ', a
-  write ( *, '(a,g14.6)' ) '  PDF parameter B =     ', b
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =     ', a
+   write (*, '(a,g14.6)') '  PDF parameter B =     ', b
 
-  if ( .not. weibull_discrete_check ( a, b ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST160 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. weibull_discrete_check(a, b)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST160 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  do i = 1, sample_num
-    call weibull_discrete_sample ( a, b, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call weibull_discrete_sample(a, b, seed, x(i))
+   end do
 
-  call i4vec_mean ( sample_num, x, mean )
-  call i4vec_variance ( sample_num, x, variance )
-  call i4vec_max ( sample_num, x, xmax )
-  call i4vec_min ( sample_num, x, xmin )
+   call i4vec_mean(sample_num, x, mean)
+   call i4vec_variance(sample_num, x, variance)
+   call i4vec_max(sample_num, x, xmax)
+   call i4vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,i8)'    ) '  Sample maximum =  ', xmax
-  write ( *, '(a,i8)'    ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,i8)') '  Sample maximum =  ', xmax
+   write (*, '(a,i8)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end subroutine
-subroutine test161 ( )
+subroutine test161()
 
 !*****************************************************************************80
 !
@@ -13413,47 +13410,47 @@ subroutine test161 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) cdf
-  real ( kind = 8 ) pdf
-  integer ( kind = 4 ) x
-  logical zipf_check
+   real(kind=8) a
+   real(kind=8) cdf
+   real(kind=8) pdf
+   integer(kind=4) x
+   logical zipf_check
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST161'
-  write ( *, '(a)' ) '  For the Zipf PDF:'
-  write ( *, '(a)' ) '  ZIPF_PDF evaluates the PDF.'
-  write ( *, '(a)' ) '  ZIPF_CDF evaluates the CDF.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST161'
+   write (*, '(a)') '  For the Zipf PDF:'
+   write (*, '(a)') '  ZIPF_PDF evaluates the PDF.'
+   write (*, '(a)') '  ZIPF_CDF evaluates the CDF.'
 
-  a = 2.0D+00
+   a = 2.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A = ', a
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A = ', a
 
-  if ( .not. zipf_check ( a ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST161 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. zipf_check(a)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST161 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '  X    PDF(X)       CDF(X)'
-  write ( *, '(a)' ) ' '
+   write (*, '(a)') ' '
+   write (*, '(a)') '  X    PDF(X)       CDF(X)'
+   write (*, '(a)') ' '
 
-  do x = 1, 20
+   do x = 1, 20
 
-    call zipf_pdf ( x, a, pdf )
-    call zipf_cdf ( x, a, cdf )
-    write ( *, '(2x,i8,2x,2g14.6)' ) x, pdf, cdf
+      call zipf_pdf(x, a, pdf)
+      call zipf_cdf(x, a, cdf)
+      write (*, '(2x,i8,2x,2g14.6)') x, pdf, cdf
 
-  end do
+   end do
 
-  return
+   return
 end subroutine
-subroutine test162 ( )
+subroutine test162()
 
 !*****************************************************************************80
 !
@@ -13471,58 +13468,58 @@ subroutine test162 ( )
 !
 !    John Burkardt
 !
-  implicit none
+   implicit none
 
-  integer ( kind = 4 ), parameter :: sample_num = 1000
+   integer(kind=4), parameter :: sample_num = 1000
 
-  real ( kind = 8 ) a
-  integer ( kind = 4 ) i
-  real ( kind = 8 ) mean
-  integer ( kind = 4 ) :: seed = 123456789
-  real ( kind = 8 ) variance
-  integer ( kind = 4 ) x(sample_num)
-  integer ( kind = 4 ) xmax
-  integer ( kind = 4 ) xmin
-  logical zipf_check
+   real(kind=8) a
+   integer(kind=4) i
+   real(kind=8) mean
+   integer(kind=4) :: seed = 123456789
+   real(kind=8) variance
+   integer(kind=4) x(sample_num)
+   integer(kind=4) xmax
+   integer(kind=4) xmin
+   logical zipf_check
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'TEST162'
-  write ( *, '(a)' ) '  For the Zipf PDF:'
-  write ( *, '(a)' ) '  ZIPF_SAMPLE samples.'
+   write (*, '(a)') ' '
+   write (*, '(a)') 'TEST162'
+   write (*, '(a)') '  For the Zipf PDF:'
+   write (*, '(a)') '  ZIPF_SAMPLE samples.'
 
-  a = 4.0D+00
+   a = 4.0D+00
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  PDF parameter A =             ', a
+   write (*, '(a)') ' '
+   write (*, '(a,g14.6)') '  PDF parameter A =             ', a
 
-  if ( .not. zipf_check ( a ) ) then
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'TEST162 - Fatal error!'
-    write ( *, '(a)' ) '  The parameters are not legal.'
-    return
-  end if
+   if (.not. zipf_check(a)) then
+      write (*, '(a)') ' '
+      write (*, '(a)') 'TEST162 - Fatal error!'
+      write (*, '(a)') '  The parameters are not legal.'
+      return
+   end if
 
-  call zipf_mean ( a, mean )
-  call zipf_variance ( a, variance )
+   call zipf_mean(a, mean)
+   call zipf_variance(a, variance)
 
-  write ( *, '(a,g14.6)' ) '  PDF mean =                    ', mean
-  write ( *, '(a,g14.6)' ) '  PDF variance =                ', variance
+   write (*, '(a,g14.6)') '  PDF mean =                    ', mean
+   write (*, '(a,g14.6)') '  PDF variance =                ', variance
 
-  do i = 1, sample_num
-    call zipf_sample ( a, seed, x(i) )
-  end do
+   do i = 1, sample_num
+      call zipf_sample(a, seed, x(i))
+   end do
 
-  call i4vec_mean ( sample_num, x, mean )
-  call i4vec_variance ( sample_num, x, variance )
-  call i4vec_max ( sample_num, x, xmax )
-  call i4vec_min ( sample_num, x, xmin )
+   call i4vec_mean(sample_num, x, mean)
+   call i4vec_variance(sample_num, x, variance)
+   call i4vec_max(sample_num, x, xmax)
+   call i4vec_min(sample_num, x, xmin)
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)'    ) '  Sample size =     ', sample_num
-  write ( *, '(a,g14.6)' ) '  Sample mean =     ', mean
-  write ( *, '(a,g14.6)' ) '  Sample variance = ', variance
-  write ( *, '(a,i8)'    ) '  Sample maximum =  ', xmax
-  write ( *, '(a,i8)'    ) '  Sample minimum =  ', xmin
+   write (*, '(a)') ' '
+   write (*, '(a,i8)') '  Sample size =     ', sample_num
+   write (*, '(a,g14.6)') '  Sample mean =     ', mean
+   write (*, '(a,g14.6)') '  Sample variance = ', variance
+   write (*, '(a,i8)') '  Sample maximum =  ', xmax
+   write (*, '(a,i8)') '  Sample minimum =  ', xmin
 
-  return
+   return
 end subroutine

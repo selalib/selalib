@@ -1,10 +1,10 @@
-!> @defgroup external fftpack 
-!> @brief 
-!> Double precision fast Fourier transform package 
+!> @defgroup external fftpack
+!> @brief
+!> Double precision fast Fourier transform package
 !> @author Paul N. Swarztrauber, National Center for Atmospheric Research, Boulder, CO
 !> @details
-!> FFTPACK is a package of Fortran subprograms for the fast Fourier transform of 
-!> periodic and other symmetric sequences. It includes complex, real, sine, 
+!> FFTPACK is a package of Fortran subprograms for the fast Fourier transform of
+!> periodic and other symmetric sequences. It includes complex, real, sine,
 !> cosine, and quarter-wave transforms.
 !> Long description of  fftpack, you can add some references or math equations.
 !>
