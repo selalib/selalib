@@ -17,6 +17,8 @@
 
 !http://en.wikipedia.org/wiki/Trapezoidal_rule_%28differential_equations%29
 
+!> @ingroup characteristics
+!> @brief computes the characteristic with trapezoidal rule
 module sll_m_characteristics_1d_trapezoid
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"

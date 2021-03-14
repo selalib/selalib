@@ -17,6 +17,8 @@
 
 !http://en.wikipedia.org/wiki/Trapezoidal_rule_%28differential_equations%29
 
+!> @ingroup characteristics
+!> @brief conservative version of trapezoid
 module sll_m_characteristics_1d_trapezoid_conservative
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"

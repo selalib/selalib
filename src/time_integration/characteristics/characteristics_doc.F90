@@ -11,7 +11,6 @@
 !> @defgroup characteristics sll_characteristics
 !> @brief computes the characteristics for advection
 !> @author Michel Mehrenberger
-!> You can add a contact, do not put your email to prevent spam.
 !> @details
 !> computes the characteristics
 !> it is then used for the advection
