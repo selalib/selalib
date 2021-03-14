@@ -15,6 +15,8 @@
 !  "http://www.cecill.info".
 !**************************************************************
 
+!> @ingroup characteristics
+!> @brief computes the characteristic with verlet method
 module sll_m_characteristics_2d_verlet
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"

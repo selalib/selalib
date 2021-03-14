@@ -15,6 +15,8 @@
 !  "http://www.cecill.info".
 !**************************************************************
 
+!> @ingroup characteristics
+!> @brief Abstract class for characteristic derived type.
 module sll_m_characteristics_1d_base
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
