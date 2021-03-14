@@ -37,33 +37,33 @@ module sll_m_hermite_interpolator_1d
 
    !> Interpolator class of Hermite 1D interpolator
    type, extends(sll_c_interpolator_1d) :: sll_hermite_interpolator_1d
-      !> 
+      !>
       type(sll_t_hermite_interpolation_1d), pointer :: hermite
-      !> 
+      !>
       sll_int32                                    :: npts
    contains
-      !> 
+      !>
       procedure, pass(interpolator) :: init => initialize_hermite_interpolator_1d
-      !> 
+      !>
       procedure :: compute_interpolants => wrap_compute_interpolants_hermite_1d
-      !> 
+      !>
       procedure :: interpolate_from_interpolant_derivatives_eta1 => interpolate_array_derivatives_hi1d
-      !> 
+      !>
       procedure :: interpolate_array => wrap_interpolate_array_hermite_1d
 
-      !> 
+      !>
       procedure :: interpolate_array_disp => interpolate_array_disp_hi1d
-      !> 
+      !>
       procedure :: interpolate_array_disp_inplace => interpolate_array_disp_inplace_hi1d
-      !> 
+      !>
       procedure :: interpolate_from_interpolant_derivative_eta1 => interpolate_derivative_eta1_hi1d
-      !> 
+      !>
       procedure :: interpolate_from_interpolant_array => interpolate_array_values_hi1d
-      !> 
+      !>
       procedure :: interpolate_from_interpolant_value => wrap_interpolate_value_hermite_1d
-      !> 
+      !>
       procedure, pass :: set_coefficients => set_coefficients_hi1d
-      !> 
+      !>
       procedure, pass :: get_coefficients => get_coefficients_hi1d
    end type sll_hermite_interpolator_1d
 
@@ -75,7 +75,7 @@ module sll_m_hermite_interpolator_1d
 
 contains  !**********************************************************
 
-   !> 
+   !>
    function sll_f_new_hermite_interpolator_1d( &
       npts, &
       eta_min, &

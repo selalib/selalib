@@ -15,7 +15,6 @@
 !  "http://www.cecill.info".
 !**************************************************************
 
-
 !> @ingroup advection
 !> @brief use integer oblic interpolation
 !> @details
