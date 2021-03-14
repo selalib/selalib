@@ -1,3 +1,4 @@
+!> @ingroup characteristics
 module sll_m_euler_2d_hex
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"

@@ -15,6 +15,8 @@
 !  "http://www.cecill.info".
 !**************************************************************
 
+!> @ingroup characteristics
+!> computes the characteristic with explicit euler scheme
 module sll_m_characteristics_1d_explicit_euler
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"

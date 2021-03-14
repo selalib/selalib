@@ -15,6 +15,8 @@
 !  "http://www.cecill.info".
 !**************************************************************
 
+!> @ingroup characteristics
+!> @brief Abstract class to compute the characteristic in two dimensions
 module sll_m_characteristics_2d_base
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
