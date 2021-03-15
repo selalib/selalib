@@ -137,7 +137,6 @@ else()
 endif()
 
 include(PreprocessorTarget)
-include(CLAPP_framework)
 # Note: The following include must be placed after the compiler flags are fixed.
 include(CompilerConfigString)
 
