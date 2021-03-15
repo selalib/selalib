@@ -174,34 +174,6 @@ endif(
   AND HDF5_IS_PARALLEL
   AND NOT MPI_ENABLED)
 
-if(BUILD_HDF5)
-
-  set(HDF5_C_LIBRARY
-      ${CMAKE_BINARY_DIR}/lib/libhdf5.a
-      CACHE FILEPATH " " FORCE)
-  set(HDF5_ENABLED
-      ON
-      CACHE BOOL " " FORCE)
-  set(HDF5_FORTRAN_LIBRARY
-      ${CMAKE_BINARY_DIR}/lib/libhdf5_fortran.a
-      CACHE FILEPATH " " FORCE)
-  set(HDF5_INCLUDE_DIR
-      ${CMAKE_BINARY_DIR}/include
-      CACHE FILEPATH " " FORCE)
-  set(HDF5_INCLUDE_DIR_FORTRAN
-      ${CMAKE_BINARY_DIR}/include
-      CACHE FILEPATH " " FORCE)
-  set(HDF5_IS_PARALLEL
-      ON
-      CACHE BOOL " " FORCE)
-  set(HDF5_PARALLEL_ENABLED
-      ON
-      CACHE BOOL " " FORCE)
-  set(HDF5_LIBRARIES ${HDF5_FORTRAN_LIBRARY} ${HDF5_C_LIBRARY}
-                     ${ZLIB_LIBRARIES})
-
-endif(BUILD_HDF5)
-
 message(STATUS "##########################################################")
 message(STATUS "HDF5_INCLUDE_DIR:${HDF5_INCLUDE_DIR}")
 message(STATUS "HDF5_INCLUDE_DIR_FORTRAN:${HDF5_INCLUDE_DIR_FORTRAN}")
