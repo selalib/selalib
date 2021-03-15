@@ -61,6 +61,14 @@ program test_conjugate_gradient
    logical :: passed
    logical :: success
 
+   integer :: nseed
+   integer, allocate, dimension(:) :: iseed
+
+   call random_seed(size=nseed)
+   allocate(iseed(nseed))
+   iseed = 1234
+   call random_seed(put=iseed)
+
    passed = .true.
 
    !-----------------------------------------------------------------------------
