@@ -26,8 +26,6 @@ if(${CMAKE_SOURCE_DIR} MATCHES ${CMAKE_BINARY_DIR})
   return()
 endif()
 
-option(BUILD_HDF5 "Download and build the HDF5 library" OFF)
-option(CLAPP "Use SELALIB within the CLAPP framework" OFF)
 option(OPENMP_ENABLED "Enable use of OpenMP library" OFF)
 option(MPI_ENABLED "Enable use of MPI library" ON)
 option(HDF5_ENABLED "Use HDF5 library for data output" ON)
@@ -37,11 +35,8 @@ option(PASTIX_ENABLED "Enable PasTiX solver " OFF)
 option(MUMPS_ENABLED "Enable MUMPS solver " OFF)
 option(SUITESPARSE_ENABLED "Enable UMFpack solver" OFF)
 option(BUILD_SIMULATIONS "Build selalib simulations" ON)
-option(BUILD_GSL "Build GSL and FGSL libraries" OFF)
-option(BUILD_PARALUTION "Build paralution library" OFF)
-option(BUILD_SPRNG "Build SPRNG libraries" OFF)
+option(BUILD_FGSL "Build GSL and FGSL libraries" OFF)
 option(USE_MKL "Using Intel Math Kernel Library" OFF)
-option(BUILD_THIRDPARTY "Build third party simulations" OFF)
 
 include(CMakeDependentOption)
 cmake_dependent_option(BUILD_MUDPACK "Build mudpack library" ON
@@ -50,10 +45,6 @@ cmake_dependent_option(BUILD_MUDPACK "Build mudpack library" ON
 set(PROCS
     4
     CACHE STRING "Number of MPI processes for tests")
-
-if(BUILD_THIRDPARTY)
-  set(HDF5_PARALLEL_ENABLED ON)
-endif(BUILD_THIRDPARTY)
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   get_filename_component(INSTALL_DIR "${CMAKE_SOURCE_DIR}/../usr" ABSOLUTE)

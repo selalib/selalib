@@ -1,4 +1,4 @@
-if(BUILD_GSL)
+if(BUILD_FGSL)
 
   include(ExternalProject)
 
@@ -31,15 +31,6 @@ if(BUILD_GSL)
 
 else()
 
-  # * Find GSL Find the native GSL INCLUDEs and library
-  #
-  # GSL_INCLUDES    - where to find gsl/gsl_*.h, etc. GSL_LIBRARIES   - List of
-  # libraries when using GSL. GSL_FOUND       - True if GSL found.
-
-  if(GSL_INCLUDES)
-    set(GSL_FIND_QUIETLY TRUE)
-  endif(GSL_INCLUDES)
-
   find_path(
     GSL_INCLUDES
     NAMES gsl/gsl_math.h
@@ -65,40 +56,28 @@ else()
 
   set(GSL_LIBRARIES "${GSL_LIB}" "${GSL_CBLAS_LIB}")
 
-  # handle the QUIETLY and REQUIRED arguments and set GSL_FOUND to TRUE if all
-  # listed variables are TRUE
-  include(FindPackageHandleStandardArgs)
-  find_package_handle_standard_args(GSL DEFAULT_MSG GSL_LIBRARIES GSL_INCLUDES)
-
-  mark_as_advanced(GSL_LIB GSL_CBLAS_LIB GSL_INCLUDES)
-
-  if(GSL_FOUND)
-
-    find_path(
+  find_path(
       FGSL_INCLUDES
       NAMES fgsl.mod
       HINTS /usr/local/include
       PATH_SUFFIXES fgsl
       DOC "Path to fgsl.mod")
 
-    find_library(
+  find_library(
       FGSL_LIB
       NAMES fgsl
       DOC "Path to libfgsl.a")
 
-    if(FGSL_LIB)
+  if(FGSL_LIB)
       set(FGSL_LIBRARIES "${FGSL_LIB}" "${GSL_LIBRARIES}")
-    endif(FGSL_LIB)
+  endif(FGSL_LIB)
 
-    include(FindPackageHandleStandardArgs)
-    find_package_handle_standard_args(FGSL DEFAULT_MSG FGSL_LIBRARIES
-                                      FGSL_INCLUDES)
+  include(FindPackageHandleStandardArgs)
+  find_package_handle_standard_args(FGSL DEFAULT_MSG FGSL_LIBRARIES FGSL_INCLUDES)
 
-    mark_as_advanced(FGSL_LIB FGSL_INCLUDES)
+  mark_as_advanced(FGSL_LIB FGSL_INCLUDES GSL_LIB GSL_CBLAS_LIB GSL_INCLUDES)
 
-  endif(GSL_FOUND)
-
-endif(BUILD_GSL)
+endif(BUILD_FGSL)
 
 if(FGSL_FOUND)
   message(STATUS "FGSL_INCLUDES:${FGSL_INCLUDES}")

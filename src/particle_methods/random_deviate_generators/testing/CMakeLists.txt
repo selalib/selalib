@@ -9,7 +9,7 @@ target_link_libraries(test_hammersley sll_random_deviate_generators)
 add_test(NAME pic_hammersley COMMAND test_hammersley)
 set_tests_properties(pic_hammersley PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-find_package(GSL)
+find_package(FGSL)
 
 if(FGSL_FOUND)
   add_executable(test_fgsl_rng mod_unit.f90 rng.f90)
