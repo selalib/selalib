@@ -62,7 +62,7 @@ program test_conjugate_gradient
    logical :: success
 
    integer :: nseed
-   integer, allocate, dimension(:) :: iseed
+   integer, allocatable, dimension(:) :: iseed
 
    call random_seed(size=nseed)
    allocate(iseed(nseed))
