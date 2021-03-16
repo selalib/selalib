@@ -65,7 +65,7 @@ program test_conjugate_gradient
    integer, allocatable, dimension(:) :: iseed
 
    call random_seed(size=nseed)
-   allocate(iseed(nseed))
+   allocate (iseed(nseed))
    iseed = 1234
    call random_seed(put=iseed)
 
