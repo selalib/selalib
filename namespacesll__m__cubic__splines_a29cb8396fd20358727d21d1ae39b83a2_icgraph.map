@@ -1,8 +1,7 @@
 <map id="compute_spline_2d_hrmt_hrmt" name="compute_spline_2d_hrmt_hrmt">
-<area shape="rect" id="node2" href="$namespacesll__m__cubic__splines.html#a0d1f3cee9f161c208e409c998ab66713" title="Computes the spline coefficients for the given data. The coeffcients are first computed in the second..." alt="" coords="277,173,464,214"/>
-<area shape="rect" id="node3" href="$namespacesll__m__fdistribu4d__dk.html#adf8cc4ba8aba42290c788f697de79f42" title="sll_m_fdistribu4d_dk\l::sll_s_function_xy_from\l_rtheta" alt="" coords="527,5,707,61"/>
-<area shape="rect" id="node4" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a2c7a0e952c10e71709680a8ea4bd548d" title="sll_m_general_coordinate\l_elliptic_solver::sll_s\l_factorize_mat_es_prototype" alt="" coords="512,85,723,141"/>
-<area shape="rect" id="node5" href="$namespacesll__m__cubic__spline__interpolator__2d.html#a10af8789e490412a3580fcd15040a9b6" title="sll_m_cubic_spline\l_interpolator_2d::compute\l_interpolants_cs2d" alt="" coords="521,165,714,221"/>
-<area shape="rect" id="node6" href="$namespacesll__m__cubic__spline__interpolator__2d.html#a44c6e00989e48621fd373f2a8d0526fa" title="sll_m_cubic_spline\l_interpolator_2d::spline\l_interpolate2d" alt="" coords="530,245,705,301"/>
-<area shape="rect" id="node7" href="$namespacesll__m__cubic__spline__interpolator__2d.html#af3b769e5f47945e7de14ba1272defea0" title="sll_m_cubic_spline\l_interpolator_2d::spline\l_interpolate2d_disp" alt="" coords="530,325,705,381"/>
+<area shape="rect" id="node2" href="$namespacesll__m__cubic__splines.html#a0d1f3cee9f161c208e409c998ab66713" title="Computes the spline coefficients for the given data. The coeffcients are first computed in the second..." alt="" coords="277,133,464,174"/>
+<area shape="rect" id="node3" href="$namespacesll__m__fdistribu4d__dk.html#adf8cc4ba8aba42290c788f697de79f42" title="sll_m_fdistribu4d_dk\l::sll_s_function_xy_from\l_rtheta" alt="" coords="519,5,699,61"/>
+<area shape="rect" id="node4" href="$namespacesll__m__cubic__spline__interpolator__2d.html#a10af8789e490412a3580fcd15040a9b6" title="sll_m_cubic_spline\l_interpolator_2d::compute\l_interpolants_cs2d" alt="" coords="512,85,705,141"/>
+<area shape="rect" id="node5" href="$namespacesll__m__cubic__spline__interpolator__2d.html#a44c6e00989e48621fd373f2a8d0526fa" title="sll_m_cubic_spline\l_interpolator_2d::spline\l_interpolate2d" alt="" coords="521,165,696,221"/>
+<area shape="rect" id="node6" href="$namespacesll__m__cubic__spline__interpolator__2d.html#af3b769e5f47945e7de14ba1272defea0" title="sll_m_cubic_spline\l_interpolator_2d::spline\l_interpolate2d_disp" alt="" coords="521,245,696,301"/>
 </map>

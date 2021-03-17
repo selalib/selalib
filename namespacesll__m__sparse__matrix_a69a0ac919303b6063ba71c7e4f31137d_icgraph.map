@@ -1,11 +1,5 @@
 <map id="sll_s_mult_csr_matrix_vector" name="sll_s_mult_csr_matrix_vector">
-<area shape="rect" id="node2" href="$namespacesll__m__general__coordinate__elliptic__solver__multipatch.html#a6b7c5c791868306ed41bd47b97d88907" title="Assemble the matrix for elliptic solver. " alt="" coords="1229,43,1469,114"/>
-<area shape="rect" id="node3" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a4f7fd26755a4faa1a8bdf94ff493eff1" title="Assemble the matrix for elliptic solver. " alt="" coords="720,43,909,99"/>
-<area shape="rect" id="node4" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a2c7a0e952c10e71709680a8ea4bd548d" title="sll_m_general_coordinate\l_elliptic_solver::sll_s\l_factorize_mat_es_prototype" alt="" coords="217,101,428,157"/>
-<area shape="rect" id="node5" href="$namespacesll__m__sparse__matrix.html#a468090b4b06aeafdea056c08b63a72ef" title="solve_with_cg" alt="" coords="265,181,380,208"/>
-<area shape="rect" id="node6" href="$namespacesll__m__sparse__matrix.html#a7d5478ffad5dfe54e84b5c4d203f380f" title="sll_s_solve_csr_matrix" alt="" coords="476,137,645,164"/>
-<area shape="rect" id="node10" href="$namespacesll__m__sparse__matrix.html#ade7113edc1de28dc83126428b54f632e" title="sll_s_solve_csr_matrix\l_perper" alt="" coords="476,189,645,230"/>
-<area shape="rect" id="node7" href="$namespacesll__m__general__coordinate__elliptic__solver__multipatch.html#acb2419ac4636b43343b2c695498a516e" title="sll_m_general_coordinate\l_elliptic_solver_multipatch\l::solve_gen_elliptic_eq_mp" alt="" coords="715,123,914,179"/>
-<area shape="rect" id="node9" href="$namespacesll__m__general__coordinate__elliptic__solver.html#aff3042a62c26cedfdcf04569ac9ead5d" title="sll_m_general_coordinate\l_elliptic_solver::sll_s\l_set_rho_coefficients_coordinates\l_elliptic_eq_prototype" alt="" coords="693,203,936,274"/>
-<area shape="rect" id="node8" href="$namespacesll__m__general__coordinate__elliptic__solver__multipatch.html#ad586304ed7ac38e61ea43cf18d2ca0c1" title="sll_m_general_coordinate\l_elliptic_solver_multipatch\l::solve_linear_system_mp" alt="" coords="984,83,1181,139"/>
+<area shape="rect" id="node2" href="$namespacesll__m__sparse__matrix.html#a468090b4b06aeafdea056c08b63a72ef" title="solve_with_cg" alt="" coords="217,35,332,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__sparse__matrix.html#a7d5478ffad5dfe54e84b5c4d203f380f" title="sll_s_solve_csr_matrix" alt="" coords="380,5,549,32"/>
+<area shape="rect" id="node4" href="$namespacesll__m__sparse__matrix.html#ade7113edc1de28dc83126428b54f632e" title="sll_s_solve_csr_matrix\l_perper" alt="" coords="380,57,549,98"/>
 </map>

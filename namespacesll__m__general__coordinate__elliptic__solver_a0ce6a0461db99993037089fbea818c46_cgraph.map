@@ -1,5 +1,0 @@
-<map id="sll_s_solve_general_coordinates_elliptic_eq_prototype" name="sll_s_solve_general_coordinates_elliptic_eq_prototype">
-<area shape="rect" id="node2" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a2371433254cb8dfeb5dabf61337f90bd" title="compute_b_spline_at_x" alt="" coords="209,35,384,61"/>
-<area shape="rect" id="node3" href="$namespacesll__m__general__coordinate__elliptic__solver.html#aa9ceef40154354e9427b67d594a0f821" title="compute_index" alt="" coords="463,5,585,32"/>
-<area shape="rect" id="node4" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a28d7b2c5dc102d89fd10040982029e00" title="compute_local_to_global\l_splines_indices" alt="" coords="432,57,616,98"/>
-</map>

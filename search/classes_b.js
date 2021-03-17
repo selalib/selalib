@@ -6,8 +6,5 @@ var searchData=
   ['memslice',['memslice',['../namespacefmempool.html#structfmempool_1_1memslice',1,'fmempool']]],
   ['mp_5facquire',['mp_acquire',['../interfacefmempool_1_1mp__acquire.html',1,'fmempool']]],
   ['mp_5frelease',['mp_release',['../interfacefmempool_1_1mp__release.html',1,'fmempool']]],
-  ['multipatch_5fdata_5f1d_5fint',['multipatch_data_1d_int',['../structsll__m__coordinate__transformation__multipatch_1_1multipatch__data__1d__int.html',1,'sll_m_coordinate_transformation_multipatch']]],
-  ['multipatch_5fdata_5f1d_5freal',['multipatch_data_1d_real',['../structsll__m__coordinate__transformation__multipatch_1_1multipatch__data__1d__real.html',1,'sll_m_coordinate_transformation_multipatch']]],
-  ['multipatch_5fdata_5f2d_5fint',['multipatch_data_2d_int',['../structsll__m__coordinate__transformation__multipatch_1_1multipatch__data__2d__int.html',1,'sll_m_coordinate_transformation_multipatch']]],
   ['mumps_5fsolver',['mumps_solver',['../structsll__m__mumps_1_1mumps__solver.html',1,'sll_m_mumps']]]
 ];

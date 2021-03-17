@@ -1,6 +1,0 @@
-<map id="sll_s_set_rho_coefficients_coordinates_elliptic_eq_prototype" name="sll_s_set_rho_coefficients_coordinates_elliptic_eq_prototype">
-<area shape="rect" id="node2" href="$namespacesll__m__sparse__matrix.html#a7d5478ffad5dfe54e84b5c4d203f380f" title="sll_m_sparse_matrix\l::sll_s_solve_csr_matrix" alt="" coords="249,13,426,54"/>
-<area shape="rect" id="node5" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a657de6caf720d3a761710d6003b4fa3d" title="compute_values_at_knots" alt="" coords="241,79,433,105"/>
-<area shape="rect" id="node3" href="$namespacesll__m__sparse__matrix.html#a468090b4b06aeafdea056c08b63a72ef" title="sll_m_sparse_matrix\l::solve_with_cg" alt="" coords="481,13,639,54"/>
-<area shape="rect" id="node4" href="$namespacesll__m__sparse__matrix.html#a69a0ac919303b6063ba71c7e4f31137d" title="sll_m_sparse_matrix\l::sll_s_mult_csr_matrix\l_vector" alt="" coords="687,5,859,61"/>
-</map>

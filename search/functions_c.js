@@ -1,18 +1,10 @@
 var searchData=
 [
   ['m1p',['m1p',['../namespacesll__m__poisson__2d__tri.html#a55eae465794da73fee4ecba53d5cb2ec',1,'sll_m_poisson_2d_tri']]],
-  ['mass_5fdf4d',['mass_df4d',['../namespacesll__m__distribution__function__4d__multipatch.html#a9dc85f2f76b5907b64b838910bebb8fd',1,'sll_m_distribution_function_4d_multipatch']]],
   ['match_5fmoment_5f1d_5flinear_5freal64',['match_moment_1d_linear_real64',['../interfacesll__m__moment__matching_1_1match__moment__1d__linear.html#aa2b32148dbd4fa243d0a7f2f45f339c1',1,'sll_m_moment_matching::match_moment_1d_linear::match_moment_1d_linear_real64()'],['../namespacesll__m__moment__matching.html#a24e5604d81500d3d4a3922ceef8c2f18',1,'sll_m_moment_matching::match_moment_1d_linear_real64()']]],
   ['matrix_5fproduct',['matrix_product',['../namespacesll__m__qn__2d__polar.html#aa7736b2f0573912e8b31a2356f047473',1,'sll_m_qn_2d_polar']]],
   ['matrix_5fproduct_5fcirc',['matrix_product_circ',['../namespacesll__m__qn__2d__polar.html#a01fc8864e65db95d0fc3e98f251f5043',1,'sll_m_qn_2d_polar']]],
   ['matrix_5fproduct_5fcomp',['matrix_product_comp',['../namespacesll__m__qn__2d__polar.html#a66faa304f76ed0d46cafd361b1fb8b02',1,'sll_m_qn_2d_polar']]],
-  ['mesh_5f2d_5fjacobian_5fcell',['mesh_2d_jacobian_cell',['../namespacesll__m__coordinate__transformations__2d.html#a7adebc146a2b3d0f50d0b768d5507bcc',1,'sll_m_coordinate_transformations_2d']]],
-  ['mesh_5f2d_5fx1_5fcell',['mesh_2d_x1_cell',['../namespacesll__m__coordinate__transformations__2d.html#ad1583de675d923451531bc72c7d412dc',1,'sll_m_coordinate_transformations_2d']]],
-  ['mesh_5f2d_5fx1_5fnode',['mesh_2d_x1_node',['../namespacesll__m__coordinate__transformations__2d.html#a6b5ae86faa132651d9fa8cfc62b828bc',1,'sll_m_coordinate_transformations_2d']]],
-  ['mesh_5f2d_5fx2_5fcell',['mesh_2d_x2_cell',['../namespacesll__m__coordinate__transformations__2d.html#a1b09ad15dcb3b5a4efd6137833884cc9',1,'sll_m_coordinate_transformations_2d']]],
-  ['mesh_5f2d_5fx2_5fnode',['mesh_2d_x2_node',['../namespacesll__m__coordinate__transformations__2d.html#a93f0891ff2a639808f8db765fb7eb619',1,'sll_m_coordinate_transformations_2d']]],
-  ['moments_5fdf4d',['moments_df4d',['../namespacesll__m__distribution__function__4d__multipatch.html#aa0324d4ada2db7d4acaab97c5210b533',1,'sll_m_distribution_function_4d_multipatch']]],
-  ['momentum_5fdf4d',['momentum_df4d',['../namespacesll__m__distribution__function__4d__multipatch.html#a043448789f72f59642b62e60dd306436',1,'sll_m_distribution_function_4d_multipatch']]],
   ['morse',['morse',['../namespacesll__m__poisson__2d__tri.html#a47b12896c284ff2ba17fbcd1bafdb6ac',1,'sll_m_poisson_2d_tri']]],
   ['mp_5facquire_5fbytes',['mp_acquire_bytes',['../namespacefmempool.html#a7d6d7b60f6147c50c872e4d81f5d02fd',1,'fmempool']]],
   ['mp_5facquire_5fdouble_5f1d',['mp_acquire_double_1d',['../interfacefmempool_1_1mp__acquire.html#a32a26846956407d22d3d12675dad9b00',1,'fmempool::mp_acquire::mp_acquire_double_1d()'],['../namespacefmempool.html#aac7c0d2790983b4a5c6f1312d80e215a',1,'fmempool::mp_acquire_double_1d()']]],

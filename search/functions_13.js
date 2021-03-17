@@ -66,7 +66,6 @@ var searchData=
   ['toroidal_5f1',['toroidal_1',['../namespacesll__m__fcisl__toroidal.html#a3ca26babb29f2aa3a9c19e127f611b38',1,'sll_m_fcisl_toroidal']]],
   ['toroidal_5f2',['toroidal_2',['../namespacesll__m__fcisl__toroidal.html#aea442fdae18e85541759322fbb865390',1,'sll_m_fcisl_toroidal']]],
   ['transf_5f2d_5fjacobian_5fnode_5fdiscrete',['transf_2d_jacobian_node_discrete',['../namespacesll__m__coordinate__transformations__2d.html#ac97df32aed38f539cd4910d6b6dad49a',1,'sll_m_coordinate_transformations_2d']]],
-  ['transf_5f2d_5fjacobian_5fnode_5fnurbs',['transf_2d_jacobian_node_nurbs',['../namespacesll__m__coordinate__transformations__2d__nurbs.html#a6112c044fe20bfdfd1cbade55aa0531a',1,'sll_m_coordinate_transformations_2d_nurbs']]],
   ['trapz_5fintegral_5f1d',['trapz_integral_1d',['../interfacesll__m__trapz__integration_1_1sll__o__trapz__integrate__1d.html#a126f2fb2a9cce19a3c84531e8d25cda9',1,'sll_m_trapz_integration::sll_o_trapz_integrate_1d::trapz_integral_1d()'],['../namespacesll__m__trapz__integration.html#af5354563267946d96ff5d989f0aaf122',1,'sll_m_trapz_integration::trapz_integral_1d()']]],
   ['trapz_5fweights',['trapz_weights',['../namespacesll__m__trapz__integration.html#a0fe42aba5c8e37593d725bbd1420e134',1,'sll_m_trapz_integration']]],
   ['triangle_5farea',['triangle_area',['../namespacesll__m__fekete__integration.html#a300188a7e5cadce739ea1ba63ac4544f',1,'sll_m_fekete_integration']]],

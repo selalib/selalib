@@ -1,11 +1,4 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$structsll__m__interpolators__1d__base_1_1sll__c__interpolator__1d.html" title="Abstract class for 1D interpolation and reconstruction. " alt="" coords="5,238,163,265"/>
-<area shape="rect" id="node2" href="$structsll__m__arbitrary__degree__spline__interpolator__1d_1_1sll__t__arbitrary__degree__spline__interpolator__1d.html" title="Class for arbitrary degree spline 1d interpolator. " alt="" coords="233,5,407,47"/>
-<area shape="rect" id="node3" href="$structsll__m__cubic__spline__interpolator__1d_1_1sll__t__cubic__spline__interpolator__1d.html" title="Cubic spline interpolator 1d regular grid. " alt="" coords="252,71,388,112"/>
-<area shape="rect" id="node4" href="$structsll__m__cubic__spline__interpolator__1d__nonuniform_1_1sll__t__cubic__spline__interpolator__1d__nonuniform.html" title="sll_interpolator_1d implemented with cubic splines on non uniform mesh " alt="" coords="215,136,425,177"/>
-<area shape="rect" id="node5" href="$structsll__m__finite__difference__interpolator__1d_1_1sll__finite__difference__interpolator__1d.html" title="Finite differences implementation of 1d interpolator. " alt="" coords="245,201,395,243"/>
-<area shape="rect" id="node6" href="$structsll__m__hermite__interpolator__1d_1_1sll__hermite__interpolator__1d.html" title="The hermite&#45;based interpolator is only a wrapper around the capabilities of the hermite interpolation..." alt="" coords="219,267,421,294"/>
-<area shape="rect" id="node7" href="$structsll__m__lagrange__interpolator__1d_1_1sll__t__lagrange__interpolator__1d.html" title="Interpolator class of Lagrange 1D interpolator. " alt="" coords="211,318,429,345"/>
-<area shape="rect" id="node8" href="$structsll__m__periodic__interpolator__1d_1_1sll__t__periodic__interpolator__1d.html" title="Periodic interpolator. " alt="" coords="213,369,427,395"/>
-<area shape="rect" id="node9" href="$structsll__m__quintic__spline__interpolator__1d_1_1sll__t__quintic__spline__interpolator__1d.html" title="Quintic spline interpolator 1d. " alt="" coords="247,420,393,461"/>
+<area shape="rect" id="node1" href="$structsll__m__meshes__base_1_1sll__c__mesh__1d__base.html" title="1D logical mesh " alt="" coords="5,5,160,32"/>
+<area shape="rect" id="node2" href="$structsll__m__cartesian__meshes_1_1sll__t__cartesian__mesh__1d.html" title="1D cartesian mesh " alt="" coords="208,5,391,32"/>
 </map>

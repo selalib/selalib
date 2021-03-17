@@ -1,6 +1,0 @@
-<map id="initconnectivity" name="initconnectivity">
-<area shape="rect" id="node2" href="$namespacesll__m__general__coordinate__elliptic__solver.html#ad3cd8986caf344e128bfc0894c2d68b9" title="compute_local_to_global\l_splines_indices_from\l_bc_indices" alt="" coords="176,20,360,76"/>
-<area shape="rect" id="node3" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a2371433254cb8dfeb5dabf61337f90bd" title="compute_b_spline_at_x" alt="" coords="408,35,583,61"/>
-<area shape="rect" id="node4" href="$namespacesll__m__general__coordinate__elliptic__solver.html#aa9ceef40154354e9427b67d594a0f821" title="compute_index" alt="" coords="661,5,784,32"/>
-<area shape="rect" id="node5" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a28d7b2c5dc102d89fd10040982029e00" title="compute_local_to_global\l_splines_indices" alt="" coords="631,57,815,98"/>
-</map>

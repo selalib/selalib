@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['_5fsll_5ferrors_5fh_5f',['_SLL_ERRORS_H_',['../sll__m__general__coordinate__elliptic__solver_8_f90.html',1,'sll_m_general_coordinate_elliptic_solver.F90']]],
-  ['_5fsll_5fmemory_5fh_5f',['_sll_memory_h_',['../sll__m__general__coordinate__elliptic__solver_8_f90.html',1,'sll_m_general_coordinate_elliptic_solver.F90']]],
-  ['_5fsll_5fworking_5fprecision_5f',['_SLL_WORKING_PRECISION_',['../sll__m__general__coordinate__elliptic__solver_8_f90.html',1,'sll_m_general_coordinate_elliptic_solver.F90']]]
+  ['a1',['A1',['../sll__m__geometry__functions_8_f90.html#acd92b430059d886880c53f13ae038e3f',1,'sll_m_geometry_functions.F90']]],
+  ['a2',['A2',['../sll__m__geometry__functions_8_f90.html#a2946bc30423c2a996eeafa49e995c30e',1,'sll_m_geometry_functions.F90']]]
 ];

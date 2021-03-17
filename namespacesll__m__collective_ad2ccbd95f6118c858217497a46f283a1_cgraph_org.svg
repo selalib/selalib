@@ -9,16 +9,16 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 84)">
 <title>sll_collective_globalsum_real32</title>
 <polygon fill="#ffffff" stroke="transparent" points="-4,4 -4,-84 660,-84 660,4 -4,4"/>
-<!-- Node194 -->
+<!-- Node192 -->
 <g id="node1" class="node">
-<title>Node194</title>
+<title>Node192</title>
 <polygon fill="#bfbfbf" stroke="#000000" points="0,-24.5 0,-54.5 137,-54.5 137,-24.5 0,-24.5"/>
 <text text-anchor="start" x="8" y="-42.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_globalsum</text>
 <text text-anchor="middle" x="68.5" y="-31.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">_real32</text>
 </g>
-<!-- Node195 -->
+<!-- Node193 -->
 <g id="node2" class="node">
-<title>Node195</title>
+<title>Node193</title>
 <g id="a_node2"><a xlink:href="namespacesll__m__collective.html#a1c2477e6d1993f5b924862a86f112f1e" target="_top" xlink:title="Performs a global sum over an array and writes the result in the given node If no node in root_rank i...">
 <polygon fill="#ffffff" stroke="#000000" points="173,-24.5 173,-54.5 310,-54.5 310,-24.5 173,-24.5"/>
 <text text-anchor="start" x="181" y="-42.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_globalsum</text>
@@ -26,15 +26,15 @@
 </a>
 </g>
 </g>
-<!-- Node194&#45;&gt;Node195 -->
+<!-- Node192&#45;&gt;Node193 -->
 <g id="edge1" class="edge">
-<title>Node194&#45;&gt;Node195</title>
+<title>Node192&#45;&gt;Node193</title>
 <path fill="none" stroke="#191970" d="M137.3713,-39.5C145.678,-39.5 154.2111,-39.5 162.6466,-39.5"/>
 <polygon fill="#191970" stroke="#191970" points="162.8657,-43.0001 172.8657,-39.5 162.8657,-36.0001 162.8657,-43.0001"/>
 </g>
-<!-- Node196 -->
+<!-- Node194 -->
 <g id="node3" class="node">
-<title>Node196</title>
+<title>Node194</title>
 <g id="a_node3"><a xlink:href="namespacesll__m__collective.html#af60e669d9e58597b27784437549e8d07" target="_top" xlink:title="Reduces real values on all processes to a single value. ">
 <polygon fill="#ffffff" stroke="#000000" points="352,-49.5 352,-79.5 481,-79.5 481,-49.5 352,-49.5"/>
 <text text-anchor="start" x="360" y="-67.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_collective_reduce</text>
@@ -42,15 +42,15 @@
 </a>
 </g>
 </g>
-<!-- Node195&#45;&gt;Node196 -->
+<!-- Node193&#45;&gt;Node194 -->
 <g id="edge2" class="edge">
-<title>Node195&#45;&gt;Node196</title>
+<title>Node193&#45;&gt;Node194</title>
 <path fill="none" stroke="#191970" d="M310.1624,-49.3089C320.5392,-50.7913 331.2871,-52.3267 341.7842,-53.8263"/>
 <polygon fill="#191970" stroke="#191970" points="341.3567,-57.3007 351.7512,-55.2502 342.3467,-50.371 341.3567,-57.3007"/>
 </g>
-<!-- Node198 -->
+<!-- Node196 -->
 <g id="node5" class="node">
-<title>Node198</title>
+<title>Node196</title>
 <g id="a_node5"><a xlink:href="namespacesll__m__collective.html#a58faad76af1ad0a1b388771c8a3c9157" target="_top" xlink:title="Combines real values from all processes and distributes the result back to all processes. ">
 <polygon fill="#ffffff" stroke="#000000" points="346,-.5 346,-30.5 487,-30.5 487,-.5 346,-.5"/>
 <text text-anchor="start" x="354" y="-18.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_collective_allreduce</text>
@@ -58,45 +58,45 @@
 </a>
 </g>
 </g>
-<!-- Node195&#45;&gt;Node198 -->
+<!-- Node193&#45;&gt;Node196 -->
 <g id="edge4" class="edge">
-<title>Node195&#45;&gt;Node198</title>
+<title>Node193&#45;&gt;Node196</title>
 <path fill="none" stroke="#191970" d="M310.1624,-30.0834C318.559,-28.9319 327.1986,-27.7471 335.7516,-26.5741"/>
 <polygon fill="#191970" stroke="#191970" points="336.301,-30.0316 345.7327,-25.2052 335.3498,-23.0965 336.301,-30.0316"/>
 </g>
-<!-- Node197 -->
+<!-- Node195 -->
 <g id="node4" class="node">
-<title>Node197</title>
+<title>Node195</title>
 <g id="a_node4"><a xlink:href="namespacesll__m__collective.html#a9a5729d7ca2e55890195f76c8a5cbd62" target="_top" xlink:title="Checks the good execution of collective instruction. ">
 <polygon fill="#ffffff" stroke="#000000" points="532,-49 532,-68 647,-68 647,-49 532,-49"/>
 <text text-anchor="middle" x="589.5" y="-56" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_test_mpi_error</text>
 </a>
 </g>
 </g>
-<!-- Node196&#45;&gt;Node197 -->
+<!-- Node194&#45;&gt;Node195 -->
 <g id="edge3" class="edge">
-<title>Node196&#45;&gt;Node197</title>
+<title>Node194&#45;&gt;Node195</title>
 <path fill="none" stroke="#191970" d="M481.411,-62.2488C494.6287,-61.7903 508.5648,-61.307 521.8742,-60.8454"/>
 <polygon fill="#191970" stroke="#191970" points="522.0349,-64.342 531.9076,-60.4974 521.7923,-57.3462 522.0349,-64.342"/>
 </g>
-<!-- Node198&#45;&gt;Node197 -->
+<!-- Node196&#45;&gt;Node195 -->
 <g id="edge6" class="edge">
-<title>Node198&#45;&gt;Node197</title>
+<title>Node196&#45;&gt;Node195</title>
 <path fill="none" stroke="#191970" d="M477.007,-30.5393C498.0958,-35.781 521.457,-41.5876 541.401,-46.5448"/>
 <polygon fill="#191970" stroke="#191970" points="540.6406,-49.9622 551.1895,-48.9777 542.3291,-43.1689 540.6406,-49.9622"/>
 </g>
-<!-- Node199 -->
+<!-- Node197 -->
 <g id="node6" class="node">
-<title>Node199</title>
+<title>Node197</title>
 <g id="a_node6"><a xlink:href="namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" target="_top" xlink:title="Checks if the pointer ptr is associated to an object. ">
 <polygon fill="#ffffff" stroke="#000000" points="523,-6 523,-25 656,-25 656,-6 523,-6"/>
 <text text-anchor="middle" x="589.5" y="-13" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_check_collective_ptr</text>
 </a>
 </g>
 </g>
-<!-- Node198&#45;&gt;Node199 -->
+<!-- Node196&#45;&gt;Node197 -->
 <g id="edge5" class="edge">
-<title>Node198&#45;&gt;Node199</title>
+<title>Node196&#45;&gt;Node197</title>
 <path fill="none" stroke="#191970" d="M487.3649,-15.5C495.7237,-15.5 504.284,-15.5 512.7194,-15.5"/>
 <polygon fill="#191970" stroke="#191970" points="512.925,-19.0001 522.9249,-15.5 512.9249,-12.0001 512.925,-19.0001"/>
 </g>

@@ -9,16 +9,16 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 84)">
 <title>sll_f_gauss_lobatto_points_and_weights</title>
 <polygon fill="#ffffff" stroke="transparent" points="-4,4 -4,-84 430,-84 430,4 -4,4"/>
-<!-- Node69 -->
+<!-- Node54 -->
 <g id="node1" class="node">
-<title>Node69</title>
+<title>Node54</title>
 <polygon fill="#bfbfbf" stroke="#000000" points="0,-24.5 0,-54.5 119,-54.5 119,-24.5 0,-24.5"/>
 <text text-anchor="start" x="8" y="-42.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_f_gauss_lobatto</text>
 <text text-anchor="middle" x="59.5" y="-31.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">_points_and_weights</text>
 </g>
-<!-- Node70 -->
+<!-- Node55 -->
 <g id="node2" class="node">
-<title>Node70</title>
+<title>Node55</title>
 <g id="a_node2"><a xlink:href="namespacesll__m__gauss__lobatto__integration.html#a43443dd7dd80f1289d964b572cd6ee2c" target="_top" xlink:title="Returns a 1d array of size (n) containing gauss&#45;lobatto points in the interval [a,b]. ">
 <polygon fill="#ffffff" stroke="#000000" points="155,-49.5 155,-79.5 265,-79.5 265,-49.5 155,-49.5"/>
 <text text-anchor="start" x="163" y="-67.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_f_gauss_lobatto</text>
@@ -26,15 +26,15 @@
 </a>
 </g>
 </g>
-<!-- Node69&#45;&gt;Node70 -->
+<!-- Node54&#45;&gt;Node55 -->
 <g id="edge1" class="edge">
-<title>Node69&#45;&gt;Node70</title>
+<title>Node54&#45;&gt;Node55</title>
 <path fill="none" stroke="#191970" d="M119.414,-49.4525C127.6893,-50.8271 136.2231,-52.2447 144.5916,-53.6348"/>
 <polygon fill="#191970" stroke="#191970" points="144.2505,-57.126 154.6889,-55.3121 145.3976,-50.2207 144.2505,-57.126"/>
 </g>
-<!-- Node73 -->
+<!-- Node58 -->
 <g id="node5" class="node">
-<title>Node73</title>
+<title>Node58</title>
 <g id="a_node5"><a xlink:href="namespacesll__m__gauss__lobatto__integration.html#ab2dd3e9cafb094226c63f629745b0654" target="_top" xlink:title="Returns a 1d array of size (n) containing gauss&#45;lobatto weights in the interval [a,b]. ">
 <polygon fill="#ffffff" stroke="#000000" points="155,-.5 155,-30.5 265,-30.5 265,-.5 155,-.5"/>
 <text text-anchor="start" x="163" y="-18.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_f_gauss_lobatto</text>
@@ -42,45 +42,45 @@
 </a>
 </g>
 </g>
-<!-- Node69&#45;&gt;Node73 -->
+<!-- Node54&#45;&gt;Node58 -->
 <g id="edge4" class="edge">
-<title>Node69&#45;&gt;Node73</title>
+<title>Node54&#45;&gt;Node58</title>
 <path fill="none" stroke="#191970" d="M119.414,-29.9456C127.6893,-28.626 136.2231,-27.2651 144.5916,-25.9306"/>
 <polygon fill="#191970" stroke="#191970" points="145.3649,-29.3516 154.6889,-24.3204 144.2625,-22.4389 145.3649,-29.3516"/>
 </g>
-<!-- Node71 -->
+<!-- Node56 -->
 <g id="node3" class="node">
-<title>Node71</title>
+<title>Node56</title>
 <g id="a_node3"><a xlink:href="namespacesll__m__gauss__lobatto__integration.html#aef28cd44b846400f5133a0ee289babbc" target="_top" xlink:title="This comes from http://dl.acm.org, Algorithme 726 : ORTHPOL, appendices and supplements To use those ...">
 <polygon fill="#ffffff" stroke="#000000" points="301,-30 301,-49 339,-49 339,-30 301,-30"/>
 <text text-anchor="middle" x="320" y="-37" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">dlob</text>
 </a>
 </g>
 </g>
-<!-- Node70&#45;&gt;Node71 -->
+<!-- Node55&#45;&gt;Node56 -->
 <g id="edge2" class="edge">
-<title>Node70&#45;&gt;Node71</title>
+<title>Node55&#45;&gt;Node56</title>
 <path fill="none" stroke="#191970" d="M265.3223,-51.9268C274.2501,-49.8977 283.1667,-47.8712 291.1309,-46.0612"/>
 <polygon fill="#191970" stroke="#191970" points="291.9973,-49.4536 300.9729,-43.8243 290.4458,-42.6277 291.9973,-49.4536"/>
 </g>
-<!-- Node72 -->
+<!-- Node57 -->
 <g id="node4" class="node">
-<title>Node72</title>
+<title>Node57</title>
 <g id="a_node4"><a xlink:href="namespacesll__m__gauss__lobatto__integration.html#a20a90d157ba32cd27c5d6f89eccf3735" target="_top" xlink:title="Given n and a measure dlambda, this routine generates the n&#45;point Gaussian quadrature formula...">
 <polygon fill="#ffffff" stroke="#000000" points="375,-30 375,-49 426,-49 426,-30 375,-30"/>
 <text text-anchor="middle" x="400.5" y="-37" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">dgauss</text>
 </a>
 </g>
 </g>
-<!-- Node71&#45;&gt;Node72 -->
+<!-- Node56&#45;&gt;Node57 -->
 <g id="edge3" class="edge">
-<title>Node71&#45;&gt;Node72</title>
+<title>Node56&#45;&gt;Node57</title>
 <path fill="none" stroke="#191970" d="M339.0774,-39.5C346.7634,-39.5 355.8894,-39.5 364.7243,-39.5"/>
 <polygon fill="#191970" stroke="#191970" points="364.8582,-43.0001 374.8582,-39.5 364.8581,-36.0001 364.8582,-43.0001"/>
 </g>
-<!-- Node73&#45;&gt;Node71 -->
+<!-- Node58&#45;&gt;Node56 -->
 <g id="edge5" class="edge">
-<title>Node73&#45;&gt;Node71</title>
+<title>Node58&#45;&gt;Node56</title>
 <path fill="none" stroke="#191970" d="M265.3223,-27.5703C274.2501,-29.5182 283.1667,-31.4636 291.1309,-33.2013"/>
 <polygon fill="#191970" stroke="#191970" points="290.4566,-36.6364 300.9729,-35.3486 291.9488,-29.7973 290.4566,-36.6364"/>
 </g>

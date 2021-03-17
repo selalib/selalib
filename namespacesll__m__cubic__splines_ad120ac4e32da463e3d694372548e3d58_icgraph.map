@@ -1,8 +1,5 @@
 <map id="sll_s_cubic_spline_2d_init" name="sll_s_cubic_spline_2d_init">
-<area shape="rect" id="node2" href="$namespacesll__m__fdistribu4d__dk.html#adf8cc4ba8aba42290c788f697de79f42" title="sll_m_fdistribu4d_dk\l::sll_s_function_xy_from\l_rtheta" alt="" coords="221,5,401,61"/>
-<area shape="rect" id="node3" href="$namespacesll__m__general__coordinate__elliptic__solver.html#accca7b4fada93fd5a46e69cb9889a2d3" title="sll_m_general_coordinate\l_elliptic_solver::compute\l_non_zero_splines_at_cell_points" alt="" coords="192,85,431,141"/>
-<area shape="rect" id="node6" href="$namespacesll__m__cubic__spline__interpolator__2d.html#a6738a0a630445eded7496b8c3d32cc13" title="sll_m_cubic_spline\l_interpolator_2d::initialize\l_cs2d_interpolator" alt="" coords="215,165,407,221"/>
-<area shape="rect" id="node7" href="$namespacesll__m__cubic__splines.html#aef2643d65a84d6793c4f86b9b5f6f6ce" title="Returns a pointer to a heap&#45;allocated 2D cubic spline object. " alt="" coords="215,245,408,272"/>
-<area shape="rect" id="node4" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a1530444505e15898adb13de4fd54458c" title="sll_m_general_coordinate\l_elliptic_solver::sll_s\l_general_elliptic_solver\l_prototype_init" alt="" coords="479,78,668,149"/>
-<area shape="rect" id="node5" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a6a5dd9c906ada7725f3e185423b28f82" title="Initialization for elliptic solver. " alt="" coords="716,85,905,141"/>
+<area shape="rect" id="node2" href="$namespacesll__m__fdistribu4d__dk.html#adf8cc4ba8aba42290c788f697de79f42" title="sll_m_fdistribu4d_dk\l::sll_s_function_xy_from\l_rtheta" alt="" coords="199,5,379,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__cubic__spline__interpolator__2d.html#a6738a0a630445eded7496b8c3d32cc13" title="sll_m_cubic_spline\l_interpolator_2d::initialize\l_cs2d_interpolator" alt="" coords="193,85,385,141"/>
+<area shape="rect" id="node4" href="$namespacesll__m__cubic__splines.html#aef2643d65a84d6793c4f86b9b5f6f6ce" title="Returns a pointer to a heap&#45;allocated 2D cubic spline object. " alt="" coords="192,165,385,192"/>
 </map>

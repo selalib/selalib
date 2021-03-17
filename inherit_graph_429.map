@@ -1,3 +1,3 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$structsll__m__particle__representations_1_1sll__t__particle__6d.html" title="Type for a single particle in a 3d volume. " alt="" coords="5,5,133,32"/>
+<area shape="rect" id="node1" href="$structsll__m__poisson__3d__periodic_1_1sll__t__poisson__3d__periodic.html" title="Structure to solve Poisson equation on 3d domain. Mesh is cartesian and all boundary conditions are p..." alt="" coords="5,5,193,32"/>
 </map>

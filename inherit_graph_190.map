@@ -1,6 +1,6 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$structsll__m__characteristics__2d__base_1_1sll__c__characteristics__2d__base.html" title="sll_c_characteristics\l_2d_base" alt="" coords="5,71,159,112"/>
-<area shape="rect" id="node2" href="$structsll__m__characteristics__2d__explicit__euler_1_1sll__t__charac__2d__explicit__euler.html" title="sll_t_charac_2d_explicit\l_euler" alt="" coords="219,5,396,47"/>
-<area shape="rect" id="node3" href="$structsll__m__characteristics__2d__explicit__euler__conservative_1_1explicit__euler__conservative__2d__charac__computer.html" title="explicit_euler_conservative\l_2d_charac_computer" alt="" coords="207,71,408,112"/>
-<area shape="rect" id="node4" href="$structsll__m__characteristics__2d__verlet_1_1sll__t__charac__2d__verlet.html" title="sll_t_charac_2d_verlet" alt="" coords="224,137,391,163"/>
+<area shape="rect" id="node1" href="$structsll__m__gyroaverage__2d__base_1_1sll__c__gyroaverage__2d__base.html" title="sll_c_gyroaverage_2d_base" alt="" coords="5,78,207,105"/>
+<area shape="rect" id="node2" href="$structsll__m__gyroaverage__2d__polar__hermite__solver_1_1gyroaverage__2d__polar__hermite__solver.html" title="gyroaverage_2d_polar\l_hermite_solver" alt="" coords="255,5,421,47"/>
+<area shape="rect" id="node3" href="$structsll__m__gyroaverage__2d__polar__pade__solver_1_1gyroaverage__2d__polar__pade__solver.html" title="gyroaverage_2d_polar\l_pade_solver" alt="" coords="255,71,421,112"/>
+<area shape="rect" id="node4" href="$structsll__m__gyroaverage__2d__polar__splines__solver_1_1gyroaverage__2d__polar__splines__solver.html" title="gyroaverage_2d_polar\l_splines_solver" alt="" coords="255,136,421,177"/>
 </map>

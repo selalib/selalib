@@ -1,3 +1,7 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$structsll__m__sim__base_1_1sll__c__simulation__base__class.html" title="Parent class for simulation. " alt="" coords="5,5,171,47"/>
+<area shape="rect" id="node1" href="$structsll__m__vector__space__base_1_1sll__c__vector__space.html" title="Abstract base class for all vector spaces. " alt="" coords="5,111,149,138"/>
+<area shape="rect" id="node2" href="$structsll__m__vector__space__c1__block_1_1sll__t__vector__space__c1__block.html" title="sll_t_vector_space\l_c1_block" alt="" coords="197,5,340,47"/>
+<area shape="rect" id="node3" href="$structsll__m__vector__space__real__array__1d_1_1sll__t__vector__space__real__array__1d.html" title="Vector space for wrapping 1D Fortran real arrays. " alt="" coords="197,71,340,112"/>
+<area shape="rect" id="node4" href="$structsll__m__vector__space__real__array__2d_1_1sll__t__vector__space__real__array__2d.html" title="Vector space for wrapping 2D Fortran real arrays. " alt="" coords="197,136,340,177"/>
+<area shape="rect" id="node5" href="$structsll__m__vector__space__real__array__3d_1_1sll__t__vector__space__real__array__3d.html" title="Vector space for wrapping 3D Fortran real arrays. " alt="" coords="197,201,340,243"/>
 </map>

@@ -9,40 +9,40 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 62)">
 <title>sll_s_collective_allreduce_real32</title>
 <polygon fill="#ffffff" stroke="transparent" points="-4,4 -4,-62 314,-62 314,4 -4,4"/>
-<!-- Node316 -->
+<!-- Node310 -->
 <g id="node1" class="node">
-<title>Node316</title>
+<title>Node310</title>
 <polygon fill="#bfbfbf" stroke="#000000" points="0,-14 0,-44 141,-44 141,-14 0,-14"/>
 <text text-anchor="start" x="8" y="-32" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_collective_allreduce</text>
 <text text-anchor="middle" x="70.5" y="-21" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">_real32</text>
 </g>
-<!-- Node317 -->
+<!-- Node311 -->
 <g id="node2" class="node">
-<title>Node317</title>
+<title>Node311</title>
 <g id="a_node2"><a xlink:href="namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" target="_top" xlink:title="Checks if the pointer ptr is associated to an object. ">
 <polygon fill="#ffffff" stroke="#000000" points="177,-38.5 177,-57.5 310,-57.5 310,-38.5 177,-38.5"/>
 <text text-anchor="middle" x="243.5" y="-45.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_check_collective_ptr</text>
 </a>
 </g>
 </g>
-<!-- Node316&#45;&gt;Node317 -->
+<!-- Node310&#45;&gt;Node311 -->
 <g id="edge1" class="edge">
-<title>Node316&#45;&gt;Node317</title>
+<title>Node310&#45;&gt;Node311</title>
 <path fill="none" stroke="#191970" d="M141.3649,-36.7828C149.7237,-37.7009 158.284,-38.641 166.7194,-39.5675"/>
 <polygon fill="#191970" stroke="#191970" points="166.6026,-43.0756 176.9249,-40.6883 167.3668,-36.1174 166.6026,-43.0756"/>
 </g>
-<!-- Node318 -->
+<!-- Node312 -->
 <g id="node3" class="node">
-<title>Node318</title>
+<title>Node312</title>
 <g id="a_node3"><a xlink:href="namespacesll__m__collective.html#a9a5729d7ca2e55890195f76c8a5cbd62" target="_top" xlink:title="Checks the good execution of collective instruction. ">
 <polygon fill="#ffffff" stroke="#000000" points="186,-.5 186,-19.5 301,-19.5 301,-.5 186,-.5"/>
 <text text-anchor="middle" x="243.5" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_test_mpi_error</text>
 </a>
 </g>
 </g>
-<!-- Node316&#45;&gt;Node318 -->
+<!-- Node310&#45;&gt;Node312 -->
 <g id="edge2" class="edge">
-<title>Node316&#45;&gt;Node318</title>
+<title>Node310&#45;&gt;Node312</title>
 <path fill="none" stroke="#191970" d="M141.3649,-21.2172C152.7243,-19.9696 164.4558,-18.6812 175.7404,-17.4418"/>
 <polygon fill="#191970" stroke="#191970" points="176.3964,-20.8909 185.9545,-16.32 175.6322,-13.9327 176.3964,-20.8909"/>
 </g>

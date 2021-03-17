@@ -1,8 +1,6 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$structsll__m__particle__group__base_1_1sll__c__particle__group__base.html" title="sll_c_particle_group_base" alt="" coords="5,107,195,133"/>
-<area shape="rect" id="node2" href="$structsll__m__particle__group__1d1v_1_1sll__t__particle__group__1d1v.html" title="Simple version of a PIC particle group in 1d1v. " alt="" coords="243,5,431,32"/>
-<area shape="rect" id="node3" href="$structsll__m__particle__group__1d2v_1_1sll__t__particle__group__1d2v.html" title="Simple version of a PIC particle group in 1d2v. " alt="" coords="243,56,431,83"/>
-<area shape="rect" id="node4" href="$structsll__m__particle__group__2d2v_1_1sll__t__particle__group__2d2v.html" title="Simple version of a PIC particle group in 2d2v. " alt="" coords="243,107,431,133"/>
-<area shape="rect" id="node5" href="$structsll__m__particle__group__2d2v__lbf_1_1sll__t__particle__group__2d2v__lbf.html" title="Group of sll_t_particle_group_2d2v_lbf. " alt="" coords="262,158,411,199"/>
-<area shape="rect" id="node6" href="$structsll__m__particle__group__3d1v_1_1sll__t__particle__group__3d1v.html" title="Simple version of a PIC particle group in 3d1v. " alt="" coords="243,224,431,251"/>
+<area shape="rect" id="node1" href="$structsll__m__poisson__2d__base_1_1sll__c__poisson__2d__base.html" title="sll_c_poisson_2d_base" alt="" coords="5,71,175,98"/>
+<area shape="rect" id="node2" href="$structsll__m__poisson__2d__mudpack__curvilinear_1_1poisson__2d__mudpack__curvilinear.html" title="Derived type to solve Poisson equation on 2d curvilinear mesh. " alt="" coords="235,5,398,47"/>
+<area shape="rect" id="node3" href="$structsll__m__poisson__2d__periodic_1_1sll__t__poisson__2d__periodic.html" title="sll_t_poisson_2d_periodic" alt="" coords="223,71,411,98"/>
+<area shape="rect" id="node4" href="$structsll__m__poisson__2d__polar_1_1sll__t__poisson__2d__polar.html" title="Class for the Poisson solver in polar coordinate. " alt="" coords="232,122,401,149"/>
 </map>

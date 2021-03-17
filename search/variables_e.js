@@ -17,5 +17,5 @@ var searchData=
   ['out',['out',['../structsll__m__sparse__grid__interpolator_1_1fft__hierarchical.html#a1a2c1cd0fba20d8ea818f889270eb621',1,'sll_m_sparse_grid_interpolator::fft_hierarchical']]],
   ['output1',['output1',['../structsll__m__split__advection__2d_1_1sll__t__split__advection__2d.html#add7d2deae759304586a8db2a161df5be',1,'sll_m_split_advection_2d::sll_t_split_advection_2d']]],
   ['output2',['output2',['../structsll__m__split__advection__2d_1_1sll__t__split__advection__2d.html#a52f315a9da4fa84db511642a2e7fe55b',1,'sll_m_split_advection_2d::sll_t_split_advection_2d']]],
-  ['owns_5fmemory',['owns_memory',['../structsll__m__scalar__field__2d__multipatch_1_1sll__t__scalar__field__multipatch__2d.html#af11e51b52825efadace05fb9a8ab1350',1,'sll_m_scalar_field_2d_multipatch::sll_t_scalar_field_multipatch_2d::owns_memory()'],['../structsll__m__scalar__field__2d_1_1sll__t__scalar__field__2d__discrete.html#af11e51b52825efadace05fb9a8ab1350',1,'sll_m_scalar_field_2d::sll_t_scalar_field_2d_discrete::owns_memory()']]]
+  ['owns_5fmemory',['owns_memory',['../structsll__m__scalar__field__2d_1_1sll__t__scalar__field__2d__discrete.html#af11e51b52825efadace05fb9a8ab1350',1,'sll_m_scalar_field_2d::sll_t_scalar_field_2d_discrete']]]
 ];

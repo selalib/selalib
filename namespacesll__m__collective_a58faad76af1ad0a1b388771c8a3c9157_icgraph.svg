@@ -9,16 +9,16 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 35)">
 <title>sll_s_collective_allreduce_real32</title>
 <polygon fill="#ffffff" stroke="transparent" points="-4,4 -4,-35 491,-35 491,4 -4,4"/>
-<!-- Node319 -->
+<!-- Node313 -->
 <g id="node1" class="node">
-<title>Node319</title>
+<title>Node313</title>
 <polygon fill="#bfbfbf" stroke="#000000" points="0,-.5 0,-30.5 141,-30.5 141,-.5 0,-.5"/>
 <text text-anchor="start" x="8" y="-18.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_collective_allreduce</text>
 <text text-anchor="middle" x="70.5" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">_real32</text>
 </g>
-<!-- Node320 -->
+<!-- Node314 -->
 <g id="node2" class="node">
-<title>Node320</title>
+<title>Node314</title>
 <g id="a_node2"><a xlink:href="namespacesll__m__collective.html#a1c2477e6d1993f5b924862a86f112f1e" target="_top" xlink:title="Performs a global sum over an array and writes the result in the given node If no node in root_rank i...">
 <polygon fill="#ffffff" stroke="#000000" points="177,-.5 177,-30.5 314,-30.5 314,-.5 177,-.5"/>
 <text text-anchor="start" x="185" y="-18.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_globalsum</text>
@@ -26,15 +26,15 @@
 </a>
 </g>
 </g>
-<!-- Node319&#45;&gt;Node320 -->
+<!-- Node313&#45;&gt;Node314 -->
 <g id="edge1" class="edge">
-<title>Node319&#45;&gt;Node320</title>
+<title>Node313&#45;&gt;Node314</title>
 <path fill="none" stroke="#191970" d="M151.1798,-15.5C159.7539,-15.5 168.4159,-15.5 176.8337,-15.5"/>
 <polygon fill="#191970" stroke="#191970" points="151.1748,-12.0001 141.1748,-15.5 151.1747,-19.0001 151.1748,-12.0001"/>
 </g>
-<!-- Node321 -->
+<!-- Node315 -->
 <g id="node3" class="node">
-<title>Node321</title>
+<title>Node315</title>
 <g id="a_node3"><a xlink:href="namespacesll__m__collective.html#ad2ccbd95f6118c858217497a46f283a1" target="_top" xlink:title="Performs a global sum and writes the result in the given node. ">
 <polygon fill="#ffffff" stroke="#000000" points="350,-.5 350,-30.5 487,-30.5 487,-.5 350,-.5"/>
 <text text-anchor="start" x="358" y="-18.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_globalsum</text>
@@ -42,9 +42,9 @@
 </a>
 </g>
 </g>
-<!-- Node320&#45;&gt;Node321 -->
+<!-- Node314&#45;&gt;Node315 -->
 <g id="edge2" class="edge">
-<title>Node320&#45;&gt;Node321</title>
+<title>Node314&#45;&gt;Node315</title>
 <path fill="none" stroke="#191970" d="M324.5941,-15.5C333.0314,-15.5 341.5633,-15.5 349.8657,-15.5"/>
 <polygon fill="#191970" stroke="#191970" points="324.3713,-12.0001 314.3713,-15.5 324.3712,-19.0001 324.3713,-12.0001"/>
 </g>

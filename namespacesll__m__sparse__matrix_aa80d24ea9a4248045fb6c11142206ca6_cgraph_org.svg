@@ -9,60 +9,60 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 100)">
 <title>sll_f_new_csr_matrix</title>
 <polygon fill="#ffffff" stroke="transparent" points="-4,4 -4,-100 602,-100 602,4 -4,4"/>
-<!-- Node20 -->
+<!-- Node18 -->
 <g id="node1" class="node">
-<title>Node20</title>
+<title>Node18</title>
 <polygon fill="#bfbfbf" stroke="#000000" points="0,-38.5 0,-57.5 119,-57.5 119,-38.5 0,-38.5"/>
 <text text-anchor="middle" x="59.5" y="-45.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_f_new_csr_matrix</text>
 </g>
-<!-- Node21 -->
+<!-- Node19 -->
 <g id="node2" class="node">
-<title>Node21</title>
+<title>Node19</title>
 <g id="a_node2"><a xlink:href="namespacesll__m__sparse__matrix.html#a4d0df569f33bdd62f3a9a6ba079074ca" target="_top" xlink:title="initialization of CSR matrix type thanks to the global index of each local dof of each element ...">
 <polygon fill="#ffffff" stroke="#000000" points="163.5,-76.5 163.5,-95.5 279.5,-95.5 279.5,-76.5 163.5,-76.5"/>
 <text text-anchor="middle" x="221.5" y="-83.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_csr_matrix_init</text>
 </a>
 </g>
 </g>
-<!-- Node20&#45;&gt;Node21 -->
+<!-- Node18&#45;&gt;Node19 -->
 <g id="edge1" class="edge">
-<title>Node20&#45;&gt;Node21</title>
+<title>Node18&#45;&gt;Node19</title>
 <path fill="none" stroke="#191970" d="M100.3794,-57.589C121.8534,-62.6261 148.3605,-68.8438 171.097,-74.1771"/>
 <polygon fill="#191970" stroke="#191970" points="170.3795,-77.6037 180.9145,-76.4799 171.9781,-70.7887 170.3795,-77.6037"/>
 </g>
-<!-- Node24 -->
+<!-- Node22 -->
 <g id="node5" class="node">
-<title>Node24</title>
+<title>Node22</title>
 <g id="a_node5"><a xlink:href="namespacesll__m__sparse__matrix.html#a8dc760a51bf16f1179981ac85563a195" target="_top" xlink:title="sll_count_non_zero_elts">
 <polygon fill="#ffffff" stroke="#000000" points="155,-38.5 155,-57.5 288,-57.5 288,-38.5 155,-38.5"/>
 <text text-anchor="middle" x="221.5" y="-45.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_count_non_zero_elts</text>
 </a>
 </g>
 </g>
-<!-- Node20&#45;&gt;Node24 -->
+<!-- Node18&#45;&gt;Node22 -->
 <g id="edge4" class="edge">
-<title>Node20&#45;&gt;Node24</title>
+<title>Node18&#45;&gt;Node22</title>
 <path fill="none" stroke="#191970" d="M119.3626,-48C127.5646,-48 136.0775,-48 144.5318,-48"/>
 <polygon fill="#191970" stroke="#191970" points="144.7901,-51.5001 154.7901,-48 144.7901,-44.5001 144.7901,-51.5001"/>
 </g>
-<!-- Node25 -->
+<!-- Node23 -->
 <g id="node6" class="node">
-<title>Node25</title>
+<title>Node23</title>
 <g id="a_node6"><a xlink:href="namespacesll__m__sparse__matrix.html#ac5355751dadd75cc69b33fed0798de2c" target="_top" xlink:title="init_sparsematrix">
 <polygon fill="#ffffff" stroke="#000000" points="170.5,-.5 170.5,-19.5 272.5,-19.5 272.5,-.5 170.5,-.5"/>
 <text text-anchor="middle" x="221.5" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">init_sparsematrix</text>
 </a>
 </g>
 </g>
-<!-- Node20&#45;&gt;Node25 -->
+<!-- Node18&#45;&gt;Node23 -->
 <g id="edge5" class="edge">
-<title>Node20&#45;&gt;Node25</title>
+<title>Node18&#45;&gt;Node23</title>
 <path fill="none" stroke="#191970" d="M100.3794,-38.411C121.8534,-33.3739 148.3605,-27.1562 171.097,-21.8229"/>
 <polygon fill="#191970" stroke="#191970" points="171.9781,-25.2113 180.9145,-19.5201 170.3795,-18.3963 171.9781,-25.2113"/>
 </g>
-<!-- Node22 -->
+<!-- Node20 -->
 <g id="node3" class="node">
-<title>Node22</title>
+<title>Node20</title>
 <g id="a_node3"><a xlink:href="namespacesll__m__qsort__partition.html#a2ce333a69b25b96185626ef494f55971" target="_top" xlink:title="sll_m_qsort_partition\l::sll_s_qsortc">
 <polygon fill="#ffffff" stroke="#000000" points="324,-33 324,-63 443,-63 443,-33 324,-33"/>
 <text text-anchor="start" x="332" y="-51" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_qsort_partition</text>
@@ -70,15 +70,15 @@
 </a>
 </g>
 </g>
-<!-- Node21&#45;&gt;Node22 -->
+<!-- Node19&#45;&gt;Node20 -->
 <g id="edge2" class="edge">
-<title>Node21&#45;&gt;Node22</title>
+<title>Node19&#45;&gt;Node20</title>
 <path fill="none" stroke="#191970" d="M262.3794,-76.411C277.972,-72.7535 296.2183,-68.4735 313.7478,-64.3616"/>
 <polygon fill="#191970" stroke="#191970" points="315.0243,-67.6573 323.9607,-61.966 313.4256,-60.8423 315.0243,-67.6573"/>
 </g>
-<!-- Node23 -->
+<!-- Node21 -->
 <g id="node4" class="node">
-<title>Node23</title>
+<title>Node21</title>
 <g id="a_node4"><a xlink:href="namespacesll__m__qsort__partition.html#aa1ad128585a5c9195e5903a7bc8f478e" target="_top" xlink:title="sll_m_qsort_partition\l::partition">
 <polygon fill="#ffffff" stroke="#000000" points="479,-33 479,-63 598,-63 598,-33 479,-33"/>
 <text text-anchor="start" x="487" y="-51" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_qsort_partition</text>
@@ -86,15 +86,15 @@
 </a>
 </g>
 </g>
-<!-- Node22&#45;&gt;Node23 -->
+<!-- Node20&#45;&gt;Node21 -->
 <g id="edge3" class="edge">
-<title>Node22&#45;&gt;Node23</title>
+<title>Node20&#45;&gt;Node21</title>
 <path fill="none" stroke="#191970" d="M443.427,-48C451.7244,-48 460.3054,-48 468.7618,-48"/>
 <polygon fill="#191970" stroke="#191970" points="468.9877,-51.5001 478.9877,-48 468.9877,-44.5001 468.9877,-51.5001"/>
 </g>
-<!-- Node25&#45;&gt;Node22 -->
+<!-- Node23&#45;&gt;Node20 -->
 <g id="edge6" class="edge">
-<title>Node25&#45;&gt;Node22</title>
+<title>Node23&#45;&gt;Node20</title>
 <path fill="none" stroke="#191970" d="M262.3794,-19.589C277.972,-23.2465 296.2183,-27.5265 313.7478,-31.6384"/>
 <polygon fill="#191970" stroke="#191970" points="313.4256,-35.1577 323.9607,-34.034 315.0243,-28.3427 313.4256,-35.1577"/>
 </g>

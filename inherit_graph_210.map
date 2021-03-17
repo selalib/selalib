@@ -1,3 +1,5 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$structsll__m__poisson__3d__base_1_1sll__c__poisson__3d__base.html" title="Abstract class for Poisson solver in 3 dimensions. " alt="" coords="5,5,175,32"/>
+<area shape="rect" id="node1" href="$structsll__m__scalar__field__initializers__base_1_1sll__c__scalar__field__2d__initializer__base.html" title="sll_c_scalar_field\l_2d_initializer_base" alt="" coords="5,23,156,65"/>
+<area shape="rect" id="node2" href="$structsll__m__landau__2d__initializer_1_1sll__t__init__landau__2d.html" title="sll_t_init_landau_2d" alt="" coords="204,5,355,32"/>
+<area shape="rect" id="node3" href="$structsll__m__tsi__2d__initializer_1_1sll__t__init__tsi__2d.html" title="sll_t_init_tsi_2d" alt="" coords="218,56,341,83"/>
 </map>

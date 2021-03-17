@@ -54,6 +54,5 @@ var searchData=
   ['localize_5fnat_5f1d',['localize_nat_1d',['../namespacesll__m__hermite__interpolation__1d.html#ad0eb66a664d4aac5f15948f2de3dfb5e',1,'sll_m_hermite_interpolation_1d']]],
   ['localize_5fper',['localize_per',['../namespacesll__m__gyroaverage__2d__polar.html#af1effd049b177ea89d86d58f6cb1ced6',1,'sll_m_gyroaverage_2d_polar::localize_per()'],['../namespacesll__m__qn__2d__polar.html#ac5e7893325a119e6331af6209aa97560',1,'sll_m_qn_2d_polar::localize_per()']]],
   ['localize_5fper_5f1d',['localize_per_1d',['../namespacesll__m__hermite__interpolation__1d.html#aa7e3fff00d8ae9289f8aa83fb45bd069',1,'sll_m_hermite_interpolation_1d']]],
-  ['localize_5fpolar',['localize_polar',['../namespacesll__m__gyroaverage__2d__polar.html#a286786970fc94c7e62732e2f3883c034',1,'sll_m_gyroaverage_2d_polar']]],
-  ['lp_5fnorms_5fdf4d',['lp_norms_df4d',['../namespacesll__m__distribution__function__4d__multipatch.html#a80477689214e690e4d18d804b940c38b',1,'sll_m_distribution_function_4d_multipatch']]]
+  ['localize_5fpolar',['localize_polar',['../namespacesll__m__gyroaverage__2d__polar.html#a286786970fc94c7e62732e2f3883c034',1,'sll_m_gyroaverage_2d_polar']]]
 ];

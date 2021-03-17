@@ -1,3 +1,6 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$structsll__m__scalar__field__initializers__base_1_1sll__c__scalar__field__6d__initializer__base.html" title="sll_c_scalar_field\l_6d_initializer_base" alt="" coords="5,5,156,47"/>
+<area shape="rect" id="node1" href="$structsll__m__spline__matrix__base_1_1sll__c__spline__matrix.html" title="sll_c_spline_matrix" alt="" coords="5,78,152,105"/>
+<area shape="rect" id="node2" href="$structsll__m__spline__matrix__banded_1_1sll__t__spline__matrix__banded.html" title="Banded matrix type. " alt="" coords="200,5,345,47"/>
+<area shape="rect" id="node3" href="$structsll__m__spline__matrix__dense_1_1sll__t__spline__matrix__dense.html" title="Dense matrix type. " alt="" coords="200,71,345,112"/>
+<area shape="rect" id="node4" href="$structsll__m__spline__matrix__periodic__banded_1_1sll__t__spline__matrix__periodic__banded.html" title="sll_t_spline_matrix\l_periodic_banded" alt="" coords="200,136,345,177"/>
 </map>

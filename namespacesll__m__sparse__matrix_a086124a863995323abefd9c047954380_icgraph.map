@@ -1,6 +1,0 @@
-<map id="sll_s_add_to_csr_matrix" name="sll_s_add_to_csr_matrix">
-<area shape="rect" id="node2" href="$namespacesll__m__general__coordinate__elliptic__solver__multipatch.html#ad5dcba50d55d23e36b6b7d9fbaae1da9" title="Assemble the matrix for elliptic solver. " alt="" coords="503,5,709,61"/>
-<area shape="rect" id="node3" href="$namespacesll__m__general__coordinate__elliptic__solver__multipatch.html#aa6645afc75d579c8f56897871f0cce27" title="sll_m_general_coordinate\l_elliptic_solver_multipatch\l::compute_source_matrice_mp" alt="" coords="232,37,455,93"/>
-<area shape="rect" id="node4" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a4f7fd26755a4faa1a8bdf94ff493eff1" title="Assemble the matrix for elliptic solver. " alt="" coords="249,117,438,173"/>
-<area shape="rect" id="node5" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a2c7a0e952c10e71709680a8ea4bd548d" title="sll_m_general_coordinate\l_elliptic_solver::sll_s\l_factorize_mat_es_prototype" alt="" coords="238,197,449,253"/>
-</map>

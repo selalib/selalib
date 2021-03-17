@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['backward_5ffd_5f5pt',['backward_fd_5pt',['../namespacesll__m__arbitrary__degree__spline__interpolator__1d.html#ace10701625bc9f222aac03751043d1f8',1,'sll_m_arbitrary_degree_spline_interpolator_1d']]],
   ['base_5ffrom_5flocal_5fbase_5fxi_5fhtc_5fc',['base_from_local_base_xi_htc_c',['../namespacesll__m__interpolation__hex__hermite.html#a15c1bbf8eb31b9646c0e7c2bd08d771f',1,'sll_m_interpolation_hex_hermite']]],
   ['base_5ffrom_5flocal_5fbase_5fxi_5fhtc_5fr',['base_from_local_base_xi_htc_r',['../namespacesll__m__interpolation__hex__hermite.html#a9991d45ae0dff6633336e681d6585094',1,'sll_m_interpolation_hex_hermite']]],
   ['base_5fganev_5fdimitrov',['base_ganev_dimitrov',['../namespacesll__m__interpolation__hex__hermite.html#a9f78b03e5cd34701a65ed75f9bb07bf2',1,'sll_m_interpolation_hex_hermite']]],
