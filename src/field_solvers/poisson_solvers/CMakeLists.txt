@@ -6,7 +6,6 @@ set(POISSON_SRCS
     sll_m_poisson_2d_polar.F90
     sll_m_poisson_2d_base.F90
     sll_m_poisson_2d_periodic.F90
-    sll_m_poisson_2d_elliptic_solver.F90
     sll_m_poisson_2d_fem.F90
     sll_m_poisson_3d_base.F90
     sll_m_hex_poisson.F90
