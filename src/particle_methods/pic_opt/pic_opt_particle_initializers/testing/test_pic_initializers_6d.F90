@@ -39,7 +39,7 @@ program test_pic_initializers_6d
    sll_real64 :: mean_ref_x, variance_ref_x
    sll_real64 :: len_x, len_v
    logical    :: passed
-   integer, allocatable :: iseed
+   integer, allocatable, dimension(:) :: iseed
    integer :: nseed
 
    call random_seed(size=nseed)
