@@ -14,10 +14,8 @@ set(SPLINES_FILES
     sll_m_spline_matrix_banded.F90
     sll_m_spline_matrix_periodic_banded.F90
     sll_m_low_level_bsplines.F90
-    sll_m_deboor_splines_1d.F90
     sll_m_splines_pp.F90
     sll_m_cubic_non_uniform_splines.F90
-    sll_m_quintic_splines.F90
     sll_m_hex_pre_filters.F90
     sll_m_box_splines.F90)
 

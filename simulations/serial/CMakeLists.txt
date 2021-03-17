@@ -26,8 +26,6 @@ if(HDF5_ENABLED AND HDF5_IS_PARALLEL)
   add_subdirectory(bsl_vp_2d2v_cart_fullsparsegrid)
 
   # Guiding-center 2D
-  add_subdirectory(bsl_gc_2d0v_cart)
-  add_subdirectory(bsl_gc_2d0v_polar)
   add_subdirectory(bsl_gc_2d0v_polar_one_mu)
   add_subdirectory(bsl_gc_2d0v_smooth_polar_splines)
   add_subdirectory(bsl_gc_2d0v_hex)

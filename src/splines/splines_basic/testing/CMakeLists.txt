@@ -75,16 +75,7 @@ target_link_libraries(test_cubic_splines sll_splines)
 # Ctests
 add_test(NAME cubic_splines COMMAND test_cubic_splines)
 set_tests_properties(cubic_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-# ...........................................
 
-# Quintic splines ............................
-add_executable(test_quintic_splines test_quintic_splines.F90)
-target_link_libraries(test_quintic_splines sll_splines)
-
-# Ctests
-add_test(NAME quintic_splines COMMAND test_quintic_splines)
-set_tests_properties(quintic_splines PROPERTIES PASS_REGULAR_EXPRESSION
-                                                "PASSED")
 # ...........................................
 
 # Cubic non uniform splines ............................

@@ -3,10 +3,6 @@ program test_scalar_field_1d
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-   use sll_m_arbitrary_degree_spline_interpolator_1d, only: &
-      sll_s_ad1d_interpolator_init, &
-      sll_t_arbitrary_degree_spline_interpolator_1d
-
    use sll_m_boundary_condition_descriptors, only: &
       sll_p_dirichlet, &
       sll_p_periodic
@@ -36,7 +32,6 @@ program test_scalar_field_1d
 #define PRINT_COMPARISON .false.
 
    type(sll_t_cartesian_mesh_1d), pointer                      :: mesh_1d
-   type(sll_t_arbitrary_degree_spline_interpolator_1d), target :: interp_1d
 
    class(sll_c_scalar_field_1d_base), pointer :: periodic_analytic
    class(sll_c_scalar_field_1d_base), pointer :: dirichlet_analytic
@@ -136,123 +131,6 @@ program test_scalar_field_1d
 
    call dirichlet_analytic%delete()
 
-! --------------------------------------------------------------------------
-!   Test case periodic non analytic
-!----------------------------------------------------------------------------
-   allocate (point1(nc1 + 1))
-   allocate (tab_values(nc1 + 1))
-   do i = 1, nc1 + 1
-      point1(i) = (i - 1)*h1 + ETA1MIN
-      tab_values(i) = test_function_per(point1(i))
-   end do
-
-   call sll_s_ad1d_interpolator_init(interp_1d, &
-                                     NUM_CELLS1 + 1, &
-                                     ETA1MIN, &
-                                     ETA1MAX, &
-                                     sll_p_periodic, &
-                                     sll_p_periodic, &
-                                     SPLINE_DEG1)
-
-   periodic_discrete => sll_f_new_scalar_field_1d_discrete( &
-                        "periodic_discrete", &
-                        interp_1d, &
-                        sll_p_periodic, &
-                        sll_p_periodic, &
-                        mesh_1d, &
-                        point1, &
-                        nc1 + 1)
-
-! ------- > allocation values of field
-   call periodic_discrete%set_field_data(tab_values)
-! --------> Compute coefficients of the field
-   call periodic_discrete%update_interpolation_coefficients()
-
-! -------> compute error norm L2 and H1
-   normL2_3 = 0.0_f64
-   normH1_3 = 0.0_f64
-   do i = 1, nc1 + 1
-      eta1 = real(i - 1, f64)*h1 + ETA1MIN
-      node_val = periodic_discrete%value_at_point(eta1)
-      grad1_node_val = periodic_discrete%derivative_value_at_point(eta1)
-      ref = test_function_per(eta1)
-      grad1ref = test_function_per_der1(eta1)
-      if (PRINT_COMPARISON) then
-         print *, 'eta1 = ', eta1, 'calculated = ', node_val, &
-            'theoretical = ', ref, 'difference=', node_val - ref
-         print *, 'eta1 = ', eta1, 'calculated = ', grad1_node_val, &
-            'theoretical = ', grad1ref, 'difference=', grad1ref - grad1_node_val
-      end if
-
-      normL2_3 = normL2_3 + (node_val - ref)**2*h1
-      normH1_3 = normH1_3 + ((grad1_node_val - grad1ref)**2)*h1
-
-   end do
-
-   call periodic_discrete%delete()
-
-   DEALLOCATE (point1)
-   DEALLOCATE (tab_values)
-
-! --------------------------------------------------------------------------
-!   Test case dirichlet non analytic
-!----------------------------------------------------------------------------
-
-   allocate (point1(nc1 + 1))
-   allocate (tab_values(nc1 + 1))
-   do i = 1, nc1 + 1
-      point1(i) = real(i - 1, f64)*h1 + ETA1MIN
-      tab_values(i) = test_function_dir(point1(i))
-   end do
-
-   call sll_s_ad1d_interpolator_init( &
-      interp_1d, &
-      NUM_CELLS1 + 1, &
-      ETA1MIN, &
-      ETA1MAX, &
-      sll_p_dirichlet, &
-      sll_p_dirichlet, &
-      SPLINE_DEG1)
-
-   dirichlet_discrete => sll_f_new_scalar_field_1d_discrete( &
-                         "dirichlet_discrete", &
-                         interp_1d, &
-                         sll_p_dirichlet, &
-                         sll_p_dirichlet, &
-                         mesh_1d, &
-                         point1, &
-                         nc1 + 1)
-
-   call dirichlet_discrete%set_field_data(tab_values)
-   call dirichlet_discrete%update_interpolation_coefficients()
-
-   normL2_4 = 0.0_f64
-   normH1_4 = 0.0_f64
-
-   do i = 1, nc1 + 1
-      eta1 = real(i - 1, f64)*h1 + ETA1MIN
-      node_val = dirichlet_discrete%value_at_point(eta1)
-      grad1_node_val = dirichlet_discrete%derivative_value_at_point(eta1)
-      ref = test_function_dir(eta1)
-      grad1ref = test_function_dir_der1(eta1)
-      if (PRINT_COMPARISON) then
-         print *, 'eta1 = ', eta1, 'calculated = ', node_val, &
-            'theoretical = ', ref, 'difference=', node_val - ref
-         print *, 'eta1 = ', eta1, 'calculated = ', grad1_node_val, &
-            'theoretical = ', grad1ref, 'difference=', grad1ref - grad1_node_val
-
-      end if
-
-      normL2_4 = normL2_4 + (node_val - ref)**2*h1
-      normH1_4 = normH1_4 + ((grad1_node_val - grad1ref)**2)*h1
-
-   end do
-
-   call dirichlet_discrete%delete()
-
-   deallocate (point1)
-   deallocate (tab_values)
-
 ! **********************  TESTS **************************************
 
    print *, '-------------------------------------------------------'
@@ -267,26 +145,10 @@ program test_scalar_field_1d
    print *, 'Norm L2', sqrt(normL2_2), 'Norm H1', sqrt(normH1_2), &
       h1**(SPLINE_DEG1), h1**(SPLINE_DEG1 - 1)
 
-   print *, '-------------------------------------------------------'
-   print *, ' PERIODIC NON ANALYTIC'
-   print *, '-------------------------------------------------------'
-   print *, 'Norm L2', sqrt(normL2_3), 'Norm H1', sqrt(normH1_3), &
-      h1**(SPLINE_DEG1), h1**(SPLINE_DEG1 - 1)
-
-   print *, '-------------------------------------------------------'
-   print *, ' DIRICHLET NON ANALYTIC'
-   print *, '-------------------------------------------------------'
-   print *, 'Norm L2', sqrt(normL2_4), 'Norm H1', sqrt(normH1_4), &
-      h1**(SPLINE_DEG1), h1**(SPLINE_DEG1 - 1)
-
    if ((sqrt(normL2_1) <= h1**(SPLINE_DEG1)) .AND. &
        (sqrt(normL2_2) <= h1**(SPLINE_DEG1)) .AND. &
-       (sqrt(normL2_3) <= h1**(SPLINE_DEG1)) .AND. &
-       (sqrt(normL2_4) <= h1**(SPLINE_DEG1)) .AND. &
        (sqrt(normH1_1) <= h1**(SPLINE_DEG1 - 1)) .AND. &
-       (sqrt(normH1_2) <= h1**(SPLINE_DEG1 - 1)) .AND. &
-       (sqrt(normH1_3) <= h1**(SPLINE_DEG1 - 1)) .AND. &
-       (sqrt(normH1_4) <= h1**(SPLINE_DEG1 - 1))) then
+       (sqrt(normH1_2) <= h1**(SPLINE_DEG1 - 1)) ) then
       print *, 'PASSED'
    end if
 

@@ -121,7 +121,3 @@
 !>
 !> - sll_m_low_level_bsplines
 !>
-!> #### 7. De Boor's implementation of 1D and 2D tensor-product splines ####
-!>
-!> - sll_m_deboor_splines_1d
-!> - sll_m_deboor_splines_2d

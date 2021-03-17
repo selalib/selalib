@@ -26,7 +26,6 @@ if(HDF5_ENABLED
   if(NOT (FFT_LIB STREQUAL "SLLFFT"))
     add_subdirectory(bsl_vp_2d2v_cart_sparsegrid)
   endif()
-  add_subdirectory(bsl_vp_2d2v_cart_multipatch)
   add_subdirectory(bsl_vp_2d2v_polar)
   add_subdirectory(bsl_vp_2d2v_curv)
 
@@ -35,15 +34,11 @@ if(HDF5_ENABLED
     add_subdirectory(bsl_vp_3d3v_cart_sparsegrid)
   endif()
 
-  # Guiding-Center 2D
-  add_subdirectory(bsl_gc_2d0v_curv)
-
   # Drift/gyro-kinetic 3Dx1D
   add_subdirectory(bsl_dk_3d1v_polar)
   add_subdirectory(bsl_gk_3d1v_polar_one_mu)
   add_subdirectory(bsl_gk_3d1v_polar_multi_mu)
   add_subdirectory(bsl_dk_3d1v_polar_field_aligned)
-  add_subdirectory(bsl_dk_3d1v_curv)
   add_subdirectory(bsl_dk_3d1v_curv_field_aligned)
 
   # Eulerian simulations
@@ -71,11 +66,5 @@ if(HDF5_ENABLED
 
   # Guiding-Center 2D
   add_subdirectory(pic_gc_2d0v_cart_optim)
-
-  # here are some other examples of simulations they can serve as examples for
-  # selalib beginners you can add some new examples the interface is more free
-  # requirements of the simulations that are present in the developer guide are
-  # not mandatory here
-  add_subdirectory(bsl_examples)
 
 endif()
