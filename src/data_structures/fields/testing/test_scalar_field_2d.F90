@@ -382,7 +382,7 @@ program unit_test_2d
        (sqrt(normH1_1) <= h1**(SPLINE_DEG1 - 1)) .AND. &
        (sqrt(normH1_2) <= h1**(SPLINE_DEG1 - 1)) .AND. &
        (sqrt(normH1_3) <= h1**(SPLINE_DEG1 - 1)) .AND. &
-       (sqrt(normH1_4) <= h1**(SPLINE_DEG1 - 1)) ) then
+       (sqrt(normH1_4) <= h1**(SPLINE_DEG1 - 1))) then
 
       print *, 'PASSED'
 

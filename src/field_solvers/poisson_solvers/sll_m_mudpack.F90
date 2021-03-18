@@ -189,18 +189,18 @@ contains
       if (error > 0) stop 0
 
 101   format(/'# integer input arguments ', &
-            &/'#intl = ', i2, ' nxa = ', i2, ' nxb = ', i2, ' nyc = ', i2, ' nyd = ', i2, &
-            &/'# ixp = ', i2, ' jyq = ', i2, ' iex = ', i2, ' jey = ', i2 &
-            &/'# nx = ', i3, ' ny = ', i3, ' iguess = ', i2, ' maxcy = ', i2, &
-            &/'# method = ', i2, ' work space estimate = ', i7)
+              &/'#intl = ', i2, ' nxa = ', i2, ' nxb = ', i2, ' nyc = ', i2, ' nyd = ', i2, &
+              &/'# ixp = ', i2, ' jyq = ', i2, ' iex = ', i2, ' jey = ', i2 &
+              &/'# nx = ', i3, ' ny = ', i3, ' iguess = ', i2, ' maxcy = ', i2, &
+              &/'# method = ', i2, ' work space estimate = ', i7)
 102   format(/'# multigrid option arguments ', &
-            &/'# kcycle = ', i2, &
-            &/'# iprer = ', i2, &
-            &/'# ipost = ', i2, &
-            &/'# intpol = ', i2)
+              &/'# kcycle = ', i2, &
+              &/'# iprer = ', i2, &
+              &/'# ipost = ', i2, &
+              &/'# intpol = ', i2)
 103   format(/'# floating point input parameters ', &
-            &/'# xa = ', f6.3, ' xb = ', f6.3, ' yc = ', f6.3, ' yd = ', f6.3, &
-            &/'# tolerance (error control) =   ', e10.3)
+              &/'# xa = ', f6.3, ' xb = ', f6.3, ' yc = ', f6.3, ' yd = ', f6.3, &
+              &/'# tolerance (error control) =   ', e10.3)
 104   format(/'# discretization call to mud2sp', ' intl = ', i2)
 200   format('# error = ', i2, ' minimum work space = ', i7)
 
@@ -272,7 +272,7 @@ contains
       if (error > 0) stop 0
 
 106   format(/'#approximation call to mud2sp', &
-            &/'# intl = ', i2, ' method = ', i2, ' iguess = ', i2)
+              &/'# intl = ', i2, ' method = ', i2, ' iguess = ', i2)
 107   format('#error = ', i2)
 108   format(/'# mud24sp test ', ' error = ', i2)
 
