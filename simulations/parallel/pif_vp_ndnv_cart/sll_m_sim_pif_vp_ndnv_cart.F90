@@ -867,7 +867,7 @@ contains
          sim%ExB = 0.0_f64
 
          sim%particle(sim%maskv, :) = exp_skew_product2(normalize(B), &
-                                                        sim%particle(sim%maskv, :) + h*sim%qm/2.0*E, h*(-sim%qm)*l2norm(B)) + h*sim%qm/2.0*E
+                                                sim%particle(sim%maskv, :) + h*sim%qm/2.0*E, h*(-sim%qm)*l2norm(B)) + h*sim%qm/2.0*E
          !x_{k+1}= x_k + dt*v_{k+1}
          sim%particle(sim%maskx, :) = sim%particle(sim%maskx, :) + h*sim%particle(sim%maskv, :); 
          t = (sim%tstep - 1)*sim%dt + sum(compc%gamma(1:stage))*sim%dt; 
