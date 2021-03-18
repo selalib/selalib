@@ -49,7 +49,7 @@ program test_pic_initializers_4d
    integer :: nseed
 
    call random_seed(size=nseed)
-   allocate(iseed(nseed))
+   allocate (iseed(nseed))
    iseed = 42
    call random_seed(put=iseed)
 
