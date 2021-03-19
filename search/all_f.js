@@ -46,7 +46,7 @@ var searchData=
   ['particle_5fmethods_5fdoc_2ef90',['particle_methods_doc.F90',['../particle__methods__doc_8_f90.html',1,'']]],
   ['partition',['partition',['../namespacesll__m__qsort__partition.html#aa1ad128585a5c9195e5903a7bc8f478e',1,'sll_m_qsort_partition']]],
   ['pastix_5fsolver',['pastix_solver',['../structsll__m__pastix_1_1pastix__solver.html',1,'sll_m_pastix']]],
-  ['pba_5fpow',['PBA_POW',['../sll__m__cubic__spline__halo__1d_8_f90.html#a66b4609331c48d4cdebe50ba764021de',1,'PBA_POW():&#160;sll_m_cubic_spline_halo_1d.F90'],['../namespacesll__m__cubic__spline__halo__1d.html#a839207d3cd046712e672cb1f8da7def0',1,'sll_m_cubic_spline_halo_1d::pba_pow()']]],
+  ['pba_5fpow',['pba_pow',['../namespacesll__m__cubic__spline__halo__1d.html#a839207d3cd046712e672cb1f8da7def0',1,'sll_m_cubic_spline_halo_1d::pba_pow()'],['../sll__m__cubic__spline__halo__1d_8_f90.html#a66b4609331c48d4cdebe50ba764021de',1,'PBA_POW():&#160;sll_m_cubic_spline_halo_1d.F90']]],
   ['per_5finterp',['per_interp',['../structsll__m__periodic__interpolator__1d_1_1sll__t__periodic__interpolator__1d.html#aaf9931b17c08423deaf967ff70a3fc95',1,'sll_m_periodic_interpolator_1d::sll_t_periodic_interpolator_1d::per_interp()'],['../structsll__m__advection__1d__periodic_1_1sll__t__advector__1d__periodic.html#aaf9931b17c08423deaf967ff70a3fc95',1,'sll_m_advection_1d_periodic::sll_t_advector_1d_periodic::per_interp()']]],
   ['per_5finterpolate1d',['per_interpolate1d',['../namespacesll__m__periodic__interpolator__1d.html#a99c71ea3eff0bcc327db7bb95605a91e',1,'sll_m_periodic_interpolator_1d']]],
   ['per_5finterpolate1d_5fdisp',['per_interpolate1d_disp',['../namespacesll__m__periodic__interpolator__1d.html#ae6f0cb5c46ddb52e2ab53c9c1e65792b',1,'sll_m_periodic_interpolator_1d']]],

@@ -244,7 +244,6 @@ var searchData=
   ['sll_5fm_5fqn_5fsolver_5f2d_5fpolar_5fpar_2ef90',['sll_m_qn_solver_2d_polar_par.F90',['../sll__m__qn__solver__2d__polar__par_8_f90.html',1,'']]],
   ['sll_5fm_5fqn_5fsolver_5f3d_5fpolar_5fpar_2ef90',['sll_m_qn_solver_3d_polar_par.F90',['../sll__m__qn__solver__3d__polar__par_8_f90.html',1,'']]],
   ['sll_5fm_5fqsort_5fpartition_2ef90',['sll_m_qsort_partition.F90',['../sll__m__qsort__partition_8_f90.html',1,'']]],
-  ['sll_5fm_5fquintic_5fsplines_2ef90',['sll_m_quintic_splines.F90',['../sll__m__quintic__splines_8_f90.html',1,'']]],
   ['sll_5fm_5frectangle_5fintegration_2ef90',['sll_m_rectangle_integration.F90',['../sll__m__rectangle__integration_8_f90.html',1,'']]],
   ['sll_5fm_5freduction_2ef90',['sll_m_reduction.F90',['../sll__m__reduction_8_f90.html',1,'']]],
   ['sll_5fm_5frk_5fexplicit_2ef90',['sll_m_rk_explicit.F90',['../sll__m__rk__explicit_8_f90.html',1,'']]],
