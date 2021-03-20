@@ -263,7 +263,7 @@ contains
 902   format(/10x, 'Reference :', i3, 5x, 'Dirichlet ')
 904   format(/10x, 'Reference :', i3, 5x, 'Neumann')
 910   format(/10x, 'Option not available'/  &
-              &       10x, 'Reference :', i3, 5x, 'Type :', i3/)
+                &       10x, 'Reference :', i3, 5x, 'Type :', i3/)
 921   format(//5x, 'Frontiere', 5x, 'ntypfr', 7x, 'potfr')
 922   format(5x, I3, 4x, I10, 2E12.3, 2I10, E12.3)
 932   format(//10x, 'Boundary conditions'/)
