@@ -9,6 +9,7 @@ jobs:
     - name: Install dependencies
       run: |
         brew install doxygen graphviz fftw open-mpi hdf5-mpi openblas cmake gfortran
+        brew unlink gcc && brew link gcc@10
     - name: Checkout
       uses: actions/checkout@v2
       with:
