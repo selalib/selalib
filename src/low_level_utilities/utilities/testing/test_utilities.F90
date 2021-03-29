@@ -30,7 +30,7 @@ program utils_tester
    re32 = 1.0_f32
    in64 = transfer(int(z'7fffffff'), in64) ! largest 32-bit int, 2**31-1
    !largest 64-bit integer 2**63-1
-   largest_int64 = transfer(int(z'7fffffffffffffff'), largest_int64)
+   largest_int64 = transfer(int(z'7fffffffffffffff', kind=16), largest_int64)
    ! largest 32-bit int, 2**31-1
    largest_int32 = transfer(int(z'7fffffff'), largest_int32)
    in32 = 2
