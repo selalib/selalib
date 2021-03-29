@@ -49,8 +49,8 @@ program working_precision_tester
    f = transfer(int(z'7f7fffff'), f)
    small = transfer(int(z'7f000001'), small) ! smallest num with same binary exp as f
    neglected = transfer(int(z'72ffffff'), neglected) ! 25-power of 2 orders less
-   f2 = transfer(int(z'7fefffffffffffff'), f2) ! largest IEEE-754 double float
-   small2 = transfer(int(z'7feffffffffffff1'), small2)
+   f2 = transfer(int(z'7fefffffffffffff',kind=16), f2) ! largest IEEE-754 double float
+   small2 = transfer(int(z'7feffffffffffff1',kind=16), small2)
 
    print *, '*************************************'
    print *, 'Tester for the working precision module'
