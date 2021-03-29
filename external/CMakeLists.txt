@@ -6,7 +6,6 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
 endif()
 
 add_subdirectory(fftpack)
-add_subdirectory(fftpack5)
 add_subdirectory(pppack)
 add_subdirectory(nufft)
 add_subdirectory(burkardt)

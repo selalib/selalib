@@ -84,6 +84,13 @@ program test_spline_2d
    integer  :: k
    integer  :: cos_n1, cos_n2
    real(wp) :: cos_c1, cos_c2
+   integer  :: nseed
+   integer, allocatable :: iseed(:)
+
+   call random_seed( size=nseed )
+   allocate(iseed(nseed))
+   iseed = 1234
+   call random_seed(put=iseed)
 
    ! Read from standard input
    call process_args(uniform, grid_perturbation)
@@ -532,8 +539,8 @@ program test_spline_2d
                      ncells(2) = ncells(1)
 
                      if (uniform) then
-                        dx1 = (pinfo%x1_max - pinfo%x1_min)/ncells(1)
-                        dx2 = (pinfo%x2_max - pinfo%x2_min)/ncells(2)
+                        dx1 = (pinfo%x1_max - pinfo%x1_min)/real(ncells(1), kind=wp)
+                        dx2 = (pinfo%x2_max - pinfo%x2_min)/real(ncells(2), kind=wp)
                      else
                         allocate (breaks1(ncells(1) + 1))
                         allocate (breaks2(ncells(2) + 1))
@@ -748,11 +755,11 @@ contains
 
       call random_seed(size=nseed)
       allocate (iseed(nseed))
-      iseed = 42
+      iseed = 1234
       call random_seed(put=iseed)
 
       ! Generate breakpoints by applying random noise onto regular grid
-      associate (dx => (xmax - xmin)/ncells)
+      associate (dx => (xmax - xmin)/real(ncells,kind=wp))
          do i = 1, ncells + 1
             call random_number(r) !  0.0 <= r < 1.0
             r = r - 0.5_wp          ! -0.5 <= r < 0.5

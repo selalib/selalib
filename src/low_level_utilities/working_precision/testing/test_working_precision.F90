@@ -41,16 +41,16 @@ program working_precision_tester
 
    test_int1 = 0
    test_int2 = 0
-   i = transfer(z'7fffffff', i)  !2147483647, largest 32-bit int
+   i = transfer(int(z'7fffffff'), i)  !2147483647, largest 32-bit int
    counter = 1
    exponent = -127
    test_float = 0.0
    ref_float = 0.0
-   f = transfer(z'7f7fffff', f)
-   small = transfer(z'7f000001', small) ! smallest num with same binary exp as f
-   neglected = transfer(z'72ffffff', neglected) ! 25-power of 2 orders less
-   f2 = transfer(z'7fefffffffffffff', f2) ! largest IEEE-754 double float
-   small2 = transfer(z'7feffffffffffff1', small2)
+   f = transfer(int(z'7f7fffff'), f)
+   small = transfer(int(z'7f000001'), small) ! smallest num with same binary exp as f
+   neglected = transfer(int(z'72ffffff'), neglected) ! 25-power of 2 orders less
+   f2 = transfer(int(z'7fefffffffffffff'), f2) ! largest IEEE-754 double float
+   small2 = transfer(int(z'7feffffffffffff1'), small2)
 
    print *, '*************************************'
    print *, 'Tester for the working precision module'
@@ -102,7 +102,7 @@ program working_precision_tester
    print *, ' '
    print *, '*************************************'
    print *, 'Test the 32-bit float'
-   stepf32 = transfer(z'00000001', stepf32) ! smallest positive normalized number
+   stepf32 = transfer(int(z'00000001'), stepf32) ! smallest positive normalized number
    infinite_real: do
       test_float = test_float + stepf32
       if (test_float .gt. ref_float) then
@@ -116,7 +116,7 @@ program working_precision_tester
          write (*, '(a, es20.12)') '  New step is ', stepf32
          counter = 1 ! reset the counter
          write (*, '(a, es20.12)') ' Largest number thus far: ', test_float
-         if (test_float .eq. transfer(z'7F800000', test_float)) then
+         if (test_float .eq. transfer(int(z'7F800000'), test_float)) then
             exit infinite_real
          end if
       end if

@@ -1,0 +1,27 @@
+name: OSX
+
+on: [push, pull_request]
+
+jobs:
+  build-and-test:
+    runs-on: macos-11.0
+    steps:
+    - name: Install dependencies
+      run: |
+        brew install doxygen graphviz fftw hdf5-mpi openblas cmake gfortran
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        persist-credentials: false
+    - name: Build & Test
+      uses: ashutoshvarma/action-cmake-build@master
+      with:
+        build-dir: ${{ runner.workspace }}/build
+        cc: gcc
+        cxx: g++
+        build-type: Release
+        configure-options: 
+        run-test: true
+        ctest-options: --output-on-failure
+        install-build: true
+        parallel: 8
