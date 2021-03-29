@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   build-and-test:
-    runs-on: macos-11.0
+    runs-on: macos-latest
     steps:
     - name: Install dependencies
       run: |
@@ -14,14 +14,5 @@ jobs:
       with:
         persist-credentials: false
     - name: Build & Test
-      uses: ashutoshvarma/action-cmake-build@master
-      with:
-        build-dir: ${{ runner.workspace }}/build
-        cc: gcc
-        cxx: g++
-        build-type: Release
-        configure-options: 
-        run-test: true
-        ctest-options: --output-on-failure
-        install-build: true
-        parallel: 8
+      run: |
+        mkdir build && cd build && cmake .. && ctest --output-on-failure
