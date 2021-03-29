@@ -1538,7 +1538,7 @@ contains
       sll_real64, dimension(:, :), allocatable :: mloc, av1loc, av2loc, bv1loc, bv2loc, &
          absbv1loc, absbv2loc
       sll_real64, dimension(:), allocatable :: gauss, weight
-      sll_real64 :: void  ! only for a valid address
+      sll_real64 :: void(1)  ! only for a valid address
       sll_int32 :: ifac, isol, nsym, mp
       sll_int32 :: ll, ib1, ib2, jb1, jb2, counter
 
@@ -2560,7 +2560,8 @@ contains
       sll_int32  :: loc_sz_x1
       sll_int32  :: loc_sz_x2
       sll_int32  :: ierr, ifac, isol, nsym, mp
-      sll_real64 :: void, Ex, Ey, vn(2)
+      sll_real64 :: Ex, Ey, vn(2)
+      sll_real64 :: void(1)
       sll_int32 :: ic, jc, icL, icR, jcL, jcR
       sll_real64 :: x1, x2
       sll_real64, dimension(1:2, 1:2) :: jac_m, inv_jac
@@ -3381,7 +3382,8 @@ contains
       sll_real64, dimension(:), pointer  :: vkgd, vkgs, vkgi
       sll_real64, dimension(:), pointer  :: val, f, vx
       sll_int32 :: ifac, isol, mp, nsym
-      sll_real64 ::v, void
+      sll_real64 ::v
+      sll_real64 :: void(1)
 !!$   sll_real64,intent(in) ::t
 !!$   sll_real64, intent(out) :: E2norm_ex
 !!$   sll_real64 :: kx, eps,dx
