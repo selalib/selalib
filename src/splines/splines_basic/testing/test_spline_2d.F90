@@ -87,8 +87,8 @@ program test_spline_2d
    integer  :: nseed
    integer, allocatable :: iseed(:)
 
-   call random_seed( size=nseed )
-   allocate(iseed(nseed))
+   call random_seed(size=nseed)
+   allocate (iseed(nseed))
    iseed = 1234
    call random_seed(put=iseed)
 
@@ -759,7 +759,7 @@ contains
       call random_seed(put=iseed)
 
       ! Generate breakpoints by applying random noise onto regular grid
-      associate (dx => (xmax - xmin)/real(ncells,kind=wp))
+      associate (dx => (xmax - xmin)/real(ncells, kind=wp))
          do i = 1, ncells + 1
             call random_number(r) !  0.0 <= r < 1.0
             r = r - 0.5_wp          ! -0.5 <= r < 0.5
