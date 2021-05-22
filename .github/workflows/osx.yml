@@ -16,4 +16,4 @@ jobs:
         persist-credentials: false
     - name: Build & Test
       run: |
-        mkdir build && cd build && env FC=gfortran-10 cmake .. && make -j 4 && ctest --output-on-failure
+        mkdir build && cd build && env FC=gfortran-10 cmake .. && env=FC=gfortran-10 make -j 4 && ctest --output-on-failure
