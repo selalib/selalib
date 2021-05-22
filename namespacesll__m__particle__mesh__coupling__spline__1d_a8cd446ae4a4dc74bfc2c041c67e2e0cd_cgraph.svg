@@ -35,7 +35,7 @@
 <!-- Node22 -->
 <g id="node3" class="node">
 <title>Node22</title>
-<g id="a_node3"><a xlink:href="namespacesll__m__splines__pp.html#a0c79f977725f86d5c265b682a0e56d02" target="_top" xlink:title="Initialize sll_t_spline_pp_1d object (Set poly_coeffs depending on degree) ">
+<g id="a_node3"><a xlink:href="namespacesll__m__splines__pp.html#a7e2a3943e2c330a0a9597b535ce259b3" target="_top" xlink:title="Initialize sll_t_spline_pp_1d object (Set poly_coeffs depending on degree) ">
 <polygon fill="#ffffff" stroke="#000000" points="145,-.5 145,-30.5 262,-30.5 262,-.5 145,-.5"/>
 <text text-anchor="start" x="153" y="-18.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_splines_pp::sll</text>
 <text text-anchor="middle" x="203.5" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">_s_spline_pp_init_1d</text>

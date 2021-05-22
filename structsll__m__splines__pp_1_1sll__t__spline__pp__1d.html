@@ -86,7 +86,7 @@ $(function() {
 <div class="dynheader">
 Collaboration diagram for sll_t_spline_pp_1d:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="structsll__m__splines__pp_1_1sll__t__spline__pp__1d__coll__graph.svg" width="312" height="171"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+<div class="center"><iframe scrolling="no" frameborder="0" src="structsll__m__splines__pp_1_1sll__t__spline__pp__1d__coll__graph.svg" width="416" height="332"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
 </div>
 </div>
 <table class="memberdecls">
@@ -95,27 +95,77 @@ Private Attributes</h2></td></tr>
 <tr class="memitem:a11904b2b8f38f0d28cd3826c99276b1a"><td class="memItemLeft" align="right" valign="top">integer(kind=i32)&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html#a11904b2b8f38f0d28cd3826c99276b1a">degree</a></td></tr>
 <tr class="memdesc:a11904b2b8f38f0d28cd3826c99276b1a"><td class="mdescLeft">&#160;</td><td class="mdescRight">degree of 1d spline  <a href="#a11904b2b8f38f0d28cd3826c99276b1a">More...</a><br /></td></tr>
 <tr class="separator:a11904b2b8f38f0d28cd3826c99276b1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af68de2269e3944bca8f23037f1dc5a0b"><td class="memItemLeft" align="right" valign="top">real(kind=f64), dimension(:, :), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html#af68de2269e3944bca8f23037f1dc5a0b">poly_coeffs</a></td></tr>
-<tr class="memdesc:af68de2269e3944bca8f23037f1dc5a0b"><td class="mdescLeft">&#160;</td><td class="mdescRight">poly_coeffs[i,j] coefficient of x^{deg+1-j} for ith B-spline function size= (degree+1, degree+1)  <a href="#af68de2269e3944bca8f23037f1dc5a0b">More...</a><br /></td></tr>
-<tr class="separator:af68de2269e3944bca8f23037f1dc5a0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adf8031006970bdf1e6ba2b3a9a591e5e"><td class="memItemLeft" align="right" valign="top">real(kind=f64), dimension(:, :), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html#adf8031006970bdf1e6ba2b3a9a591e5e">poly_coeffs_fp</a></td></tr>
-<tr class="memdesc:adf8031006970bdf1e6ba2b3a9a591e5e"><td class="mdescLeft">&#160;</td><td class="mdescRight">poly_coeffs[i,j] coefficient of x^{deg+1-j} for ith B-spline function size= (degree+1, degree+1)  <a href="#adf8031006970bdf1e6ba2b3a9a591e5e">More...</a><br /></td></tr>
-<tr class="separator:adf8031006970bdf1e6ba2b3a9a591e5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aad1cf258d5f17e6c1cd85a94a731cd75"><td class="memItemLeft" align="right" valign="top">real(kind=f64), dimension(:,:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html#aad1cf258d5f17e6c1cd85a94a731cd75">poly_coeffs</a></td></tr>
+<tr class="memdesc:aad1cf258d5f17e6c1cd85a94a731cd75"><td class="mdescLeft">&#160;</td><td class="mdescRight">poly_coeffs[j,i] coefficient of x^{degree+1-j} for B-spline in interval degree+2-i function size= (degree+1, degree+1)  <a href="#aad1cf258d5f17e6c1cd85a94a731cd75">More...</a><br /></td></tr>
+<tr class="separator:aad1cf258d5f17e6c1cd85a94a731cd75"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2d251fd134d12cfc683a11f95ef418ec"><td class="memItemLeft" align="right" valign="top">real(kind=f64), dimension(:,:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html#a2d251fd134d12cfc683a11f95ef418ec">poly_coeffs_fp</a></td></tr>
+<tr class="memdesc:a2d251fd134d12cfc683a11f95ef418ec"><td class="mdescLeft">&#160;</td><td class="mdescRight">poly_coeffs[j,i] coefficient of x^{deg+1-j} for primitive of B-spline function in interval degree+2-i size= (degree+1, degree+1)  <a href="#a2d251fd134d12cfc683a11f95ef418ec">More...</a><br /></td></tr>
+<tr class="separator:a2d251fd134d12cfc683a11f95ef418ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a16448193350fb6e4b4706b4e432e0449"><td class="memItemLeft" align="right" valign="top">real(kind=f64), dimension(:,:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html#a16448193350fb6e4b4706b4e432e0449">poly_coeffs_fpa</a></td></tr>
+<tr class="memdesc:a16448193350fb6e4b4706b4e432e0449"><td class="mdescLeft">&#160;</td><td class="mdescRight">poly_coeffs[j,i] coefficient of x^{deg+1-j+1} for primitive of B-spline function in interval degree+2-i size= (degree+2, degree+1)  <a href="#a16448193350fb6e4b4706b4e432e0449">More...</a><br /></td></tr>
+<tr class="separator:a16448193350fb6e4b4706b4e432e0449"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6b0307dc760cd9b9250fe6801b57653d"><td class="memItemLeft" align="right" valign="top">real(kind=f64), dimension(:,:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html#a6b0307dc760cd9b9250fe6801b57653d">poly_coeffs_fd</a></td></tr>
+<tr class="memdesc:a6b0307dc760cd9b9250fe6801b57653d"><td class="mdescLeft">&#160;</td><td class="mdescRight">poly_coeffs[j,i] coefficient of x^{deg+1-j} for derivative of B-spline function in interval degree+2-i size= (degree+1, degree+1)  <a href="#a6b0307dc760cd9b9250fe6801b57653d">More...</a><br /></td></tr>
+<tr class="separator:a6b0307dc760cd9b9250fe6801b57653d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a17918312e4d19d69bf21f35b16a755f7"><td class="memItemLeft" align="right" valign="top">integer(kind=i32)&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html#a17918312e4d19d69bf21f35b16a755f7">n_cells</a></td></tr>
 <tr class="memdesc:a17918312e4d19d69bf21f35b16a755f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of gridcells  <a href="#a17918312e4d19d69bf21f35b16a755f7">More...</a><br /></td></tr>
 <tr class="separator:a17918312e4d19d69bf21f35b16a755f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a96005aa4431c84b4bdb09eb261dba5c0"><td class="memItemLeft" align="right" valign="top">integer(kind=i32)&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html#a96005aa4431c84b4bdb09eb261dba5c0">n_coeffs</a></td></tr>
+<tr class="memdesc:a96005aa4431c84b4bdb09eb261dba5c0"><td class="mdescLeft">&#160;</td><td class="mdescRight">no. of coefficients  <a href="#a96005aa4431c84b4bdb09eb261dba5c0">More...</a><br /></td></tr>
+<tr class="separator:a96005aa4431c84b4bdb09eb261dba5c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a74cbbfd893d3e3734992ce9886b2af35"><td class="memItemLeft" align="right" valign="top">real(kind=f64), dimension(:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html#a74cbbfd893d3e3734992ce9886b2af35">scratch_b</a></td></tr>
 <tr class="memdesc:a74cbbfd893d3e3734992ce9886b2af35"><td class="mdescLeft">&#160;</td><td class="mdescRight">scratch data for b_to_pp-converting  <a href="#a74cbbfd893d3e3734992ce9886b2af35">More...</a><br /></td></tr>
 <tr class="separator:a74cbbfd893d3e3734992ce9886b2af35"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aad3386db50cf00045d48ccda49bba348"><td class="memItemLeft" align="right" valign="top">real(kind=f64), dimension(:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html#aad3386db50cf00045d48ccda49bba348">scratch_p</a></td></tr>
 <tr class="memdesc:aad3386db50cf00045d48ccda49bba348"><td class="mdescLeft">&#160;</td><td class="mdescRight">scratch data for b_to_pp-converting  <a href="#aad3386db50cf00045d48ccda49bba348">More...</a><br /></td></tr>
 <tr class="separator:aad3386db50cf00045d48ccda49bba348"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2d037b1fbcecec8eeceb67111f96c7e4"><td class="memItemLeft" align="right" valign="top">real(kind=f64), dimension(:,:,:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html#a2d037b1fbcecec8eeceb67111f96c7e4">poly_coeffs_boundary_left</a></td></tr>
+<tr class="memdesc:a2d037b1fbcecec8eeceb67111f96c7e4"><td class="mdescLeft">&#160;</td><td class="mdescRight">poly_coeffs_left[j,i,k] coefficient of x^{degree+1-j} for B-spline in interval degree+2-i function size= (degree+1, degree+1,degree-1) for kth boundary cell  <a href="#a2d037b1fbcecec8eeceb67111f96c7e4">More...</a><br /></td></tr>
+<tr class="separator:a2d037b1fbcecec8eeceb67111f96c7e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a147bb130f13e32a4567f041c4519b9bd"><td class="memItemLeft" align="right" valign="top">real(kind=f64), dimension(:,:,:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html#a147bb130f13e32a4567f041c4519b9bd">poly_coeffs_boundary_right</a></td></tr>
+<tr class="memdesc:a147bb130f13e32a4567f041c4519b9bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">poly_coeffs[j,i,k] coefficient of x^{degree+1-j} for B-spline in interval degree+2-i function size= (degree+1, degree+1, degree-1) for (N-k)th boundary cell  <a href="#a147bb130f13e32a4567f041c4519b9bd">More...</a><br /></td></tr>
+<tr class="separator:a147bb130f13e32a4567f041c4519b9bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a73e12d3fc6fac0c3f81a95ede5538ea0"><td class="memItemLeft" align="right" valign="top">real(kind=f64), dimension(:,:,:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html#a73e12d3fc6fac0c3f81a95ede5538ea0">poly_coeffs_fd_boundary_left</a></td></tr>
+<tr class="memdesc:a73e12d3fc6fac0c3f81a95ede5538ea0"><td class="mdescLeft">&#160;</td><td class="mdescRight">poly_coeffs_left[j,i,k] coefficient of x^{degree+1-j} for B-spline in interval degree+2-i function size= (degree+1, degree+1,degree-1) for kth boundary cell  <a href="#a73e12d3fc6fac0c3f81a95ede5538ea0">More...</a><br /></td></tr>
+<tr class="separator:a73e12d3fc6fac0c3f81a95ede5538ea0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6c286888cf8d03cd2ee5c308a8d14938"><td class="memItemLeft" align="right" valign="top">real(kind=f64), dimension(:,:,:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html#a6c286888cf8d03cd2ee5c308a8d14938">poly_coeffs_fd_boundary_right</a></td></tr>
+<tr class="memdesc:a6c286888cf8d03cd2ee5c308a8d14938"><td class="mdescLeft">&#160;</td><td class="mdescRight">poly_coeffs[j,i,k] coefficient of x^{degree+1-j} for B-spline in interval degree+2-i function size= (degree+1, degree+1, degree-1) for (N-k)th boundary cell  <a href="#a6c286888cf8d03cd2ee5c308a8d14938">More...</a><br /></td></tr>
+<tr class="separator:a6c286888cf8d03cd2ee5c308a8d14938"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a23ee25e8a1e882690a8878862a248823"><td class="memItemLeft" align="right" valign="top">integer(kind=i32)&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html#a23ee25e8a1e882690a8878862a248823">boundary_conditions</a> = <a class="el" href="namespacesll__m__splines__pp.html#aa3d1b769458b6a04a5003f7e016ebc64">sll_p_boundary_periodic</a></td></tr>
+<tr class="memdesc:a23ee25e8a1e882690a8878862a248823"><td class="mdescLeft">&#160;</td><td class="mdescRight">flag for boundary conditions  <a href="#a23ee25e8a1e882690a8878862a248823">More...</a><br /></td></tr>
+<tr class="separator:a23ee25e8a1e882690a8878862a248823"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>arbitrary degree 1d spline </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00056">56</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00096">96</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 </div><h2 class="groupheader">Member Data Documentation</h2>
+<a id="a23ee25e8a1e882690a8878862a248823"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a23ee25e8a1e882690a8878862a248823">&#9670;&nbsp;</a></span>boundary_conditions</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">integer(kind=i32) boundary_conditions = <a class="el" href="namespacesll__m__splines__pp.html#aa3d1b769458b6a04a5003f7e016ebc64">sll_p_boundary_periodic</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>flag for boundary conditions </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00112">112</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+
+</div>
+</div>
 <a id="a11904b2b8f38f0d28cd3826c99276b1a"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a11904b2b8f38f0d28cd3826c99276b1a">&#9670;&nbsp;</a></span>degree</h2>
 
@@ -138,7 +188,7 @@ Private Attributes</h2></td></tr>
 
 <p>degree of 1d spline </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00058">58</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00098">98</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 
 </div>
 </div>
@@ -164,12 +214,12 @@ Private Attributes</h2></td></tr>
 
 <p>number of gridcells </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00061">61</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00103">103</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 
 </div>
 </div>
-<a id="af68de2269e3944bca8f23037f1dc5a0b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af68de2269e3944bca8f23037f1dc5a0b">&#9670;&nbsp;</a></span>poly_coeffs</h2>
+<a id="a96005aa4431c84b4bdb09eb261dba5c0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a96005aa4431c84b4bdb09eb261dba5c0">&#9670;&nbsp;</a></span>n_coeffs</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -178,7 +228,7 @@ Private Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">real(kind=f64), dimension(:, :), allocatable poly_coeffs</td>
+          <td class="memname">integer(kind=i32) n_coeffs</td>
         </tr>
       </table>
   </td>
@@ -188,14 +238,14 @@ Private Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>poly_coeffs[i,j] coefficient of x^{deg+1-j} for ith B-spline function size= (degree+1, degree+1) </p>
+<p>no. of coefficients </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00059">59</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00104">104</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 
 </div>
 </div>
-<a id="adf8031006970bdf1e6ba2b3a9a591e5e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#adf8031006970bdf1e6ba2b3a9a591e5e">&#9670;&nbsp;</a></span>poly_coeffs_fp</h2>
+<a id="aad1cf258d5f17e6c1cd85a94a731cd75"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aad1cf258d5f17e6c1cd85a94a731cd75">&#9670;&nbsp;</a></span>poly_coeffs</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -204,7 +254,7 @@ Private Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">real(kind=f64), dimension(:, :), allocatable poly_coeffs_fp</td>
+          <td class="memname">real(kind=f64), dimension(:,:), allocatable poly_coeffs</td>
         </tr>
       </table>
   </td>
@@ -214,9 +264,191 @@ Private Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>poly_coeffs[i,j] coefficient of x^{deg+1-j} for ith B-spline function size= (degree+1, degree+1) </p>
+<p>poly_coeffs[j,i] coefficient of x^{degree+1-j} for B-spline in interval degree+2-i function size= (degree+1, degree+1) </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00060">60</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00099">99</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+
+</div>
+</div>
+<a id="a2d037b1fbcecec8eeceb67111f96c7e4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2d037b1fbcecec8eeceb67111f96c7e4">&#9670;&nbsp;</a></span>poly_coeffs_boundary_left</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">real(kind=f64), dimension(:,:,:), allocatable poly_coeffs_boundary_left</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>poly_coeffs_left[j,i,k] coefficient of x^{degree+1-j} for B-spline in interval degree+2-i function size= (degree+1, degree+1,degree-1) for kth boundary cell </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00108">108</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+
+</div>
+</div>
+<a id="a147bb130f13e32a4567f041c4519b9bd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a147bb130f13e32a4567f041c4519b9bd">&#9670;&nbsp;</a></span>poly_coeffs_boundary_right</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">real(kind=f64), dimension(:,:,:), allocatable poly_coeffs_boundary_right</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>poly_coeffs[j,i,k] coefficient of x^{degree+1-j} for B-spline in interval degree+2-i function size= (degree+1, degree+1, degree-1) for (N-k)th boundary cell </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00109">109</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+
+</div>
+</div>
+<a id="a6b0307dc760cd9b9250fe6801b57653d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6b0307dc760cd9b9250fe6801b57653d">&#9670;&nbsp;</a></span>poly_coeffs_fd</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">real(kind=f64), dimension(:,:), allocatable poly_coeffs_fd</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>poly_coeffs[j,i] coefficient of x^{deg+1-j} for derivative of B-spline function in interval degree+2-i size= (degree+1, degree+1) </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00102">102</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+
+</div>
+</div>
+<a id="a73e12d3fc6fac0c3f81a95ede5538ea0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a73e12d3fc6fac0c3f81a95ede5538ea0">&#9670;&nbsp;</a></span>poly_coeffs_fd_boundary_left</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">real(kind=f64), dimension(:,:,:), allocatable poly_coeffs_fd_boundary_left</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>poly_coeffs_left[j,i,k] coefficient of x^{degree+1-j} for B-spline in interval degree+2-i function size= (degree+1, degree+1,degree-1) for kth boundary cell </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00110">110</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+
+</div>
+</div>
+<a id="a6c286888cf8d03cd2ee5c308a8d14938"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6c286888cf8d03cd2ee5c308a8d14938">&#9670;&nbsp;</a></span>poly_coeffs_fd_boundary_right</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">real(kind=f64), dimension(:,:,:), allocatable poly_coeffs_fd_boundary_right</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>poly_coeffs[j,i,k] coefficient of x^{degree+1-j} for B-spline in interval degree+2-i function size= (degree+1, degree+1, degree-1) for (N-k)th boundary cell </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00111">111</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+
+</div>
+</div>
+<a id="a2d251fd134d12cfc683a11f95ef418ec"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2d251fd134d12cfc683a11f95ef418ec">&#9670;&nbsp;</a></span>poly_coeffs_fp</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">real(kind=f64), dimension(:,:), allocatable poly_coeffs_fp</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>poly_coeffs[j,i] coefficient of x^{deg+1-j} for primitive of B-spline function in interval degree+2-i size= (degree+1, degree+1) </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00100">100</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+
+</div>
+</div>
+<a id="a16448193350fb6e4b4706b4e432e0449"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a16448193350fb6e4b4706b4e432e0449">&#9670;&nbsp;</a></span>poly_coeffs_fpa</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">real(kind=f64), dimension(:,:), allocatable poly_coeffs_fpa</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>poly_coeffs[j,i] coefficient of x^{deg+1-j+1} for primitive of B-spline function in interval degree+2-i size= (degree+2, degree+1) </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00101">101</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 
 </div>
 </div>
@@ -242,7 +474,7 @@ Private Attributes</h2></td></tr>
 
 <p>scratch data for b_to_pp-converting </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00062">62</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00105">105</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 
 </div>
 </div>
@@ -268,7 +500,7 @@ Private Attributes</h2></td></tr>
 
 <p>scratch data for b_to_pp-converting </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00063">63</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00106">106</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 
 </div>
 </div>
@@ -279,7 +511,7 @@ Private Attributes</h2></td></tr>
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Tue Mar 30 2021 05:41:31 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat May 22 2021 08:18:56 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

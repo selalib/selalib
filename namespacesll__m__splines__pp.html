@@ -79,8 +79,8 @@ $(function() {
 <div class="contents">
 <a name="details" id="details"></a><h2 class="groupheader">Description</h2>
 <div class="textblock"><p>Splines in pp form. </p>
-<dl class="section author"><dt>Author</dt><dd>Benedikt Perse, Katharina Kormann, IPP</dd></dl>
-<p>Only implements splines on a uniform grid </p>
+<dl class="section author"><dt>Authors</dt><dd>Katharina Kormann, IPP Benedikt Perse, IPP</dd></dl>
+<p>Implement splines on a uniform grid, periodic boundaries implemented for degree 0-6 and clamped boundaries for degree 1-3 </p>
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Derived types and interfaces</h2></td></tr>
@@ -96,14 +96,29 @@ Derived types and interfaces</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
+<tr class="memitem:ad607087c419c427949171b328faa0242"><td class="memItemLeft" align="right" valign="top">subroutine, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#ad607087c419c427949171b328faa0242">sll_s_spline_pp_pp_to_b_1d</a> (self, n_cells, pp_coeffs, b_coeffs)</td></tr>
+<tr class="memdesc:ad607087c419c427949171b328faa0242"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute b_coeffs from coefficients of the monomials (in <em>pp_coeffs</em>)  <a href="#ad607087c419c427949171b328faa0242">More...</a><br /></td></tr>
+<tr class="separator:ad607087c419c427949171b328faa0242"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abf8e9df8c41cd12d7457aef4e7510825"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#abf8e9df8c41cd12d7457aef4e7510825">sll_s_spline_pp_b_to_pp_1d_clamped</a> (self, n_cells, b_coeffs, pp_coeffs)</td></tr>
+<tr class="memdesc:abf8e9df8c41cd12d7457aef4e7510825"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert 1d spline in B form to spline in pp form for clamped spline.  <a href="#abf8e9df8c41cd12d7457aef4e7510825">More...</a><br /></td></tr>
+<tr class="separator:abf8e9df8c41cd12d7457aef4e7510825"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3d7983b209b302141850ea69b757b51b"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a3d7983b209b302141850ea69b757b51b">sll_s_spline_pp_b_to_pp_1d_clamped_clampeddiri</a> (self, n_cells, b_coeffs, pp_coeffs)</td></tr>
+<tr class="memdesc:a3d7983b209b302141850ea69b757b51b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert 1d spline in B form to spline in pp form for clamped spline and Dirichlet conditions on the right boundary.  <a href="#a3d7983b209b302141850ea69b757b51b">More...</a><br /></td></tr>
+<tr class="separator:a3d7983b209b302141850ea69b757b51b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9375e3f69bc194b10b4c9973e590a428"><td class="memItemLeft" align="right" valign="top">subroutine, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a9375e3f69bc194b10b4c9973e590a428">sll_s_spline_pp_b_to_pp_1d</a> (self, n_cells, b_coeffs, pp_coeffs)</td></tr>
 <tr class="memdesc:a9375e3f69bc194b10b4c9973e590a428"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert 1d spline in B form to spline in pp form with periodic boundary conditions.  <a href="#a9375e3f69bc194b10b4c9973e590a428">More...</a><br /></td></tr>
 <tr class="separator:a9375e3f69bc194b10b4c9973e590a428"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1a051605f297f81093a1ff7008bd4143"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a1a051605f297f81093a1ff7008bd4143">sll_s_spline_pp_b_to_pp_1d_cell</a> (self, b_coeffs, pp_coeffs)</td></tr>
 <tr class="memdesc:a1a051605f297f81093a1ff7008bd4143"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert 1d spline in B form in a cell to spline in pp form with periodic boundary conditions.  <a href="#a1a051605f297f81093a1ff7008bd4143">More...</a><br /></td></tr>
 <tr class="separator:a1a051605f297f81093a1ff7008bd4143"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a411f7e3b4a4df46ddc89167ca33258dd"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a411f7e3b4a4df46ddc89167ca33258dd">sll_s_spline_pp_b_to_pp_1d_cella</a> (degree, pp_b, b_coeffs, pp_coeffs)</td></tr>
+<tr class="memdesc:a411f7e3b4a4df46ddc89167ca33258dd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert 1d spline in B form in a cell to spline in pp form for specified pp_coefficients of the b_splines.  <a href="#a411f7e3b4a4df46ddc89167ca33258dd">More...</a><br /></td></tr>
+<tr class="separator:a411f7e3b4a4df46ddc89167ca33258dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7a4ae507d1adf13115d039fd6899a4d9"><td class="memItemLeft" align="right" valign="top">subroutine, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a7a4ae507d1adf13115d039fd6899a4d9">sll_s_spline_pp_b_to_pp_2d_periodic</a> (self, n_cells, b_coeffs, pp_coeffs)</td></tr>
+<tr class="memdesc:a7a4ae507d1adf13115d039fd6899a4d9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert 2d spline in B form to spline in pp form with periodic boundary conditions This is a special case of the procedure sll_s_spline_pp_b_to_pp_2d for the double periodic case to avoid the select case statements.  <a href="#a7a4ae507d1adf13115d039fd6899a4d9">More...</a><br /></td></tr>
+<tr class="separator:a7a4ae507d1adf13115d039fd6899a4d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad9b7b9b7852ac7873a01d8480d15819a"><td class="memItemLeft" align="right" valign="top">subroutine, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#ad9b7b9b7852ac7873a01d8480d15819a">sll_s_spline_pp_b_to_pp_2d</a> (self, n_cells, b_coeffs, pp_coeffs)</td></tr>
-<tr class="memdesc:ad9b7b9b7852ac7873a01d8480d15819a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert 2d spline in B form to spline in pp form with periodic boundary conditions.  <a href="#ad9b7b9b7852ac7873a01d8480d15819a">More...</a><br /></td></tr>
+<tr class="memdesc:ad9b7b9b7852ac7873a01d8480d15819a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert 2d spline in B form to spline in pp form.  <a href="#ad9b7b9b7852ac7873a01d8480d15819a">More...</a><br /></td></tr>
 <tr class="separator:ad9b7b9b7852ac7873a01d8480d15819a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab15fd73674029fed73d3aad115a5348e"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#ab15fd73674029fed73d3aad115a5348e">sll_s_spline_pp_b_to_pp_2d_cell</a> (spline1, spline2, n_cells, b_coeffs, pp_coeffs, i, j)</td></tr>
 <tr class="memdesc:ab15fd73674029fed73d3aad115a5348e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert 2d spline in B form in a cell to spline in pp form with periodic boundary conditions.  <a href="#ab15fd73674029fed73d3aad115a5348e">More...</a><br /></td></tr>
@@ -114,6 +129,36 @@ Functions/Subroutines</h2></td></tr>
 <tr class="memitem:a840a12d2e58e2e3fe29b1f1296b24e25"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a840a12d2e58e2e3fe29b1f1296b24e25">sll_s_spline_pp_b_to_pp_3d_cell</a> (self, n_cells, b_coeffs, pp_coeffs, i, j, k)</td></tr>
 <tr class="memdesc:a840a12d2e58e2e3fe29b1f1296b24e25"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert 3d spline in B form in a cell to spline in pp form with periodic boundary conditions.  <a href="#a840a12d2e58e2e3fe29b1f1296b24e25">More...</a><br /></td></tr>
 <tr class="separator:a840a12d2e58e2e3fe29b1f1296b24e25"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a72ef4f15966d54f96a2ca8b5400626a5"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a72ef4f15966d54f96a2ca8b5400626a5">sll_s_spline_pp_b_to_pp_3d_cella</a> (self, n_cells, b_coeffs, pp_coeffs, i, j, k)</td></tr>
+<tr class="memdesc:a72ef4f15966d54f96a2ca8b5400626a5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert 3d spline in B form in a cell to spline in pp form with clamped boundary in first direction and periodic boundary conditions in the other directions.  <a href="#a72ef4f15966d54f96a2ca8b5400626a5">More...</a><br /></td></tr>
+<tr class="separator:a72ef4f15966d54f96a2ca8b5400626a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1e67da5c2dc436b0b8cbd874575e4631"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a1e67da5c2dc436b0b8cbd874575e4631">sll_s_spline_pp_b_to_pp_3d_cella2f</a> (self, n_cells, b_coeffs, pp_coeffs, i, j, k)</td></tr>
+<tr class="memdesc:a1e67da5c2dc436b0b8cbd874575e4631"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert 3d spline in B form in a cell to spline in pp form with clamped boundary in all three directions.  <a href="#a1e67da5c2dc436b0b8cbd874575e4631">More...</a><br /></td></tr>
+<tr class="separator:a1e67da5c2dc436b0b8cbd874575e4631"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9de4fa50cb649ed3fd93d415c65a6e84"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a9de4fa50cb649ed3fd93d415c65a6e84">sll_s_spline_pp_b_to_pp_3d_cellaf</a> (self, n_cells, b_coeffs, pp_coeffs, i, j, k)</td></tr>
+<tr class="memdesc:a9de4fa50cb649ed3fd93d415c65a6e84"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert 3d spline in B form in a cell to spline in pp form with clamped boundary in all three directions.  <a href="#a9de4fa50cb649ed3fd93d415c65a6e84">More...</a><br /></td></tr>
+<tr class="separator:a9de4fa50cb649ed3fd93d415c65a6e84"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a109b7091f4f1906d9806c109df6c7ac4"><td class="memItemLeft" align="right" valign="top">subroutine, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a109b7091f4f1906d9806c109df6c7ac4">sll_s_spline_pp_b_to_pp_3d_clamped</a> (self, n_cells, b_coeffs, pp_coeffs)</td></tr>
+<tr class="memdesc:a109b7091f4f1906d9806c109df6c7ac4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert 3d spline in B form to spline in pp form for clamped spline.  <a href="#a109b7091f4f1906d9806c109df6c7ac4">More...</a><br /></td></tr>
+<tr class="separator:a109b7091f4f1906d9806c109df6c7ac4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a033f4f58d0202d7d899c86e4329336ca"><td class="memItemLeft" align="right" valign="top">subroutine, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a033f4f58d0202d7d899c86e4329336ca">sll_s_spline_pp_b_to_pp_3d_clamped_2full</a> (self, n_cells, b_coeffs, pp_coeffs)</td></tr>
+<tr class="memdesc:a033f4f58d0202d7d899c86e4329336ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert 3d spline in B form to spline in pp form for clamped spline.  <a href="#a033f4f58d0202d7d899c86e4329336ca">More...</a><br /></td></tr>
+<tr class="separator:a033f4f58d0202d7d899c86e4329336ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aceeeac2f921344b851fe65f3a4b91e90"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#aceeeac2f921344b851fe65f3a4b91e90">sll_s_spline_pp_b_to_pp_3d_clamped_full</a> (self, n_cells, b_coeffs, pp_coeffs)</td></tr>
+<tr class="memdesc:aceeeac2f921344b851fe65f3a4b91e90"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert 3d spline in B form to spline in pp form for clamped spline.  <a href="#aceeeac2f921344b851fe65f3a4b91e90">More...</a><br /></td></tr>
+<tr class="separator:aceeeac2f921344b851fe65f3a4b91e90"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae856e97f9b335607629a52dc2d54adc9"><td class="memItemLeft" align="right" valign="top">subroutine, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#ae856e97f9b335607629a52dc2d54adc9">sll_s_spline_evaluate_basis_b_form_1d_clamped</a> (self, n_cells, b_coeffs, val)</td></tr>
+<tr class="separator:ae856e97f9b335607629a52dc2d54adc9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ada27fc420cd644f1c8a46c2595781c91"><td class="memItemLeft" align="right" valign="top">subroutine, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#ada27fc420cd644f1c8a46c2595781c91">sll_s_spline_evaluate_basis_b_form_1d_periodic</a> (self, n_cells, b_coeffs, val)</td></tr>
+<tr class="separator:ada27fc420cd644f1c8a46c2595781c91"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aac718fb34dbd7eb0e310c43067de4a69"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#aac718fb34dbd7eb0e310c43067de4a69">sll_s_spline_evaluate_basis_pp_form_1d</a> (self, n_cells, pp_coeffs, val)</td></tr>
+<tr class="separator:aac718fb34dbd7eb0e310c43067de4a69"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a382a523b8cbb98a4c148f5ba85ffb1e0"><td class="memItemLeft" align="right" valign="top">subroutine, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a382a523b8cbb98a4c148f5ba85ffb1e0">sll_s_spline_evaluate_basis_b_form_3d_clamped</a> (self, n_cells, b_coeffs, val)</td></tr>
+<tr class="separator:a382a523b8cbb98a4c148f5ba85ffb1e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a70fb277ea5af3f97a33262915023e427"><td class="memItemLeft" align="right" valign="top">subroutine, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a70fb277ea5af3f97a33262915023e427">sll_s_spline_evaluate_basis_b_form_3d_periodic</a> (self, n_cells, b_coeffs, val)</td></tr>
+<tr class="separator:a70fb277ea5af3f97a33262915023e427"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:affc792b409c5d6d87a1e217fe304fa22"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#affc792b409c5d6d87a1e217fe304fa22">sll_s_spline_evaluate_basis_pp_form_3d</a> (self, n_cells, pp_coeffs, val)</td></tr>
+<tr class="separator:affc792b409c5d6d87a1e217fe304fa22"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9c41e0d7f233767c475e68b606091447"><td class="memItemLeft" align="right" valign="top">subroutine, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a9c41e0d7f233767c475e68b606091447">sll_s_spline_pp_horner_m_1d</a> (self, val, degree, x)</td></tr>
 <tr class="memdesc:a9c41e0d7f233767c475e68b606091447"><td class="mdescLeft">&#160;</td><td class="mdescRight">Perform a 1d hornerschema on the poly_coeffs.  <a href="#a9c41e0d7f233767c475e68b606091447">More...</a><br /></td></tr>
 <tr class="separator:a9c41e0d7f233767c475e68b606091447"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -129,21 +174,36 @@ Functions/Subroutines</h2></td></tr>
 <tr class="memitem:ab63c3a25b861ed9b8701ae2f65942bcf"><td class="memItemLeft" align="right" valign="top">real(kind=f64) function, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#ab63c3a25b861ed9b8701ae2f65942bcf">sll_f_spline_pp_horner_1d</a> (degree, pp_coeffs, x, index)</td></tr>
 <tr class="memdesc:ab63c3a25b861ed9b8701ae2f65942bcf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Perform a 1d hornerschema on the pp_coeffs at index.  <a href="#ab63c3a25b861ed9b8701ae2f65942bcf">More...</a><br /></td></tr>
 <tr class="separator:ab63c3a25b861ed9b8701ae2f65942bcf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acf3c65f47e6b878f86ed229904c30cb4"><td class="memItemLeft" align="right" valign="top">real(kind=f64) function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#acf3c65f47e6b878f86ed229904c30cb4">sll_f_spline_pp_horner_derivative_1d</a> (degree, pp_coeffs, x, index)</td></tr>
+<tr class="memdesc:acf3c65f47e6b878f86ed229904c30cb4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Perform a 1d hornerschema on the pp_coeffs at index.  <a href="#acf3c65f47e6b878f86ed229904c30cb4">More...</a><br /></td></tr>
+<tr class="separator:acf3c65f47e6b878f86ed229904c30cb4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0e728b131757d9606adbb1227354c22a"><td class="memItemLeft" align="right" valign="top">real(kind=f64) function, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a0e728b131757d9606adbb1227354c22a">sll_f_spline_pp_horner_2d</a> (degree, pp_coeffs, x, indices, n_cells)</td></tr>
 <tr class="memdesc:a0e728b131757d9606adbb1227354c22a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Perform a 2d hornerschema on the pp_coeffs at the indices.  <a href="#a0e728b131757d9606adbb1227354c22a">More...</a><br /></td></tr>
 <tr class="separator:a0e728b131757d9606adbb1227354c22a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a44b8b762ad5f936a42a8f989718bb48c"><td class="memItemLeft" align="right" valign="top">real(kind=f64) function, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a44b8b762ad5f936a42a8f989718bb48c">sll_f_spline_pp_horner_3d</a> (degree, pp_coeffs, x, indices, n_cells)</td></tr>
 <tr class="memdesc:a44b8b762ad5f936a42a8f989718bb48c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Perform a 3d hornerschema on the pp_coeffs at the indices.  <a href="#a44b8b762ad5f936a42a8f989718bb48c">More...</a><br /></td></tr>
 <tr class="separator:a44b8b762ad5f936a42a8f989718bb48c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0c79f977725f86d5c265b682a0e56d02"><td class="memItemLeft" align="right" valign="top">subroutine, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a0c79f977725f86d5c265b682a0e56d02">sll_s_spline_pp_init_1d</a> (self, degree, n_cells)</td></tr>
-<tr class="memdesc:a0c79f977725f86d5c265b682a0e56d02"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize <em><a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html" title="arbitrary degree 1d spline ">sll_t_spline_pp_1d</a></em> object (Set <em>poly_coeffs</em> depending on <em>degree</em>)  <a href="#a0c79f977725f86d5c265b682a0e56d02">More...</a><br /></td></tr>
-<tr class="separator:a0c79f977725f86d5c265b682a0e56d02"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab0bd290f1a3b06fd9211b341b3b8fa18"><td class="memItemLeft" align="right" valign="top">subroutine, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#ab0bd290f1a3b06fd9211b341b3b8fa18">sll_s_spline_pp_init_2d</a> (self, degree, n_cells)</td></tr>
-<tr class="memdesc:ab0bd290f1a3b06fd9211b341b3b8fa18"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize <em><a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__2d.html" title="arbitrary degree 2d spline ">sll_t_spline_pp_2d</a></em> object.  <a href="#ab0bd290f1a3b06fd9211b341b3b8fa18">More...</a><br /></td></tr>
-<tr class="separator:ab0bd290f1a3b06fd9211b341b3b8fa18"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa89575bf1babec91a086cb0ad8dffeb5"><td class="memItemLeft" align="right" valign="top">subroutine, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#aa89575bf1babec91a086cb0ad8dffeb5">sll_s_spline_pp_init_3d</a> (self, degree, n_cells)</td></tr>
-<tr class="memdesc:aa89575bf1babec91a086cb0ad8dffeb5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize <em><a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__3d.html" title="arbitrary degree 3d spline ">sll_t_spline_pp_3d</a></em> object.  <a href="#aa89575bf1babec91a086cb0ad8dffeb5">More...</a><br /></td></tr>
-<tr class="separator:aa89575bf1babec91a086cb0ad8dffeb5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aacce0e239afcd70f6315e0cadd26be62"><td class="memItemLeft" align="right" valign="top">real(kind=f64) function, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#aacce0e239afcd70f6315e0cadd26be62">sll_f_spline_pp_horner_3d_d1</a> (degree, pp_coeffs, x, indices, n_cells)</td></tr>
+<tr class="memdesc:aacce0e239afcd70f6315e0cadd26be62"><td class="mdescLeft">&#160;</td><td class="mdescRight">Perform a 3d hornerschema on the pp_coeffs at the indices.  <a href="#aacce0e239afcd70f6315e0cadd26be62">More...</a><br /></td></tr>
+<tr class="separator:aacce0e239afcd70f6315e0cadd26be62"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afe8f7935ed63d95b8a7064eea175b463"><td class="memItemLeft" align="right" valign="top">real(kind=f64) function, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#afe8f7935ed63d95b8a7064eea175b463">sll_f_spline_pp_horner_3d_d2</a> (degree, pp_coeffs, x, indices, n_cells)</td></tr>
+<tr class="memdesc:afe8f7935ed63d95b8a7064eea175b463"><td class="mdescLeft">&#160;</td><td class="mdescRight">Perform a 3d hornerschema on the pp_coeffs at the indices.  <a href="#afe8f7935ed63d95b8a7064eea175b463">More...</a><br /></td></tr>
+<tr class="separator:afe8f7935ed63d95b8a7064eea175b463"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeff33e1701dfa1c5216323804fc7be71"><td class="memItemLeft" align="right" valign="top">real(kind=f64) function, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#aeff33e1701dfa1c5216323804fc7be71">sll_f_spline_pp_horner_3d_d3</a> (degree, pp_coeffs, x, indices, n_cells)</td></tr>
+<tr class="memdesc:aeff33e1701dfa1c5216323804fc7be71"><td class="mdescLeft">&#160;</td><td class="mdescRight">Perform a 3d hornerschema on the pp_coeffs at the indices.  <a href="#aeff33e1701dfa1c5216323804fc7be71">More...</a><br /></td></tr>
+<tr class="separator:aeff33e1701dfa1c5216323804fc7be71"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0ba3cd26a200f41e303ce4fb2789acb2"><td class="memItemLeft" align="right" valign="top">real(kind=f64) function, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a0ba3cd26a200f41e303ce4fb2789acb2">sll_f_spline_pp_horner_derivative_3d</a> (degree, pp_coeffs, x, indices, n_cells, component)</td></tr>
+<tr class="memdesc:a0ba3cd26a200f41e303ce4fb2789acb2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Perform a 3d hornerschema on the pp_coeffs at the indices.  <a href="#a0ba3cd26a200f41e303ce4fb2789acb2">More...</a><br /></td></tr>
+<tr class="separator:a0ba3cd26a200f41e303ce4fb2789acb2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7e2a3943e2c330a0a9597b535ce259b3"><td class="memItemLeft" align="right" valign="top">subroutine, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a7e2a3943e2c330a0a9597b535ce259b3">sll_s_spline_pp_init_1d</a> (self, degree, n_cells, boundary)</td></tr>
+<tr class="memdesc:a7e2a3943e2c330a0a9597b535ce259b3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize <em><a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html" title="arbitrary degree 1d spline ">sll_t_spline_pp_1d</a></em> object (Set <em>poly_coeffs</em> depending on <em>degree</em>)  <a href="#a7e2a3943e2c330a0a9597b535ce259b3">More...</a><br /></td></tr>
+<tr class="separator:a7e2a3943e2c330a0a9597b535ce259b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acc0dcc5dbab3c00bd786671ffb731503"><td class="memItemLeft" align="right" valign="top">subroutine, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#acc0dcc5dbab3c00bd786671ffb731503">sll_s_spline_pp_init_2d</a> (self, degree, n_cells, boundary)</td></tr>
+<tr class="memdesc:acc0dcc5dbab3c00bd786671ffb731503"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize <em><a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__2d.html" title="arbitrary degree 2d spline ">sll_t_spline_pp_2d</a></em> object.  <a href="#acc0dcc5dbab3c00bd786671ffb731503">More...</a><br /></td></tr>
+<tr class="separator:acc0dcc5dbab3c00bd786671ffb731503"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a05168b8afdfed2b282ee242d8d2a2225"><td class="memItemLeft" align="right" valign="top">subroutine, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a05168b8afdfed2b282ee242d8d2a2225">sll_s_spline_pp_init_3d</a> (self, degree, n_cells, boundary)</td></tr>
+<tr class="memdesc:a05168b8afdfed2b282ee242d8d2a2225"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize <em><a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__3d.html" title="arbitrary degree 3d spline ">sll_t_spline_pp_3d</a></em> object.  <a href="#a05168b8afdfed2b282ee242d8d2a2225">More...</a><br /></td></tr>
+<tr class="separator:a05168b8afdfed2b282ee242d8d2a2225"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a801edc3f369eab9b8195bb24b1f649a1"><td class="memItemLeft" align="right" valign="top">subroutine, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a801edc3f369eab9b8195bb24b1f649a1">sll_s_spline_pp_free_1d</a> (self)</td></tr>
 <tr class="memdesc:a801edc3f369eab9b8195bb24b1f649a1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destructor 1d.  <a href="#a801edc3f369eab9b8195bb24b1f649a1">More...</a><br /></td></tr>
 <tr class="separator:a801edc3f369eab9b8195bb24b1f649a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -156,6 +216,27 @@ Functions/Subroutines</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
 Variables</h2></td></tr>
+<tr class="memitem:aa3d1b769458b6a04a5003f7e016ebc64"><td class="memItemLeft" align="right" valign="top">integer(kind=i32), parameter, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#aa3d1b769458b6a04a5003f7e016ebc64">sll_p_boundary_periodic</a> = 0</td></tr>
+<tr class="memdesc:aa3d1b769458b6a04a5003f7e016ebc64"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parameter to specify boundary conditions.  <a href="#aa3d1b769458b6a04a5003f7e016ebc64">More...</a><br /></td></tr>
+<tr class="separator:aa3d1b769458b6a04a5003f7e016ebc64"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a385b57b6f7140b5b0a5d4b5ab8d96113"><td class="memItemLeft" align="right" valign="top">integer(kind=i32), parameter, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a385b57b6f7140b5b0a5d4b5ab8d96113">sll_p_boundary_clamped</a> = 1</td></tr>
+<tr class="memdesc:a385b57b6f7140b5b0a5d4b5ab8d96113"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parameter specifying clamped boundary conditions.  <a href="#a385b57b6f7140b5b0a5d4b5ab8d96113">More...</a><br /></td></tr>
+<tr class="separator:a385b57b6f7140b5b0a5d4b5ab8d96113"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa46479839e3f85c9caa1309fd68a325a"><td class="memItemLeft" align="right" valign="top">integer(kind=i32), parameter, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#aa46479839e3f85c9caa1309fd68a325a">sll_p_boundary_clamped_clampeddiri</a> = 2</td></tr>
+<tr class="memdesc:aa46479839e3f85c9caa1309fd68a325a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parameter specifying clamped boundary conditions with the last point left out (for Dirichlet conditions on the right side of the domain)  <a href="#aa46479839e3f85c9caa1309fd68a325a">More...</a><br /></td></tr>
+<tr class="separator:aa46479839e3f85c9caa1309fd68a325a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acc9dfa034754994fb1247c25421e4104"><td class="memItemLeft" align="right" valign="top">integer(kind=i32), parameter, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#acc9dfa034754994fb1247c25421e4104">sll_p_boundary_clampeddiri</a> = 3</td></tr>
+<tr class="memdesc:acc9dfa034754994fb1247c25421e4104"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parameter specifying clamped boundary conditions with the first and last point left out (for Dirichlet conditions)  <a href="#acc9dfa034754994fb1247c25421e4104">More...</a><br /></td></tr>
+<tr class="separator:acc9dfa034754994fb1247c25421e4104"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af1a32ad75919ffb04a32c73ca0aeb1d0"><td class="memItemLeft" align="right" valign="top">integer(kind=i32), parameter, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#af1a32ad75919ffb04a32c73ca0aeb1d0">sll_p_boundary_clampeddiri_clamped</a> = 4</td></tr>
+<tr class="memdesc:af1a32ad75919ffb04a32c73ca0aeb1d0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parameter specifying clamped boundary conditions with the first point left out (for Dirichlet conditions on the left side of the domain)  <a href="#af1a32ad75919ffb04a32c73ca0aeb1d0">More...</a><br /></td></tr>
+<tr class="separator:af1a32ad75919ffb04a32c73ca0aeb1d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acffa70d1c0c6acc0ce30287c825ee668"><td class="memItemLeft" align="right" valign="top">integer(kind=i32), parameter, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#acffa70d1c0c6acc0ce30287c825ee668">sll_p_boundary_clamped_square</a> = 5</td></tr>
+<tr class="memdesc:acffa70d1c0c6acc0ce30287c825ee668"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parameter specifying clamped boundary conditions with square spline for the 0-form, boundary spline of degree 2 is set to zero.  <a href="#acffa70d1c0c6acc0ce30287c825ee668">More...</a><br /></td></tr>
+<tr class="separator:acffa70d1c0c6acc0ce30287c825ee668"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af4f87ba9884c66c54ad63714719c5125"><td class="memItemLeft" align="right" valign="top">integer(kind=i32), parameter, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#af4f87ba9884c66c54ad63714719c5125">sll_p_boundary_clamped_cubic</a> = 6</td></tr>
+<tr class="memdesc:af4f87ba9884c66c54ad63714719c5125"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parameter specifying clamped boundary conditions with a cubic spline for the 0-form, boundary spline of degree 3 is set to zero.  <a href="#af4f87ba9884c66c54ad63714719c5125">More...</a><br /></td></tr>
+<tr class="separator:af4f87ba9884c66c54ad63714719c5125"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aacd409417f2c10e38faa310c1c09b3dc"><td class="memItemLeft" align="right" valign="top">real(kind=f64), parameter&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#aacd409417f2c10e38faa310c1c09b3dc">inv_2</a> = 1._f64/2._f64</td></tr>
 <tr class="separator:aacd409417f2c10e38faa310c1c09b3dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad8d9d2eb2de90457bcd8739d596e94a7"><td class="memItemLeft" align="right" valign="top">real(kind=f64), parameter&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#ad8d9d2eb2de90457bcd8739d596e94a7">inv_3</a> = 1._f64/3._f64</td></tr>
@@ -164,10 +245,14 @@ Variables</h2></td></tr>
 <tr class="separator:afdce0156676074af7fe6450c1f3548de"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a06c2393aac735592132b878b77d2bcfe"><td class="memItemLeft" align="right" valign="top">real(kind=f64), parameter&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a06c2393aac735592132b878b77d2bcfe">inv_6</a> = 1._f64/6._f64</td></tr>
 <tr class="separator:a06c2393aac735592132b878b77d2bcfe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa01342a66bdb353d098ad7e087462f6c"><td class="memItemLeft" align="right" valign="top">real(kind=f64), parameter&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#aa01342a66bdb353d098ad7e087462f6c">inv_7</a> = 1._f64/7._f64</td></tr>
+<tr class="separator:aa01342a66bdb353d098ad7e087462f6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af660bcece777c86c41fb22dfa783c289"><td class="memItemLeft" align="right" valign="top">real(kind=f64), parameter&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#af660bcece777c86c41fb22dfa783c289">inv_8</a> = 1._f64/8._f64</td></tr>
 <tr class="separator:af660bcece777c86c41fb22dfa783c289"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a02f70a70042aef335102633f17dcbeb3"><td class="memItemLeft" align="right" valign="top">real(kind=f64), parameter&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a02f70a70042aef335102633f17dcbeb3">inv_12</a> = 1._f64/12._f64</td></tr>
 <tr class="separator:a02f70a70042aef335102633f17dcbeb3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6adf6e22abe6556d829eb6bbcedd873a"><td class="memItemLeft" align="right" valign="top">real(kind=f64), parameter&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a6adf6e22abe6556d829eb6bbcedd873a">inv_16</a> = 1._f64/16._f64</td></tr>
+<tr class="separator:a6adf6e22abe6556d829eb6bbcedd873a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ade97c55d4dab84847e6ac3b5246fec7b"><td class="memItemLeft" align="right" valign="top">real(kind=f64), parameter&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#ade97c55d4dab84847e6ac3b5246fec7b">inv_18</a> = 1._f64/18._f64</td></tr>
 <tr class="separator:ade97c55d4dab84847e6ac3b5246fec7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a18664ca28e94208eee514f1d3f962d30"><td class="memItemLeft" align="right" valign="top">real(kind=f64), parameter&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a18664ca28e94208eee514f1d3f962d30">inv_20</a> = 1._f64/20._f64</td></tr>
@@ -180,14 +265,22 @@ Variables</h2></td></tr>
 <tr class="separator:a9b52ca7ce3827c749ce947eddfbf0871"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6132a93593cc176b727b576173369bc8"><td class="memItemLeft" align="right" valign="top">real(kind=f64), parameter&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a6132a93593cc176b727b576173369bc8">inv_48</a> = 1._f64/48._f64</td></tr>
 <tr class="separator:a6132a93593cc176b727b576173369bc8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab9ca7f155505cf6b691feeb63be7db3a"><td class="memItemLeft" align="right" valign="top">real(kind=f64), parameter&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#ab9ca7f155505cf6b691feeb63be7db3a">inv_60</a> = 1._f64/60._f64</td></tr>
+<tr class="separator:ab9ca7f155505cf6b691feeb63be7db3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a01d6ac945bdeea7760fdfc035abbbafb"><td class="memItemLeft" align="right" valign="top">real(kind=f64), parameter&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a01d6ac945bdeea7760fdfc035abbbafb">inv_72</a> = 1._f64/72._f64</td></tr>
 <tr class="separator:a01d6ac945bdeea7760fdfc035abbbafb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a766248ce5e8f8abd56fab6a1a3c3c861"><td class="memItemLeft" align="right" valign="top">real(kind=f64), parameter&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a766248ce5e8f8abd56fab6a1a3c3c861">inv_80</a> = 1._f64/80._f64</td></tr>
+<tr class="separator:a766248ce5e8f8abd56fab6a1a3c3c861"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5a81f35f1097cfdc50ab0d4604b072a2"><td class="memItemLeft" align="right" valign="top">real(kind=f64), parameter&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a5a81f35f1097cfdc50ab0d4604b072a2">inv_120</a> = 1._f64/120._f64</td></tr>
 <tr class="separator:a5a81f35f1097cfdc50ab0d4604b072a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af69a676e3f53e7e938a75086988573f5"><td class="memItemLeft" align="right" valign="top">real(kind=f64), parameter&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#af69a676e3f53e7e938a75086988573f5">inv_240</a> = 1._f64/240._f64</td></tr>
+<tr class="separator:af69a676e3f53e7e938a75086988573f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a78faf04778c1db079a55702510878658"><td class="memItemLeft" align="right" valign="top">real(kind=f64), parameter&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a78faf04778c1db079a55702510878658">inv_144</a> = 1._f64/144._f64</td></tr>
 <tr class="separator:a78faf04778c1db079a55702510878658"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2e7ee077da0d00dd4a542168ec13f530"><td class="memItemLeft" align="right" valign="top">real(kind=f64), parameter&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a2e7ee077da0d00dd4a542168ec13f530">inv_720</a> = 1._f64/720._f64</td></tr>
 <tr class="separator:a2e7ee077da0d00dd4a542168ec13f530"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8c97d337e5e3358a46849820af17ae4a"><td class="memItemLeft" align="right" valign="top">real(kind=f64), parameter&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__splines__pp.html#a8c97d337e5e3358a46849820af17ae4a">inv_5040</a> = 1._f64/5040._f64</td></tr>
+<tr class="separator:a8c97d337e5e3358a46849820af17ae4a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
 <a id="ab63c3a25b861ed9b8701ae2f65942bcf"></a>
@@ -205,7 +298,7 @@ Variables</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:, :), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:,:), intent(in)&#160;</td>
           <td class="paramname"><em>pp_coeffs</em>, </td>
         </tr>
         <tr>
@@ -240,7 +333,7 @@ Variables</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>value of the splinefunction at point x </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00355">355</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l01209">1209</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
@@ -265,7 +358,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:, :), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:,:), intent(in)&#160;</td>
           <td class="paramname"><em>pp_coeffs</em>, </td>
         </tr>
         <tr>
@@ -309,7 +402,7 @@ Here is the caller graph for this function:</div>
 <p>Perform a 1d hornerschema in the first dimension</p>
 <p>Perform a 1d hornerschema in the second dimension </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00370">370</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l01243">1243</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -319,7 +412,7 @@ Here is the call graph for this function:</div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_a0e728b131757d9606adbb1227354c22a_icgraph.svg" width="440" height="134"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_a0e728b131757d9606adbb1227354c22a_icgraph.svg" width="100%" height="596"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 </div>
 
@@ -340,7 +433,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:, :), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:,:), intent(in)&#160;</td>
           <td class="paramname"><em>pp_coeffs</em>, </td>
         </tr>
         <tr>
@@ -384,26 +477,445 @@ Here is the caller graph for this function:</div>
 <p>Perform a 1d hornerschema in the first dimension</p>
 <p>Perform a 2d hornerschema in the second and third dimension </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00388">388</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l01261">1261</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_a44b8b762ad5f936a42a8f989718bb48c_cgraph.svg" width="100%" height="300"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 </div>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_a44b8b762ad5f936a42a8f989718bb48c_icgraph.svg" width="662" height="118"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
 
 </div>
 </div>
-<a id="a9375e3f69bc194b10b4c9973e590a428"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9375e3f69bc194b10b4c9973e590a428">&#9670;&nbsp;</a></span>sll_s_spline_pp_b_to_pp_1d()</h2>
+<a id="aacce0e239afcd70f6315e0cadd26be62"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aacce0e239afcd70f6315e0cadd26be62">&#9670;&nbsp;</a></span>sll_f_spline_pp_horner_3d_d1()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">subroutine, public sll_m_splines_pp::sll_s_spline_pp_b_to_pp_1d </td>
+          <td class="memname">real(kind=f64) function, public sll_m_splines_pp::sll_f_spline_pp_horner_3d_d1 </td>
           <td>(</td>
-          <td class="paramtype">type(<a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html">sll_t_spline_pp_1d</a>), intent(in)&#160;</td>
+          <td class="paramtype">integer(kind=i32), dimension(3), intent(in)&#160;</td>
+          <td class="paramname"><em>degree</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:,:), intent(in)&#160;</td>
+          <td class="paramname"><em>pp_coeffs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(3), intent(in)&#160;</td>
+          <td class="paramname"><em>x</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), dimension(3), intent(in)&#160;</td>
+          <td class="paramname"><em>indices</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), dimension(3), intent(in)&#160;</td>
+          <td class="paramname"><em>n_cells</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Perform a 3d hornerschema on the pp_coeffs at the indices. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">degree</td><td>degree of the spline</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pp_coeffs</td><td>coefficients of spline in pp-form</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">x</td><td>point at which we evaluate our spline</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">indices</td><td>indices of cell in which is x</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n_cells</td><td>number of gridcells</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>value of the splinefunction at point x </dd></dl>
+<p>Perform a 1d hornerschema in the first dimension</p>
+<p>Perform a 2d hornerschema in the second and third dimension</p>
+<p>Perform a 1d hornerschema in the first dimension</p>
+<p>Perform a 1d hornerschema in the second dimension </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l01285">1285</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_aacce0e239afcd70f6315e0cadd26be62_cgraph.svg" width="655" height="130"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="afe8f7935ed63d95b8a7064eea175b463"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afe8f7935ed63d95b8a7064eea175b463">&#9670;&nbsp;</a></span>sll_f_spline_pp_horner_3d_d2()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">real(kind=f64) function, public sll_m_splines_pp::sll_f_spline_pp_horner_3d_d2 </td>
+          <td>(</td>
+          <td class="paramtype">integer(kind=i32), dimension(3), intent(in)&#160;</td>
+          <td class="paramname"><em>degree</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:,:), intent(in)&#160;</td>
+          <td class="paramname"><em>pp_coeffs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(3), intent(in)&#160;</td>
+          <td class="paramname"><em>x</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), dimension(3), intent(in)&#160;</td>
+          <td class="paramname"><em>indices</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), dimension(3), intent(in)&#160;</td>
+          <td class="paramname"><em>n_cells</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Perform a 3d hornerschema on the pp_coeffs at the indices. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">degree</td><td>degree of the spline</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pp_coeffs</td><td>coefficients of spline in pp-form</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">x</td><td>point at which we evaluate our spline</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">indices</td><td>indices of cell in which is x</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n_cells</td><td>number of gridcells</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>value of the splinefunction at point x </dd></dl>
+<p>Perform a 1d hornerschema in the first dimension</p>
+<p>Perform a 2d hornerschema in the second and third dimension</p>
+<p>Perform a 1d hornerschema in the first dimension</p>
+<p>Perform a 1d hornerschema in the second dimension </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l01317">1317</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_afe8f7935ed63d95b8a7064eea175b463_cgraph.svg" width="655" height="130"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="aeff33e1701dfa1c5216323804fc7be71"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aeff33e1701dfa1c5216323804fc7be71">&#9670;&nbsp;</a></span>sll_f_spline_pp_horner_3d_d3()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">real(kind=f64) function, public sll_m_splines_pp::sll_f_spline_pp_horner_3d_d3 </td>
+          <td>(</td>
+          <td class="paramtype">integer(kind=i32), dimension(3), intent(in)&#160;</td>
+          <td class="paramname"><em>degree</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:,:), intent(in)&#160;</td>
+          <td class="paramname"><em>pp_coeffs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(3), intent(in)&#160;</td>
+          <td class="paramname"><em>x</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), dimension(3), intent(in)&#160;</td>
+          <td class="paramname"><em>indices</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), dimension(3), intent(in)&#160;</td>
+          <td class="paramname"><em>n_cells</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Perform a 3d hornerschema on the pp_coeffs at the indices. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">degree</td><td>degree of the spline</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pp_coeffs</td><td>coefficients of spline in pp-form</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">x</td><td>point at which we evaluate our spline</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">indices</td><td>indices of cell in which is x</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n_cells</td><td>number of gridcells</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>value of the splinefunction at point x </dd></dl>
+<p>Perform a 1d hornerschema in the first dimension</p>
+<p>Perform a 2d hornerschema in the second and third dimension</p>
+<p>Perform a 1d hornerschema in the first dimension</p>
+<p>Perform a 1d hornerschema in the second dimension </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l01349">1349</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_aeff33e1701dfa1c5216323804fc7be71_cgraph.svg" width="655" height="130"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="acf3c65f47e6b878f86ed229904c30cb4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acf3c65f47e6b878f86ed229904c30cb4">&#9670;&nbsp;</a></span>sll_f_spline_pp_horner_derivative_1d()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">real(kind=f64) function sll_m_splines_pp::sll_f_spline_pp_horner_derivative_1d </td>
+          <td>(</td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>degree</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:,:), intent(in)&#160;</td>
+          <td class="paramname"><em>pp_coeffs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
+          <td class="paramname"><em>x</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>index</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Perform a 1d hornerschema on the pp_coeffs at index. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">degree</td><td>degree of the spline</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pp_coeffs</td><td>coefficients of spline in pp-form</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">x</td><td>point at which we evaluate our spline</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">index</td><td>index of cell in which is x</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>value of the splinefunction at point x </dd></dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l01226">1226</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_acf3c65f47e6b878f86ed229904c30cb4_icgraph.svg" width="392" height="183"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="a0ba3cd26a200f41e303ce4fb2789acb2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0ba3cd26a200f41e303ce4fb2789acb2">&#9670;&nbsp;</a></span>sll_f_spline_pp_horner_derivative_3d()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">real(kind=f64) function, public sll_m_splines_pp::sll_f_spline_pp_horner_derivative_3d </td>
+          <td>(</td>
+          <td class="paramtype">integer(kind=i32), dimension(3), intent(in)&#160;</td>
+          <td class="paramname"><em>degree</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:,:), intent(in)&#160;</td>
+          <td class="paramname"><em>pp_coeffs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(3), intent(in)&#160;</td>
+          <td class="paramname"><em>x</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), dimension(3), intent(in)&#160;</td>
+          <td class="paramname"><em>indices</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), dimension(3), intent(in)&#160;</td>
+          <td class="paramname"><em>n_cells</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>component</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Perform a 3d hornerschema on the pp_coeffs at the indices. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">degree</td><td>degree of the spline</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pp_coeffs</td><td>coefficients of spline in pp-form</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">x</td><td>point at which we evaluate our spline</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">indices</td><td>indices of cell in which is x</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n_cells</td><td>number of gridcells</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>value of the splinefunction at point x </dd></dl>
+<p>Perform a 1d hornerschema in the first dimension</p>
+<p>Perform a 2d hornerschema in the second and third dimension </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l01381">1381</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_a0ba3cd26a200f41e303ce4fb2789acb2_cgraph.svg" width="655" height="71"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="ae856e97f9b335607629a52dc2d54adc9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae856e97f9b335607629a52dc2d54adc9">&#9670;&nbsp;</a></span>sll_s_spline_evaluate_basis_b_form_1d_clamped()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine, public sll_m_splines_pp::sll_s_spline_evaluate_basis_b_form_1d_clamped </td>
+          <td>(</td>
+          <td class="paramtype">type( <a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html">sll_t_spline_pp_1d</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>n_cells</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(n_cells+self%degree), intent(in)&#160;</td>
+          <td class="paramname"><em>b_coeffs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(out)&#160;</td>
+          <td class="paramname"><em>val</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>arbitrary degree 1d spline</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n_cells</td><td>number of gridcells</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">b_coeffs</td><td>coefficients of spline in B-form</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">val</td><td>array of values </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l01036">1036</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_ae856e97f9b335607629a52dc2d54adc9_cgraph.svg" width="662" height="118"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="ada27fc420cd644f1c8a46c2595781c91"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ada27fc420cd644f1c8a46c2595781c91">&#9670;&nbsp;</a></span>sll_s_spline_evaluate_basis_b_form_1d_periodic()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine, public sll_m_splines_pp::sll_s_spline_evaluate_basis_b_form_1d_periodic </td>
+          <td>(</td>
+          <td class="paramtype">type( <a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html">sll_t_spline_pp_1d</a>), intent(in)&#160;</td>
           <td class="paramname"><em>self</em>, </td>
         </tr>
         <tr>
@@ -421,7 +933,320 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(self%degree + 1, n_cells), intent(out)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(out)&#160;</td>
+          <td class="paramname"><em>val</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>arbitrary degree 1d spline</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n_cells</td><td>number of gridcells</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">b_coeffs</td><td>coefficients of spline in B-form</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">val</td><td>array of values </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l01051">1051</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_ada27fc420cd644f1c8a46c2595781c91_cgraph.svg" width="658" height="118"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="a382a523b8cbb98a4c148f5ba85ffb1e0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a382a523b8cbb98a4c148f5ba85ffb1e0">&#9670;&nbsp;</a></span>sll_s_spline_evaluate_basis_b_form_3d_clamped()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine, public sll_m_splines_pp::sll_s_spline_evaluate_basis_b_form_3d_clamped </td>
+          <td>(</td>
+          <td class="paramtype">type( <a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__3d.html">sll_t_spline_pp_3d</a>), intent(inout)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), dimension(3), intent(in)&#160;</td>
+          <td class="paramname"><em>n_cells</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension((n_cells(1)+self%spline1%degree)*n_cells(2)*n_cells(3)), intent(in)&#160;</td>
+          <td class="paramname"><em>b_coeffs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(out)&#160;</td>
+          <td class="paramname"><em>val</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>arbitrary degree 1d spline</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n_cells</td><td>number of gridcells</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">b_coeffs</td><td>coefficients of spline in B-form</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">val</td><td>array of values </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l01083">1083</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_a382a523b8cbb98a4c148f5ba85ffb1e0_cgraph.svg" width="100%" height="467"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
+</div>
+
+</div>
+</div>
+<a id="a70fb277ea5af3f97a33262915023e427"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a70fb277ea5af3f97a33262915023e427">&#9670;&nbsp;</a></span>sll_s_spline_evaluate_basis_b_form_3d_periodic()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine, public sll_m_splines_pp::sll_s_spline_evaluate_basis_b_form_3d_periodic </td>
+          <td>(</td>
+          <td class="paramtype">type( <a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__3d.html">sll_t_spline_pp_3d</a>), intent(inout)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), dimension(3), intent(in)&#160;</td>
+          <td class="paramname"><em>n_cells</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(n_cells(1)*n_cells(2)*n_cells(3)), intent(in)&#160;</td>
+          <td class="paramname"><em>b_coeffs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(out)&#160;</td>
+          <td class="paramname"><em>val</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>arbitrary degree 1d spline</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n_cells</td><td>number of gridcells</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">b_coeffs</td><td>coefficients of spline in B-form</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">val</td><td>array of values </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l01096">1096</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_a70fb277ea5af3f97a33262915023e427_cgraph.svg" width="100%" height="418"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
+</div>
+
+</div>
+</div>
+<a id="aac718fb34dbd7eb0e310c43067de4a69"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aac718fb34dbd7eb0e310c43067de4a69">&#9670;&nbsp;</a></span>sll_s_spline_evaluate_basis_pp_form_1d()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_splines_pp::sll_s_spline_evaluate_basis_pp_form_1d </td>
+          <td>(</td>
+          <td class="paramtype">type( <a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html">sll_t_spline_pp_1d</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>n_cells</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(self%degree+1,n_cells), intent(in)&#160;</td>
+          <td class="paramname"><em>pp_coeffs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(out)&#160;</td>
+          <td class="paramname"><em>val</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>arbitrary degree 1d spline</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n_cells</td><td>number of gridcells</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pp_coeffs</td><td>coefficients of sp</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">val</td><td>array of values </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l01066">1066</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_aac718fb34dbd7eb0e310c43067de4a69_cgraph.svg" width="411" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_aac718fb34dbd7eb0e310c43067de4a69_icgraph.svg" width="423" height="118"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="affc792b409c5d6d87a1e217fe304fa22"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#affc792b409c5d6d87a1e217fe304fa22">&#9670;&nbsp;</a></span>sll_s_spline_evaluate_basis_pp_form_3d()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_splines_pp::sll_s_spline_evaluate_basis_pp_form_3d </td>
+          <td>(</td>
+          <td class="paramtype">type( <a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__3d.html">sll_t_spline_pp_3d</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), dimension(3), intent(in)&#160;</td>
+          <td class="paramname"><em>n_cells</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension((self%spline1%degree+1)*(self%spline2%degree+1)*(self%spline3%degree+1),n_cells(1)*n_cells(2)*n_cells(3)), intent(in)&#160;</td>
+          <td class="paramname"><em>pp_coeffs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(out)&#160;</td>
+          <td class="paramname"><em>val</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>arbitrary degree 1d spline</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n_cells</td><td>number of gridcells</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pp_coeffs</td><td>coefficients of sp</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">val</td><td>array of values </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l01109">1109</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_affc792b409c5d6d87a1e217fe304fa22_cgraph.svg" width="100%" height="300"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
+</div>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_affc792b409c5d6d87a1e217fe304fa22_icgraph.svg" width="423" height="118"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="a9375e3f69bc194b10b4c9973e590a428"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9375e3f69bc194b10b4c9973e590a428">&#9670;&nbsp;</a></span>sll_s_spline_pp_b_to_pp_1d()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine, public sll_m_splines_pp::sll_s_spline_pp_b_to_pp_1d </td>
+          <td>(</td>
+          <td class="paramtype">type( <a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html">sll_t_spline_pp_1d</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>n_cells</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(n_cells), intent(in)&#160;</td>
+          <td class="paramname"><em>b_coeffs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(self%degree+1,n_cells), intent(out)&#160;</td>
           <td class="paramname"><em>pp_coeffs</em>&#160;</td>
         </tr>
         <tr>
@@ -443,11 +1268,17 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00089">89</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00215">215</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_a9375e3f69bc194b10b4c9973e590a428_cgraph.svg" width="368" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_a9375e3f69bc194b10b4c9973e590a428_icgraph.svg" width="412" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
 </div>
 </div>
 
@@ -465,19 +1296,19 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="memname">subroutine sll_m_splines_pp::sll_s_spline_pp_b_to_pp_1d_cell </td>
           <td>(</td>
-          <td class="paramtype">type(<a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html">sll_t_spline_pp_1d</a>), intent(in)&#160;</td>
+          <td class="paramtype">type( <a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html">sll_t_spline_pp_1d</a>), intent(in)&#160;</td>
           <td class="paramname"><em>self</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(self%degree + 1), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(self%degree+1), intent(in)&#160;</td>
           <td class="paramname"><em>b_coeffs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(self%degree + 1), intent(out)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(self%degree+1), intent(out)&#160;</td>
           <td class="paramname"><em>pp_coeffs</em>&#160;</td>
         </tr>
         <tr>
@@ -503,11 +1334,218 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00107">107</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00233">233</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_a1a051605f297f81093a1ff7008bd4143_icgraph.svg" width="571" height="183"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_a1a051605f297f81093a1ff7008bd4143_icgraph.svg" width="100%" height="584"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
+</div>
+
+</div>
+</div>
+<a id="a411f7e3b4a4df46ddc89167ca33258dd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a411f7e3b4a4df46ddc89167ca33258dd">&#9670;&nbsp;</a></span>sll_s_spline_pp_b_to_pp_1d_cella()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_splines_pp::sll_s_spline_pp_b_to_pp_1d_cella </td>
+          <td>(</td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>degree</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(degree+1,degree+1), intent(in)&#160;</td>
+          <td class="paramname"><em>pp_b</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(degree+1), intent(in)&#160;</td>
+          <td class="paramname"><em>b_coeffs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(degree+1), intent(out)&#160;</td>
+          <td class="paramname"><em>pp_coeffs</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Convert 1d spline in B form in a cell to spline in pp form for specified pp_coefficients of the b_splines. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">degree</td><td>spline degree</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pp_b</td><td>pp coefficients of the b spline in this interval</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">b_coeffs</td><td>coefficients of spline in B-form</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">pp_coeffs</td><td>coefficients of spline in pp-form </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00252">252</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_a411f7e3b4a4df46ddc89167ca33258dd_icgraph.svg" width="100%" height="584"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
+</div>
+
+</div>
+</div>
+<a id="abf8e9df8c41cd12d7457aef4e7510825"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abf8e9df8c41cd12d7457aef4e7510825">&#9670;&nbsp;</a></span>sll_s_spline_pp_b_to_pp_1d_clamped()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_splines_pp::sll_s_spline_pp_b_to_pp_1d_clamped </td>
+          <td>(</td>
+          <td class="paramtype">type( <a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html">sll_t_spline_pp_1d</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>n_cells</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(n_cells+self%degree), intent(in)&#160;</td>
+          <td class="paramname"><em>b_coeffs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(self%degree+1,n_cells), intent(out)&#160;</td>
+          <td class="paramname"><em>pp_coeffs</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Convert 1d spline in B form to spline in pp form for clamped spline. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>arbitrary degree 1d spline</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n_cells</td><td>number of gridcells</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">b_coeffs</td><td>coefficients of spline in B-form</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">pp_coeffs</td><td>coefficients of spline in pp-form </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00161">161</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_abf8e9df8c41cd12d7457aef4e7510825_cgraph.svg" width="368" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_abf8e9df8c41cd12d7457aef4e7510825_icgraph.svg" width="416" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="a3d7983b209b302141850ea69b757b51b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3d7983b209b302141850ea69b757b51b">&#9670;&nbsp;</a></span>sll_s_spline_pp_b_to_pp_1d_clamped_clampeddiri()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_splines_pp::sll_s_spline_pp_b_to_pp_1d_clamped_clampeddiri </td>
+          <td>(</td>
+          <td class="paramtype">type( <a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html">sll_t_spline_pp_1d</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>n_cells</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(n_cells+self%degree-1), intent(in)&#160;</td>
+          <td class="paramname"><em>b_coeffs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(self%degree+1,n_cells), intent(out)&#160;</td>
+          <td class="paramname"><em>pp_coeffs</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Convert 1d spline in B form to spline in pp form for clamped spline and Dirichlet conditions on the right boundary. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>arbitrary degree 1d spline</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n_cells</td><td>number of gridcells</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">b_coeffs</td><td>coefficients of spline in B-form</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">pp_coeffs</td><td>coefficients of spline in pp-form </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00187">187</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_a3d7983b209b302141850ea69b757b51b_cgraph.svg" width="428" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
 </div>
 </div>
 
@@ -522,7 +1560,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="memname">subroutine, public sll_m_splines_pp::sll_s_spline_pp_b_to_pp_2d </td>
           <td>(</td>
-          <td class="paramtype">type(<a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__2d.html">sll_t_spline_pp_2d</a>), intent(inout)&#160;</td>
+          <td class="paramtype">type( <a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__2d.html">sll_t_spline_pp_2d</a>), intent(inout)&#160;</td>
           <td class="paramname"><em>self</em>, </td>
         </tr>
         <tr>
@@ -534,13 +1572,13 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(n_cells(1)*n_cells(2)), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(in)&#160;</td>
           <td class="paramname"><em>b_coeffs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension((self%spline1%degree + 1)*(self%spline2%degree + 1), n_cells(1)*n_cells(2)), intent(out)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension((self%spline1%degree+1)*(self%spline2%degree+1),n_cells(1)*n_cells(2)), intent(out)&#160;</td>
           <td class="paramname"><em>pp_coeffs</em>&#160;</td>
         </tr>
         <tr>
@@ -551,22 +1589,21 @@ Here is the caller graph for this function:</div>
       </table>
 </div><div class="memdoc">
 
-<p>Convert 2d spline in B form to spline in pp form with periodic boundary conditions. </p>
+<p>Convert 2d spline in B form to spline in pp form. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>arbitrary degree 2d spline</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">n_cells</td><td>number of gridcells</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">b_coeffs</td><td>coefficients of spline in B-form</td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">pp_coeffs</td><td>coefficients of spline in pp-form </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00125">125</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00294">294</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_ad9b7b9b7852ac7873a01d8480d15819a_cgraph.svg" width="571" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_ad9b7b9b7852ac7873a01d8480d15819a_cgraph.svg" width="368" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
 </div>
 </div>
 
@@ -584,13 +1621,13 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="memname">subroutine sll_m_splines_pp::sll_s_spline_pp_b_to_pp_2d_cell </td>
           <td>(</td>
-          <td class="paramtype">type(<a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html">sll_t_spline_pp_1d</a>), intent(inout)&#160;</td>
+          <td class="paramtype">type( <a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html">sll_t_spline_pp_1d</a>), intent(inout)&#160;</td>
           <td class="paramname"><em>spline1</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">type(<a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html">sll_t_spline_pp_1d</a>), intent(inout)&#160;</td>
+          <td class="paramtype">type( <a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html">sll_t_spline_pp_1d</a>), intent(inout)&#160;</td>
           <td class="paramname"><em>spline2</em>, </td>
         </tr>
         <tr>
@@ -608,7 +1645,7 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension((spline1%degree + 1)*(spline2%degree + 1), n_cells(1)*n_cells(2)), intent(inout)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension((spline1%degree+1)*(spline2%degree+1),n_cells(1)*n_cells(2)), intent(inout)&#160;</td>
           <td class="paramname"><em>pp_coeffs</em>, </td>
         </tr>
         <tr>
@@ -653,7 +1690,7 @@ Here is the call graph for this function:</div>
 <p>use of modulo for boundary cells in both dimensions</p>
 <p>convert b-coefficients in pp_coefficients in second dimension </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00144">144</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00494">494</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -669,6 +1706,65 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
+<a id="a7a4ae507d1adf13115d039fd6899a4d9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7a4ae507d1adf13115d039fd6899a4d9">&#9670;&nbsp;</a></span>sll_s_spline_pp_b_to_pp_2d_periodic()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine, public sll_m_splines_pp::sll_s_spline_pp_b_to_pp_2d_periodic </td>
+          <td>(</td>
+          <td class="paramtype">type( <a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__2d.html">sll_t_spline_pp_2d</a>), intent(inout)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), dimension(2), intent(in)&#160;</td>
+          <td class="paramname"><em>n_cells</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(n_cells(1)*n_cells(2)), intent(in)&#160;</td>
+          <td class="paramname"><em>b_coeffs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension((self%spline1%degree+1)*(self%spline2%degree+1),n_cells(1)*n_cells(2)), intent(out)&#160;</td>
+          <td class="paramname"><em>pp_coeffs</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Convert 2d spline in B form to spline in pp form with periodic boundary conditions This is a special case of the procedure sll_s_spline_pp_b_to_pp_2d for the double periodic case to avoid the select case statements. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>arbitrary degree 2d spline</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n_cells</td><td>number of gridcells</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">b_coeffs</td><td>coefficients of spline in B-form</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">pp_coeffs</td><td>coefficients of spline in pp-form </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00273">273</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_a7a4ae507d1adf13115d039fd6899a4d9_cgraph.svg" width="571" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
 <a id="a3e49717b4c10582e60662adb7cfd24d2"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a3e49717b4c10582e60662adb7cfd24d2">&#9670;&nbsp;</a></span>sll_s_spline_pp_b_to_pp_3d()</h2>
 
@@ -678,7 +1774,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="memname">subroutine, public sll_m_splines_pp::sll_s_spline_pp_b_to_pp_3d </td>
           <td>(</td>
-          <td class="paramtype">type(<a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__3d.html">sll_t_spline_pp_3d</a>), intent(inout)&#160;</td>
+          <td class="paramtype">type( <a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__3d.html">sll_t_spline_pp_3d</a>), intent(inout)&#160;</td>
           <td class="paramname"><em>self</em>, </td>
         </tr>
         <tr>
@@ -690,7 +1786,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(n_cells(1)*n_cells(2), n_cells(2)), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(n_cells(1)*n_cells(2),n_cells(2)), intent(in)&#160;</td>
           <td class="paramname"><em>b_coeffs</em>, </td>
         </tr>
         <tr>
@@ -718,11 +1814,17 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00195">195</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00546">546</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_a3e49717b4c10582e60662adb7cfd24d2_cgraph.svg" width="571" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_a3e49717b4c10582e60662adb7cfd24d2_icgraph.svg" width="412" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
 </div>
 </div>
 
@@ -740,7 +1842,7 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="memname">subroutine sll_m_splines_pp::sll_s_spline_pp_b_to_pp_3d_cell </td>
           <td>(</td>
-          <td class="paramtype">type(<a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__3d.html">sll_t_spline_pp_3d</a>), intent(inout)&#160;</td>
+          <td class="paramtype">type( <a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__3d.html">sll_t_spline_pp_3d</a>), intent(inout)&#160;</td>
           <td class="paramname"><em>self</em>, </td>
         </tr>
         <tr>
@@ -808,9 +1910,9 @@ Here is the call graph for this function:</div>
 <p>use of modulo for boundary cells in second and third dimension</p>
 <p>use of modulo for boundary cells in all three dimensions</p>
 <p>convert b-coefficients in pp-coefficients in second dimension</p>
-<p>convert b-coefficients in pp-coefficients in first dimension </p>
+<p>convert b-coefficients in pp-coefficients in third dimension </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00217">217</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00565">565</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -820,7 +1922,488 @@ Here is the call graph for this function:</div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_a840a12d2e58e2e3fe29b1f1296b24e25_icgraph.svg" width="368" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_a840a12d2e58e2e3fe29b1f1296b24e25_icgraph.svg" width="615" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="a72ef4f15966d54f96a2ca8b5400626a5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a72ef4f15966d54f96a2ca8b5400626a5">&#9670;&nbsp;</a></span>sll_s_spline_pp_b_to_pp_3d_cella()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_splines_pp::sll_s_spline_pp_b_to_pp_3d_cella </td>
+          <td>(</td>
+          <td class="paramtype">type( <a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__3d.html">sll_t_spline_pp_3d</a>), intent(inout)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), dimension(3), intent(in)&#160;</td>
+          <td class="paramname"><em>n_cells</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension((n_cells(1)+self%spline1%degree)*n_cells(2)*n_cells(3)), intent(in)&#160;</td>
+          <td class="paramname"><em>b_coeffs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension((self%spline1%degree+1)*(self%spline2%degree+1)*(self%spline3%degree+1),n_cells(1)*n_cells(2)*n_cells(3)), intent(inout)&#160;</td>
+          <td class="paramname"><em>pp_coeffs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>i</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>j</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>k</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Convert 3d spline in B form in a cell to spline in pp form with clamped boundary in first direction and periodic boundary conditions in the other directions. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>arbitrary degree 3d spline</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n_cells</td><td>number of gridcells</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">b_coeffs</td><td>coefficients of spline in B-form</td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">pp_coeffs</td><td>coefficients of spline in pp-form</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">k</td><td>indices </td></tr>
+  </table>
+  </dd>
+</dl>
+<p>convert b-coefficients in pp-coefficients in first dimension</p>
+<p>use of modulo for boundary cells in third dimension</p>
+<p>use of modulo for boundary cells in second and third dimension</p>
+<p>use of modulo for boundary cells in all three dimensions</p>
+<p>use of modulo for boundary cells in all three dimensions</p>
+<p>convert b-coefficients in pp-coefficients in second dimension</p>
+<p>convert b-coefficients in pp-coefficients in third dimension </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00650">650</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_a72ef4f15966d54f96a2ca8b5400626a5_cgraph.svg" width="368" height="118"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_a72ef4f15966d54f96a2ca8b5400626a5_icgraph.svg" width="619" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="a1e67da5c2dc436b0b8cbd874575e4631"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1e67da5c2dc436b0b8cbd874575e4631">&#9670;&nbsp;</a></span>sll_s_spline_pp_b_to_pp_3d_cella2f()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_splines_pp::sll_s_spline_pp_b_to_pp_3d_cella2f </td>
+          <td>(</td>
+          <td class="paramtype">type( <a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__3d.html">sll_t_spline_pp_3d</a>), intent(inout)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), dimension(3), intent(in)&#160;</td>
+          <td class="paramname"><em>n_cells</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension((n_cells(1)+self%spline1%degree)*n_cells(2)*(n_cells(3)+self%spline3%degree)), intent(in)&#160;</td>
+          <td class="paramname"><em>b_coeffs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension((self%spline1%degree+1)*(self%spline2%degree+1)*(self%spline3%degree+1),n_cells(1)*n_cells(2)*n_cells(3)), intent(inout)&#160;</td>
+          <td class="paramname"><em>pp_coeffs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>i</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>j</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>k</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Convert 3d spline in B form in a cell to spline in pp form with clamped boundary in all three directions. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>arbitrary degree 3d spline</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n_cells</td><td>number of gridcells</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">b_coeffs</td><td>coefficients of spline in B-form</td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">pp_coeffs</td><td>coefficients of spline in pp-form</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">k</td><td>indices </td></tr>
+  </table>
+  </dd>
+</dl>
+<p>convert b-coefficients in pp-coefficients in first dimension</p>
+<p>use of modulo for boundary cells in second dimension</p>
+<p>convert b-coefficients in pp-coefficients in second dimension</p>
+<p>convert b-coefficients in pp-coefficients in third dimension </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00744">744</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_a1e67da5c2dc436b0b8cbd874575e4631_cgraph.svg" width="368" height="118"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_a1e67da5c2dc436b0b8cbd874575e4631_icgraph.svg" width="380" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="a9de4fa50cb649ed3fd93d415c65a6e84"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9de4fa50cb649ed3fd93d415c65a6e84">&#9670;&nbsp;</a></span>sll_s_spline_pp_b_to_pp_3d_cellaf()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_splines_pp::sll_s_spline_pp_b_to_pp_3d_cellaf </td>
+          <td>(</td>
+          <td class="paramtype">type( <a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__3d.html">sll_t_spline_pp_3d</a>), intent(inout)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), dimension(3), intent(in)&#160;</td>
+          <td class="paramname"><em>n_cells</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension((n_cells(1)+self%spline1%degree)*(n_cells(2)+self%spline2%degree)*(n_cells(3)+self%spline3%degree)), intent(in)&#160;</td>
+          <td class="paramname"><em>b_coeffs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension((self%spline1%degree+1)*(self%spline2%degree+1)*(self%spline3%degree+1),n_cells(1)*n_cells(2)*n_cells(3)), intent(inout)&#160;</td>
+          <td class="paramname"><em>pp_coeffs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>i</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>j</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>k</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Convert 3d spline in B form in a cell to spline in pp form with clamped boundary in all three directions. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>arbitrary degree 3d spline</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n_cells</td><td>number of gridcells</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">b_coeffs</td><td>coefficients of spline in B-form</td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">pp_coeffs</td><td>coefficients of spline in pp-form</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">k</td><td>indices </td></tr>
+  </table>
+  </dd>
+</dl>
+<p>convert b-coefficients in pp-coefficients in first dimension</p>
+<p>convert b-coefficients in pp-coefficients in second dimension</p>
+<p>convert b-coefficients in pp-coefficients in third dimension </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00855">855</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_a9de4fa50cb649ed3fd93d415c65a6e84_cgraph.svg" width="368" height="118"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_a9de4fa50cb649ed3fd93d415c65a6e84_icgraph.svg" width="372" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="a109b7091f4f1906d9806c109df6c7ac4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a109b7091f4f1906d9806c109df6c7ac4">&#9670;&nbsp;</a></span>sll_s_spline_pp_b_to_pp_3d_clamped()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine, public sll_m_splines_pp::sll_s_spline_pp_b_to_pp_3d_clamped </td>
+          <td>(</td>
+          <td class="paramtype">type( <a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__3d.html">sll_t_spline_pp_3d</a>), intent(inout)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), dimension(3), intent(in)&#160;</td>
+          <td class="paramname"><em>n_cells</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension((n_cells(1)+self%spline1%degree)*n_cells(2)*n_cells(3)), intent(in)&#160;</td>
+          <td class="paramname"><em>b_coeffs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension((self%spline1%degree+1)*(self%spline2%degree+1)*(self%spline3%degree+1),n_cells(1)*n_cells(2)*n_cells(3)), intent(out)&#160;</td>
+          <td class="paramname"><em>pp_coeffs</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Convert 3d spline in B form to spline in pp form for clamped spline. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>arbitrary degree 1d spline</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n_cells</td><td>number of gridcells</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">b_coeffs</td><td>coefficients of spline in B-form</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">pp_coeffs</td><td>coefficients of spline in pp-form </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00981">981</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_a109b7091f4f1906d9806c109df6c7ac4_cgraph.svg" width="571" height="118"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_a109b7091f4f1906d9806c109df6c7ac4_icgraph.svg" width="416" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="a033f4f58d0202d7d899c86e4329336ca"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a033f4f58d0202d7d899c86e4329336ca">&#9670;&nbsp;</a></span>sll_s_spline_pp_b_to_pp_3d_clamped_2full()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine, public sll_m_splines_pp::sll_s_spline_pp_b_to_pp_3d_clamped_2full </td>
+          <td>(</td>
+          <td class="paramtype">type( <a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__3d.html">sll_t_spline_pp_3d</a>), intent(inout)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), dimension(3), intent(in)&#160;</td>
+          <td class="paramname"><em>n_cells</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension((n_cells(1)+self%spline1%degree)*n_cells(2)*(n_cells(3)+self%spline3%degree)), intent(in)&#160;</td>
+          <td class="paramname"><em>b_coeffs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension((self%spline1%degree+1)*(self%spline2%degree+1)*(self%spline3%degree+1),n_cells(1)*n_cells(2)*n_cells(3)), intent(out)&#160;</td>
+          <td class="paramname"><em>pp_coeffs</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Convert 3d spline in B form to spline in pp form for clamped spline. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>arbitrary degree 1d spline</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n_cells</td><td>number of gridcells</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">b_coeffs</td><td>coefficients of spline in B-form</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">pp_coeffs</td><td>coefficients of spline in pp-form </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00999">999</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_a033f4f58d0202d7d899c86e4329336ca_cgraph.svg" width="583" height="118"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="aceeeac2f921344b851fe65f3a4b91e90"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aceeeac2f921344b851fe65f3a4b91e90">&#9670;&nbsp;</a></span>sll_s_spline_pp_b_to_pp_3d_clamped_full()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_splines_pp::sll_s_spline_pp_b_to_pp_3d_clamped_full </td>
+          <td>(</td>
+          <td class="paramtype">type( <a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__3d.html">sll_t_spline_pp_3d</a>), intent(inout)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), dimension(3), intent(in)&#160;</td>
+          <td class="paramname"><em>n_cells</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension((n_cells(1)+self%spline1%degree)*(n_cells(2)+self%spline2%degree)*(n_cells(3)+self%spline3%degree)), intent(in)&#160;</td>
+          <td class="paramname"><em>b_coeffs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension((self%spline1%degree+1)*(self%spline2%degree+1)*(self%spline3%degree+1),n_cells(1)*n_cells(2)*n_cells(3)), intent(out)&#160;</td>
+          <td class="paramname"><em>pp_coeffs</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Convert 3d spline in B form to spline in pp form for clamped spline. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>arbitrary degree 1d spline</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n_cells</td><td>number of gridcells</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">b_coeffs</td><td>coefficients of spline in B-form</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">pp_coeffs</td><td>coefficients of spline in pp-form </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l01018">1018</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_aceeeac2f921344b851fe65f3a4b91e90_cgraph.svg" width="575" height="118"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
 </div>
 </div>
 
@@ -835,7 +2418,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="memname">subroutine, public sll_m_splines_pp::sll_s_spline_pp_free_1d </td>
           <td>(</td>
-          <td class="paramtype">type(<a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html">sll_t_spline_pp_1d</a>), intent(inout)&#160;</td>
+          <td class="paramtype">type( <a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html">sll_t_spline_pp_1d</a>), intent(inout)&#160;</td>
           <td class="paramname"><em>self</em></td><td>)</td>
           <td></td>
         </tr>
@@ -850,7 +2433,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00519">519</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l01724">1724</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
@@ -869,7 +2452,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="memname">subroutine, public sll_m_splines_pp::sll_s_spline_pp_free_2d </td>
           <td>(</td>
-          <td class="paramtype">type(<a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__2d.html">sll_t_spline_pp_2d</a>), intent(inout)&#160;</td>
+          <td class="paramtype">type( <a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__2d.html">sll_t_spline_pp_2d</a>), intent(inout)&#160;</td>
           <td class="paramname"><em>self</em></td><td>)</td>
           <td></td>
         </tr>
@@ -884,7 +2467,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00530">530</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l01735">1735</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -909,7 +2492,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="memname">subroutine, public sll_m_splines_pp::sll_s_spline_pp_free_3d </td>
           <td>(</td>
-          <td class="paramtype">type(<a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__3d.html">sll_t_spline_pp_3d</a>), intent(inout)&#160;</td>
+          <td class="paramtype">type( <a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__3d.html">sll_t_spline_pp_3d</a>), intent(inout)&#160;</td>
           <td class="paramname"><em>self</em></td><td>)</td>
           <td></td>
         </tr>
@@ -924,7 +2507,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00539">539</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l01744">1744</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -943,7 +2526,7 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="memname">subroutine, public sll_m_splines_pp::sll_s_spline_pp_horner_m_1d </td>
           <td>(</td>
-          <td class="paramtype">type(<a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html">sll_t_spline_pp_1d</a>), intent(in)&#160;</td>
+          <td class="paramtype">type( <a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html">sll_t_spline_pp_1d</a>), intent(in)&#160;</td>
           <td class="paramname"><em>self</em>, </td>
         </tr>
         <tr>
@@ -983,7 +2566,7 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00300">300</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l01146">1146</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -1008,13 +2591,13 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="memname">subroutine, public sll_m_splines_pp::sll_s_spline_pp_horner_m_2d </td>
           <td>(</td>
-          <td class="paramtype">type(<a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__2d.html">sll_t_spline_pp_2d</a>), intent(in)&#160;</td>
+          <td class="paramtype">type( <a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__2d.html">sll_t_spline_pp_2d</a>), intent(in)&#160;</td>
           <td class="paramname"><em>self</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:, :), intent(out)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:,:), intent(out)&#160;</td>
           <td class="paramname"><em>val</em>, </td>
         </tr>
         <tr>
@@ -1048,7 +2631,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00313">313</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l01159">1159</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -1073,13 +2656,13 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="memname">subroutine, public sll_m_splines_pp::sll_s_spline_pp_horner_m_3d </td>
           <td>(</td>
-          <td class="paramtype">type(<a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__3d.html">sll_t_spline_pp_3d</a>), intent(in)&#160;</td>
+          <td class="paramtype">type( <a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__3d.html">sll_t_spline_pp_3d</a>), intent(in)&#160;</td>
           <td class="paramname"><em>self</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:, :), intent(out)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:,:), intent(out)&#160;</td>
           <td class="paramname"><em>val</em>, </td>
         </tr>
         <tr>
@@ -1113,7 +2696,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00327">327</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l01175">1175</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -1144,7 +2727,7 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:, :), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:,:), intent(in)&#160;</td>
           <td class="paramname"><em>pp_coeffs</em>, </td>
         </tr>
         <tr>
@@ -1172,7 +2755,7 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00342">342</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l01195">1195</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -1188,8 +2771,8 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a id="a0c79f977725f86d5c265b682a0e56d02"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0c79f977725f86d5c265b682a0e56d02">&#9670;&nbsp;</a></span>sll_s_spline_pp_init_1d()</h2>
+<a id="a7e2a3943e2c330a0a9597b535ce259b3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7e2a3943e2c330a0a9597b535ce259b3">&#9670;&nbsp;</a></span>sll_s_spline_pp_init_1d()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1197,7 +2780,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="memname">subroutine, public sll_m_splines_pp::sll_s_spline_pp_init_1d </td>
           <td>(</td>
-          <td class="paramtype">type(<a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html">sll_t_spline_pp_1d</a>), intent(out)&#160;</td>
+          <td class="paramtype">type( <a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html">sll_t_spline_pp_1d</a>), intent(out)&#160;</td>
           <td class="paramname"><em>self</em>, </td>
         </tr>
         <tr>
@@ -1210,7 +2793,13 @@ Here is the caller graph for this function:</div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
-          <td class="paramname"><em>n_cells</em>&#160;</td>
+          <td class="paramname"><em>n_cells</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in), optional&#160;</td>
+          <td class="paramname"><em>boundary</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1230,18 +2819,18 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00412">412</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l01422">1422</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_a0c79f977725f86d5c265b682a0e56d02_icgraph.svg" width="604" height="168"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_a7e2a3943e2c330a0a9597b535ce259b3_icgraph.svg" width="604" height="168"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
 </div>
 </div>
 
 </div>
 </div>
-<a id="ab0bd290f1a3b06fd9211b341b3b8fa18"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab0bd290f1a3b06fd9211b341b3b8fa18">&#9670;&nbsp;</a></span>sll_s_spline_pp_init_2d()</h2>
+<a id="acc0dcc5dbab3c00bd786671ffb731503"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acc0dcc5dbab3c00bd786671ffb731503">&#9670;&nbsp;</a></span>sll_s_spline_pp_init_2d()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1262,7 +2851,13 @@ Here is the caller graph for this function:</div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">integer(kind=i32), dimension(2), intent(in)&#160;</td>
-          <td class="paramname"><em>n_cells</em>&#160;</td>
+          <td class="paramname"><em>n_cells</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), dimension(2), intent(in), optional&#160;</td>
+          <td class="paramname"><em>boundary</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1277,29 +2872,30 @@ Here is the caller graph for this function:</div>
   <table class="params">
     <tr><td class="paramdir"></td><td class="paramname">self</td><td>arbitrary degree 2d spline</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">degree</td><td>degrees of the 1d splines</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">n_cells</td><td>number of gridcells in every dimension </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n_cells</td><td>number of gridcells in every dimension</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">boundary</td><td>boundary conditions </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00489">489</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l01677">1677</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_ab0bd290f1a3b06fd9211b341b3b8fa18_cgraph.svg" width="400" height="38"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_acc0dcc5dbab3c00bd786671ffb731503_cgraph.svg" width="400" height="38"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
 </div>
 </div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_ab0bd290f1a3b06fd9211b341b3b8fa18_icgraph.svg" width="386" height="67"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_acc0dcc5dbab3c00bd786671ffb731503_icgraph.svg" width="386" height="67"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
 </div>
 </div>
 
 </div>
 </div>
-<a id="aa89575bf1babec91a086cb0ad8dffeb5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa89575bf1babec91a086cb0ad8dffeb5">&#9670;&nbsp;</a></span>sll_s_spline_pp_init_3d()</h2>
+<a id="a05168b8afdfed2b282ee242d8d2a2225"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a05168b8afdfed2b282ee242d8d2a2225">&#9670;&nbsp;</a></span>sll_s_spline_pp_init_3d()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1320,7 +2916,13 @@ Here is the caller graph for this function:</div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">integer(kind=i32), dimension(3), intent(in)&#160;</td>
-          <td class="paramname"><em>n_cells</em>&#160;</td>
+          <td class="paramname"><em>n_cells</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), dimension(3), intent(in), optional&#160;</td>
+          <td class="paramname"><em>boundary</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1335,18 +2937,72 @@ Here is the caller graph for this function:</div>
   <table class="params">
     <tr><td class="paramdir"></td><td class="paramname">self</td><td>arbitrary degree 3d spline</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">degree</td><td>degrees of the 1d splines</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">n_cells</td><td>number of gridcells in every dimension </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n_cells</td><td>number of gridcells in every dimension</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">boundary</td><td>boundary conditions </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00500">500</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l01695">1695</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_aa89575bf1babec91a086cb0ad8dffeb5_cgraph.svg" width="400" height="38"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__splines__pp_a05168b8afdfed2b282ee242d8d2a2225_cgraph.svg" width="400" height="38"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
 </div>
 </div>
+
+</div>
+</div>
+<a id="ad607087c419c427949171b328faa0242"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad607087c419c427949171b328faa0242">&#9670;&nbsp;</a></span>sll_s_spline_pp_pp_to_b_1d()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine, public sll_m_splines_pp::sll_s_spline_pp_pp_to_b_1d </td>
+          <td>(</td>
+          <td class="paramtype">type( <a class="el" href="structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html">sll_t_spline_pp_1d</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>n_cells</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(self%degree+1,0:n_cells-1), intent(in)&#160;</td>
+          <td class="paramname"><em>pp_coeffs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(0:n_cells-1), intent(out)&#160;</td>
+          <td class="paramname"><em>b_coeffs</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Compute b_coeffs from coefficients of the monomials (in <em>pp_coeffs</em>) </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>arbitrary degree 1d spline</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n_cells</td><td>number of gridcells</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">b_coeffs</td><td>coefficients of spline in B-form</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pp_coeffs</td><td>coefficients of spline in pp-form </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00140">140</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 
 </div>
 </div>
@@ -1371,7 +3027,7 @@ Here is the call graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00044">44</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00078">78</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 
 </div>
 </div>
@@ -1395,7 +3051,7 @@ Here is the call graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00052">52</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00089">89</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 
 </div>
 </div>
@@ -1419,7 +3075,31 @@ Here is the call graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00053">53</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00091">91</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+
+</div>
+</div>
+<a id="a6adf6e22abe6556d829eb6bbcedd873a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6adf6e22abe6556d829eb6bbcedd873a">&#9670;&nbsp;</a></span>inv_16</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">real(kind=f64), parameter inv_16 = 1._f64/16._f64</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00079">79</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 
 </div>
 </div>
@@ -1443,7 +3123,7 @@ Here is the call graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00045">45</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00080">80</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 
 </div>
 </div>
@@ -1467,7 +3147,7 @@ Here is the call graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00039">39</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00072">72</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 
 </div>
 </div>
@@ -1491,7 +3171,7 @@ Here is the call graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00046">46</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00081">81</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 
 </div>
 </div>
@@ -1515,7 +3195,31 @@ Here is the call graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00047">47</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00082">82</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+
+</div>
+</div>
+<a id="af69a676e3f53e7e938a75086988573f5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af69a676e3f53e7e938a75086988573f5">&#9670;&nbsp;</a></span>inv_240</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">real(kind=f64), parameter inv_240 = 1._f64/240._f64</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00090">90</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 
 </div>
 </div>
@@ -1539,7 +3243,7 @@ Here is the call graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00040">40</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00073">73</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 
 </div>
 </div>
@@ -1563,7 +3267,7 @@ Here is the call graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00048">48</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00083">83</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 
 </div>
 </div>
@@ -1587,7 +3291,7 @@ Here is the call graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00049">49</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00084">84</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 
 </div>
 </div>
@@ -1611,7 +3315,7 @@ Here is the call graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00041">41</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00074">74</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 
 </div>
 </div>
@@ -1635,7 +3339,31 @@ Here is the call graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00050">50</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00085">85</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+
+</div>
+</div>
+<a id="a8c97d337e5e3358a46849820af17ae4a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8c97d337e5e3358a46849820af17ae4a">&#9670;&nbsp;</a></span>inv_5040</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">real(kind=f64), parameter inv_5040 = 1._f64/5040._f64</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00094">94</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 
 </div>
 </div>
@@ -1659,7 +3387,55 @@ Here is the call graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00042">42</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00075">75</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+
+</div>
+</div>
+<a id="ab9ca7f155505cf6b691feeb63be7db3a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab9ca7f155505cf6b691feeb63be7db3a">&#9670;&nbsp;</a></span>inv_60</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">real(kind=f64), parameter inv_60 = 1._f64/60._f64</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00086">86</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+
+</div>
+</div>
+<a id="aa01342a66bdb353d098ad7e087462f6c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa01342a66bdb353d098ad7e087462f6c">&#9670;&nbsp;</a></span>inv_7</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">real(kind=f64), parameter inv_7 = 1._f64/7._f64</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00076">76</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 
 </div>
 </div>
@@ -1683,7 +3459,7 @@ Here is the call graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00051">51</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00087">87</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 
 </div>
 </div>
@@ -1707,7 +3483,7 @@ Here is the call graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00054">54</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00093">93</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 
 </div>
 </div>
@@ -1731,7 +3507,158 @@ Here is the call graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00043">43</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00077">77</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+
+</div>
+</div>
+<a id="a766248ce5e8f8abd56fab6a1a3c3c861"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a766248ce5e8f8abd56fab6a1a3c3c861">&#9670;&nbsp;</a></span>inv_80</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">real(kind=f64), parameter inv_80 = 1._f64/80._f64</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00088">88</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+
+</div>
+</div>
+<a id="a385b57b6f7140b5b0a5d4b5ab8d96113"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a385b57b6f7140b5b0a5d4b5ab8d96113">&#9670;&nbsp;</a></span>sll_p_boundary_clamped</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">integer(kind=i32), parameter, public sll_p_boundary_clamped = 1</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Parameter specifying clamped boundary conditions. </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00065">65</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+
+</div>
+</div>
+<a id="aa46479839e3f85c9caa1309fd68a325a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa46479839e3f85c9caa1309fd68a325a">&#9670;&nbsp;</a></span>sll_p_boundary_clamped_clampeddiri</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">integer(kind=i32), parameter, public sll_p_boundary_clamped_clampeddiri = 2</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Parameter specifying clamped boundary conditions with the last point left out (for Dirichlet conditions on the right side of the domain) </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00066">66</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+
+</div>
+</div>
+<a id="af4f87ba9884c66c54ad63714719c5125"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af4f87ba9884c66c54ad63714719c5125">&#9670;&nbsp;</a></span>sll_p_boundary_clamped_cubic</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">integer(kind=i32), parameter, public sll_p_boundary_clamped_cubic = 6</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Parameter specifying clamped boundary conditions with a cubic spline for the 0-form, boundary spline of degree 3 is set to zero. </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00070">70</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+
+</div>
+</div>
+<a id="acffa70d1c0c6acc0ce30287c825ee668"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acffa70d1c0c6acc0ce30287c825ee668">&#9670;&nbsp;</a></span>sll_p_boundary_clamped_square</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">integer(kind=i32), parameter, public sll_p_boundary_clamped_square = 5</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Parameter specifying clamped boundary conditions with square spline for the 0-form, boundary spline of degree 2 is set to zero. </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00069">69</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+
+</div>
+</div>
+<a id="acc9dfa034754994fb1247c25421e4104"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acc9dfa034754994fb1247c25421e4104">&#9670;&nbsp;</a></span>sll_p_boundary_clampeddiri</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">integer(kind=i32), parameter, public sll_p_boundary_clampeddiri = 3</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Parameter specifying clamped boundary conditions with the first and last point left out (for Dirichlet conditions) </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00067">67</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+
+</div>
+</div>
+<a id="af1a32ad75919ffb04a32c73ca0aeb1d0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af1a32ad75919ffb04a32c73ca0aeb1d0">&#9670;&nbsp;</a></span>sll_p_boundary_clampeddiri_clamped</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">integer(kind=i32), parameter, public sll_p_boundary_clampeddiri_clamped = 4</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Parameter specifying clamped boundary conditions with the first point left out (for Dirichlet conditions on the left side of the domain) </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00068">68</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
+
+</div>
+</div>
+<a id="aa3d1b769458b6a04a5003f7e016ebc64"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa3d1b769458b6a04a5003f7e016ebc64">&#9670;&nbsp;</a></span>sll_p_boundary_periodic</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">integer(kind=i32), parameter, public sll_p_boundary_periodic = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Parameter to specify boundary conditions. </p>
+<p>Parameter specifying periodic boundary conditions </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__splines__pp_8_f90_source.html#l00064">64</a> of file <a class="el" href="sll__m__splines__pp_8_f90_source.html">sll_m_splines_pp.F90</a>.</p>
 
 </div>
 </div>
@@ -1742,7 +3669,7 @@ Here is the call graph for this function:</div>
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Tue Mar 30 2021 05:41:31 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat May 22 2021 08:18:56 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

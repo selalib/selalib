@@ -1,4 +1,4 @@
 <map id="init_spline_2d" name="init_spline_2d">
-<area shape="rect" id="node2" href="$namespacesll__m__splines__pp.html#ab0bd290f1a3b06fd9211b341b3b8fa18" title="Initialize sll_t_spline_pp_2d object. " alt="" coords="165,5,321,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__splines__pp.html#a0c79f977725f86d5c265b682a0e56d02" title="Initialize sll_t_spline_pp_1d object (Set poly_coeffs depending on degree) " alt="" coords="369,5,525,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__splines__pp.html#acc0dcc5dbab3c00bd786671ffb731503" title="Initialize sll_t_spline_pp_2d object. " alt="" coords="165,5,321,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__splines__pp.html#a7e2a3943e2c330a0a9597b535ce259b3" title="Initialize sll_t_spline_pp_1d object (Set poly_coeffs depending on degree) " alt="" coords="369,5,525,47"/>
 </map>
