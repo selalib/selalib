@@ -8,12 +8,12 @@ jobs:
     steps:
     - name: Install dependencies
       run: |
-        brew install doxygen graphviz fftw open-mpi hdf5-mpi openblas cmake gfortran
-        brew unlink gcc && brew link gcc@10
+        brew install doxygen graphviz fftw open-mpi hdf5-mpi openblas cmake 
+        brew install --cask gfortran
     - name: Checkout
       uses: actions/checkout@v2
       with:
         persist-credentials: false
     - name: Build & Test
       run: |
-        mkdir build && cd build && env FC=gfortran-10 cmake .. && env=FC=gfortran-10 make -j 4 && ctest --output-on-failure
+        mkdir build && cd build && cmake .. && make -j 4 && ctest --output-on-failure
