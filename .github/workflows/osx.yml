@@ -15,4 +15,4 @@ jobs:
         persist-credentials: false
     - name: Build & Test
       run: |
-        mkdir build && cd build && env FC=gfortran-10 cmake .. && env OMPI_FC=gfortran-10 make -j 4 && ctest --output-on-failure
+        alias gfortran=gfortran-10 && mkdir build && cd build && cmake .. && make -j 4 && ctest --output-on-failure
