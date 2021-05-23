@@ -77,6 +77,18 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
    ! Logical variables
    logical :: equil_num, evolve_background, success
 
+   ! Character variables
+   character(len=8) :: method
+   character(len=14) :: test_case
+   character(len=32) :: file_name
+   character(len=10) :: status
+   character(len=10) :: position
+   character(len=32) :: attr_name
+   character(len=:), allocatable :: input_file
+
+   real(wp), allocatable :: intensity(:)
+   real(wp), allocatable :: location(:, :)
+
    ! Namelists
 
    namelist /splines/ &
@@ -117,20 +129,11 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
    ! Real parameters
    real(wp), parameter :: epsi = 1.0e-12_wp
 
-   ! Character variables
-   character(len=8) :: method
-   character(len=14) :: test_case
-   character(len=32) :: file_name
-   character(len=10) :: status
-   character(len=10) :: position
-   character(len=32) :: attr_name
-   character(len=:), allocatable :: input_file
-
    ! Real 1D allocatables
-   real(wp), allocatable :: breaks_eta1(:), breaks_eta2(:), tau_eta1(:), tau_eta2(:), intensity(:)
+   real(wp), allocatable :: breaks_eta1(:), breaks_eta2(:), tau_eta1(:), tau_eta2(:)
 
    ! Real 2D allocatables
-   real(wp), allocatable :: phi_eq(:, :), Ex_eq(:, :), Ey_eq(:, :), location(:, :)
+   real(wp), allocatable :: phi_eq(:, :), Ex_eq(:, :), Ey_eq(:, :)
 
    real(wp) :: Exy_eq(2)
 
