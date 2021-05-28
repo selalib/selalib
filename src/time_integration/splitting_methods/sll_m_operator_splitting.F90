@@ -1,6 +1,6 @@
 !> @ingroup sll_t_operator_splitting
 !> @brief
-!> Base class of operator splitting library.
+!> Base class of operator splitting library. It is only used with particle-in-cell method.
 !>
 !> @details
 !> The operator splitting module provides a generic implementation of composition algorithms
