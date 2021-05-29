@@ -17,7 +17,7 @@
 !  "http://www.cecill.info".
 !**************************************************************
 !
-! Define coefficients for time splitting with semi-lagrangian 
+! Define coefficients for time splitting with semi-lagrangian
 !
 !> @author Michel Mehrenberger (mehrenbe@math.unistra.fr)
 !
