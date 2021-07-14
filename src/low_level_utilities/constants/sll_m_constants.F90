@@ -31,6 +31,7 @@ module sll_m_constants
       sll_p_charge, &
       sll_p_mass, &
       sll_p_epsilon_0, &
+      sll_p_fourpi, &
       sll_p_g, &
       sll_p_i0, &
       sll_p_i1, &
@@ -51,6 +52,9 @@ module sll_m_constants
 
 !> @param 2*PI number
    sll_real64, parameter :: sll_p_twopi = 2.0_f64*sll_p_pi
+
+!> @param 4*PI number
+   sll_real64, parameter :: sll_p_fourpi = 4.0_f64*sll_p_pi
 
 !> @param sll_p_kx is the fundamental mode in the x-direction.
    sll_real64, parameter :: sll_p_kx = 2.0_f64*sll_p_pi
