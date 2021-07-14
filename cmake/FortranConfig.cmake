@@ -37,14 +37,9 @@ elseif(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
   string(REGEX MATCH "([0-9]+)\\.[0-9]+\\.[0-9]+" Fortran_COMPILER_VERSION
                ${source_path})
 
-  string(REPLACE "." ";" VERSION_LIST ${Fortran_COMPILER_VERSION})
-  list(GET VERSION_LIST 0 Fortran_VERSION_MAJOR)
-  list(GET VERSION_LIST 1 Fortran_VERSION_MINOR)
-  list(GET VERSION_LIST 2 Fortran_VERSION_PATCH)
-
   add_definitions(-DGFORTRAN)
   set(CMAKE_Fortran_FLAGS_RELEASE
-      "-std=f2008 -ffree-line-length-none -fstack-arrays -O3 -fPIC  -w -fallow-argument-mismatch")
+      "-std=f2008 -ffree-line-length-none -fstack-arrays -O3 -fPIC  -w ")
   if(NOT APPLE)
     set(CMAKE_Fortran_FLAGS_RELEASE
         "${CMAKE_Fortran_FLAGS_RELEASE} -march=native")
@@ -72,7 +67,7 @@ elseif(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
         "${CMAKE_Fortran_FLAGS_DEBUG} -Wno-unused-dummy-argument")
   endif()
 
-  if(Fortran_VERSION_MAJOR GREATER_EQUAL "10")
+  if(Fortran_COMPILER_VERSION VERSION_GREATER_EQUAL "10")
     set(CMAKE_Fortran_FLAGS_DEBUG
         "${CMAKE_Fortran_FLAGS_DEBUG} -fallow-argument-mismatch")
     set(CMAKE_Fortran_FLAGS_RELEASE
