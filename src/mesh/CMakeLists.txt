@@ -1,3 +1,4 @@
 add_subdirectory(meshes)
 add_subdirectory(mesh_calculus)
 add_subdirectory(coordinate_transformations)
+add_subdirectory(mapping)
