@@ -34,12 +34,12 @@ elseif(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
     ${CMAKE_Fortran_COMPILER} ARGS
     "--version"
     OUTPUT_VARIABLE source_path)
-  string(REGEX MATCH "[4-9]\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION
+  string(REGEX MATCH "([0-9]+)\\.[0-9]+\\.[0-9]+" Fortran_COMPILER_VERSION
                ${source_path})
 
   add_definitions(-DGFORTRAN)
   set(CMAKE_Fortran_FLAGS_RELEASE
-      "-std=f2008 -ffree-line-length-none -fstack-arrays -O3 -fPIC  -w")
+      "-std=f2008 -ffree-line-length-none -fstack-arrays -O3 -fPIC  -w ")
   if(NOT APPLE)
     set(CMAKE_Fortran_FLAGS_RELEASE
         "${CMAKE_Fortran_FLAGS_RELEASE} -march=native")
@@ -67,13 +67,20 @@ elseif(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
         "${CMAKE_Fortran_FLAGS_DEBUG} -Wno-unused-dummy-argument")
   endif()
 
+  if(Fortran_COMPILER_VERSION VERSION_GREATER_EQUAL "10")
+    set(CMAKE_Fortran_FLAGS_DEBUG
+        "${CMAKE_Fortran_FLAGS_DEBUG} -fallow-argument-mismatch")
+    set(CMAKE_Fortran_FLAGS_RELEASE
+        "${CMAKE_Fortran_FLAGS_RELEASE} -fallow-argument-mismatch")
+  endif()
+
 else()
 
   message(SEND_ERROR "NO KNOWN FORTRAN COMPILER FOUND")
 
 endif()
 
-message(STATUS "Fortran ${Fortran_COMPILER_NAME}-${Fortran_COMPILER_VERSION}")
+message(STATUS "Fortran ${Fortran_COMPILER_NAME} version ${Fortran_COMPILER_VERSION}")
 
 # --- enable fully user-defineable compiler flags
 if(FORCE_Fortran_FLAGS_RELEASE)
