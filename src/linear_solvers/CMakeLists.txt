@@ -15,7 +15,20 @@ add_library(
   sll_m_linear_operator_matrix_stencil_to_stencil.F90
   sll_m_linear_operator_matrix_c1_block.F90
   sll_m_linear_operator_matrix_c1_block_new.F90
-  sll_m_conjugate_gradient.F90)
+  sll_m_conjugate_gradient.F90
+  sll_m_linear_operator_abstract.F90
+  sll_m_matrix_abstract.F90
+  sll_m_matrix_csr.F90
+  sll_m_linear_operator_kron.F90
+  sll_m_linear_operator_block.F90
+  sll_m_linear_operator_penalized.F90
+  sll_m_linear_solver_abstract.F90
+  sll_m_linear_solver_iter_abstract.F90
+  sll_m_linear_solver_kron.F90
+  sll_m_linear_solver_block.F90
+  sll_m_linear_solver_cg.F90
+  sll_m_linear_solver_mgmres.F90
+  sll_m_linear_operator_base.F90)
 
 if(Fortran_COMPILER MATCHES IBM)
   set_source_files_properties(sol.f muls.f PROPERTIES COMPILE_FLAGS '-qfixed')
