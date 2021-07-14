@@ -72,7 +72,7 @@ elseif(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
         "${CMAKE_Fortran_FLAGS_DEBUG} -Wno-unused-dummy-argument")
   endif()
 
-  if(Fortran_VERSION_MAJOR GREATER_EQUAL 10)
+  if(Fortran_VERSION_MAJOR GREATER_EQUAL "10")
     set(CMAKE_Fortran_FLAGS_DEBUG
         "${CMAKE_Fortran_FLAGS_DEBUG} -fallow-argument-mismatch")
     set(CMAKE_Fortran_FLAGS_RELEASE
