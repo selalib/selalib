@@ -94,7 +94,6 @@ module sll_m_time_propagator_pic_vm_1d2v_subcyci
      sll_real64, allocatable :: j2_dofs(:,:)      !< DoFs for kernel representation of current density. 
      sll_real64, allocatable :: j2_dofs_local(:,:)!< MPI-processor local part of one component of \a j_dofs
      sll_real64, allocatable :: rho_dofs_local(:) 
-   !  sll_real64, allocatable :: rho_dofs_local2(:,:) 
      sll_real64, allocatable :: rho_dofs(:) 
      sll_int32 :: n_species
 
@@ -140,7 +139,7 @@ module sll_m_time_propagator_pic_vm_1d2v_subcyci
      procedure :: lie_splitting => lie_splitting_pic_vm_1d2v !> Lie splitting propagator
      procedure :: lie_splitting_back => lie_splitting_back_pic_vm_1d2v !> Lie splitting propagator
      procedure :: strang_splitting => strang_splitting_pic_vm_1d2v !> Strang splitting propagator
-     procedure :: reinit_fields
+     procedure :: reinit_fields !> Apply the filter to set the dofs of the filtered fields
 
      procedure :: init => initialize_pic_vm_1d2v !> Initialize the type
      procedure :: free => delete_pic_vm_1d2v !> Finalization
@@ -152,6 +151,7 @@ module sll_m_time_propagator_pic_vm_1d2v_subcyci
 
 contains
 
+  !> Apply the filter to set the dofs of the filtered fields
   subroutine reinit_fields( self ) 
     class(sll_t_time_propagator_pic_vm_1d2v_subcyci), intent(inout) :: self !< time splitting object 
 
@@ -313,15 +313,12 @@ contains
   
     ! Temporary check of Gauss law for the case with substepping in the electric field
     self%rho_dofs = 0.0_f64
- !   self%rho_dofs_local = self%rho_dofs_local2(:,1) + self%rho_dofs_local2(:,2)
     call sll_o_collective_allreduce( sll_v_world_collective, self%rho_dofs_local, n_cells, &
          MPI_SUM, self%rho_dofs )
     call self%maxwell_solver%compute_rho_from_e( self%efield_dofs(:,1), self%rho_dofs_local )
     self%rho_dofs = self%rho_dofs/real(self%n_sub_iter,f64)
     self%rho_dofs = self%rho_dofs - sum(self%rho_dofs)/real(n_cells, f64)
-  !  write(51,*) self%rho_dofs
-  !  write(52,*) self%rho_dofs_local
-  !  stop
+
     
     write(self%file_id_rho,*) maxval( abs(self%rho_dofs - self%rho_dofs_local ) )
 

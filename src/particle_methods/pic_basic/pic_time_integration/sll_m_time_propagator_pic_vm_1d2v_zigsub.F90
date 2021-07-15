@@ -1,9 +1,8 @@
 !> @ingroup pic_time_integration
 !> @author Katharina Kormann, IPP
-!> @brief Particle pusher based on Hamiltonian splitting for 1d2v Vlasov-Poisson.
+!> @brief Particle pusher based on the subcycling algorithm for the 1d2v Vlasov-Maxwell equation with splitting of the three H_p parts
 !> @details MPI parallelization by domain cloning. Periodic boundaries. Spline DoFs numerated by the point the spline starts.
-!> Reference: Kraus, Kormann, Sonnendrücker, Morrison: GEMPIC: Geometric ElectroMagnetic Particle-In-Cell Methods
-
+!> Reference: Hirvijoki, Kormann, Zonta, Subcycling of particle orbits in variational, geometric electromagnetic particle-in-cell methods.
 !> Control variate: Note the we do not account for the analytic j at the moment (TODO: control_variate for current)
 module sll_m_time_propagator_pic_vm_1d2v_zigsub
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
