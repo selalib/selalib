@@ -14,9 +14,6 @@ module sll_m_operator_splitting_pic_vp_2d2v
   use sll_m_control_variate, only: &
     sll_t_control_variate
 
-  use sll_m_particle_mesh_coupling_base, only: &
-    sll_c_particle_mesh_coupling
-
   use sll_m_operator_splitting, only: &
     sll_t_operator_splitting
 

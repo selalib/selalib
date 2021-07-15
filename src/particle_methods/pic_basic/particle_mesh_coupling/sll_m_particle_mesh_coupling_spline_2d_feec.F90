@@ -26,11 +26,6 @@ module sll_m_particle_mesh_coupling_spline_2d_feec
     sll_s_spline_pp_init_1d, &
     sll_f_spline_pp_horner_1d, &
     sll_s_spline_pp_horner_m_1d
-       
-  use sll_m_particle_mesh_coupling_base, only: &
-    sll_p_collocation, &
-    sll_c_particle_mesh_coupling, &
-    sll_p_galerkin
 
   use sll_m_particle_group_base, only: &
     sll_c_particle_group_base
