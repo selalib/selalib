@@ -1,3 +1,8 @@
+!> @ingroup pic_time_integration
+!> @author Katharina Kormann, IPP
+!> @brief Particle pusher based on a variation of the energy and charge-conserving discrete gradient method with subcycling, implicit
+!> @details MPI parallelization by domain cloning. Periodic boundaries. Spline DoFs numerated by the point the spline starts.
+!> Reference: Kormann, Sonnendrücker, Energy-conserving time propagation for a structure-preserving particle-in-cell Vlasov–Maxwell solver, Journal of Computational Physics 425, 109890, 2021
 module sll_m_time_propagator_pic_vm_1d2v_disgradEC_sub
   !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"

@@ -2,7 +2,7 @@
 !> @author Katharina Kormann, IPP
 !> @brief Particle pusher based on the subcycling algorithm for the 1d2v Vlasov-Maxwell equation
 !> @details MPI parallelization by domain cloning. Periodic boundaries. Spline DoFs numerated by the point the spline starts.
-!> Reference: Hirvijoki, Kormann, Zonta, Subcycling of particle orbits in variational, geometric electromagnetic particle-in-cell methods.
+!> Reference: Hirvijoki, Kormann, Zonta, Subcycling of particle orbits in variational, geometric electromagnetic particle-in-cell methods, Physics of Plasmas 27, 092506 (2020).
 
 !> Control variate: Note the we do not account for the analytic j at the moment (TODO: control_variate for current)
 !> Explanation to the various versions:

@@ -63,7 +63,7 @@ module sll_m_particle_sampling
      sll_int32,  allocatable :: random_seed_start(:) !< save starting seed
      sll_int64               :: sobol_seed     !< seed for Sobol numbers
      sll_int64               :: sobol_seed_start !< save starting seed
-     logical                 :: inverse = .false. !< ture if the mapping has an analytical inverse
+     logical                 :: inverse = .false. !< true if the mapping has an analytical inverse
      logical                 :: xiprofile = .false. !< logical temperature profile
 
      logical                 :: delta_perturb = .false. !< true if delta perturbation for the velocity distribution
