@@ -4,7 +4,7 @@
 !> @details MPI parallelization by domain cloning. Periodic boundaries. Spline DoFs numerated by the point the spline starts.
 !> Reference: Hirvijoki, Kormann, Zonta, Subcycling of particle orbits in variational, geometric electromagnetic particle-in-cell methods.
 
-!> Control variate: Note the we do not account for the analytic j at the moment (TODO: control_variate for current)
+!> Control variate: Note that we do not account for the analytic j at the moment (TODO: control_variate for current)
 module sll_m_time_propagator_pic_vm_1d2v_subcyc
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
@@ -94,7 +94,7 @@ module sll_m_time_propagator_pic_vm_1d2v_subcyc
      procedure :: lie_splitting => lie_splitting_pic_vm_1d2v !> Lie splitting propagator
      procedure :: lie_splitting_back => lie_splitting_back_pic_vm_1d2v !> Lie splitting propagator
      procedure :: strang_splitting => strang_splitting_pic_vm_1d2v !> Strang splitting propagator
-     procedure :: reinit_fields
+     procedure :: reinit_fields !> Apply the filter to set the filtered fields
 
      procedure :: init => initialize_pic_vm_1d2v !> Initialize the type
      procedure :: free => delete_pic_vm_1d2v !> Finalization
@@ -103,6 +103,7 @@ module sll_m_time_propagator_pic_vm_1d2v_subcyc
 
 contains
 
+  !> Apply the filter to find the filtered field values
   subroutine reinit_fields( self ) 
     class(sll_t_time_propagator_pic_vm_1d2v_subcyc), intent(inout) :: self !< time splitting object 
 
@@ -244,10 +245,7 @@ contains
              residual = max( abs( v_new(1)-v_nnew(1) ), abs( v_new(2) - v_nnew(2) ) )
              v_new = v_nnew
 
-             !print*, residual
           end do
-          !print*, n_iter
-          !stop
           if ( n_iter .eq. self%n_max_iter ) then
              print*, 'First iteration did not converge. Residual:', residual
           end if
@@ -257,7 +255,6 @@ contains
           if (abs (v_new(1))> 1E-16_f64) then
              ! Now the charge deposition
              call self%kernel_smoother_1%add_current( x_new, x_future, wi(1), self%j_dofs_local(:,1 ) )
-             !call self%kernel_smoother_0%add_current( x_new, x_future, wi(1)*v_new(2)/v_new(1), self%j_dofs_local(:,2 ) )
           end if
           
           select type ( q=> self%kernel_smoother_0 )
@@ -277,7 +274,6 @@ contains
              type is (sll_t_particle_mesh_coupling_spline_1d )
                 call q%evaluate_int_quad( x_old(1), x_new(1), self%bfield_filter, bfield_old )
              end select
-             !call self%kernel_smoother_1%evaluate( x_new(1), self%bfield_filter, bfield_old )
              ! Now we add up the fixed update into efield
              efield(1) = qoverm * dtau * (  vi(2) * bfield_old  )
              efield(2) = qoverm * dtau * (- vi(1) * bfield_old  )
@@ -311,7 +307,6 @@ contains
              if (abs (v_new(1))> 1E-16_f64) then
                 ! Now the charge deposition
                 call self%kernel_smoother_1%add_current( x_new, x_future, wi(1), self%j_dofs_local(:,1 ) )
-              !  call self%kernel_smoother_0%add_current( x_new, x_future, wi(1)*v_new(2)/v_new(1), self%j_dofs_local(:,2 ) )
              end if
              select type ( q=> self%kernel_smoother_0 )
              type is (sll_t_particle_mesh_coupling_spline_1d )
@@ -342,16 +337,9 @@ contains
     call sll_o_collective_allreduce( sll_v_world_collective, self%j_dofs_local(:,2), &
          n_cells, MPI_SUM, self%j_dofs(:,2))
     
-    !call filter( self%j_dofs(:,1), self%j_dofs_local(:,1), n_cells )
-    !call filter( self%j_dofs_local(:,1), self%j_dofs(:,1), n_cells )
-    !self%j_dofs(:,1) = self%j_dofs_local(:,1)
     call self%filter%apply_inplace( self%j_dofs(:,1) )
     call self%filter%apply_inplace( self%j_dofs(:,2) )
 
-    !write(15,*) self%j_dofs(:,1)
-    !write(16,*) self%j_dofs(:,2)
-    !stop
-    
     if ( self%jmean .eqv. .true. ) then
        self%j_dofs(:,1) = self%j_dofs(:,1) - sum(self%j_dofs(:,1))/real(self%kernel_smoother_0%n_dofs, f64)
        self%j_dofs(:,2) = self%j_dofs(:,2) - sum(self%j_dofs(:,2))/real(self%kernel_smoother_1%n_dofs, f64)
@@ -367,7 +355,7 @@ contains
   end subroutine operatorHp_pic_vm_1d2v
 
 
-! Implementation of the full time step with Newton iteration for the nonlinear part
+!> Implementation of the full time step with Newton iteration for the nonlinear part
    !---------------------------------------------------------------------------!
   subroutine operatorHp_pic_vm_1d2v_newton(self, dt)
     class(sll_t_time_propagator_pic_vm_1d2v_subcyc), intent(inout) :: self !< time splitting object 
@@ -435,13 +423,7 @@ contains
           efield(1) = qoverm * ( dt *  efield(1) + dtau * vi(2) * bfield_old  ) 
           efield(2) = qoverm * ( dt *  efield(2) - dtau * vi(1) * bfield_old  )
           
-          !x_future = x_new + dtau * vi
-          !select type ( q=> self%kernel_smoother_1 )
-          !type is (sll_t_particle_mesh_coupling_spline_1d )
-          !   call q%evaluate_int_quad( x_future(1), x_new(1), self%bfield_filter, bfield_new )
-          !end select
           ! First guess for v_new = v_old
-          !print*, bfield_new, bfield_old
           v_new(1) = vi(1) + efield(1) + qoverm * dtau *  vi(2) * bfield_old 
           v_new(2) = vi(2) + efield(2) - qoverm * dtau *  vi(1) * bfield_old
           x_future = x_new + dtau * v_new
@@ -585,7 +567,6 @@ contains
                 ! Now the charge deposition
                 call self%kernel_smoother_1%add_current( x_new, x_future, wi(1), self%j_dofs_local(:,1 ) )
                 call self%kernel_smoother_0%add_current( x_new, x_future, wi(1)*v_new(2)/v_new(1), self%j_dofs_local(:,2 ) )
-                !call self%kernel_smoother_1%add_current( xt, x_future, wi(1), self%j_dofs_local(:,2 ))
                 ! For rho check
                 !call self%kernel_smoother_0%add_charge( x_new, wi(1), self%rho_dofs_local )
              end if
@@ -625,9 +606,6 @@ contains
     call sll_o_collective_allreduce( sll_v_world_collective, self%j_dofs_local(:,2), &
          n_cells, MPI_SUM, self%j_dofs(:,2))
     
-    !call filter( self%j_dofs(:,1), self%j_dofs_local(:,1), n_cells )
-    !call filter( self%j_dofs_local(:,1), self%j_dofs(:,1), n_cells )
-    !self%j_dofs(:,1) = self%j_dofs_local(:,1)
     call self%filter%apply_inplace( self%j_dofs(:,1) )
     call self%filter%apply_inplace( self%j_dofs(:,2) )
 
@@ -693,10 +671,6 @@ contains
     self%kernel_smoother_1 => kernel_smoother_1
 
     self%n_species = particle_group%n_species
-    !allocate( sll_t_time_propagator_pic_vm_1d2v_subcyc :: self%particle_group(self%n_species) )
-    !do j=1,self%n_species
-    !   self%particle_group(j) => particle_group(j)
-    !end do
     
     self%particle_group => particle_group
     self%efield_dofs => efield_dofs
@@ -741,9 +715,6 @@ contains
        allocate(self%control_variate )
        allocate(self%control_variate%cv(self%n_species) )
        self%control_variate => control_variate
-       !do j=1,self%n_species
-       !   self%control_variate%cv(j) => control_variate%cv(j)
-       !end do
     end if
 
     ! File to write out no. of iterations
