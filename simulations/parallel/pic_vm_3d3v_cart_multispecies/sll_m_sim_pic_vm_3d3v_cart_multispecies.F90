@@ -1,0 +1,1636 @@
+! Simulation of 3d3v Vlasov-Maxwell with simple PIC method, FEM with splines
+
+! author: Katharina Kormann, Benedikt Perse, IPP
+
+module sll_m_sim_pic_vm_3d3v_cart_multispecies
+
+  !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_assert.h"
+#include "sll_errors.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+
+  use sll_m_ascii_io, only: &
+       sll_s_ascii_file_create
+
+  use sll_m_collective, only: &
+       sll_o_collective_allreduce, &
+       sll_s_collective_reduce_real64, &
+       sll_f_get_collective_rank, &
+       sll_f_get_collective_size, &
+       sll_v_world_collective
+
+  use sll_m_constants, only: &
+       sll_p_pi
+
+  use sll_m_control_variate, only: &
+       sll_t_control_variate, &
+       sll_t_control_variates
+
+  use sll_m_filter_base_3d, only: &
+       sll_c_filter_base_3d
+
+  use sll_m_fft_filter_3d, only: &
+       sll_t_fft_filter_3d
+
+  use sll_m_gauss_legendre_integration, only: &
+       sll_f_gauss_legendre_points_and_weights
+
+  use sll_m_initial_distribution, only : &
+       sll_c_distribution_params, &
+       sll_s_initial_distribution_file_new, &
+       sll_t_params_cos_gaussian
+
+  use sll_m_io_utilities, only : &
+       sll_s_read_data_real_array, &
+       sll_s_concatenate_filename_and_path
+
+  use sll_m_low_level_bsplines, only: &
+       sll_s_uniform_bsplines_eval_basis
+
+  use sll_m_mapping_3d, only: &
+       sll_t_mapping_3d
+
+  use sll_m_maxwell_3d_base, only: &
+       sll_c_maxwell_3d_base
+
+  use sll_m_maxwell_3d_fem, only: &
+       sll_t_maxwell_3d_fem
+
+  use sll_m_maxwell_3d_fem_fft, only: &
+       sll_t_maxwell_3d_fem_fft
+
+  use sll_m_maxwell_3d_trafo_parallel, only:&
+       sll_t_maxwell_3d_trafo_parallel
+
+  use sll_m_maxwell_clamped_3d_fem, only: &
+       sll_t_maxwell_clamped_3d_fem
+
+  use sll_m_maxwell_clamped_3d_trafo_parallel, only:&
+       sll_t_maxwell_clamped_3d_trafo_parallel
+
+  use sll_mpi, only: &
+       mpi_sum
+
+  use sll_m_particle_mesh_coupling_base_3d, only: &
+       sll_c_particle_mesh_coupling_3d
+
+  use sll_m_particle_mesh_coupling_spline_3d_feec, only: &
+       sll_t_particle_mesh_coupling_spline_3d_feec
+
+  use sll_m_particle_mesh_coupling_spline_cl_3d_feec, only: &
+       sll_t_particle_mesh_coupling_spline_cl_3d_feec
+
+  use sll_m_particle_group_3d3v, only: &
+       sll_t_particle_group_3d3v, &
+       sll_s_new_particle_group_3d3v_ptr
+
+  use sll_m_particle_group_base, only: &
+       sll_c_particle_group_base, &
+       sll_t_particle_array
+
+  use sll_m_particle_sampling, only: &
+       sll_t_particle_sampling
+
+  use sll_m_profile_functions, only: &
+       sll_t_profile_functions
+
+  use sll_m_sim_base, only: &
+       sll_c_simulation_base_class
+
+  use sll_m_splines_pp, only: &
+       sll_f_spline_pp_horner_1d, &
+       sll_p_boundary_periodic, &
+       sll_p_boundary_clamped, &
+       sll_p_boundary_clamped_square, &
+       sll_p_boundary_clamped_cubic
+
+  use sll_m_time_propagator_base, only: &
+       sll_c_time_propagator_base
+
+  use sll_m_time_propagator_pic_vm_3d3v_cef, only: &
+       sll_t_time_propagator_pic_vm_3d3v_cef
+
+  use sll_m_time_propagator_pic_vm_3d3v_cef_trafo, only: &
+       sll_t_time_propagator_pic_vm_3d3v_cef_trafo
+
+  use sll_m_time_propagator_pic_vm_3d3v_cl_helper, only: &
+       sll_p_boundary_particles_periodic, &
+       sll_p_boundary_particles_singular, &
+       sll_p_boundary_particles_reflection, &
+       sll_p_boundary_particles_absorption
+
+  use sll_m_time_propagator_pic_vm_3d3v_disgradE, only: &
+       sll_t_time_propagator_pic_vm_3d3v_disgradE
+
+  use sll_m_time_propagator_pic_vm_3d3v_disgradEC, only: &
+       sll_t_time_propagator_pic_vm_3d3v_disgradEC
+
+  use sll_m_time_propagator_pic_vm_3d3v_disgradEC_trafo, only: &
+       sll_t_time_propagator_pic_vm_3d3v_disgradEC_trafo
+
+  use sll_m_time_propagator_pic_vm_3d3v_disgradE_trafo, only: &
+       sll_t_time_propagator_pic_vm_3d3v_disgradE_trafo
+
+  use sll_m_time_propagator_pic_vm_3d3v_disgradE_trunc, only: &
+       sll_t_time_propagator_pic_vm_3d3v_disgradE_trunc
+
+  use sll_m_time_propagator_pic_vm_3d3v_hs, only: &
+       sll_t_time_propagator_pic_vm_3d3v_hs
+
+  use sll_m_time_propagator_pic_vm_3d3v_hs_trafo, only: &
+       sll_t_time_propagator_pic_vm_3d3v_hs_trafo
+
+  use sll_m_timer, only: &
+       sll_s_set_time_mark, &
+       sll_f_time_elapsed_between, &
+       sll_t_time_mark
+
+  use sll_m_utilities, only : &
+       sll_s_int2string
+
+  implicit none
+
+  public :: &
+       sll_t_sim_pic_vm_3d3v_cart_multispecies
+
+  private
+  !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  sll_int32, parameter :: sll_p_splitting_hs = 0
+  sll_int32, parameter :: sll_p_splitting_hs_trafo = 1
+  sll_int32, parameter :: sll_p_splitting_boris = 2
+  sll_int32, parameter :: sll_p_splitting_disgradE = 3
+  sll_int32, parameter :: sll_p_splitting_disgradE_trafo = 4
+  sll_int32, parameter :: sll_p_splitting_nldisgradE = 5
+  sll_int32, parameter :: sll_p_splitting_cef = 6
+  sll_int32, parameter :: sll_p_splitting_cef_trafo = 7
+  sll_int32, parameter :: sll_p_splitting_disgradE_trunc = 8
+  sll_int32, parameter :: sll_p_splitting_disgradEC = 10
+  sll_int32, parameter :: sll_p_splitting_disgradEC_trafo = 11
+
+  sll_int32, parameter :: sll_p_onegaussian = 0
+  sll_int32, parameter :: sll_p_twogaussian = 1
+
+  sll_int32, parameter :: sll_p_bfield_cossum = 0
+  sll_int32, parameter :: sll_p_bfield_sumcos = 1
+  sll_int32, parameter :: sll_p_bfield_prodcos = 2
+  sll_int32, parameter :: sll_p_bfield_polynom = 3
+  sll_int32, parameter :: sll_p_bfield_constant = 4
+
+  sll_int32, parameter :: sll_p_strang_splitting = 0
+  sll_int32, parameter :: sll_p_splitting_fourth = 1
+  sll_int32, parameter :: sll_p_lie_splitting = 2
+  sll_int32, parameter :: sll_p_lie_splitting_back = 3
+  sll_int32, parameter :: sll_p_splitting_fourth_10steps = 4
+  sll_int32, parameter :: sll_p_splitting_second_4steps = 5
+
+
+  type, extends(sll_c_simulation_base_class) :: sll_t_sim_pic_vm_3d3v_cart_multispecies
+
+     ! Abstract particle group
+     class(sll_t_particle_array), allocatable :: particle_group !< Particle group
+
+     ! Control variate
+     type(sll_t_control_variates), pointer :: control_variate !< control variate
+     sll_int32 :: no_weights
+
+     sll_real64, allocatable :: phi_dofs(:) !< DoFs describing the scalar potential
+     sll_real64, allocatable :: efield_dofs(:) !< DoFs describing the three components of the electric field
+     sll_real64, allocatable :: bfield_dofs(:) !< DoFs describing the three components of the magnetic field
+     sll_real64, allocatable :: rhob(:) !< charge at the boundary
+
+     ! Abstract  Maxwell solver 
+     class(sll_c_maxwell_3d_base), allocatable :: maxwell_solver !< Maxwell solver
+
+     ! Abstract kernel smoothers
+     class( sll_c_particle_mesh_coupling_3d), allocatable :: particle_mesh_coupling !< Particle  mesh coupling
+
+     ! Cart_Multispeciesesian mesh
+     sll_real64 :: delta_x(3) !< Grid spacing
+     sll_real64 :: volume !< cell volume
+
+     sll_real64 :: time !< time
+
+     ! Specific operator splitting
+     class(sll_c_time_propagator_base), allocatable :: propagator !< time propagator object 
+     sll_int32 :: splitting_case !< time splitting case
+     sll_int32 :: splitting_type !< time splitting type
+
+     ! Physical parameters
+     class(sll_c_distribution_params), allocatable :: init_distrib_params_sp1 !< distribution parameter
+     class(sll_c_distribution_params), allocatable :: init_distrib_params_sp2 !< distribution parameter
+     sll_real64 :: bkx(3) !< modenumbers for initial magnetic field
+     sll_real64 :: balpha(3) !< magnitude of initial magnetic field
+     sll_real64 :: bphase_shift(3) !< phase shift in initial magnetic field(e.g. cos or sinus)
+     sll_real64 :: bconstant(3) !< constant part of initial magnetic field
+     sll_real64 :: domain(3,3) !< domain length
+     type(sll_t_particle_sampling) :: sampler !< particle sampler
+     sll_real64 :: plasma_betar(3) !< reciprocal of plasma beta
+     logical :: external_field = .false. !< true for run with external electric field
+
+     type(sll_t_profile_functions) :: profile !< temperature profile
+     class(sll_c_filter_base_3d), allocatable :: filter !< filter
+
+     ! Simulation parameters
+     sll_real64 :: delta_t !< time step
+     sll_int32  :: n_time_steps !< amount of time steps
+     sll_int32  :: n_particles !< amount of particles per mpi process
+     sll_int32  :: n_total_particles !< total number of particles
+     sll_int32  :: degree_smoother(3) !< spline degrees
+     sll_int32  :: n_gcells(3) !< numer of gridcells for each direction
+     sll_int32  :: n_totalcells !< product of gridcells
+     sll_int32  :: n_totaldofs0 !< total number of Dofs for 0form
+     sll_int32  :: n_totaldofs1  !< total number of Dofs for 1form
+     logical    :: boundary !< true for non periodic field boundary
+     sll_int32  :: boundary_fields(3) = 100 !< field boundary conditions
+     sll_int32  :: boundary_particles = 100 !< particle boundary conditions
+
+
+     ! Parameters for MPI
+     sll_int32  :: rank !< mpi rank
+     sll_int32  :: world_size !< mpi world size
+
+     ! Case definitions
+     sll_int32  :: initial_bfield !< case for intial magnetic field
+
+     ! Output
+     character(len=256)   :: file_prefix !< name of diagnostic file
+     logical              :: output_fields !< logical for print out fields
+     logical              :: output_particles !< logical for print out particles
+
+     ! For ctest
+     logical    :: ctest_passed = .false. !< logical for ctest
+     logical    :: make_ctest = .false. !< logical for ctest
+     character(len=256)   :: ctest_ref_file !< name of ctest reffile
+
+     ! For restart
+     logical    :: restart = .false. !< true if restart run
+     character(len=256) :: restart_file !< name of restart data
+     sll_int32 :: restart_steps = 0  !< restart steps
+
+     !coordinate transformation
+     type(sll_t_mapping_3d) :: map !< coordinate transformation
+     logical                :: ct = .false. !< true if coordinate transformation is used
+
+   contains
+     procedure :: init_from_file => init_pic_vm_3d3v !< Initialization
+     procedure :: run => run_pic_vm_3d3v !< Simulation
+     procedure :: delete => delete_pic_vm_3d3v !< Finalization
+
+  end type sll_t_sim_pic_vm_3d3v_cart_multispecies
+
+
+contains
+
+
+  !------------------------------------------------------------------------------!
+  ! Read in the simulation parameters from input file
+  subroutine init_pic_vm_3d3v (sim, filename)
+    class(sll_t_sim_pic_vm_3d3v_cart_multispecies), intent(inout) :: sim !< Multispecies simulation
+    character(len=*),                  intent(in)    :: filename !< filename
+    !local variables
+    sll_int32   :: io_stat
+    sll_int32   :: input_file, file_id
+    sll_int32   :: ierr
+    type(sll_t_time_mark) :: start_init, end_init
+    sll_real64         :: delta_t
+    sll_int32          :: n_time_steps
+    character(len=256) :: initial_distrib_sp1
+    character(len=256) :: initial_distrib_sp2
+    character(len=256) :: initial_bfield
+    sll_real64         :: plasma_beta(3) = 1._f64
+    logical            :: electrostatic = .false.
+    sll_real64         :: charge(2) = [-1._f64, 1._f64] 
+    sll_real64         :: mass(2) = [1._f64, 1._f64]
+    logical            :: restart = .false.
+    character(len=256) :: restart_file
+    sll_int32          :: restart_steps = 0
+    sll_real64         :: bkx(3) = 0._f64
+    sll_real64         :: balpha(3) = 0._f64
+    sll_real64         :: bphase_shift(3) = 0._f64
+    sll_real64         :: bconstant(3) = 0._f64
+    character(len=256) :: file_prefix
+    logical            :: output_fields = .false.
+    logical            :: output_particles = .false.
+    sll_int32          :: ng_x(3)
+    sll_real64         :: x_min(3), x_max(3)
+    sll_int32          :: n_particles
+    character(len=256) :: sampling_case
+    logical            :: delta_perturb = .false.
+    sll_real64         :: delta_eps(6)
+    character(len=256) :: splitting_case
+    sll_int32          :: spline_degree(3)
+    character(len=256) :: splitting_type
+    character(len=256) :: boundary_fields = "none"
+    character(len=256) :: boundary_particles = "none"
+    character(len=256) :: filtering
+    sll_int32          :: filter_iter = 0
+    sll_int32          :: mode(3) = 2
+    logical            :: with_control_variate = .false.
+    character(len=256) :: ctest_case ="No"
+
+
+    namelist /sim_params/         delta_t, n_time_steps, initial_distrib_sp1,initial_distrib_sp2, initial_bfield, charge, mass, plasma_beta, electrostatic, restart, restart_file, restart_steps
+
+    namelist /bfield/      bkx, balpha, bphase_shift, bconstant
+
+    namelist /output/             file_prefix, output_fields, output_particles
+
+    namelist /grid_dims/          ng_x, x_min, x_max
+
+    namelist /pic_params/         n_particles, sampling_case, delta_perturb, delta_eps, splitting_case, spline_degree, splitting_type, boundary_fields, boundary_particles, with_control_variate, filtering, filter_iter, mode
+    namelist /ctest/              ctest_case
+
+    call sll_s_set_time_mark( start_init )
+
+    ! Read parameters from file
+    open(newunit = input_file, file=trim(filename), IOStat=io_stat)
+    if (io_stat /= 0) then
+       print*, 'init_pic_3d3v() failed to open file ', filename
+       STOP
+    end if
+
+    read(input_file, sim_params)
+    if( restart ) then
+       sim%restart = .true.
+       sim%restart_file = restart_file
+       sim%restart_steps = restart_steps
+    end if
+    call sim%profile%init(input_file)
+    close(input_file)
+    open(newunit = input_file, file=trim(filename), IOStat=io_stat)
+    call sll_s_initial_distribution_file_new( [3,3], initial_distrib_sp1, sim%init_distrib_params_sp1, sim%profile )
+    call sll_s_initial_distribution_file_new( [3,3], initial_distrib_sp2, sim%init_distrib_params_sp2, sim%profile )
+    read(input_file, bfield)
+    read(input_file, output)
+    read(input_file, grid_dims)
+    read(input_file, pic_params)
+    read(input_file, ctest)
+    close(input_file)
+
+    ! Set MPI paramseters
+    sim%world_size = sll_f_get_collective_size(sll_v_world_collective)
+    sim%rank = sll_f_get_collective_rank(sll_v_world_collective)
+
+    ! Copy the read parameters into the simulation parameters
+    sim%delta_t = delta_t
+    sim%n_time_steps = n_time_steps
+    sim%plasma_betar = 1._f64/plasma_beta
+
+    select case ( initial_bfield )
+    case( "cossum")
+       sim%bkx = bkx
+       sim%balpha = balpha
+       sim%bphase_shift = bphase_shift
+       sim%bconstant = bconstant
+       sim%initial_bfield = sll_p_bfield_cossum
+    case( "sumcos")
+       sim%bkx = bkx
+       sim%balpha = balpha
+       sim%bphase_shift = bphase_shift
+       sim%bconstant = bconstant
+       sim%initial_bfield = sll_p_bfield_sumcos
+    case( "polynom")
+       sim%bkx = bkx
+       sim%balpha = balpha
+       sim%bconstant = bconstant
+       sim%initial_bfield = sll_p_bfield_polynom
+    case( "constant")
+       sim%bconstant = bconstant
+       sim%initial_bfield = sll_p_bfield_constant
+    case default
+       print*, '#initial bfield must be cossum or sumcos as alternatives are not yet implemented'
+    end select
+
+    ! Output  
+    sim%file_prefix = file_prefix
+    sim%output_fields = output_fields
+    sim%output_particles = output_particles
+
+    sim%n_gcells = ng_x
+    sim%n_totalcells = product(ng_x)
+    sim%domain(:,1) = x_min
+    sim%domain(:,2) = x_max
+    sim%domain(:,3) = x_max - x_min
+    sim%delta_x = (x_max - x_min)/real(ng_x, f64)
+    sim%volume =  product(sim%delta_x)
+
+    sim%n_particles = n_particles/sim%world_size
+    sim%degree_smoother = spline_degree
+
+    call sim%sampler%init( trim(sampling_case), [3,3], sim%n_particles, sim%rank, delta_perturb, delta_eps )
+    sim%n_total_particles = sim%n_particles * sim%world_size
+
+    !boundary conditions
+    select case(trim(boundary_fields))
+    case( "clamped" )
+       sim%boundary = .true.
+       sim%boundary_fields=sll_p_boundary_periodic
+       if( sim%degree_smoother(1) == 2 )then
+          sim%boundary_fields(1)=sll_p_boundary_clamped_square
+       else if( sim%degree_smoother(1) == 3 )then
+          sim%boundary_fields(1)=sll_p_boundary_clamped_cubic
+       else
+          sim%boundary_fields(1)=sll_p_boundary_clamped
+       end if
+       sim%n_totaldofs0 = (ng_x(1)+spline_degree(1))*ng_x(2)*ng_x(3)
+       sim%n_totaldofs1 = (ng_x(1)+spline_degree(1)-1)*ng_x(2)*ng_x(3)
+    case("periodic")
+       sim%boundary = .true.
+       sim%boundary_fields=sll_p_boundary_periodic
+       sim%n_totaldofs0 = (ng_x(1)+spline_degree(1))*ng_x(2)*ng_x(3)
+       sim%n_totaldofs1 = (ng_x(1)+spline_degree(1)-1)*ng_x(2)*ng_x(3)
+    case default
+       sim%boundary = .false.
+       sim%n_totaldofs0 = sim%n_totalcells
+       sim%n_totaldofs1 = sim%n_totalcells
+    end select
+
+    select case(trim(boundary_particles))
+    case( "periodic" )
+       sim%boundary_particles=sll_p_boundary_particles_periodic
+    case( "singular" )
+       sim%boundary_particles=sll_p_boundary_particles_singular
+    case( "reflection" )
+       sim%boundary_particles=sll_p_boundary_particles_reflection
+    case( "absorption" )
+       sim%boundary_particles=sll_p_boundary_particles_absorption
+    end select
+
+    select case(splitting_case)
+    case("splitting_hs")
+       sim%splitting_case = sll_p_splitting_hs
+    case("splitting_boris")
+       sim%splitting_case = sll_p_splitting_boris
+    case("splitting_disgradE")
+       sim%splitting_case = sll_p_splitting_disgradE
+    case("splitting_nldisgradE")
+       sim%splitting_case = sll_p_splitting_nldisgradE
+    case("splitting_cef")
+       sim%splitting_case = sll_p_splitting_cef
+    case("splitting_disgradE_trunc")
+       sim%splitting_case = sll_p_splitting_disgradE_trunc
+    case("splitting_disgradEC")
+       sim%splitting_case = sll_p_splitting_disgradEC
+    case("splitting_disgradE_trafo")
+       sim%splitting_case = sll_p_splitting_disgradE_trafo
+       sim%ct=.true.
+       !for curvilinear set domain in logical coordinates due to the init of mesh coupling
+       sim%domain(:,1) = 0._f64
+       sim%domain(:,2) = 1._f64
+       sim%domain(:,3) = 1._f64
+       sim%delta_x = 1._f64/real(ng_x, f64)
+       call sim%map%init_from_file(filename)
+    case("splitting_hs_trafo")
+       sim%splitting_case = sll_p_splitting_hs_trafo
+       sim%ct=.true.
+       !for curvilinear set domain in logical coordinates due to the init of mesh coupling
+       sim%domain(:,1) = 0._f64
+       sim%domain(:,2) = 1._f64
+       sim%domain(:,3) = 1._f64
+       sim%delta_x = 1._f64/real(ng_x, f64)
+       call sim%map%init_from_file(filename)
+    case("splitting_cef_trafo")
+       sim%splitting_case = sll_p_splitting_cef_trafo
+       sim%ct=.true.
+       !for curvilinear set domain in logical coordinates due to the init of mesh coupling
+       sim%domain(:,1) = 0._f64
+       sim%domain(:,2) = 1._f64
+       sim%domain(:,3) = 1._f64
+       sim%delta_x = 1._f64/real(ng_x, f64)
+       call sim%map%init_from_file(filename)
+    case("splitting_disgradEC_trafo")
+       sim%splitting_case = sll_p_splitting_disgradEC_trafo
+       sim%ct=.true.
+       !for curvilinear set domain in logical coordinates due to the init of mesh coupling
+       sim%domain(:,1) = 0._f64
+       sim%domain(:,2) = 1._f64
+       sim%domain(:,3) = 1._f64
+       sim%delta_x = 1._f64/real(ng_x, f64)
+       call sim%map%init_from_file(filename)
+    case default
+       print*, '#splitting case ', splitting_case, ' not implemented.'
+    end select
+
+    select case(splitting_type)
+    case("strang")
+       sim%splitting_type=sll_p_strang_splitting
+    case("strang_fourth")
+       sim%splitting_type=sll_p_splitting_fourth
+    case("lie")
+       sim%splitting_type=sll_p_lie_splitting
+    case("lie_back")
+       sim%splitting_type=sll_p_lie_splitting_back
+    case("fourth_10steps")
+       sim%splitting_type=sll_p_splitting_fourth_10steps
+    case("second_4steps")
+       sim%splitting_type=sll_p_splitting_second_4steps
+    case default
+       sim%splitting_type=sll_p_strang_splitting
+    end select
+
+    ! Control variate
+    if (with_control_variate .eqv. .true.) then
+       sim%no_weights = 3
+       allocate(sim%control_variate)
+       allocate(sim%control_variate%cv(2))
+       call sim%control_variate%cv(1)%init( control_variate_equi, &
+            distribution_params=sim%init_distrib_params_sp1 )
+       call sim%control_variate%cv(2)%init( control_variate_equi, &
+            distribution_params=sim%init_distrib_params_sp2 )
+    else
+       sim%no_weights = 1
+    end if
+
+    ! filter
+    select case( filtering )
+    case( "fft" )
+       allocate( sll_t_fft_filter_3d :: sim%filter )
+    case default
+       allocate( sll_t_fft_filter_3d :: sim%filter )
+    end select
+    call sim%filter%init( filter_iter, sim%n_gcells, mode )
+
+    !ctest
+    select case( ctest_case)
+    case ("hs")
+       sim%make_ctest = .true.
+       sim%ctest_ref_file = "reffile_pic_vm_3d3v_cart_multispecies_hs.dat"
+!!$    case("hs_trafo")
+!!$       sim%make_ctest = .true.
+!!$       sim%ctest_ref_file = "reffile_pic_vm_3d3v_cart_multispecies_hs_trafo.dat"
+!!$    case ("cef")
+!!$       sim%make_ctest = .true.
+!!$       sim%ctest_ref_file = "reffile_pic_vm_3d3v_cart_multispecies_cef.dat"
+!!$    case("cef_trafo")
+!!$       sim%make_ctest = .true.
+!!$       sim%ctest_ref_file = "reffile_pic_vm_3d3v_cart_multispecies_cef_trafo.dat"
+!!$    case("disgradE")
+!!$       sim%make_ctest = .true.
+!!$       sim%ctest_ref_file = "reffile_pic_vm_3d3v_cart_multispecies_disgradE.dat"
+!!$    case("disgradE_trunc")
+!!$       sim%make_ctest = .true.
+!!$       sim%ctest_ref_file = "reffile_pic_vm_3d3v_cart_multispecies_disgradE_trunc.dat"
+!!$    case("disgradEC")
+!!$       sim%make_ctest = .true.
+!!$       sim%ctest_ref_file = "reffile_pic_vm_3d3v_cart_multispecies_disgradEC.dat"
+!!$    case("disgradEC_trafo")
+!!$       sim%make_ctest = .true.
+!!$       sim%ctest_ref_file = "reffile_pic_vm_3d3v_cart_multispecies_disgradEC_trafo.dat"
+!!$    case("disgradE_trafo")
+!!$       sim%make_ctest = .true.
+!!$       sim%ctest_ref_file = "reffile_pic_vm_3d3v_cart_multispecies_disgradE_trafo.dat"
+    end select
+
+    ! Initialize the particles   
+    allocate( sim%particle_group )
+    sim%particle_group%n_species = 2
+    allocate( sll_t_particle_group_3d3v :: sim%particle_group%group(sim%particle_group%n_species) )
+    !electrons
+    select type ( qp => sim%particle_group%group(1) )
+    type is (  sll_t_particle_group_3d3v )
+       ! Note: This call produces a segmentation fault with the INTEL 17 compiler
+       ! Therefore we manually initialize here
+       ! TODO: Fix the problem with the init function
+
+       !call qp%init(sim%n_particles, &
+       !     sim%n_total_particles, charge(1), mass(1), sim%no_weights )
+       qp%n_particles = sim%n_particles
+       qp%n_total_particles = sim%n_total_particles
+
+       SLL_ALLOCATE(qp%particle_array(6+sim%no_weights, qp%n_particles), ierr)
+       qp%particle_array = 0._f64
+       allocate(qp%species, stat=ierr)
+       SLL_ASSERT( ierr == 0)
+       call qp%species%init( charge(1), mass(1) )
+       qp%n_weights = sim%no_weights
+    end select
+    !ions
+    select type ( qp => sim%particle_group%group(2) )
+    type is (  sll_t_particle_group_3d3v )
+       ! Note: This call produces a segmentation fault with the INTEL 17 compiler
+       ! Therefore we manually initialize here
+       ! TODO: Fix the problem with the init function
+
+       !call qp%init(sim%n_particles, &
+       !     sim%n_total_particles, charge(2), mass(2), sim%no_weights )
+       qp%n_particles = sim%n_particles
+       qp%n_total_particles = sim%n_total_particles
+
+       SLL_ALLOCATE(qp%particle_array(6+sim%no_weights, qp%n_particles), ierr)
+       qp%particle_array = 0._f64
+       allocate(qp%species, stat=ierr)
+       SLL_ASSERT( ierr == 0)
+       call qp%species%init( charge(2), mass(2) )
+       qp%n_weights = sim%no_weights
+    end select
+
+    if (sim%rank == 0 ) then
+       open(newunit=file_id, file=trim(filename)//'_used.dat')
+       close(file_id)
+    end if
+
+
+    if(sim%boundary) then
+       ! Initialize the field solver
+       if (sim%ct) then
+          if(sim%map%singular) then
+             print*, 'Error: singular mapping not yet implemented'
+          else
+             allocate( sll_t_maxwell_clamped_3d_trafo_parallel :: sim%maxwell_solver )
+             select type ( q=>sim%maxwell_solver )
+             type is ( sll_t_maxwell_clamped_3d_trafo_parallel )
+                call q%init_from_file( sim%domain(:,1:2), sim%n_gcells, sim%degree_smoother,sim%boundary_fields, sim%map, trim(filename), profile=sim%profile )
+             end select
+          end if
+       else
+          allocate( sll_t_maxwell_clamped_3d_fem :: sim%maxwell_solver )
+          select type ( q=>sim%maxwell_solver )
+          type is ( sll_t_maxwell_clamped_3d_fem )
+             call q%init_from_file( sim%domain(:,1:2), sim%n_gcells, sim%degree_smoother,sim%boundary_fields, trim(filename), profile=sim%profile )
+          end select
+       end if
+       ! Initialize kernel smoother
+       allocate( sll_t_particle_mesh_coupling_spline_cl_3d_feec :: sim%particle_mesh_coupling)
+       select type ( mc=>sim%particle_mesh_coupling )
+       type is ( sll_t_particle_mesh_coupling_spline_cl_3d_feec )
+          call mc%init( sim%n_gcells, sim%domain(:,1:2), &
+               sim%degree_smoother, sim%boundary_fields, sim%n_particles)
+       end select
+    else
+       ! Initialize the field solver
+       if (sim%ct) then
+          allocate( sll_t_maxwell_3d_trafo_parallel :: sim%maxwell_solver )
+          select type ( q=>sim%maxwell_solver )
+          type is ( sll_t_maxwell_3d_trafo_parallel )
+             call q%init_from_file( sim%domain(:,1:2), sim%n_gcells, sim%degree_smoother,sim%map, trim(filename), profile=sim%profile )
+          end select
+       else
+!!$          allocate( sll_t_maxwell_3d_fem :: sim%maxwell_solver )
+!!$          select type ( q=>sim%maxwell_solver )
+!!$          type is ( sll_t_maxwell_3d_fem )
+!!$             call q%init_from_file( sim%domain(:,1:2), sim%n_gcells, sim%degree_smoother, trim(filename) )
+!!$          end select
+          allocate( sll_t_maxwell_3d_fem_fft :: sim%maxwell_solver )
+          select type ( q=>sim%maxwell_solver )
+          type is ( sll_t_maxwell_3d_fem_fft )
+             call q%init( sim%domain(:,1:2), sim%n_gcells, sim%degree_smoother )
+          end select
+       end if
+       ! Initialize kernel smoother
+       allocate( sll_t_particle_mesh_coupling_spline_3d_feec :: sim%particle_mesh_coupling)
+       select type ( mc=>sim%particle_mesh_coupling )
+       type is ( sll_t_particle_mesh_coupling_spline_3d_feec )
+          call mc%init( sim%n_gcells, sim%domain(:,1:2), &
+               sim%degree_smoother, sim%n_particles )
+       end select
+    end if
+
+    ! Initialize the arrays for the spline coefficients of the fields
+    SLL_ALLOCATE(sim%phi_dofs(1:sim%n_totaldofs0), ierr)
+    SLL_ALLOCATE(sim%efield_dofs(1:sim%n_totaldofs1+2*sim%n_totaldofs0), ierr)
+    SLL_ALLOCATE(sim%bfield_dofs(1:sim%n_totaldofs0+2*sim%n_totaldofs1), ierr)
+    sim%phi_dofs = 0._f64
+    sim%efield_dofs = 0._f64
+    sim%bfield_dofs = 0._f64
+
+    SLL_ALLOCATE(sim%rhob(1:sim%n_totaldofs0), ierr)
+    sim%rhob = 0._f64
+
+    ! Initialize the time-splitting propagator
+    if (sim%splitting_case == sll_p_splitting_hs) then
+       allocate( sll_t_time_propagator_pic_vm_3d3v_hs :: sim%propagator )
+       select type( qp=>sim%propagator )
+       type is ( sll_t_time_propagator_pic_vm_3d3v_hs )
+          if (sim%no_weights == 1) then
+             call qp%init( sim%maxwell_solver, &
+                  sim%particle_mesh_coupling, sim%particle_group, &
+                  sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
+                  sim%domain(:,1), sim%domain(:,3), sim%filter, betar=sim%plasma_betar(1:2), electrostatic=electrostatic)
+          else
+             call qp%init( sim%maxwell_solver, &
+                  sim%particle_mesh_coupling, sim%particle_group, &
+                  sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
+                  sim%domain(:,1), sim%domain(:,3), sim%filter, &
+                  betar=sim%plasma_betar(1:2), electrostatic=electrostatic, &
+                  control_variate=sim%control_variate )
+          end if
+       end select
+    elseif (sim%splitting_case == sll_p_splitting_disgradE) then
+       if(sim%boundary) then
+          allocate( sll_t_time_propagator_pic_vm_3d3v_disgradE :: sim%propagator )
+          select type( qpdisgradE=>sim%propagator )
+          type is ( sll_t_time_propagator_pic_vm_3d3v_disgradE )
+             if (sim%no_weights == 1) then
+                call qpdisgradE%init_from_file(sim%maxwell_solver, &
+                     sim%particle_mesh_coupling, sim%particle_group, &
+                     sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
+                     sim%domain(:,1), sim%domain(:,3), sim%filter, &
+                     trim(filename), sim%boundary_particles, betar=sim%plasma_betar(1:2), electrostatic=electrostatic )
+             else
+                call qpdisgradE%init_from_file(sim%maxwell_solver, &
+                     sim%particle_mesh_coupling, sim%particle_group, &
+                     sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
+                     sim%domain(:,1), sim%domain(:,3), sim%filter, &
+                     trim(filename), sim%boundary_particles, betar=sim%plasma_betar(1:2), electrostatic=electrostatic, control_variate=sim%control_variate )
+             end if
+          end select
+       else
+          allocate( sll_t_time_propagator_pic_vm_3d3v_disgradE :: sim%propagator )
+          select type( qpdisgradE=>sim%propagator )
+          type is ( sll_t_time_propagator_pic_vm_3d3v_disgradE )
+             if (sim%no_weights == 1) then
+                call qpdisgradE%init_from_file(sim%maxwell_solver, &
+                     sim%particle_mesh_coupling, sim%particle_group, &
+                     sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
+                     sim%domain(:,1), sim%domain(:,3), sim%filter, &
+                     trim(filename), betar=sim%plasma_betar(1:2), electrostatic=electrostatic )
+             else
+                call qpdisgradE%init_from_file(sim%maxwell_solver, &
+                     sim%particle_mesh_coupling, sim%particle_group, &
+                     sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
+                     sim%domain(:,1), sim%domain(:,3), sim%filter, &
+                     trim(filename), betar=sim%plasma_betar(1:2), electrostatic=electrostatic, control_variate=sim%control_variate )
+             end if
+          end select
+       end if
+    elseif (sim%splitting_case == sll_p_splitting_disgradEC) then
+       allocate( sll_t_time_propagator_pic_vm_3d3v_disgradEC :: sim%propagator )
+       select type( qpdg=>sim%propagator )
+       type is ( sll_t_time_propagator_pic_vm_3d3v_disgradEC )
+          call qpdg%init_from_file(sim%maxwell_solver, &
+               sim%particle_mesh_coupling, sim%particle_group, &
+               sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
+               sim%domain(:,1), sim%domain(:,3), sim%filter, &
+               trim(filename), betar=sim%plasma_betar(1:2), electrostatic=electrostatic )
+       end select
+    elseif (sim%splitting_case == sll_p_splitting_disgradE_trafo) then
+       if(sim%boundary) then
+          allocate( sll_t_time_propagator_pic_vm_3d3v_disgradE_trafo :: sim%propagator )
+          select type( qdisgradEtrafo=>sim%propagator )
+          type is ( sll_t_time_propagator_pic_vm_3d3v_disgradE_trafo )
+             if (sim%no_weights == 1) then
+                call qdisgradEtrafo%init_from_file(sim%maxwell_solver, &
+                     sim%particle_mesh_coupling, sim%particle_group, &
+                     sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
+                     sim%domain(:,1), sim%domain(:,3), sim%map, &
+                     trim(filename), sim%boundary_particles, betar=sim%plasma_betar(1:2), electrostatic=electrostatic, rhob = sim%rhob)
+             else
+                call qdisgradEtrafo%init_from_file(sim%maxwell_solver, &
+                     sim%particle_mesh_coupling, sim%particle_group, &
+                     sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
+                     sim%domain(:,1), sim%domain(:,3), sim%map, &
+                     trim(filename), sim%boundary_particles, betar=sim%plasma_betar(1:2), electrostatic=electrostatic, control_variate=sim%control_variate, rhob = sim%rhob)
+             end if
+          end select
+       else
+          allocate( sll_t_time_propagator_pic_vm_3d3v_disgradE_trafo :: sim%propagator )
+          select type( qdisgradEtrafo=>sim%propagator )
+          type is ( sll_t_time_propagator_pic_vm_3d3v_disgradE_trafo )
+             if (sim%no_weights == 1) then
+                call qdisgradEtrafo%init_from_file(sim%maxwell_solver, &
+                     sim%particle_mesh_coupling, sim%particle_group, &
+                     sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
+                     sim%domain(:,1), sim%domain(:,3), sim%map, &
+                     trim(filename), betar=sim%plasma_betar(1:2), electrostatic=electrostatic)
+             else
+                call qdisgradEtrafo%init_from_file(sim%maxwell_solver, &
+                     sim%particle_mesh_coupling, sim%particle_group, &
+                     sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
+                     sim%domain(:,1), sim%domain(:,3), sim%map, &
+                     trim(filename), betar=sim%plasma_betar(1:2), electrostatic=electrostatic, control_variate=sim%control_variate)
+             end if
+          end select
+       end if
+    elseif (sim%splitting_case == sll_p_splitting_hs_trafo) then
+       if(sim%boundary) then
+          allocate( sll_t_time_propagator_pic_vm_3d3v_hs_trafo :: sim%propagator )
+          select type( qhstrafo=>sim%propagator )
+          type is ( sll_t_time_propagator_pic_vm_3d3v_hs_trafo )
+             if (sim%no_weights == 1) then
+                call qhstrafo%init_from_file(sim%maxwell_solver, &
+                     sim%particle_mesh_coupling, sim%particle_group, &
+                     sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
+                     sim%domain(:,1), sim%domain(:,3), sim%map, &
+                     trim(filename), sim%boundary_particles, betar=sim%plasma_betar(1:2), electrostatic=electrostatic, rhob = sim%rhob)
+             else
+                call qhstrafo%init_from_file(sim%maxwell_solver, &
+                     sim%particle_mesh_coupling, sim%particle_group, &
+                     sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
+                     sim%domain(:,1), sim%domain(:,3), sim%map, &
+                     trim(filename), sim%boundary_particles, betar=sim%plasma_betar(1:2), electrostatic=electrostatic, control_variate=sim%control_variate, rhob = sim%rhob)
+             end if
+          end select
+       else
+          allocate( sll_t_time_propagator_pic_vm_3d3v_hs_trafo :: sim%propagator )
+          select type( qhstrafo=>sim%propagator )
+          type is ( sll_t_time_propagator_pic_vm_3d3v_hs_trafo )
+             if (sim%no_weights == 1) then
+                call qhstrafo%init(sim%maxwell_solver, &
+                     sim%particle_mesh_coupling, sim%particle_group, &
+                     sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
+                     sim%domain(:,1), sim%domain(:,3), sim%map, &
+                     betar=sim%plasma_betar(1:2), electrostatic=electrostatic )
+             else
+                call qhstrafo%init(sim%maxwell_solver, &
+                     sim%particle_mesh_coupling, sim%particle_group, &
+                     sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
+                     sim%domain(:,1), sim%domain(:,3), sim%map, &
+                     betar=sim%plasma_betar(1:2), electrostatic=electrostatic, control_variate=sim%control_variate )
+             end if
+          end select
+       end if
+    elseif (sim%splitting_case == sll_p_splitting_cef_trafo) then
+       if(sim%boundary) then
+          allocate( sll_t_time_propagator_pic_vm_3d3v_cef_trafo :: sim%propagator )
+          select type( qceftrafo=>sim%propagator )
+          type is ( sll_t_time_propagator_pic_vm_3d3v_cef_trafo )
+             if (sim%no_weights == 1) then
+                call qceftrafo%init_from_file(sim%maxwell_solver, &
+                     sim%particle_mesh_coupling, sim%particle_group, &
+                     sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
+                     sim%domain(:,1), sim%domain(:,3), sim%map, &
+                     trim(filename), sim%boundary_particles, betar=sim%plasma_betar(1:2), electrostatic=electrostatic, rhob = sim%rhob)
+             else
+                call qceftrafo%init_from_file(sim%maxwell_solver, &
+                     sim%particle_mesh_coupling, sim%particle_group, &
+                     sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
+                     sim%domain(:,1), sim%domain(:,3), sim%map, &
+                     trim(filename), sim%boundary_particles, betar=sim%plasma_betar(1:2), electrostatic=electrostatic, control_variate=sim%control_variate, rhob = sim%rhob)
+             end if
+          end select
+       else
+          allocate( sll_t_time_propagator_pic_vm_3d3v_cef_trafo :: sim%propagator )
+          select type( qceftrafo=>sim%propagator )
+          type is ( sll_t_time_propagator_pic_vm_3d3v_cef_trafo )
+             if (sim%no_weights == 1) then
+                call qceftrafo%init(sim%maxwell_solver, &
+                     sim%particle_mesh_coupling, sim%particle_group, &
+                     sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
+                     sim%domain(:,1), sim%domain(:,3), sim%map, &
+                     betar=sim%plasma_betar(1:2), electrostatic=electrostatic )
+             else
+                call qceftrafo%init(sim%maxwell_solver, &
+                     sim%particle_mesh_coupling, sim%particle_group, &
+                     sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
+                     sim%domain(:,1), sim%domain(:,3), sim%map, &
+                     betar=sim%plasma_betar(1:2), electrostatic=electrostatic, control_variate=sim%control_variate )
+             end if
+          end select
+       end if
+    elseif (sim%splitting_case == sll_p_splitting_disgradEC_trafo) then
+       if(sim%boundary) then
+          print*, 'Error: not implemented'
+       else
+          allocate( sll_t_time_propagator_pic_vm_3d3v_disgradEC_trafo :: sim%propagator )
+          select type( qdisgtrafo=>sim%propagator )
+          type is ( sll_t_time_propagator_pic_vm_3d3v_disgradEC_trafo )
+             call qdisgtrafo%init_from_file(sim%maxwell_solver, &
+                  sim%particle_mesh_coupling, sim%particle_group, &
+                  sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
+                  sim%domain(:,1), sim%domain(:,3), sim%map, &
+                  trim(filename), betar=sim%plasma_betar(1:2), electrostatic=electrostatic )
+          end select
+       end if
+    elseif (sim%splitting_case == sll_p_splitting_cef) then
+       allocate( sll_t_time_propagator_pic_vm_3d3v_cef :: sim%propagator )
+       select type( qcef=>sim%propagator )
+       type is ( sll_t_time_propagator_pic_vm_3d3v_cef )
+          call qcef%init(sim%maxwell_solver, &
+               sim%particle_mesh_coupling, sim%particle_group, &
+               sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
+               sim%domain(:,1), sim%domain(:,3), electrostatic=electrostatic)
+       end select
+    elseif (sim%splitting_case == sll_p_splitting_disgradE_trunc) then
+       allocate( sll_t_time_propagator_pic_vm_3d3v_disgradE_trunc :: sim%propagator )
+       select type( qpdisgradE=>sim%propagator )
+       type is ( sll_t_time_propagator_pic_vm_3d3v_disgradE_trunc )
+          call qpdisgradE%init(sim%maxwell_solver, &
+               sim%particle_mesh_coupling, sim%particle_group, &
+               sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
+               sim%domain(:,1), sim%domain(:,3), sim%filter)
+       end select
+    else
+       print*, 'Propagator not implemented.'
+    end if
+
+    call sll_s_set_time_mark( end_init )
+    if (sim%rank == 0 ) then
+       sim%time = sll_f_time_elapsed_between( start_init, end_init)
+       write(*, "(A, F10.3)") "Init run time [s] = ", sim%time
+
+       open(newunit=file_id, file=trim(filename)//'_used.dat', position = 'append', status='old', action='write', iostat=ierr)
+       write(file_id, *) 'delta t:', sim%delta_t
+       write(file_id, *) 'n_time_steps:', sim%n_time_steps
+       write(file_id, *) 'charge:', charge
+       write(file_id, *) 'mass:', mass
+       write(file_id, *) 'plasma betar:', sim%plasma_betar
+       write(file_id, *) 'electrostatic simulation:', electrostatic
+       write(file_id, *) 'output filename:', sim%file_prefix
+       write(file_id, *) 'output fields:', sim%output_fields
+       write(file_id, *) 'output particles:', sim%output_particles
+       write(file_id, *) 'n_cells:', sim%n_gcells
+       write(file_id, *) 'domain:', sim%domain
+       write(file_id, *) 'delta x:', sim%delta_x
+       write(file_id, *) 'n_particles:', sim%n_total_particles
+       write(file_id, *) 'spline degree:', sim%degree_smoother
+       write(file_id, *) 'no_weights:', sim%no_weights
+       write(file_id, *) 'control_variate', with_control_variate
+       close(file_id)
+    end if
+
+  end subroutine init_pic_vm_3d3v
+
+  !------------------------------------------------------------------------------!
+  !> Run simulation
+  subroutine run_pic_vm_3d3v (sim)
+    class(sll_t_sim_pic_vm_3d3v_cart_multispecies), intent(inout) :: sim !< Multispecies simulation
+    ! Local variables
+    sll_int32  :: j, ierr, i_steps
+    sll_real64, allocatable :: rho(:), rho_local(:), scratch(:)
+    sll_int32  :: th_diag_id, file_id
+    character(len=4) :: crank
+    character(len=4) :: step
+    character(len=256) :: diag_file_name
+    type(sll_t_time_mark) :: start_loop, end_loop
+
+
+    ! Initialize file for diagnostics
+    if (sim%rank == 0) then
+       if(sim%restart) then
+          open(newunit=th_diag_id, file=trim(sim%restart_file)//'_diag.dat', position = 'append', status='old', action='write', iostat=ierr)
+       else
+          diag_file_name = trim(sim%file_prefix)//"_diag.dat"
+          call sll_s_ascii_file_create(trim(diag_file_name), th_diag_id, ierr)
+       end if
+    end if
+
+    call sll_s_int2string( sim%rank, crank )
+    if ( sim%restart ) then
+       i_steps = real(sim%restart_steps,f64)*sim%delta_t
+       call sll_s_int2string( i_steps, step )
+       call sim%particle_group%group(1)%read(trim(sim%restart_file)//step//'_particles_'//crank//'_sp1.dat')
+       call sim%particle_group%group(2)%read(trim(sim%restart_file)//step//'_particles_'//crank//'_sp2.dat')
+    else
+       if(sim%ct) then
+          if (sim%no_weights == 1) then
+             call sim%sampler%sample( sim%particle_group%group(1), sim%init_distrib_params_sp1, &
+                  sim%domain(:,1), sim%domain(:,3), sim%map )
+             call sim%sampler%reset_seed_jump( sim%n_total_particles )
+             call sim%sampler%sample( sim%particle_group%group(2), sim%init_distrib_params_sp2, &
+                  sim%domain(:,1), sim%domain(:,3), sim%map )
+          else
+             call sim%sampler%sample_cv( sim%particle_group%group(1), sim%init_distrib_params_sp1, &
+                  sim%domain(:,1), sim%domain(:,3), sim%control_variate%cv(1), map=sim%map )
+             call sim%sampler%reset_seed_jump( sim%n_total_particles )
+             call sim%sampler%sample_cv( sim%particle_group%group(2), sim%init_distrib_params_sp2, &
+                  sim%domain(:,1), sim%domain(:,3), sim%control_variate%cv(2), map=sim%map )
+          end if
+       else
+          if (sim%no_weights == 1) then
+             call sim%sampler%sample( sim%particle_group%group(1), sim%init_distrib_params_sp1, &
+                  sim%domain(:,1), sim%domain(:,3) )
+             call sim%sampler%reset_seed_jump( sim%n_total_particles )
+             call sim%sampler%sample( sim%particle_group%group(2), sim%init_distrib_params_sp2, &
+                  sim%domain(:,1), sim%domain(:,3) )
+          else
+             call sim%sampler%sample_cv( sim%particle_group%group(1), sim%init_distrib_params_sp1, &
+                  sim%domain(:,1), sim%domain(:,3), sim%control_variate%cv(1) )
+             call sim%sampler%reset_seed_jump( sim%n_total_particles )
+             call sim%sampler%sample_cv( sim%particle_group%group(2), sim%init_distrib_params_sp2, &
+                  sim%domain(:,1), sim%domain(:,3), sim%control_variate%cv(2) )
+          end if
+       end if
+    end if
+
+    ! Print particle array to file
+    if ( sim%output_particles ) then
+       call sll_s_int2string( sim%rank, crank )
+       call sim%particle_group%group(1)%print(trim(sim%file_prefix)//'_particles_start_1_'//crank//'.dat')
+       call sim%particle_group%group(2)%print(trim(sim%file_prefix)//'_particles_start_2_'//crank//'.dat')
+    end if
+    ! Set the initial fields
+    SLL_ALLOCATE(rho_local(1:sim%n_totaldofs0), ierr)
+    SLL_ALLOCATE(rho(1:sim%n_totaldofs0), ierr)
+    SLL_ALLOCATE(scratch(1:sim%n_totaldofs0), ierr)
+    scratch = 0.0_f64
+
+
+    if ( sim%restart ) then
+       i_steps= real(sim%restart_steps,f64)*sim%delta_t
+       call sll_s_int2string( i_steps, step )
+       open(newunit=file_id, file=trim(sim%restart_file)//step//'_efield.dat', status='old', action='read', iostat=ierr)
+       if (ierr /= 0 ) then
+          SLL_ERROR("run", "Restart file for efield does not exist: "//trim(sim%restart_file)//step//'_efield.dat')
+       end if
+       read(file_id, *) sim%efield_dofs
+       close(file_id)
+       open(newunit=file_id, file=trim(sim%restart_file)//step//'_bfield.dat', status='old', action='read', iostat=ierr)
+       if (ierr /= 0 ) then
+          SLL_ERROR("run", "Restart file for bfield does not exist: "//trim(sim%restart_file)//step//'_bfield.dat')
+       end if
+       read(file_id, *) sim%bfield_dofs
+       close(file_id)
+    else
+       ! Efield  by Poisson
+       call solve_poisson( sim, rho_local, rho )
+
+       if(sim%ct) then
+          select case( sim%initial_bfield )
+          case (  sll_p_bfield_cossum )
+             call sim%maxwell_solver%L2projection( 2, 0, sim%bfield_dofs, bx_cossum_k, by_cossum_k, bz_cossum_k )
+          case (  sll_p_bfield_sumcos )
+             call sim%maxwell_solver%L2projection( 2, 0, sim%bfield_dofs, zero, zero, bfield_sumcos_k )
+          case( sll_p_bfield_prodcos)
+             call sim%maxwell_solver%L2projection( 2, 0, sim%bfield_dofs, bx_prodcos_k, by_prodcos_k, bz_prodcos_k )
+          case (  sll_p_bfield_polynom )
+             call sim%maxwell_solver%L2projection( 2, 0, sim%bfield_dofs, bx_polynom_k, by_polynom_k, bz_polynom_k )
+          case (  sll_p_bfield_constant )
+             call sim%maxwell_solver%L2projection( 2, 0, sim%bfield_dofs, zero, zero, bfield_constant_k )
+          end select
+       else
+          select case( sim%initial_bfield )
+          case (  sll_p_bfield_cossum )
+             call sim%maxwell_solver%L2projection( 2, 1, sim%bfield_dofs(1:sim%n_totaldofs0), bx_cossum_k )
+             call sim%maxwell_solver%L2projection( 2, 2, sim%bfield_dofs(sim%n_totaldofs0+1:sim%n_totaldofs0+sim%n_totaldofs1), by_cossum_k )
+             call sim%maxwell_solver%L2projection( 2, 3, sim%bfield_dofs(sim%n_totaldofs0+sim%n_totaldofs1+1:sim%n_totaldofs0+sim%n_totaldofs1*2), bz_cossum_k )
+          case (  sll_p_bfield_sumcos )
+             call sim%maxwell_solver%L2projection( 2, 3, sim%bfield_dofs(sim%n_totaldofs0+sim%n_totaldofs1+1:sim%n_totaldofs0+sim%n_totaldofs1*2), bfield_sumcos_k )
+          case( sll_p_bfield_prodcos)
+             call sim%maxwell_solver%L2projection( 2, 1, sim%bfield_dofs(1:sim%n_totaldofs0), bx_prodcos_k )
+             call sim%maxwell_solver%L2projection( 2, 2, sim%bfield_dofs(sim%n_totaldofs0+1:sim%n_totaldofs0+sim%n_totaldofs1), by_prodcos_k )
+             call sim%maxwell_solver%L2projection( 2, 3, sim%bfield_dofs(sim%n_totaldofs0+sim%n_totaldofs1+1:sim%n_totaldofs0+sim%n_totaldofs1*2), bz_prodcos_k )
+          case (  sll_p_bfield_constant )
+             call sim%maxwell_solver%L2projection( 2, 3, sim%bfield_dofs(sim%n_totaldofs0+sim%n_totaldofs1+1:sim%n_totaldofs0+sim%n_totaldofs1*2), bfield_constant_k )
+          end select
+       end if
+    end if
+
+    ! Diagnostics
+    if(sim%restart .eqv. .false.)then
+       call sll_s_time_history_diagnostics_pic_vm_3d3v( &
+            sim,  0.0_f64, th_diag_id, rho_local, rho )
+    end if
+
+    if (sim%rank == 0 ) then
+       call sll_s_set_time_mark( start_loop )
+    end if
+
+    select case (sim%splitting_type)
+    case(sll_p_strang_splitting)
+       do j=1+sim%restart_steps, sim%n_time_steps+sim%restart_steps
+          call sim%propagator%strang_splitting(sim%delta_t,1)
+          ! Diagnostics
+          call sll_s_time_history_diagnostics_pic_vm_3d3v( &
+               sim, sim%delta_t*real(j,f64), th_diag_id, rho, scratch)
+       end do
+    case(sll_p_splitting_fourth)
+       do j=1+sim%restart_steps, sim%n_time_steps+sim%restart_steps
+          call sim%propagator%splitting_fourth(sim%delta_t,1)
+          ! Diagnostics
+          call sll_s_time_history_diagnostics_pic_vm_3d3v( &
+               sim, sim%delta_t*real(j,f64), th_diag_id, rho, scratch)
+       end do
+    case(sll_p_lie_splitting)
+       do j=1+sim%restart_steps, sim%n_time_steps+sim%restart_steps
+          call sim%propagator%lie_splitting(sim%delta_t,1)
+          ! Diagnostics
+          call sll_s_time_history_diagnostics_pic_vm_3d3v( &
+               sim, sim%delta_t*real(j,f64), th_diag_id, rho, scratch)
+       end do
+    case(sll_p_lie_splitting_back)
+       do j=1+sim%restart_steps, sim%n_time_steps+sim%restart_steps
+          call sim%propagator%lie_splitting_back(sim%delta_t,1)
+          ! Diagnostics
+          call sll_s_time_history_diagnostics_pic_vm_3d3v( &
+               sim, sim%delta_t*real(j,f64), th_diag_id, rho, scratch)
+       end do
+    case(sll_p_splitting_fourth_10steps)
+       do j=1, sim%n_time_steps
+          call sim%propagator%splitting_fourth_10steps(sim%delta_t,1)
+          ! Diagnostics
+          call sll_s_time_history_diagnostics_pic_vm_3d3v( &
+               sim, sim%delta_t*real(j,f64), th_diag_id, rho, scratch)
+       end do
+    case(sll_p_splitting_second_4steps)
+       do j=1+sim%restart_steps, sim%n_time_steps+sim%restart_steps
+          call sim%propagator%splitting_second_4steps(sim%delta_t,1)
+          ! Diagnostics
+          call sll_s_time_history_diagnostics_pic_vm_3d3v( &
+               sim, sim%delta_t*real(j,f64), th_diag_id, rho, scratch)
+       end do
+    case default
+       print*, 'this splitting type is not implemented'
+    end select
+
+    if (sim%rank == 0 ) then
+       call sll_s_set_time_mark( end_loop )
+       write(*, "(A, F10.3)") "Main loop run time [s] = ", sll_f_time_elapsed_between( start_loop, end_loop)
+       close(th_diag_id)
+       if ( sim%output_fields ) then
+          i_steps = real(sim%n_time_steps+sim%restart_steps, f64)*sim%delta_t
+          call sll_s_int2string( i_steps, step )
+          open(newunit=file_id, file=trim(sim%file_prefix)//step//'_efield.dat')
+          write(file_id, *) sim%efield_dofs
+          close(file_id)
+          open(newunit=file_id, file=trim(sim%file_prefix)//step//'_bfield.dat')
+          write(file_id, *) sim%bfield_dofs
+          close(file_id)
+       end if
+
+       if ( sim%make_ctest .eqv. .true. ) then
+          ! Check for ctest
+          call sll_s_check_diagnostics(trim(sim%ctest_ref_file),"ctest_diag.dat" , 5E-13_f64, sim%ctest_passed)
+       end if
+    end if
+
+    ! Print particle array to file
+    if ( sim%output_particles ) then
+       call sll_s_int2string( sim%rank, crank )
+       i_steps = real(sim%n_time_steps+sim%restart_steps, f64)*sim%delta_t
+       call sll_s_int2string( i_steps, step )
+       call sim%particle_group%group(1)%print(trim(sim%file_prefix)//step//'_particles_'//crank//'_sp1.dat')
+       call sim%particle_group%group(2)%print(trim(sim%file_prefix)//step//'_particles_'//crank//'_sp2.dat')
+    end if
+
+  contains
+    function bx_cossum_k(x)
+      sll_real64             :: bx_cossum_k
+      sll_real64, intent(in) :: x(3)
+
+      bx_cossum_k = sim%bconstant(1) + sim%balpha(1) * cos( sum( sim%bkx * x ) - sim%bphase_shift(1) * sll_p_pi ) 
+
+    end function bx_cossum_k
+    function by_cossum_k(x)
+      sll_real64             :: by_cossum_k
+      sll_real64, intent(in) :: x(3)
+
+      by_cossum_k = sim%bconstant(2) + sim%balpha(2) * cos( sum( sim%bkx * x ) - sim%bphase_shift(2) * sll_p_pi ) 
+
+    end function by_cossum_k
+    function bz_cossum_k(x)
+      sll_real64             :: bz_cossum_k
+      sll_real64, intent(in) :: x(3)
+
+      bz_cossum_k = sim%bconstant(3) + sim%balpha(3) * cos( sum( sim%bkx * x ) - sim%bphase_shift(3) * sll_p_pi ) 
+
+    end function bz_cossum_k
+
+    function bfield_sumcos_k(x)
+      sll_real64             :: bfield_sumcos_k
+      sll_real64, intent(in) :: x(3)
+
+      bfield_sumcos_k = sim%bconstant(3) + sum( sim%balpha * cos(  sim%bkx * x - sim%bphase_shift * sll_p_pi ) ) 
+
+    end function bfield_sumcos_k
+
+    function bx_prodcos_k(x)
+      sll_real64             :: bx_prodcos_k
+      sll_real64, intent(in) :: x(3)
+
+      bx_prodcos_k = sim%bconstant(1) + sim%balpha(1) * cos( sim%bkx(1) * x(1) - sim%bphase_shift(1) * sll_p_pi )* cos( sim%bkx(2) * x(2) - sim%bphase_shift(2) * sll_p_pi )* cos( sim%bkx(3) * x(3) - sim%bphase_shift(3) * sll_p_pi )
+
+    end function bx_prodcos_k
+
+    function by_prodcos_k(x)
+      sll_real64             :: by_prodcos_k
+      sll_real64, intent(in) :: x(3)
+
+      by_prodcos_k = sim%bconstant(2) + sim%balpha(2) * cos( sim%bkx(1) * x(1) - sim%bphase_shift(1) * sll_p_pi )* cos( sim%bkx(2) * x(2) - sim%bphase_shift(2) * sll_p_pi )* cos( sim%bkx(3) * x(3) - sim%bphase_shift(3) * sll_p_pi )
+
+    end function by_prodcos_k
+
+    function bz_prodcos_k(x)
+      sll_real64             :: bz_prodcos_k
+      sll_real64, intent(in) :: x(3)
+
+      bz_prodcos_k = sim%bconstant(3) + sim%balpha(3) * cos( sim%bkx(1) * x(1) - sim%bphase_shift(1) * sll_p_pi )* cos( sim%bkx(2) * x(2) - sim%bphase_shift(2) * sll_p_pi )* cos( sim%bkx(3) * x(3) - sim%bphase_shift(3) * sll_p_pi )
+
+    end function bz_prodcos_k
+
+    function bx_polynom_k(x)
+      sll_real64             :: bx_polynom_k
+      sll_real64, intent(in) :: x(3)
+
+      bx_polynom_k = sim%bconstant(1) + sim%bkx(2) * x(2)
+
+    end function bx_polynom_k
+
+    function by_polynom_k(x)
+      sll_real64             :: by_polynom_k
+      sll_real64, intent(in) :: x(3)
+
+      by_polynom_k = sim%bconstant(2) + sim%bkx(1) * x(1)
+
+    end function by_polynom_k
+
+    function bz_polynom_k(x)
+      sll_real64             :: bz_polynom_k
+      sll_real64, intent(in) :: x(3)
+
+      bz_polynom_k = sim%bconstant(3) + sim%balpha(3) * sum(sim%bkx * x)
+
+    end function bz_polynom_k
+
+    function bfield_constant_k(x)
+      sll_real64             :: bfield_constant_k
+      sll_real64, intent(in) :: x(3)
+
+      bfield_constant_k = sim%bconstant(3)
+
+    end function bfield_constant_k
+
+    function zero(x)
+      sll_real64             :: zero
+      sll_real64, intent(in) :: x(3)
+
+      zero = 0._f64
+
+    end function zero
+
+  end subroutine run_pic_vm_3d3v
+
+
+  !------------------------------------------------------------------------------!
+  !> Finalize simulation
+  subroutine delete_pic_vm_3d3v (sim)
+    class(sll_t_sim_pic_vm_3d3v_cart_multispecies), intent(inout) :: sim !< Multispecies simulation
+
+    SLL_ASSERT(storage_size(sim)>0)
+    call sim%propagator%free()
+    deallocate(sim%propagator)
+    call sim%particle_group%group(1)%free()
+    call sim%particle_group%group(2)%free()
+    deallocate (sim%particle_group)
+    call sim%maxwell_solver%free()
+    deallocate(sim%maxwell_solver)
+    call sim%particle_mesh_coupling%free()
+    deallocate(sim%particle_mesh_coupling)
+    deallocate(sim%efield_dofs)
+    deallocate(sim%bfield_dofs)
+    if( sim%no_weights == 3) then
+       call sim%control_variate%cv(1)%free()
+       call sim%control_variate%cv(2)%free()
+    end if
+
+    if ( sim%restart .eqv. .false. ) then
+       call sim%init_distrib_params_sp1%free()
+       deallocate(sim%init_distrib_params_sp1)
+       call sim%init_distrib_params_sp2%free()
+       deallocate(sim%init_distrib_params_sp2)
+    end if
+    call sim%sampler%free()
+
+  end subroutine delete_pic_vm_3d3v
+
+
+  !------------------------------------------------------------------------------!
+  !Diagnostic functions and other helper functions
+  !> Diagnostics for PIC Vlasov-Maxwell 3d3v 
+  !> @todo (should be part of the library)
+  subroutine sll_s_time_history_diagnostics_pic_vm_3d3v(&
+       sim,&
+       time, &
+       file_id, &
+       scratch1, scratch2)
+    class(sll_t_sim_pic_vm_3d3v_cart_multispecies), intent( inout ) :: sim !< Multispecies simulation
+    sll_real64,                        intent( in    ) :: time !< time
+    sll_int32,                         intent( in    ) :: file_id !< file id
+    sll_real64,                        intent(   out ) :: scratch1(:) !< scratch data
+    sll_real64,                        intent(   out ) :: scratch2(:) !< scratch data
+    ! local variables
+    sll_real64 :: diagnostics_local(9)
+    sll_real64 :: diagnostics(9)
+    sll_real64 :: potential_energy(6)
+    sll_int32  :: i_part, i_sp
+    sll_real64 :: vi(3),  xi(3)
+    sll_real64 :: wi(1)
+    sll_real64 :: error_gauss
+
+    diagnostics_local = 0.0_f64
+    do i_sp = 1, sim%particle_group%n_species
+       do i_part= 1, sim%particle_group%group(i_sp)%n_particles
+          vi = sim%particle_group%group(i_sp)%get_v(i_part)
+          xi = sim%particle_group%group(i_sp)%get_x(i_part)
+          wi = sim%particle_group%group(i_sp)%get_mass(i_part)
+
+          ! Kinetic energy
+          diagnostics_local(1+(i_sp-1)*3) = diagnostics_local(1+(i_sp-1)*3) + &
+               0.5_f64*(vi(1)**2)*wi(1)
+          diagnostics_local(2+(i_sp-1)*3) = diagnostics_local(2+(i_sp-1)*3) + &
+               0.5_f64*(vi(2)**2)*wi(1)
+          diagnostics_local(3+(i_sp-1)*3) = diagnostics_local(3+(i_sp-1)*3) + &
+               0.5_f64*(vi(3)**2)*wi(1)
+          ! Momentum 1
+          diagnostics_local(7) = diagnostics_local(7) + &
+               vi(1)*wi(1)
+          ! Momentum 2
+          diagnostics_local(8) = diagnostics_local(8) + &
+               vi(2)*wi(1)
+          ! Momentum 3
+          diagnostics_local(9) = diagnostics_local(9) + &
+               vi(3)*wi(1)
+       end do
+    end do
+    diagnostics = 0.0_f64
+    call sll_s_collective_reduce_real64(sll_v_world_collective, diagnostics_local, 9,&
+         MPI_SUM, 0, diagnostics)
+    diagnostics_local = 0._f64
+
+    ! Add ExB part
+    if(sim%ct) then
+       call compute_e_cross_b_curvilinear( sim%particle_mesh_coupling, sim%degree_smoother, sim%map, sim%efield_dofs, sim%bfield_dofs, sim%n_totaldofs0, sim%n_totaldofs1, diagnostics_local(7:9) )
+    else
+       if(sim%boundary ) then
+          diagnostics_local(7:9) = 0._f64
+       else
+          call compute_e_cross_b ( sim%maxwell_solver, scratch1, sim%efield_dofs, sim%bfield_dofs, diagnostics_local(7:9) )
+       end if
+    end if
+    !total momentum
+    diagnostics(7:9) = diagnostics(7:9) + diagnostics_local(7:9)
+
+    ! Check error in Gauss law
+    call check_gauss_law ( sim, scratch1, scratch2, error_gauss )
+
+    if (sim%rank == 0) then
+       if(sim%ct) then
+          potential_energy(1) = sim%maxwell_solver%inner_product &
+               ( sim%efield_dofs, sim%efield_dofs, 1, 1 )/sim%plasma_betar(2)
+          potential_energy(2) = sim%maxwell_solver%inner_product &
+               ( sim%efield_dofs, sim%efield_dofs, 1, 2 )/sim%plasma_betar(2)
+          potential_energy(3) = sim%maxwell_solver%inner_product &
+               ( sim%efield_dofs, sim%efield_dofs, 1, 3 )/sim%plasma_betar(2)
+          potential_energy(4) = sim%maxwell_solver%inner_product &
+               ( sim%bfield_dofs, sim%bfield_dofs, 2, 1 )*sim%plasma_betar(3)
+          potential_energy(5) = sim%maxwell_solver%inner_product &
+               ( sim%bfield_dofs, sim%bfield_dofs, 2, 2 )*sim%plasma_betar(3)
+          potential_energy(6) = sim%maxwell_solver%inner_product &
+               ( sim%bfield_dofs, sim%bfield_dofs, 2, 3 )*sim%plasma_betar(3)
+       else
+          potential_energy(1) = sim%maxwell_solver%inner_product &
+               ( sim%efield_dofs(1:sim%n_totaldofs1), sim%efield_dofs(1:sim%n_totaldofs1), 1, 1 )/sim%plasma_betar(2)
+          potential_energy(2) = sim%maxwell_solver%inner_product &
+               ( sim%efield_dofs(sim%n_totaldofs1+1:sim%n_totaldofs1+sim%n_totaldofs0), sim%efield_dofs(sim%n_totaldofs1+1:sim%n_totaldofs1+sim%n_totaldofs0), 1, 2 )/sim%plasma_betar(2)
+          potential_energy(3) = sim%maxwell_solver%inner_product &
+               ( sim%efield_dofs(sim%n_totaldofs1+sim%n_totaldofs0+1:sim%n_totaldofs1+sim%n_totaldofs0*2), sim%efield_dofs(sim%n_totaldofs1+sim%n_totaldofs0+1:sim%n_totaldofs1+sim%n_totaldofs0*2), 1, 3 )/sim%plasma_betar(2)
+          potential_energy(4) = sim%maxwell_solver%inner_product &
+               ( sim%bfield_dofs(1:sim%n_totaldofs0), sim%bfield_dofs(1:sim%n_totaldofs0), 2, 1 )*sim%plasma_betar(3)
+          potential_energy(5) = sim%maxwell_solver%inner_product &
+               ( sim%bfield_dofs(sim%n_totaldofs0+1:sim%n_totaldofs0+sim%n_totaldofs1), sim%bfield_dofs(sim%n_totaldofs0+1:sim%n_totaldofs0+sim%n_totaldofs1), 2, 2 )*sim%plasma_betar(3)
+          potential_energy(6) =sim%maxwell_solver%inner_product &
+               ( sim%bfield_dofs(sim%n_totaldofs0+sim%n_totaldofs1+1:sim%n_totaldofs0+sim%n_totaldofs1*2), sim%bfield_dofs(sim%n_totaldofs0+sim%n_totaldofs1+1:sim%n_totaldofs0+sim%n_totaldofs1*2), 2, 3 )*sim%plasma_betar(3)
+       end if
+
+       write(file_id,'(f12.5,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16)' ) &
+            time,  potential_energy, diagnostics(1:6), &
+            sum(diagnostics(1:6)) + 0.5_f64*sum(potential_energy), diagnostics(7:9), &
+            diagnostics_local(7:9), error_gauss
+    end if
+
+  end subroutine sll_s_time_history_diagnostics_pic_vm_3d3v
+
+
+  !> Accumulate rho and solve Poisson
+  subroutine solve_poisson( sim, rho_local, rho )
+    class(sll_t_sim_pic_vm_3d3v_cart_multispecies), intent( inout ) :: sim !< Multispecies simulation
+    sll_real64,                        intent(   out ) :: rho_local(:) !< charge local to mpi processes
+    sll_real64,                        intent(   out ) :: rho(:) !< charge
+    !local variables
+    sll_int32 :: i_part, i_sp
+    sll_real64 :: xi(3), wi(1)
+
+    rho_local = 0.0_f64
+    do i_sp = 1, sim%particle_group%n_species
+       do i_part = 1, sim%particle_group%group(i_sp)%n_particles
+          xi = sim%particle_group%group(i_sp)%get_x(i_part)
+          ! Get charge for accumulation of rho
+          wi(1) = sim%particle_group%group(i_sp)%get_charge( i_part , sim%no_weights)
+          call sim%particle_mesh_coupling%add_charge(xi, wi(1), &
+               sim%degree_smoother, rho_local)
+       end do
+    end do
+    ! MPI to sum up contributions from each processor
+    rho = 0.0_f64
+    call sll_o_collective_allreduce( sll_v_world_collective, &
+         rho_local, sim%n_totaldofs0, MPI_SUM, rho)
+
+    call sim%filter%apply_inplace( rho )
+
+    ! Solve Poisson problem
+    rho = rho * sim%plasma_betar(2)
+    call sim%maxwell_solver%compute_E_from_rho( rho, sim%efield_dofs)
+
+  end subroutine solve_poisson
+
+
+  !> check Gauss' law
+  subroutine check_gauss_law (sim, rho_gauss, rho, error )
+    class(sll_t_sim_pic_vm_3d3v_cart_multispecies), intent( inout ) :: sim !< Multispecies simulation
+    sll_real64,                        intent(   out ) :: rho_gauss(:) !< charge local to mpi processes 
+    sll_real64,                        intent(   out ) :: rho(:) !< charge
+    sll_real64,                        intent(   out ) :: error !< error in Gauss' law 
+    !local variables
+    sll_int32 :: i_part, i_sp
+    sll_real64 :: xi(3), wi(1)
+
+    rho_gauss = 0.0_f64
+    do i_sp = 1, sim%particle_group%n_species
+       do i_part = 1, sim%particle_group%group(i_sp)%n_particles
+          xi = sim%particle_group%group(i_sp)%get_x(i_part)
+          if (xi(1) >= sim%domain(1,1) .and. xi(1) <= sim%domain(1,2)) then
+             ! Get charge for accumulation of rho
+             wi(1) = sim%particle_group%group(i_sp)%get_charge( i_part, sim%no_weights)
+             call sim%particle_mesh_coupling%add_charge(xi, wi(1), &
+                  sim%degree_smoother, rho_gauss)
+          end if
+       end do
+    end do
+
+    ! MPI to sum up contributions from each processor
+    rho = 0.0_f64
+    call sll_o_collective_allreduce( sll_v_world_collective, &
+         rho_gauss, sim%n_totaldofs0, MPI_SUM, rho)
+    call sll_o_collective_allreduce( sll_v_world_collective, &
+         sim%rhob, sim%n_totaldofs0, MPI_SUM, rho_gauss)
+    rho = rho + rho_gauss
+
+    call sim%filter%apply_inplace( rho )
+
+    rho = rho * sim%plasma_betar(2)
+    rho_gauss=0._f64
+    ! Solve Gauss law
+    call sim%maxwell_solver%compute_rho_from_e( sim%efield_dofs, rho_gauss )
+    error = maxval(abs(rho - rho_gauss ))
+
+  end subroutine check_gauss_law
+
+
+  !------------------------------------------------------------------------------!
+  !> As a control variate, we use the equilibrium (v part of the initial distribution)
+  function control_variate_equi( this, xi, vi, time) result(sll_f_control_variate)
+    class(sll_t_control_variate) :: this !> control variate
+    sll_real64, optional,  intent( in ) :: xi(:) !< particle position
+    sll_real64, optional,  intent( in ) :: vi(:) !< particle velocity
+    sll_real64, optional,  intent( in ) :: time  !< current time
+    sll_real64               :: sll_f_control_variate
+
+
+    sll_f_control_variate = &
+         this%control_variate_distribution_params%eval_v_density( vi )
+
+  end function control_variate_equi
+
+  !> As a control variate, we use the equilibrium (v part of the initial distribution)
+  function control_variate_xi( this, xi, vi, time) result(sll_f_control_variate)
+    class(sll_t_control_variate) :: this !> control variate
+    sll_real64, optional,  intent( in ) :: xi(:) !< particle position
+    sll_real64, optional,  intent( in ) :: vi(:) !< particle velocity
+    sll_real64, optional,  intent( in ) :: time  !< current time
+    sll_real64               :: sll_f_control_variate
+
+
+    sll_f_control_variate = &
+         this%control_variate_distribution_params%eval_v_density( vi, xi, m=1._f64  )
+
+  end function control_variate_xi
+
+
+  !> Compute ExB
+  subroutine compute_e_cross_b ( maxwell, scratch, efield, bfield, e_cross_b )
+    class(sll_c_maxwell_3d_base), intent(inout) :: maxwell !> Maxwell solver
+    sll_real64, intent( out ) :: scratch(:) !> scratch data
+    sll_real64, intent( in  ) :: efield(:) !> E
+    sll_real64, intent( in  ) :: bfield(:) !> B
+    sll_real64, intent( out ) :: e_cross_b(3)  !< E cross B
+
+    call  maxwell%multiply_mass( [3, 2, 1], bfield(maxwell%n_total*2+1:maxwell%n_total*3), scratch )
+    e_cross_b(1) = sum(efield(maxwell%n_total+1:maxwell%n_total*2)*scratch)
+    call  maxwell%multiply_mass([3, 1, 2], bfield(maxwell%n_total+1:maxwell%n_total*2), scratch )
+    e_cross_b(1) = e_cross_b(1) - sum(efield(maxwell%n_total*2+1:maxwell%n_total*3)*scratch)
+
+    call maxwell%multiply_mass( [1, 3, 2], bfield(1:maxwell%n_total), scratch )
+    e_cross_b(2) = sum(efield(maxwell%n_total*2+1:maxwell%n_total*3)*scratch)
+    call maxwell%multiply_mass( [2, 3, 1], bfield(maxwell%n_total*2+1:maxwell%n_total*3), scratch )
+    e_cross_b(2) = e_cross_b(2) - sum(efield(1:maxwell%n_total)*scratch)
+
+
+    call  maxwell%multiply_mass( [2, 1, 3], bfield(maxwell%n_total+1:maxwell%n_total*2), scratch )
+    e_cross_b(3) = sum(efield(1:maxwell%n_total)*scratch)
+    call  maxwell%multiply_mass( [1, 2, 3], bfield(1:maxwell%n_total), scratch )
+    e_cross_b(3) = e_cross_b(3) - sum(efield(maxwell%n_total+1:maxwell%n_total*2)*scratch)
+
+  end subroutine compute_e_cross_b
+
+  
+  !> Compute ExB with coordinate transformation
+  subroutine compute_e_cross_b_curvilinear( particle_mesh_coupling, deg, map, efield_dofs, bfield_dofs, n_total0, n_total1, ecb)
+    class(sll_c_particle_mesh_coupling_3d), intent(inout) :: particle_mesh_coupling !> Particle mesh coupling
+    sll_int32,  intent( in    )             :: deg(3)     !< maximal spline deg
+    type(sll_t_mapping_3d), intent( inout ) :: map        !< coordinate transformation
+    sll_real64, intent( in    )             :: efield_dofs(:) !< DoFs describing the two components of the electric field
+    sll_real64, intent( in    )             :: bfield_dofs(:)   !< DoFs describing the magnetic field
+    sll_int32,  intent( in    )             :: n_total0, n_total1 !< total number of DoFs for 0- and 1-form
+    sll_real64, intent(   out )             :: ecb(3) !< E cross B 
+    !local variables
+    sll_int32  :: i, k3, k2, k1, q(3)
+    sll_real64, allocatable :: xw_gauss_d1(:,:), xw_gauss_d2(:,:), xw_gauss_d3(:,:)
+    sll_real64 :: xi(3), N(3,3), DF(3,3)
+    sll_real64 :: e_phys(3), b_phys(3), efield(3), bfield(3)
+
+    efield = 0.0_f64
+    bfield = 0.0_f64
+    e_phys = 0.0_f64
+    b_phys = 0.0_f64
+    ecb = 0.0_f64
+
+    q = 2*maxval(deg)+1
+    allocate( xw_gauss_d1(1:2, 1:q(1)) )
+    allocate( xw_gauss_d2(1:2, 1:q(2)) )
+    allocate( xw_gauss_d3(1:2, 1:q(3)) )
+
+    xw_gauss_d1 = sll_f_gauss_legendre_points_and_weights( q(1), 0._f64, 1._f64 )
+    xw_gauss_d2 = sll_f_gauss_legendre_points_and_weights( q(2), 0._f64, 1._f64 )
+    xw_gauss_d3 = sll_f_gauss_legendre_points_and_weights( q(3), 0._f64, 1._f64 )
+
+    ! loop over Gauss points
+    do k3=1, q(3) 
+       xi(3)=xw_gauss_d3(1,k3)
+       do k2=1, q(2)
+          xi(2)=xw_gauss_d2(1,k2)
+          do k1=1, q(1)
+             xi(1)=xw_gauss_d1(1,k1)
+
+             call particle_mesh_coupling%evaluate( xi, [deg(1)-1, deg(2), deg(3)], &
+                  efield_dofs(1:n_total1), efield(1))
+             call particle_mesh_coupling%evaluate( xi, [deg(1), deg(2)-1, deg(3)], &
+                  efield_dofs(1+n_total1:n_total1+n_total0), efield(2))
+             call particle_mesh_coupling%evaluate( xi, [deg(1), deg(2), deg(3)-1], &
+                  efield_dofs(1+n_total1+n_total0:n_total1+2*n_total0), efield(3))
+
+             call particle_mesh_coupling%evaluate( xi, [deg(1), deg(2)-1, deg(3)-1], &
+                  bfield_dofs(1:n_total0), bfield(1))
+             call particle_mesh_coupling%evaluate( xi, [deg(1)-1, deg(2), deg(3)-1], &
+                  bfield_dofs(1+n_total0:n_total0+n_total1), bfield(2))
+             call particle_mesh_coupling%evaluate( xi, [deg(1)-1, deg(2)-1, deg(3)], &
+                  bfield_dofs(1+n_total0+n_total1:n_total0+2*n_total1), bfield(3))
+
+             N = map%jacobian_matrix_inverse( xi )
+             DF = map%jacobian_matrix( xi ) 
+
+             do i = 1, 3
+                e_phys(i) = (N(i,1)* efield(1)+N(i,2)* efield(2)+N(i,3)* efield(3)) *&
+                     xw_gauss_d1(2,k1)* xw_gauss_d2(2,k2)* xw_gauss_d3(2,k3)
+                b_phys(i) = (DF(i,1)* bfield(1)+DF(i,2)* bfield(2)+DF(i,3)* bfield(3)) *&
+                     xw_gauss_d1(2,k1)* xw_gauss_d2(2,k2)* xw_gauss_d3(2,k3)
+             end do
+
+             ecb(1) = ecb(1) + e_phys(2) * b_phys(3) - e_phys(3) * b_phys(2)
+             ecb(2) = ecb(2) + e_phys(3) * b_phys(1) - e_phys(1) * b_phys(3)
+             ecb(3) = ecb(3) + e_phys(1) * b_phys(2) - e_phys(2) * b_phys(1)
+          end do
+       end do
+    end do
+
+
+
+  end subroutine compute_e_cross_b_curvilinear
+
+  
+  !> Check diagnostics
+  subroutine sll_s_check_diagnostics(reffile, simfile, tol_error, passed)
+    character(*), intent(in) :: reffile !< Name of reference file (stored in same folder as source file)
+    character(*), intent(in) :: simfile !< Name of file with simulation result
+    sll_real64, intent(in)   :: tol_error !< tolerance 
+    logical, intent(out)     :: passed !< true if diagnostics checks out
+    !local variables
+    sll_real64 :: error
+    sll_real64 :: data_sim(4,21)
+    sll_real64 :: data_ref(4,21)
+    sll_int32  :: file_id
+
+    ! Read simulation result
+    open(newunit=file_id, file=simfile, status='old', action='read')
+    read(unit=file_id,fmt=*) data_sim
+    close(file_id)
+
+    ! Read reference
+    open(newunit=file_id, file=reffile, status='old', action='read')
+    read(unit=file_id,fmt=*) data_ref
+    close(file_id)
+
+    ! Compare
+    data_sim = data_sim - data_ref
+    error = maxval(abs(data_sim))
+    print*, 'Max error in time history diagnostics: ', error
+    if (error < tol_error) then
+       passed = .true.
+    else
+       passed = .false.
+    end if
+
+  end subroutine sll_s_check_diagnostics
+
+
+end module sll_m_sim_pic_vm_3d3v_cart_multispecies

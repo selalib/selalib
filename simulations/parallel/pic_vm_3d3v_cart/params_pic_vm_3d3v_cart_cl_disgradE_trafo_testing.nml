@@ -1,0 +1,71 @@
+&sim_params
+        delta_t = 0.05
+        n_time_steps = 3
+        initial_distrib = "cossum_onegaussian"
+        initial_bfield = "cossum"
+        !plasma_beta = 1.0 1.0 1.0 
+	
+/        
+  
+&cos_onegaussian
+	kx = 0.0 0.0 0.0	
+        modnum = 0.0 0.0 0.0
+        alpha = 0.0
+	phase_shift= 0.0	
+        v_thermal = 0.014142135623730949 0.048989794855663557 0.048989794855663557
+        v_mean = 0.0 0.0 0.0
+
+/   
+&bfield
+	bkx = 1.25 0.0 0.0	
+	balpha = 0.0 0.0 0.01
+	bphase_shift= 0.0 0.0 0.0
+	bconstant = 0.0 0.0 0.0
+/   
+&output
+        file_prefix = "ctest"
+/
+
+&grid_dims
+        ng_x = 8 4 2
+        x_min = 0.0 0.0 0.0
+        x_max = 1.0 1.0 1.0
+/
+
+&pic_params
+        n_particles = 100000
+        sampling_case = "particle_sampling_sobol"
+        splitting_case = "splitting_disgradE_trafo"     
+        spline_degree = 3 2 1
+	splitting_type = "strang"
+	boundary_fields = "clamped"
+	boundary_particles = "reflection"
+	!with_control_variate = .false.
+/
+
+&trafo
+	nparams = 3
+	params = 0.01 5.026548245743669 5.026548245743669 
+	mapping_case = "cylindrical"
+	!n_cells = 8 4 2
+	!deg = 3 2 1
+/
+
+&ctest
+	ctest_case = "cl_disgradE_trafo"
+
+/
+
+&maxwell_solver
+        mass_tolerance = 1E-14
+        poisson_tolerance = 1E-13
+/
+
+&time_solver
+        maxwell_tolerance = 1E-12
+/
+&time_iterate
+	iter_tolerance = 1E-10
+	max_iter = 5
+
+/
