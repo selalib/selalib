@@ -85,8 +85,7 @@ module sll_m_particle_mesh_coupling_spline_3d_feec
      procedure :: init => init_spline_3d_feec !> Constructor
      procedure :: free => free_spline_3d_feec !> Destructor
    
-     procedure :: add_current_evaluate_int
-     procedure :: evaluate_int_subcyc
+     procedure :: add_current_evaluate_int !> Evaluates the integral int_{poisition_old}^{position_new} field(x) d x and the integrated current
   end type sll_t_particle_mesh_coupling_spline_3d_feec
 
   type :: vector
@@ -432,7 +431,7 @@ contains
 
   end subroutine evaluate_multiple_spline_3d_feec
 
-
+  !> Convert 3d index to 1d index (first dimension without stride)
   pure function convert_index_3d_to_1d( index3d, n_cells ) result( index1d )
     sll_int32, intent( in ) :: index3d(3)
     sll_int32, intent( in ) :: n_cells(3)
@@ -440,9 +439,9 @@ contains
 
     index1d = index3d(1) + (index3d(2)-1)*n_cells(1) + (index3d(3)-1)*n_cells(1)*n_cells(2)
 
-
   end function convert_index_3d_to_1d
 
+  !> Identify the box in which the particle is located and its normalized position within the box
   subroutine convert_x_to_xbox( self, position, xi, box )
     class( sll_t_particle_mesh_coupling_spline_3d_feec ), intent(inout)   :: self !< kernel smoother object
     sll_real64,                               intent( in )    :: position(3) !< Position of the particle
@@ -455,9 +454,10 @@ contains
 
   end subroutine convert_x_to_xbox
 
+  !> Identify the box in which the particle is located and its normalized position within the box (only along the dimension \a component)
   subroutine convert_x_to_xbox_1d( self, component, position, xi, box )
     class( sll_t_particle_mesh_coupling_spline_3d_feec ), intent(inout)   :: self !< kernel smoother object
-    sll_int32,                                intent( in )    :: component
+    sll_int32,                                intent( in )    :: component !< direction along which the position is given
     sll_real64,                               intent( in )    :: position !< Position of the particle
     sll_real64,                               intent( out )    :: xi !< Position of the particle
     sll_int32,                                intent( out )    :: box !< Position of the particle
@@ -469,10 +469,11 @@ contains
   end subroutine convert_x_to_xbox_1d
 
 
+  !> Sets the index of the splines that are involved in computations that concern splines from index \a box
   subroutine box_index( self, box, comp )
     class(sll_t_particle_mesh_coupling_spline_3d_feec), intent(inout) :: self !< kernel smoother object
-    sll_int32, intent(in) :: box
-    sll_int32, intent(in) :: comp
+    sll_int32, intent(in) :: box !> starting box number
+    sll_int32, intent(in) :: comp !> direction along which to operate
     !local variables
     sll_int32 :: j
 
@@ -482,7 +483,7 @@ contains
 
   end subroutine box_index
 
-
+  !>  Add current via line integral and evaluate spline
   subroutine add_current_evaluate ( self, position_old, position_new, xdot, efield_dofs, j_dofs, efield_val)
     class( sll_t_particle_mesh_coupling_spline_3d_feec ), intent(inout)   :: self !< kernel smoother object
     sll_real64,                               intent( in )    :: position_old(3) !< Position of the particle
@@ -551,14 +552,6 @@ contains
              print*, xbox, sigma, sigma_counter, increment
              print*, xold, xnewtilde, sigma_r
              SLL_ERROR( 'add_current_evaluate', 'box value too low')
-!!$             xbox = min(xbox, 1._f64)
-!!$             !print*, xbox, sigma, sigma_counter, increment
-!!$             !SLL_ERROR( 'add_current_evaluate', 'box value too large')
-!!$          elseif (minval(xbox) < 0.0_f64 ) then
-!!$             xbox = max(xbox, 0._f64)
-!!$             !print*, xbox, sigma, sigma_counter, increment
-!!$             !print*, xold, xnewtilde, sigma_r
-!!$             !SLL_ERROR( 'add_current_evaluate', 'box value too low')
           end if
 
           weight = self%quad_xw_line(2,q)*(sigma_r-sigma_l)
@@ -577,7 +570,7 @@ contains
 
   end subroutine add_current_evaluate
 
-
+  !> Helper function for add_current_evaluate that takes care of the per-cell computations
   subroutine point_add_eval ( self, box_in, xbox, field_dofs, weight, j_dofs, field_value )
     class( sll_t_particle_mesh_coupling_spline_3d_feec ), intent(inout)   :: self !< kernel smoother object
     sll_int32, intent(in) :: box_in(3)
@@ -608,14 +601,10 @@ contains
     call box_index( self, box(2), 2 )   
     call box_index( self, box(3), 3 )      
     do k = 1, self%spline_degree(3)+1 
-       !index3d(3) = modulo(box(3)+k-2,self%n_cells(3))+1
        index3d(3) = (self%index1d(k,3)-1)*self%n_cells(1)*self%n_cells(2)
        do j = 1, self%spline_degree(2)+1
-          !index3d(2) = modulo(box(2)+j-2,self%n_cells(2))+1
           index3d(2) = index3d(3) + (self%index1d(j,2)-1)*self%n_cells(1)
           do i = 1, self%spline_degree(1)
-             !index3d(1) = modulo(box(1)+i-2,self%n_cells(1))+1
-             !convert_index_3d_to_1d( index3d, self%n_cells )
              index1d = index3d(2) + self%index1d(i,1)
 
              spval =  self%spline_1(i,1) * &
@@ -632,15 +621,10 @@ contains
     call box_index( self, box(1), 1 )
     call box_index( self, box(2), 2 )   
     do k = 1, self%spline_degree(3)+1       
-       !index3d(3) = self%index1d(k,3)!modulo(box(3)+k-2,self%n_cells(3))+1
        index3d(3) = (self%index1d(k,3)-1)*self%n_cells(1)*self%n_cells(2)
        do j = 1, self%spline_degree(2)
-          !index3d(2) = self%index1d(j,2)!modulo(box(2)+j-2,self%n_cells(2))+1
           index3d(2) = index3d(3) + (self%index1d(j,2)-1)*self%n_cells(1)
           do i = 1, self%spline_degree(1)+1
-             !index3d(1) = self%index1d(i,1)!modulo(box(1)+i-2,self%n_cells(1))+1
-             !index1d = convert_index_3d_to_1d( index3d, self%n_cells )
-             !index1d = index1d + n_total
              index1d = index3d(2) + self%index1d(i,1) + n_total
 
              spval = self%spline_0(i,1) * &
@@ -659,15 +643,10 @@ contains
     call box_index( self, box(2), 2 )   
     call box_index( self, box(3), 3 ) 
     do k = 1, self%spline_degree(3)    
-       !index3d(3) = self%index1d(k,3)!modulo(box(3)+k-2,self%n_cells(3))+1
        index3d(3) = (self%index1d(k,3)-1)*self%n_cells(1)*self%n_cells(2)
        do j = 1, self%spline_degree(2)+1
-          !index3d(2) = self%index1d(j,2)!modulo(box(2)+j-2,self%n_cells(2))+1
           index3d(2) = index3d(3) + (self%index1d(j,2)-1)*self%n_cells(1)
           do i = 1, self%spline_degree(1)+1
-             !index3d(1) = self%index1d(i,1)!modulo(box(1)+i-2,self%n_cells(1))+1
-             !index1d = convert_index_3d_to_1d( index3d, self%n_cells )
-             !index1d = index1d + n_total
              index1d = index3d(2) + self%index1d(i,1) + n_total
              spval = self%spline_0(i,1) * &
                   self%spline_0(j,2) * self%spline_1(k,3)
@@ -681,7 +660,7 @@ contains
 
   end subroutine point_add_eval
 
-
+  !> Add current via line integral (when x changes along all three directions)
   subroutine add_current_3d  ( self, position_old, position_new, xdot, j_dofs) 
     class( sll_t_particle_mesh_coupling_spline_3d_feec ), intent(inout)   :: self !< kernel smoother object
     sll_real64,                               intent( in    ) :: position_old(3) !< Position of the particle
@@ -762,6 +741,7 @@ contains
     end do
   end subroutine add_current_3d
 
+  !> Helper function for add_current_3d, takes care of the per box computations
   subroutine integrate_spline_3d( self, box_in, xbox, weight, j_dofs )
     class( sll_t_particle_mesh_coupling_spline_3d_feec ), intent(inout)   :: self !< kernel smoother object
     sll_int32,  intent( in    ) :: box_in(3)
@@ -786,14 +766,10 @@ contains
     call box_index( self, box(2), 2 )   
     call box_index( self, box(3), 3 ) 
     do k = 1, self%spline_degree(3)+1 
-       !index3d(3) = modulo(box(3)+k-2,self%n_cells(3))+1
        index3d(3) = (self%index1d(k,3)-1)*self%n_cells(1)*self%n_cells(2)
        do j = 1, self%spline_degree(2)+1
-          !index3d(2) = modulo(box(2)+j-2,self%n_cells(2))+1
           index3d(2) = index3d(3) + (self%index1d(j,2)-1)*self%n_cells(1)
           do i = 1, self%spline_degree(1)
-             !index3d(1) = modulo(box(1)+i-2,self%n_cells(1))+1
-             !convert_index_3d_to_1d( index3d, self%n_cells )
              index1d = index3d(2) + self%index1d(i,1)
 
              j_dofs(index1d) = j_dofs(index1d) + &
@@ -808,15 +784,10 @@ contains
     call box_index( self, box(1), 1 )
     call box_index( self, box(2), 2 )   
     do k = 1, self%spline_degree(3)+1       
-       !index3d(3) = self%index1d(k,3)!modulo(box(3)+k-2,self%n_cells(3))+1
        index3d(3) = (self%index1d(k,3)-1)*self%n_cells(1)*self%n_cells(2)
        do j = 1, self%spline_degree(2)
-          !index3d(2) = self%index1d(j,2)!modulo(box(2)+j-2,self%n_cells(2))+1
           index3d(2) = index3d(3) + (self%index1d(j,2)-1)*self%n_cells(1)
           do i = 1, self%spline_degree(1)+1
-             !index3d(1) = self%index1d(i,1)!modulo(box(1)+i-2,self%n_cells(1))+1
-             !index1d = convert_index_3d_to_1d( index3d, self%n_cells )
-             !index1d = index1d + n_total
              index1d = index3d(2) + self%index1d(i,1) + self%n_total
 
              j_dofs(index1d) = j_dofs(index1d) + &
@@ -831,15 +802,10 @@ contains
     call box_index( self, box(2), 2 )   
     call box_index( self, box(3), 3 ) 
     do k = 1, self%spline_degree(3)    
-       !index3d(3) = self%index1d(k,3)!modulo(box(3)+k-2,self%n_cells(3))+1
        index3d(3) = (self%index1d(k,3)-1)*self%n_cells(1)*self%n_cells(2)
        do j = 1, self%spline_degree(2)+1
-          !index3d(2) = self%index1d(j,2)!modulo(box(2)+j-2,self%n_cells(2))+1
           index3d(2) = index3d(3) + (self%index1d(j,2)-1)*self%n_cells(1)
           do i = 1, self%spline_degree(1)+1
-             !index3d(1) = self%index1d(i,1)!modulo(box(1)+i-2,self%n_cells(1))+1
-             !index1d = convert_index_3d_to_1d( index3d, self%n_cells )
-             !index1d = index1d + n_total
              index1d = index3d(2) + self%index1d(i,1) + 2*self%n_total
 
              j_dofs(index1d) = j_dofs(index1d) + &
@@ -932,7 +898,7 @@ contains
   end subroutine add_current_spline_3d_feec
 
 
-  !> Add current for one particle and update v (according to H_p1 part in Hamiltonian splitting)
+  !> Add current for one particle and update v (according to H_p1 part in Hamiltonian splitting), version based on  primitive function
   subroutine add_current_update_v_primitive_component1_spline_3d_feec (self, position_old, position_new, marker_charge, qoverm, bfield_dofs, vi, j_dofs)
     class(sll_t_particle_mesh_coupling_spline_3d_feec), intent(inout) :: self !< kernel smoother object
     sll_real64, intent(in)    :: position_old(3) !< Position at time t
@@ -982,9 +948,6 @@ contains
             * self%delta_x(component)
     end do
 
-    !print*, boxold, boxnew
-    !print*, position_old, position_new
-    !print*, local_size, degree
 
     if (position_old(component) .le. position_new ) then
        self%j1d(local_size-degree+1:local_size) = self%spline_1(1:degree,2)
@@ -1059,6 +1022,7 @@ contains
 
   end subroutine add_current_update_v_primitive_component1_spline_3d_feec
 
+  !> Add current for one particle and update v (according to H_p2 part in Hamiltonian splitting), version based on primitive function
   subroutine add_current_update_v_primitive_component2_spline_3d_feec (self, position_old, position_new, marker_charge, qoverm, bfield_dofs, vi, j_dofs)
     class(sll_t_particle_mesh_coupling_spline_3d_feec), intent(inout) :: self !< kernel smoother object
     sll_real64, intent(in)    :: position_old(3) !< Position at time t
@@ -1178,6 +1142,9 @@ contains
 
   end subroutine add_current_update_v_primitive_component2_spline_3d_feec
 
+
+  
+  !> Add current for one particle and update v (according to H_p3 part in Hamiltonian splitting), version based on primitive function
   subroutine add_current_update_v_primitive_component3_spline_3d_feec (self, position_old, position_new, marker_charge, qoverm, bfield_dofs, vi, j_dofs)
     class(sll_t_particle_mesh_coupling_spline_3d_feec), intent(inout) :: self !< kernel smoother object
     sll_real64, intent(in)    :: position_old(3) !< Position at time t
@@ -1297,7 +1264,7 @@ contains
   end subroutine add_current_update_v_primitive_component3_spline_3d_feec
 
 
-  !> Add current for one particle and update v (according to H_p1 part in Hamiltonian splitting)
+  !> Add current for one particle and update v (according to H_p1 part in Hamiltonian splitting), version based on quadrature
   subroutine add_current_update_v_component1_spline_3d_feec (self, position_old, position_new, marker_charge, qoverm, bfield_dofs, vi, j_dofs)
     class(sll_t_particle_mesh_coupling_spline_3d_feec), intent(inout) :: self !< kernel smoother object
     sll_real64, intent(in)    :: position_old(3) !< Position at time t
@@ -1390,6 +1357,7 @@ contains
 
   end subroutine add_current_update_v_component1_spline_3d_feec
 
+  !> Add current for one particle and update v (according to H_p2 part in Hamiltonian splitting), version based on quadrature
   subroutine add_current_update_v_component2_spline_3d_feec (self, position_old, position_new, marker_charge, qoverm, bfield_dofs, vi, j_dofs)
     class(sll_t_particle_mesh_coupling_spline_3d_feec), intent(inout) :: self !< kernel smoother object
     sll_real64, intent(in)    :: position_old(3) !< Position at time t
@@ -1486,6 +1454,7 @@ contains
   end subroutine add_current_update_v_component2_spline_3d_feec
 
   
+  !> Add current for one particle and update v (according to H_p3 part in Hamiltonian splitting), version based on quadrature
   subroutine add_current_update_v_component3_spline_3d_feec (self, position_old, position_new, marker_charge, qoverm, bfield_dofs, vi, j_dofs)
     class(sll_t_particle_mesh_coupling_spline_3d_feec), intent(inout) :: self !< kernel smoother object
     sll_real64, intent(in)    :: position_old(3) !< Position at time t
@@ -1682,53 +1651,6 @@ contains
 
 
 
-  subroutine update_j( self, component, lower, upper, index, marker_charge, sign, j_dofs)
-    class(sll_t_particle_mesh_coupling_spline_3d_feec), intent(inout) :: self !< time splitting object 
-    sll_int32,                              intent(in)    :: component
-    sll_real64,                             intent(in)    :: lower
-    sll_real64,                             intent(in)    :: upper
-    sll_int32,                              intent(in)    :: index
-    sll_real64,                             intent(in)    :: marker_charge
-    sll_real64,                             intent(in)    :: sign
-    sll_real64,                             intent(inout) :: j_dofs(self%n_total)
-
-    !Local variables
-    sll_int32  :: ind, i_grid, i_mod, j
-    sll_real64 :: c1, c2
-    sll_int32 :: spline_degree
-    sll_int32 :: n_cells
-
-    n_cells = self%n_cells(component)
-    spline_degree = self%spline_degree(component)-1
-
-    c1 =  0.5_f64*(upper-lower)
-    c2 =  0.5_f64*(upper+lower)
-
-    call sll_s_uniform_bsplines_eval_basis(spline_degree, c1*self%quad_xw(1,1)+c2, &
-         self%spline_val(1:spline_degree,1))
-    self%spline_val(1:spline_degree,1) = self%spline_val(1:spline_degree,1) * (self%quad_xw(2,1)*c1)
-    do j=2,self%n_quad_points
-       call sll_s_uniform_bsplines_eval_basis(spline_degree, c1*self%quad_xw(1,j)+c2, &
-            self%spline_val_more(1:spline_degree,1))
-       self%spline_val(1:spline_degree,1) = self%spline_val(1:spline_degree,1) + self%spline_val_more(1:spline_degree,1) * (self%quad_xw(2,j)*c1)
-    end do
-    self%spline_val(1:spline_degree,1) = self%spline_val(1:spline_degree,1) * (sign*self%delta_x(component))
-
-
-    ind = 1
-    do i_grid = index - spline_degree , index
-       i_mod = modulo(i_grid, n_cells )
-       j_dofs(i_mod+1) = j_dofs(i_mod+1) + &
-            (marker_charge*self%spline_val(ind,1))
-       ind = ind + 1
-    end do
-
-
-
-  end subroutine update_j
-
-
-
   !> Constructor
   subroutine init_spline_3d_feec ( self, n_cells, domain, spline_degree, no_particles )
     class (sll_t_particle_mesh_coupling_spline_3d_feec), intent( out ) :: self !< Kernel smoother object 
@@ -1830,7 +1752,7 @@ contains
   end subroutine free_spline_3d_feec
 
 
-
+  !> Evaluates the integral int_{poisition_old}^{position_new} field(x) d x and the integrated current
   subroutine add_current_evaluate_int ( self, position_old, position_new, vbar, bfield_dofs, j_dofs, bfield_val)
     class( sll_t_particle_mesh_coupling_spline_3d_feec ), intent(inout)   :: self !< kernel smoother object
     sll_real64,                               intent( in )    :: position_old(self%dim) !< Position of the particle
@@ -1856,7 +1778,6 @@ contains
     sigma_l = 0.0_f64
     box = boxold ! We start in the old box
 
-    !print*, xold, boxold, xnew, boxnew
 
     sigma_counter = 0
 
@@ -1920,7 +1841,7 @@ contains
   end subroutine add_current_evaluate_int
 
 
-
+  !> Helper function for add_current_evaluate_int, takes care of per cell computations
   subroutine point_add_eval_subcyc ( self, box_in, xbox, field_dofs, weight, j_dofs, field_value )
     class( sll_t_particle_mesh_coupling_spline_3d_feec ), intent(inout)   :: self !< kernel smoother object
     sll_int32, intent(in) :: box_in(3)
@@ -2041,196 +1962,5 @@ contains
     end do
 
   end subroutine point_add_eval_subcyc
-
-  subroutine evaluate_int_subcyc ( self, position_old, position_new,  bfield_dofs,  bfield_val, bfield_derivs)
-    class( sll_t_particle_mesh_coupling_spline_3d_feec ), intent(inout)   :: self !< kernel smoother object
-    sll_real64,                               intent( in )    :: position_old(self%dim) !< Position of the particle
-    sll_real64,                               intent( in )    :: position_new(self%dim) !< Position of the particle
-    sll_real64,                               intent( in )    :: bfield_dofs(:)
-    sll_real64,                               intent( out   ) :: bfield_val(3)
-    sll_real64,                               intent( out   ) :: bfield_derivs(3,3)
-
-    sll_real64 :: xold(3), xnew(3), xnewtilde(3), xbox(3)
-    sll_int32 :: boxold(3), boxnew(3), sigma_counter(3), boxdiff(3), increment(3), box(3)
-    sll_real64 :: sigma_r, sigma_l, sigma, sigma_next(3), field_value(3), weight, field_derivs(3,3)
-    sll_int32 :: j, q, bl, maxind, index_is
-    type(vector) :: sigmas(3)
-
-    call convert_x_to_xbox( self, position_old, xold, boxold )
-    call convert_x_to_xbox( self, position_new, xnew, boxnew )
-
-    ! Now we need to compute the normalized 1d line along which to integrate:
-    boxdiff = boxnew-boxold
-    xnewtilde = xnew + real(boxdiff,f64)
-
-    sigma_l = 0.0_f64
-    box = boxold ! We start in the old box
-
-    !print*, xold, boxold, xnew, boxnew
-
-    sigma_counter = 0
-
-    bfield_val = 0.0_f64
-    bfield_derivs = 0.0_f64
-
-    do j=1,3
-       if (boxdiff(j) > 0 ) then
-          allocate ( sigmas(j)%vals(boxdiff(j)+1) )
-          do bl=1,boxdiff(j)
-             sigmas(j)%vals(bl) = (real(bl,f64)  - xold(j))/(xnewtilde(j)-xold(j))
-          end do
-          sigmas(j)%vals(boxdiff(j)+1) = 1.0_f64
-          sigma_next(j) = sigmas(j)%vals(1)
-          increment(j) = 1
-       elseif (boxdiff(j) < 0 ) then
-          allocate ( sigmas(j)%vals(-boxdiff(j)+1) )
-          do bl=boxdiff(j)+1,0
-             sigmas(j)%vals(-bl+1) = (real(bl,f64)  - xold(j))/(xnewtilde(j)-xold(j))
-          end do
-          sigmas(j)%vals(-boxdiff(j)+1) = 1.0_f64
-          sigma_next(j) = sigmas(j)%vals(1)
-          increment(j) = -1
-       else
-          sigma_next(j) = 1.0_f64
-          increment(j) = 0
-       end if
-    end do
-
-    sigma_r = 0.0_f64
-    do while ( sigma_r < 1.0_f64 )
-       ! Identify index of next intersection
-       index_is = minloc(sigma_next, dim=1)
-       sigma_r = sigma_next(index_is)
-
-       do q = 1, self%n_quad_points_line
-          sigma = sigma_l + (sigma_r-sigma_l) * self%quad_xw_line(1,q)
-          xbox = xold* (1.0_f64 - sigma) + xnewtilde * sigma  - real(sigma_counter*increment, f64)
-          if (maxval(xbox)> 1.0_f64 ) then
-             print*, xbox, sigma, sigma_counter, increment
-             SLL_ERROR( 'add_current_evaluate', 'box value too large')
-          elseif (minval(xbox)< 0.0_f64 ) then
-             print*, xbox, sigma, sigma_counter, increment
-             print*, xold, xnewtilde, sigma_r
-             SLL_ERROR( 'add_current_evaluate', 'box value too low')
-          end if
-
-          weight = self%quad_xw_line(2,q)*(sigma_r-sigma_l)
-
-          call point_eval_subcyc (self, box, xbox, bfield_dofs, field_value, field_derivs )
-          bfield_val = bfield_val + field_value * weight * ( 1.0_f64 - sigma )
-          bfield_derivs = bfield_derivs + field_derivs * weight * ( 1.0_f64 - sigma ) * sigma
-       end do
-       if (sigma_r < 1.0_f64 ) then
-          ! Update the
-          sigma_counter(index_is) = sigma_counter(index_is)+1
-          sigma_next(index_is) = sigmas(index_is)%vals(sigma_counter(index_is)+1)
-          box(index_is) = box(index_is) + increment(index_is)
-          sigma_l = sigma_r
-       end if
-    end do
-
-  end subroutine evaluate_int_subcyc
-
-
-  subroutine point_eval_subcyc ( self, box_in, xbox, field_dofs,  field_value, field_derivs )
-    class( sll_t_particle_mesh_coupling_spline_3d_feec ), intent(inout)   :: self !< kernel smoother object
-    sll_int32, intent(in) :: box_in(3)
-    sll_real64, intent(in) :: xbox(3)
-    sll_real64, intent(in) :: field_dofs(:)
-    sll_real64, intent(out) :: field_value(3)
-    sll_real64, intent(out) :: field_derivs(3,3)
-
-    sll_int32 :: i,j,k, index1d, n_total
-    sll_int32 :: box(3), index3d(3)
-    sll_real64 :: spval
-
-    n_total = self%n_total
-    field_value = 0.0_f64
-    field_derivs = 0.0_f64
-
-    ! Evaluate the splines and their derivatives
-    do j=1,3
-       call sll_s_uniform_bsplines_eval_basis( self%spline_degree(j), xbox(j), &
-            self%spline_0(1:self%spline_degree(j)+1,j) )
-       call sll_s_uniform_bsplines_eval_basis( self%spline_degree(j)-1, xbox(j), &
-            self%spline_1(1:self%spline_degree(j),j) )
-       call sll_s_uniform_bsplines_eval_deriv( self%spline_degree(j), xbox(j), &
-            self%spline_0_deriv(1:self%spline_degree(j)+1,j) )
-       call sll_s_uniform_bsplines_eval_deriv( self%spline_degree(j)-1, xbox(j), &
-            self%spline_1_deriv(1:self%spline_degree(j),j) )
-    end do
-
-    ! print*, '#', self%spline_0_deriv
-    ! print*, '#', self%spline_1_deriv
-
-    box = box_in-self%spline_degree
-
-    !box(1) = box(1)+1
-    call box_index( self, box(1), 1 )
-    call box_index( self, box(2), 2 )   
-    call box_index( self, box(3), 3 )
-
-
-    ! First component field
-    do k=2,self%spline_degree(3)+1 
-       index3d(3) = (self%index1d(k,3)-1)*self%n_cells(1)*self%n_cells(2)
-       do j=2,self%spline_degree(2)+1
-          index3d(2) = index3d(3) + (self%index1d(j,2)-1)*self%n_cells(1)
-          do i=1,self%spline_degree(1)+1
-             index1d = index3d(2) + self%index1d(i,1)
-             spval =  self%spline_0(i,1) * &
-                  self%spline_1(j-1,2) * self%spline_1(k-1,3)
-             field_value(1) = field_value(1) + field_dofs(index1d) * spval
-             field_derivs(1,1) = field_derivs(1,1) + field_dofs(index1d) * &
-                  self%spline_0_deriv(i,1) *  self%spline_1(j-1,2) * self%spline_1(k-1,3)
-             field_derivs(1,2) = field_derivs(1,2) + field_dofs(index1d) * &
-                  self%spline_0(i,1) *  self%spline_1_deriv(j-1,2) * self%spline_1(k-1,3)
-             field_derivs(1,3) = field_derivs(1,3) + field_dofs(index1d) * &
-                  self%spline_0(i,1) *  self%spline_1(j-1,2) * self%spline_1_deriv(k-1,3)
-          end do
-       end do
-    end do
-    ! Second component field
-    do k=2,self%spline_degree(3)+1       
-       index3d(3) = (self%index1d(k,3)-1)*self%n_cells(1)*self%n_cells(2)
-       do j=1,self%spline_degree(2)+1
-          index3d(2) = index3d(3) + (self%index1d(j,2)-1)*self%n_cells(1)
-          do i=2,self%spline_degree(1)+1
-             spval = self%spline_1(i-1,1) * &
-                  self%spline_0(j,2) * self%spline_1(k-1,3)
-             field_value(2) = field_value(2) + field_dofs(index1d ) * spval
-             field_derivs(2,1) = field_derivs(2,1) + field_dofs(index1d) * &
-                  self%spline_1_deriv(i-1,1) *  self%spline_0(j,2) * self%spline_1(k-1,3)
-             field_derivs(2,2) = field_derivs(2,2) + field_dofs(index1d) * &
-                  self%spline_1(i-1,1) *  self%spline_0_deriv(j,2) * self%spline_1(k-1,3)
-             field_derivs(2,3) = field_derivs(2,3) + field_dofs(index1d) * &
-                  self%spline_1(i-1,1) *  self%spline_0(j,2) * self%spline_1_deriv(k-1,3)
-          end do
-       end do
-    end do
-
-    n_total = n_total*2
-
-    ! Third component field
-    do k=1,self%spline_degree(3)+1    
-       index3d(3) = (self%index1d(k,3)-1)*self%n_cells(1)*self%n_cells(2)
-       do j=2,self%spline_degree(2)+1
-          index3d(2) = index3d(3) + (self%index1d(j,2)-1)*self%n_cells(1)
-          do i=2,self%spline_degree(1)+1
-             index1d = index3d(2) + self%index1d(i,1) + n_total
-             spval = self%spline_1(i-1,1) * &
-                  self%spline_1(j-1,2) * self%spline_0(k,3)
-             field_value(3) = field_value(3) + field_dofs(index1d ) * spval
-             field_derivs(3,1) = field_derivs(3,1) + field_dofs(index1d) * &
-                  self%spline_1_deriv(i-1,1) *  self%spline_1(j-1,2) * self%spline_0(k,3)
-             field_derivs(3,2) = field_derivs(3,2) + field_dofs(index1d) * &
-                  self%spline_1(i-1,1) *  self%spline_1_deriv(j-1,2) * self%spline_0(k,3)
-             field_derivs(3,3) = field_derivs(3,3) + field_dofs(index1d) * &
-                  self%spline_1(i-1,1) *  self%spline_1(j-1,2) * self%spline_0_deriv(k,3)
-          end do
-       end do
-    end do
-
-  end subroutine point_eval_subcyc
 
 end module sll_m_particle_mesh_coupling_spline_3d_feec
