@@ -1,0 +1,34 @@
+&sim_params
+        delta_t = 0.01
+        n_time_steps = 2
+        beta = 0.001
+	initial_distrib_sp1 = "initial_distribution_sp1.nml"
+	initial_distrib_sp2 = "initial_distribution_sp2.nml"
+	initial_bfield = "cos"
+	charge = -1.0 1.0
+	mass = 1.0 100.0
+/      
+
+&output
+	file_prefix = "ctest"
+	
+/
+
+&grid_dims
+        ng_x = 32
+        x1_min = 0.0
+        x1_max = 6.283185307179586
+/
+
+&pic_params
+        n_particles = 100000
+        sampling_case = "particle_sampling_sobol_symmetric"
+        splitting_case = "splitting_hs"
+	spline_degree = 3
+	splitting_type = "strang"
+/
+
+&ctest
+        ctest_case = "hs"
+/
+

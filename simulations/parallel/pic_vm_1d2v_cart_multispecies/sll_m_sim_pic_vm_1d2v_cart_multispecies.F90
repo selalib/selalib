@@ -1,8 +1,10 @@
 ! Simulation of 1d2v Vlasov-Maxwell with simple PIC method, periodic boundary conditions, Weibel instability. FEM with splines, degree 3 for B and 2 for E
 
+! Species 1: electrons, species 2: ions
+
 ! author: Katharina Kormann, IPP
 
-module sll_m_sim_pic_vm_1d2v_cart
+module sll_m_sim_pic_vm_1d2v_cart_multispecies
 
   !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
@@ -10,13 +12,8 @@ module sll_m_sim_pic_vm_1d2v_cart
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  
   use sll_m_low_level_bsplines, only: &
-       sll_s_uniform_bsplines_eval_basis, &
-       sll_s_eval_uniform_periodic_spline_curve
-
-  use sll_m_gauss_legendre_integration, only: &
-       sll_f_gauss_legendre_points_and_weights
+       sll_s_uniform_bsplines_eval_basis
 
   use sll_m_ascii_io, only: &
        sll_s_ascii_file_create, &
@@ -73,12 +70,9 @@ module sll_m_sim_pic_vm_1d2v_cart
   use sll_m_time_propagator_pic_vm_1d2v_disgradEC_sub, only: &
        sll_t_time_propagator_pic_vm_1d2v_disgradEC_sub
 
-  use sll_m_time_propagator_pic_vm_1d2v_hs_trafo, only: &
-       sll_t_time_propagator_pic_vm_1d2v_hs_trafo
-
   use sll_m_time_propagator_pic_vm_1d2v_trafo, only: &
        sll_t_time_propagator_pic_vm_1d2v_trafo
-  
+
   use sll_m_time_propagator_pic_vm_3d3v_cl_helper, only: &
        sll_p_boundary_particles_periodic, &
        sll_p_boundary_particles_singular, &
@@ -94,23 +88,9 @@ module sll_m_sim_pic_vm_1d2v_cart
   use sll_m_time_propagator_pic_vm_1d2v_ecsim2o, only: &
        sll_t_time_propagator_pic_vm_1d2v_ecsim2o
 
-  use sll_m_time_propagator_pic_vm_1d2v_subcyc, only: &
-       sll_t_time_propagator_pic_vm_1d2v_subcyc
-
-  use sll_m_time_propagator_pic_vm_1d2v_subcyci, only: &
-       sll_t_time_propagator_pic_vm_1d2v_subcyci
-
-  use sll_m_time_propagator_pic_vm_1d2v_zigsub, only: &
-       sll_t_time_propagator_pic_vm_1d2v_zigsub
-
   use sll_m_initial_distribution, only : &
        sll_c_distribution_params, &
-       sll_s_initial_distribution_new
-
-  use sll_m_timer, only: &
-       sll_s_set_time_mark, &
-       sll_f_time_elapsed_between, &
-       sll_t_time_mark
+       sll_s_initial_distribution_file_new
 
   use sll_m_io_utilities, only : &
        sll_s_read_data_real_array, &
@@ -125,14 +105,14 @@ module sll_m_sim_pic_vm_1d2v_cart
        sll_s_new_particle_mesh_coupling_spline_1d, &
        sll_s_new_particle_mesh_coupling_spline_1d_ptr
 
+  use sll_m_particle_mesh_coupling_spline_strong_1d, only: &
+       sll_t_particle_mesh_coupling_spline_strong_1d, &
+       sll_s_new_particle_mesh_coupling_spline_strong_1d
+
   use sll_m_particle_mesh_coupling_spline_cl_1d, only: &
        sll_t_particle_mesh_coupling_spline_cl_1d, &
        sll_s_new_particle_mesh_coupling_spline_cl_1d, &
        sll_s_new_particle_mesh_coupling_spline_cl_1d_ptr
-  
-  use sll_m_particle_mesh_coupling_spline_strong_1d, only: &
-       sll_t_particle_mesh_coupling_spline_strong_1d, &
-       sll_s_new_particle_mesh_coupling_spline_strong_1d
 
   use sll_m_particle_mesh_coupling_spline_smooth_1d, only: &
        sll_t_particle_mesh_coupling_spline_smooth_1d, &
@@ -156,10 +136,10 @@ module sll_m_sim_pic_vm_1d2v_cart
 
   use sll_m_maxwell_clamped_1d_fem_sm, only: &
        sll_t_maxwell_clamped_1d_fem_sm
-  
+
   use sll_m_maxwell_clamped_1d_trafo, only:&
        sll_t_maxwell_clamped_1d_trafo
-  
+
   use sll_m_particle_group_1d2v, only: &
        sll_t_particle_group_1d2v
 
@@ -168,10 +148,16 @@ module sll_m_sim_pic_vm_1d2v_cart
        sll_t_particle_array
 
   use sll_m_particle_sampling, only: &
-       sll_t_particle_sampling
+       sll_t_particle_sampling, &
+       sll_s_particle_sampling_randomized_weights
 
   use sll_m_sim_base, only: &
        sll_c_simulation_base_class
+
+  use sll_m_timer, only: &
+       sll_s_set_time_mark, &
+       sll_f_time_elapsed_between, &
+       sll_t_time_mark
 
   use sll_m_utilities, only : &
        sll_s_int2string
@@ -188,7 +174,7 @@ module sll_m_sim_pic_vm_1d2v_cart
   implicit none
 
   public :: &
-       sll_t_sim_pic_vm_1d2v_cart
+       sll_t_sim_pic_vm_1d2v_cart_multispecies
 
   private
   !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -198,16 +184,11 @@ module sll_m_sim_pic_vm_1d2v_cart
   sll_int32, parameter :: sll_p_splitting_disgradE = 2
   sll_int32, parameter :: sll_p_splitting_cef = 4
   sll_int32, parameter :: sll_p_splitting_ecsim = 6
-  sll_int32, parameter :: sll_p_splitting_ecsim2o =7 
+  sll_int32, parameter :: sll_p_splitting_ecsim2o = 7
   sll_int32, parameter :: sll_p_splitting_disgradEC = 10
   sll_int32, parameter :: sll_p_splitting_disgradEC_sub = 13
-  sll_int32, parameter :: sll_p_splitting_hs_trafo = 14
-  sll_int32, parameter :: sll_p_splitting_trafo = 15
-  sll_int32, parameter :: sll_p_splitting_subcyc = 17
-  sll_int32, parameter :: sll_p_splitting_subcyci = 18 !< implicit subcycling scheme
-  sll_int32, parameter :: sll_p_splitting_zigsub = 19 !< subcycling with zig zagging
+  sll_int32, parameter :: sll_p_splitting_trafo = 14
   sll_int32, parameter :: sll_p_splitting_momentum = 20
- 
 
   sll_int32, parameter :: sll_p_onegaussian = 0
   sll_int32, parameter :: sll_p_twogaussian = 1
@@ -215,7 +196,6 @@ module sll_m_sim_pic_vm_1d2v_cart
   sll_int32, parameter :: sll_p_bfield_cos = 0
   sll_int32, parameter :: sll_p_bfield_sin = 1
   sll_int32, parameter :: sll_p_bfield_constant = 2
-  sll_int32, parameter :: sll_p_bfield_cos_const = 3
 
   sll_int32, parameter :: sll_p_strang_splitting=0
   sll_int32, parameter :: sll_p_splitting_fourth=1
@@ -224,17 +204,17 @@ module sll_m_sim_pic_vm_1d2v_cart
   sll_int32, parameter :: sll_p_splitting_fourth_10steps=4
   sll_int32, parameter :: sll_p_splitting_second_4steps=5
 
-  type, extends(sll_c_simulation_base_class) :: sll_t_sim_pic_vm_1d2v_cart
+
+  type, extends(sll_c_simulation_base_class) :: sll_t_sim_pic_vm_1d2v_cart_multispecies
 
      ! Abstract particle group
-     class(sll_t_particle_array), pointer :: particle_group
+     class(sll_t_particle_array), pointer :: particle_group !< Particle group
 
-     ! 
+     !
+     sll_real64, pointer :: phi_dofs(:)
      sll_real64, pointer :: efield_dofs(:,:)
      sll_real64, pointer :: efield_dofs_n(:,:)
-     sll_real64, pointer :: phi_dofs(:)
      sll_real64, allocatable :: bfield_dofs(:)
-     sll_real64, allocatable :: rhob(:)
 
      sll_real64, allocatable :: x_array(:)
      sll_real64, allocatable :: field_grid(:)
@@ -268,14 +248,17 @@ module sll_m_sim_pic_vm_1d2v_cart
      sll_int32  :: no_weights
 
      ! Physical parameters
-     class(sll_c_distribution_params), allocatable :: init_distrib_params
+     class(sll_c_distribution_params), allocatable :: init_distrib_params_sp1
+     class(sll_c_distribution_params), allocatable :: init_distrib_params_sp2
      sll_real64 :: beta
+     sll_real64 :: delta(2)
      sll_real64 :: domain(3) ! x_min, x_max, Lx
+     sll_real64 :: domain_logical(3)
      type(sll_t_particle_sampling) :: sampler
-     sll_real64 :: plasma_betar(3) 
+     sll_real64 :: plasma_betar(3) = 1.0_f64
      sll_real64 :: force_sign 
-     logical :: electrostatic
-     logical :: adiabatic_electrons = .false.
+     logical :: electrostatic 
+
 
      ! Simulation parameters
      sll_real64 :: delta_t
@@ -291,14 +274,13 @@ module sll_m_sim_pic_vm_1d2v_cart
      sll_int32  :: boundary_fields = 100
      sll_int32  :: boundary_particles = 100
 
+
      ! Parameters for MPI
      sll_int32  :: rank
      sll_int32  :: world_size
 
      ! Case definitions
      sll_int32  :: initial_bfield
-     sll_real64 :: charge
-     sll_real64 :: mass
 
      ! Output
      character(len=256)   :: file_prefix
@@ -308,7 +290,10 @@ module sll_m_sim_pic_vm_1d2v_cart
      ! For ctest
      logical    :: ctest_passed = .false.
      logical    :: make_ctest = .false.
-     character(len=256)   :: ctest_ref_file_rho, ctest_ref_file_thdiag
+     character(len=256)   :: ctest_ref_file!_rho, ctest_ref_file_thdiag
+
+
+     logical :: strong_ampere
 
      !coordinate transformation
      type(sll_t_mapping_3d) :: map
@@ -317,25 +302,32 @@ module sll_m_sim_pic_vm_1d2v_cart
      !spline_pp
      type(sll_t_spline_pp_1d) :: spline0_pp
 
-     logical :: strong_ampere
-
      ! Filter
      class(sll_c_filter_base_1d), allocatable :: filter
-     type(sll_t_binomial_filter) :: bfilter
-     
+     type( sll_t_binomial_filter ) :: bfilter
+
+     ! For restart
+     logical    :: restart = .false.
+     character(len=256) :: restart_file
+     sll_int32 :: restart_steps = 0
+
+     ! For random perturbation in initial function
+     logical :: randomize_weights(2)
+     sll_real64 :: randomize_weights_alpha(2)
+
    contains
      procedure :: init_from_file => init_pic_vm_1d2v
      procedure :: run => run_pic_vm_1d2v
      procedure :: delete => delete_pic_vm_1d2v
 
-  end type sll_t_sim_pic_vm_1d2v_cart
+  end type sll_t_sim_pic_vm_1d2v_cart_multispecies
 
 
 contains
   !------------------------------------------------------------------------------!
   ! Read in the simulation parameters from input file
   subroutine init_pic_vm_1d2v (sim, filename)
-    class(sll_t_sim_pic_vm_1d2v_cart), intent(inout) :: sim
+    class(sll_t_sim_pic_vm_1d2v_cart_multispecies), intent(inout) :: sim
     character(len=*),                  intent(in)    :: filename
 
     sll_int32   :: io_stat
@@ -345,52 +337,58 @@ contains
     sll_real64         :: delta_t
     sll_int32          :: n_time_steps
     sll_real64         :: beta
-    character(len=256) :: initial_distrib
+    sll_real64         :: delta(2)= [1._f64, 1._f64]
+    character(len=256) :: initial_distrib_sp1
+    character(len=256) :: initial_distrib_sp2
     character(len=256) :: initial_bfield
-    sll_real64         :: charge = -1._f64
-    sll_real64         :: mass = 1._f64
+    sll_real64         :: charge(2) = [-1._f64, 1._f64] 
+    sll_real64         :: mass(2) = [1._f64, 1._f64]
     sll_real64         :: plasma_beta(3)  = 1._f64
-    character(len=256) :: particle_force = "repulsion"
+    character(len=256) :: particle_force
     logical            :: electrostatic = .false.
+    logical            :: restart = .false.
+    character(len=256) :: restart_file
+    sll_int32          :: restart_steps = 0
     character(len=256) :: file_prefix
     logical            :: output_fields = .false.
     logical            :: output_particles = .false.
     sll_int32          :: ng_x
     sll_real64         :: x1_min, x1_max
-    logical            :: jmean = .false.
-    sll_int32          :: degree_fem = -2
     sll_int32          :: n_particles
     character(len=256) :: sampling_case
+    logical            :: delta_perturb = .false.
+    sll_real64         :: delta_eps(6)
     character(len=256) :: splitting_case
     sll_int32          :: spline_degree 
     character(len=256) :: splitting_type
-    logical            :: strong_ampere = .false.
-    logical            :: eval_grid_points
     character(len=256) :: boundary_fields = "none"
     character(len=256) :: boundary_particles = "none"
     logical            :: smoothing = .false.
-    character(len=256) :: ctest_case = "none"
+    character(len=256) :: ctest_case
+    logical            :: jmean = .false.
+    sll_int32          :: degree_fem = -2
     character(len=256) :: filtering
     sll_int32          :: filter_iter = 0
     sll_int32          :: mode = 2
     logical            :: with_control_variate = .false.
-    sll_int32          :: n_sub_iter
+    logical            :: strong_ampere = .false.
+    logical            :: randomize_weights(2) = .false.
+    sll_real64         :: randomize_weights_alpha(2)
+    logical            :: eval_grid_points
 
 
-    namelist /sim_params/         delta_t, n_time_steps, beta, initial_distrib, initial_bfield, charge, mass, plasma_beta, particle_force, electrostatic
+    namelist /sim_params/         delta_t, n_time_steps, beta, delta, initial_distrib_sp1,initial_distrib_sp2, initial_bfield, charge, mass, plasma_beta, particle_force, electrostatic, restart, restart_file, restart_steps
 
     namelist /output/             file_prefix, output_fields, output_particles
 
     namelist /grid_dims/          ng_x, x1_min, x1_max, jmean, degree_fem
 
-    namelist /pic_params/         n_particles, sampling_case, splitting_case, spline_degree, splitting_type, boundary_fields, boundary_particles, smoothing, filtering, filter_iter, mode, with_control_variate, strong_ampere
+    namelist /pic_params/         n_particles, sampling_case, delta_perturb, delta_eps, splitting_case, spline_degree, splitting_type, boundary_fields, boundary_particles, smoothing, filtering, filter_iter, mode, with_control_variate, strong_ampere, randomize_weights, randomize_weights_alpha
 
     namelist /ctest/              ctest_case
-    namelist /time_iterate/       n_sub_iter
-
 
     call sll_s_set_time_mark( start_init )
-    
+
     ! Read parameters from file
     open(newunit = input_file, file=trim(filename), status='old', IOStat=io_stat)
     if (io_stat /= 0) then
@@ -399,12 +397,19 @@ contains
     end if
 
     read(input_file, sim_params)
-    call sll_s_initial_distribution_new( trim(initial_distrib), [1,2], input_file, sim%init_distrib_params )
+    if( restart ) then
+       sim%restart = .true.
+       sim%restart_file = restart_file
+       sim%restart_steps = restart_steps
+    end if
+    call sll_s_initial_distribution_file_new( [1,2], initial_distrib_sp1, sim%init_distrib_params_sp1 )
+    call sll_s_initial_distribution_file_new( [1,2], initial_distrib_sp2, sim%init_distrib_params_sp2 )
     read(input_file, output)
     read(input_file, grid_dims)
     read(input_file, pic_params)
     read(input_file, ctest )
     close (input_file)
+
 
     ! Set MPI parameters
     sim%world_size = sll_f_get_collective_size(sll_v_world_collective)
@@ -413,19 +418,17 @@ contains
     ! Copy the read parameters into the simulation parameters
     sim%delta_t = delta_t
     sim%n_time_steps = n_time_steps
+    sim%delta = delta
     sim%beta = beta
-    sim%charge = charge
-    sim%mass = mass
-
     sim%plasma_betar = 1._f64/plasma_beta
     sim%electrostatic = electrostatic
-
-    if( sim%charge > 0._f64) sim%adiabatic_electrons = .true.
 
     select case( particle_force)
     case( "attraction" )
        sim%force_sign = -1._f64
     case( "repulsion" )
+       sim%force_sign = 1._f64
+    case default
        sim%force_sign = 1._f64
     end select
 
@@ -436,8 +439,6 @@ contains
        sim%initial_bfield = sll_p_bfield_sin
     case( "constant" )
        sim%initial_bfield = sll_p_bfield_constant
-    case( "cos_constant" )
-       sim%initial_bfield = sll_p_bfield_cos_const
     case default
        print*, '#initial bfield must be either sin or cos or constant.'
     end select
@@ -451,10 +452,12 @@ contains
     sim%mesh => sll_f_new_cartesian_mesh_1d( ng_x, &
          x1_min, x1_max)
     sim%domain = [x1_min, x1_max, x1_max - x1_min ]
+    sim%domain_logical = sim%domain
     sim%delta_x = (x1_max - x1_min)/real(ng_x, f64)
 
     sim%n_particles = n_particles/sim%world_size
     sim%degree_smoother = spline_degree
+
 
     sim%strong_ampere = strong_ampere
 
@@ -481,7 +484,7 @@ contains
 
     call sim%bfilter%init ( filter_iter, sim%n_gcells )
 
-    call sim%sampler%init( trim(sampling_case), [1,2], sim%n_particles, sim%rank)
+    call sim%sampler%init( trim(sampling_case), [1,2], sim%n_particles, sim%rank, delta_perturb, delta_eps )
     sim%n_total_particles = sim%n_particles * sim%world_size
 
     if (with_control_variate .eqv. .true.) then
@@ -490,17 +493,12 @@ contains
        sim%no_weights = 1
     end if
 
+
     !boundary conditions
     select case(boundary_fields)
     case("clamped")
        sim%boundary = .true.
-       if( sim%degree_smoother == 2 )then
-          sim%boundary_fields=sll_p_boundary_clamped_square
-       else if( sim%degree_smoother == 3 )then
-          sim%boundary_fields=sll_p_boundary_clamped_cubic
-       else
-          sim%boundary_fields=sll_p_boundary_clamped
-       end if
+       sim%boundary_fields=sll_p_boundary_clamped
        sim%n_total0= ng_x+spline_degree
        sim%n_total1= ng_x+spline_degree-1
        call sll_s_spline_pp_init_1d( sim%spline0_pp, spline_degree, ng_x, sim%boundary_fields)
@@ -523,15 +521,14 @@ contains
     end select
 
     select case(boundary_particles)
-    case( "periodic" )
-       sim%boundary_particles=sll_p_boundary_particles_periodic
-    case( "singular" )
-       sim%boundary_particles=sll_p_boundary_particles_singular
     case( "reflection" )
-       sim%boundary_particles=sll_p_boundary_particles_reflection
+       sim%boundary_particles = sll_p_boundary_particles_reflection
     case( "absorption" )
-       sim%boundary_particles=sll_p_boundary_particles_absorption
+       sim%boundary_particles = sll_p_boundary_particles_absorption
+    case( "periodic" )
+       sim%boundary_particles = sll_p_boundary_particles_periodic
     end select
+
 
     select case(splitting_case)
     case("splitting_hs")
@@ -550,22 +547,10 @@ contains
        sim%splitting_case = sll_p_splitting_disgradEC
     case("splitting_disgradEC_sub")
        sim%splitting_case = sll_p_splitting_disgradEC_sub
-    case("splitting_subcyc")
-       sim%splitting_case = sll_p_splitting_subcyc
-    case("splitting_subcyci")
-       sim%splitting_case = sll_p_splitting_subcyci
-    case("splitting_zigsub")
-       sim%splitting_case = sll_p_splitting_zigsub
-    case("splitting_hs_trafo")
-       sim%splitting_case = sll_p_splitting_hs_trafo
-       sim%ct=.true.
-       sim%domain = [0._f64, 1._f64, x1_max - x1_min ]
-       sim%delta_x = 1._f64/real(ng_x, f64)
-       call sim%map%init_from_file(filename)
     case("splitting_trafo")
        sim%splitting_case = sll_p_splitting_trafo
        sim%ct=.true.
-       sim%domain = [0._f64, 1._f64, x1_max - x1_min ]
+       sim%domain_logical = [0._f64, 1._f64, x1_max - x1_min ]
        sim%delta_x = 1._f64/real(ng_x, f64)
        call sim%map%init_from_file(filename)
     case ("splitting_momentum")
@@ -595,90 +580,75 @@ contains
     select case( ctest_case)
     case ("hs")
        sim%make_ctest = .true.
-       sim%ctest_ref_file_rho = "ctests/reffile_hs_pic_vm_1d2v_cart_rho.dat"
-       sim%ctest_ref_file_thdiag = "ctests/reffile_hs_pic_vm_1d2v_cart_thdiag.dat"
-    case ("hs_stronga")
-       sim%make_ctest = .true.
-       sim%ctest_ref_file_rho = "ctests/reffile_hs_stronga_pic_vm_1d2v_cart_rho.dat"
-       sim%ctest_ref_file_thdiag = "ctests/reffile_hs_stronga_pic_vm_1d2v_cart_thdiag.dat"
-    case("cef")
-       sim%make_ctest = .true.
-       sim%ctest_ref_file_rho = "ctests/reffile_cef_pic_vm_1d2v_cart_rho.dat"
-       sim%ctest_ref_file_thdiag = "ctests/reffile_cef_pic_vm_1d2v_cart_thdiag.dat"
-    case("ecsim")
-       sim%make_ctest = .true.
-       sim%ctest_ref_file_rho = "ctests/reffile_ecsim_pic_vm_1d2v_cart_rho.dat"
-       sim%ctest_ref_file_thdiag = "ctests/reffile_ecsim_pic_vm_1d2v_cart_thdiag.dat"
-    case("disgradE")
-       sim%make_ctest = .true.
-       sim%ctest_ref_file_rho = "ctests/reffile_disgradE_pic_vm_1d2v_cart_rho.dat"
-       sim%ctest_ref_file_thdiag = "ctests/reffile_disgradE_pic_vm_1d2v_cart_thdiag.dat"
-    case("disgradEC")
-       sim%make_ctest = .true.
-       sim%ctest_ref_file_rho = "ctests/reffile_disgradEC_pic_vm_1d2v_cart_rho.dat"
-       sim%ctest_ref_file_thdiag = "ctests/reffile_disgradEC_pic_vm_1d2v_cart_thdiag.dat"
-    case("disgradEC_stronga")
-       sim%make_ctest = .true.
-       sim%ctest_ref_file_rho = "ctests/reffile_disgradEC_stronga_pic_vm_1d2v_cart_rho.dat"
-       sim%ctest_ref_file_thdiag = "ctests/reffile_disgradEC_stronga_pic_vm_1d2v_cart_thdiag.dat"
-    case("disgradEC_sub")
-       sim%make_ctest = .true.
-       sim%ctest_ref_file_rho = "ctests/reffile_disgradEC_sub_pic_vm_1d2v_cart_rho.dat"
-       sim%ctest_ref_file_thdiag = "ctests/reffile_disgradEC_sub_pic_vm_1d2v_cart_thdiag.dat"
-    case("hs_smooth")
-       sim%make_ctest = .true.
-       sim%ctest_ref_file_rho = "ctests/reffile_hs_smooth_pic_vm_1d2v_cart_rho.dat"
-       sim%ctest_ref_file_thdiag = "ctests/reffile_hs_smooth_pic_vm_1d2v_cart_thdiag.dat"
-    case("disgradE_smooth")
-       sim%make_ctest = .true.
-       sim%ctest_ref_file_rho = "ctests/reffile_disgradE_smooth_pic_vm_1d2v_cart_rho.dat"
-       sim%ctest_ref_file_thdiag = "ctests/reffile_disgradE_smooth_pic_vm_1d2v_cart_thdiag.dat"
-    case("disgradEC_smooth")
-       sim%make_ctest = .true.
-       sim%ctest_ref_file_rho = "ctests/reffile_disgradEC_smooth_pic_vm_1d2v_cart_rho.dat"
-       sim%ctest_ref_file_thdiag = "ctests/reffile_disgradEC_smooth_pic_vm_1d2v_cart_thdiag.dat"
-    case("disgradEC_sub_smooth")
-       sim%make_ctest = .true.
-       sim%ctest_ref_file_rho = "ctests/reffile_disgradEC_sub_smooth_pic_vm_1d2v_cart_rho.dat"
-       sim%ctest_ref_file_thdiag = "ctests/reffile_disgradEC_sub_smooth_pic_vm_1d2v_cart_thdiag.dat"
-    case("trafo")
-       sim%make_ctest = .true.
-       sim%ctest_ref_file_rho = "ctests/reffile_trafo_pic_vm_1d2v_cart_rho.dat"
-       sim%ctest_ref_file_thdiag = "ctests/reffile_trafo_pic_vm_1d2v_cart_thdiag.dat"
+       sim%ctest_ref_file = "reffile_pic_vm_1d2v_cart_multispecies.dat"
+!!$    case("ecsim")
+!!$       sim%make_ctest = .true.
+!!$       sim%ctest_ref_file = "reffile_ecsim_pic_vm_1d2v_cart_rho.dat"
     end select
 
 
     ! Initialize the particles   (mass set to 1.0 and charge set to -1.0)
     allocate( sim%particle_group )
-    sim%particle_group%n_species = 1
+    sim%particle_group%n_species = 2
     allocate( sll_t_particle_group_1d2v :: sim%particle_group%group(sim%particle_group%n_species) )
+    ! electrons
     select type ( qp => sim%particle_group%group(1) )
     type is (  sll_t_particle_group_1d2v )
        ! Note: This call produces a segmentation fault with the INTEL 17 compiler
        ! Therefore we manually initialize here
        ! TODO: Fix the problem with the init function
        call qp%init(sim%n_particles, &
-            sim%n_total_particles, sim%charge, sim%mass, sim%no_weights)
+            sim%n_total_particles, charge(1), mass(1), sim%no_weights)
+       call qp%set_common_weight(sim%delta(1))
+
        !qp%n_particles = sim%n_particles
        !qp%n_total_particles = sim%n_total_particles
        !SLL_ALLOCATE( qp%particle_array(3+sim%no_weights,sim%n_particles), ierr)
        !allocate( qp%species, stat=ierr)
        !SLL_ASSERT(ierr==0)
-       !call qp%species%init( sim%charge, 1.0_f64 )
+       !call qp%species%init( charge(1), mass(1) )
        !qp%n_weights = sim%no_weights
     end select
-
-    ! Initialize control variate
-    allocate(sim%control_variate%cv(1) )
-    call sim%control_variate%cv(1)%init(control_variate_equi, &
-         distribution_params=sim%init_distrib_params)
+    ! ions
+    select type ( qp => sim%particle_group%group(2) )
+    type is (  sll_t_particle_group_1d2v )
+       ! Note: This call produces a segmentation fault with the INTEL 17 compiler
+       ! Therefore we manually initialize here
+       ! TODO: Fix the problem with the init function
+       call qp%init(sim%n_particles, &
+            sim%n_total_particles, charge(2), mass(2), sim%no_weights)
+       call qp%set_common_weight(sim%delta(2))
+       !qp%n_particles = sim%n_particles
+       !qp%n_total_particles = sim%n_total_particles
+       !SLL_ALLOCATE( qp%particle_array(3+sim%no_weights,sim%n_particles), ierr)
+       !allocate( qp%species, stat=ierr)
+       !SLL_ASSERT(ierr==0)
+       !call qp%species%init( charge(2), mass(2) )
+       !qp%n_weights = sim%no_weights
+       !call qp%init(sim%n_particles, &
+       !     sim%n_total_particles, 1.0_f64, mass_ion, sim%no_weights)
+    end select
 
     if (sim%rank == 0 ) then
        open(newunit=file_id, file=trim(filename)//'_used.dat')
        close(file_id)
     end if
+
+    ! Initialize control variate
+    allocate(sim%control_variate%cv(2) )
+    call sim%control_variate%cv(1)%init(control_variate_equi, &
+         distribution_params=sim%init_distrib_params_sp1)
+    call sim%control_variate%cv(2)%init(control_variate_equi, &
+         distribution_params=sim%init_distrib_params_sp2)
+
+
+    if (sim%rank == 0 ) then
+       open(newunit=file_id, file=trim(filename)//'_used.dat')
+       close(file_id)
+    end if
+
     ! Initialize kernel smoother
-    if( sim%boundary )then
+    if( sim%boundary ) then
        ! Initialize the field solver
        if (sim%ct) then
           allocate( sll_t_maxwell_clamped_1d_trafo :: sim%maxwell_solver )
@@ -691,23 +661,24 @@ contains
           select type ( q=>sim%maxwell_solver )
           type is ( sll_t_maxwell_clamped_1d_fem_sm )
              call q%init_from_file( sim%domain(1:2), sim%n_gcells, &
-                  sim%degree_smoother, sim%boundary_fields, trim(filename) )
+                  sim%degree_smoother, sim%boundary_fields , trim(filename) )
           end select
        end if
        call sim%maxwell_norm%init_from_file( sim%domain(1:2), sim%n_gcells, sim%degree_smoother, trim(filename) )
+
        call sll_s_new_particle_mesh_coupling_spline_cl_1d(sim%kernel_smoother_1, &
-            sim%domain(1:2), sim%n_gcells, &
+            sim%domain_logical(1:2), sim%n_gcells, &
             sim%n_particles, sim%degree_smoother-1, sll_p_galerkin, sim%boundary_fields) 
        call sll_s_new_particle_mesh_coupling_spline_cl_1d(sim%kernel_smoother_0, &
-            sim%domain(1:2), sim%n_gcells, &
+            sim%domain_logical(1:2), sim%n_gcells, &
             sim%n_particles, sim%degree_smoother, sll_p_galerkin, sim%boundary_fields)
     else
        ! Initialize the field solver
        if (sim%ct) then
           allocate( sll_t_maxwell_1d_trafo :: sim%maxwell_solver )
-          select type ( qtrafo=>sim%maxwell_solver )
+          select type ( q=>sim%maxwell_solver )
           type is ( sll_t_maxwell_1d_trafo )
-             call qtrafo%init_from_file( sim%domain(1:2), sim%n_gcells, sim%degree_smoother, sim%map,  trim(filename)  )
+             call q%init_from_file( sim%domain(1:2), sim%n_gcells, sim%degree_smoother, sim%map,  trim(filename) )
           end select
        else
           if ( sim%degree_fem > -1 ) then
@@ -715,27 +686,27 @@ contains
              select type ( q=>sim%maxwell_solver )
              type is ( sll_t_maxwell_1d_fem )
                 call q%init( sim%domain(1:2), sim%n_gcells, &
-                     sim%degree_fem, delta_t*0.5_f64, strong_ampere = strong_ampere, &
-                     force_sign=sim%force_sign, adiabatic_electrons=sim%adiabatic_electrons) ! Note: The time is defined for the matrices of the curl-curl solver. This is used for a half time step at the time (hence, the delta_t*0.5).
+                     sim%degree_fem, delta_t*0.5_f64, strong_ampere = sim%strong_ampere )
              end select
+!!$          allocate( sll_t_maxwell_1d_fem_sm :: sim%maxwell_solver )
+!!$          select type ( q=>sim%maxwell_solver )
+!!$          type is ( sll_t_maxwell_1d_fem_sm )
+!!$             call q%init_from_file( sim%domain(1:2), sim%n_gcells, &
+!!$                  sim%degree_fem, trim(filename) )
+!!$          end select
           else
              allocate( sll_t_maxwell_1d_ps :: sim%maxwell_solver )
              select type ( q=>sim%maxwell_solver )
              type is ( sll_t_maxwell_1d_ps )
                 call q%init( sim%domain(1:2), sim%n_gcells )
              end select
-!!$          allocate( sll_t_maxwell_1d_fem_sm :: sim%maxwell_solver )
-!!$          select type ( q=>sim%maxwell_solver )
-!!$          type is ( sll_t_maxwell_1d_fem_sm )
-!!$             call q%init_from_file( sim%domain(1:2), sim%n_gcells, &
-!!$                  sim%degree_smoother, trim(filename) )
-!!$          end select
           end if
        end if
-       if ( sim%degree_fem > -1 ) then
-          call sim%maxwell_norm%init_from_file( sim%domain(1:2), sim%n_gcells, sim%degree_fem, trim(filename), force_sign=sim%force_sign )
+       if ( sim%degree_fem > -1) then
+          call sim%maxwell_norm%init_from_file( sim%domain(1:2), sim%n_gcells, sim%degree_fem, trim(filename) )
        end if
 
+       ! Initialize kernel smoother
        if ( smoothing .eqv. .false. ) then
           if ( strong_ampere .eqv. .false. ) then
              call sll_s_new_particle_mesh_coupling_spline_1d(sim%kernel_smoother_1, &
@@ -758,41 +729,30 @@ contains
                   sim%domain(1:2), sim%n_gcells, &
                   sim%degree_smoother+1, integ = .true., eval_grid_points=eval_grid_points )
           end if
-       else
-          call sll_s_new_particle_mesh_coupling_spline_smooth_1d(sim%kernel_smoother_1, &
-               sim%domain(1:2), sim%n_gcells, &
-               sim%n_particles, sim%degree_smoother-1, sll_p_galerkin) 
-          call sll_s_new_particle_mesh_coupling_spline_smooth_1d(sim%kernel_smoother_0, &
-               sim%domain(1:2), sim%n_gcells, &
-               sim%n_particles, sim%degree_smoother, sll_p_galerkin) 
        end if
     end if
-    
+
     ! Initialize the arrays for the spline coefficients of the fields
-    SLL_ALLOCATE(sim%phi_dofs(sim%n_total0), ierr)
-    SLL_ALLOCATE(sim%efield_dofs(sim%n_total0,2), ierr)
-    SLL_ALLOCATE(sim%bfield_dofs(sim%n_total1), ierr)
-    sim%phi_dofs = 0._f64
+    SLL_ALLOCATE(sim%phi_dofs(sim%n_gcells), ierr)
+    SLL_ALLOCATE(sim%efield_dofs(sim%n_gcells,2), ierr)
+    SLL_ALLOCATE(sim%bfield_dofs(sim%n_gcells), ierr)
     sim%efield_dofs = 0._f64
     sim%bfield_dofs = 0._f64
-
-    SLL_ALLOCATE(sim%rhob(1:sim%n_total0), ierr)
-    sim%rhob = 0._f64
 
     ! Initialize the time-splitting propagator
     if (sim%splitting_case == sll_p_splitting_hs) then
        if (sim%no_weights == 1) then
           call sll_s_new_time_propagator_pic_vm_1d2v_hs(&
-            sim%propagator, sim%maxwell_solver, &
-            sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
-            sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
-            sim%domain(1), sim%domain(3), sim%filter, boundary_particles=sim%boundary_particles, force_sign=sim%force_sign, jmean=jmean, betar = sim%plasma_betar(1:2), electrostatic=sim%electrostatic, rhob = sim%rhob)
+               sim%propagator, sim%maxwell_solver, &
+               sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
+               sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
+               sim%domain(1), sim%domain(3), sim%filter, force_sign=sim%force_sign, jmean=jmean, betar = sim%plasma_betar(1:2), electrostatic=sim%electrostatic)
        else
           call sll_s_new_time_propagator_pic_vm_1d2v_hs(&
                sim%propagator, sim%maxwell_solver, &
                sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
                sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
-               sim%domain(1), sim%domain(3), sim%filter, sim%boundary_particles, sim%force_sign, jmean, sim%control_variate, sim%no_weights, betar = sim%plasma_betar(1:2), electrostatic=sim%electrostatic, rhob = sim%rhob)
+               sim%domain(1), sim%domain(3), sim%filter, force_sign=sim%force_sign, jmean=jmean, control_variate=sim%control_variate, i_weight=sim%no_weights, betar = sim%plasma_betar(1:2), electrostatic=sim%electrostatic)
        end if
        sim%efield_dofs_n => sim%efield_dofs
     elseif( sim%splitting_case == sll_p_splitting_boris) then
@@ -814,12 +774,11 @@ contains
                   sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
                   sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
                   sim%domain(1), sim%domain(3), sim%filter, trim(filename), boundary_particles=sim%boundary_particles, force_sign=sim%force_sign, betar=sim%plasma_betar(1:2), electrostatic=sim%electrostatic, jmean=jmean  )
-             sim%efield_dofs_n => qpdisgradE%efield_dofs
           else
              call qpdisgradE%init_from_file( sim%maxwell_solver, &
                   sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
                   sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
-                  sim%domain(1), sim%domain(3), sim%filter, trim(filename), sim%boundary_particles, sim%force_sign,  sim%control_variate, sim%no_weights, sim%plasma_betar(1:2), sim%electrostatic, jmean=jmean  )
+                  sim%domain(1), sim%domain(3), sim%filter, trim(filename), sim%boundary_particles, sim%force_sign, sim%control_variate, sim%no_weights, sim%plasma_betar(1:2), sim%electrostatic, jmean  )
           end if
           sim%efield_dofs_n => qpdisgradE%efield_dofs
        end select
@@ -829,24 +788,23 @@ contains
        type is ( sll_t_time_propagator_pic_vm_1d2v_cef )
           call qpcef%init( sim%maxwell_solver, &
                sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
-               sim%efield_dofs, sim%bfield_dofs, sim%domain(1), sim%domain(3), &
-               boundary_particles=sim%boundary_particles, electrostatic =sim%electrostatic, rhob = sim%rhob )
-          sim%efield_dofs_n => qpcef%efield_dofs
+               sim%efield_dofs, sim%bfield_dofs, sim%domain(1), sim%domain(3) )
+          sim%efield_dofs_n => sim%efield_dofs
        end select
     elseif( sim%splitting_case == sll_p_splitting_ecsim) then
        allocate( sll_t_time_propagator_pic_vm_1d2v_ecsim :: sim%propagator )
        select type( qpecsim=>sim%propagator )
        type is ( sll_t_time_propagator_pic_vm_1d2v_ecsim )
-          call qpecsim%init_from_file(  sim%kernel_smoother_0, sim%kernel_smoother_1, &
+          call qpecsim%init_from_file(sim%kernel_smoother_0, sim%kernel_smoother_1, &
                sim%particle_group, sim%efield_dofs, sim%bfield_dofs, &
-               sim%domain(1), sim%domain(3), trim(filename))
+               sim%domain(1), sim%domain(3), trim(filename) )
           sim%efield_dofs_n => qpecsim%efield_dofs
        end select
     elseif( sim%splitting_case == sll_p_splitting_ecsim2o) then
        allocate( sll_t_time_propagator_pic_vm_1d2v_ecsim2o :: sim%propagator )
        select type( qpecsim2o=>sim%propagator )
        type is ( sll_t_time_propagator_pic_vm_1d2v_ecsim2o )
-          call qpecsim2o%init(  sim%kernel_smoother_0, sim%kernel_smoother_1, &
+          call qpecsim2o%init(sim%kernel_smoother_0, sim%kernel_smoother_1, &
                sim%particle_group, sim%efield_dofs, sim%bfield_dofs, &
                sim%domain(1), sim%domain(3))
           sim%efield_dofs_n => qpecsim2o%efield_dofs
@@ -861,7 +819,7 @@ contains
                sim%domain(1), sim%domain(3), sim%filter, trim(filename) )
           sim%efield_dofs_n => qpdisgradEC%helper%efield_dofs
        end select
-      elseif  (sim%splitting_case == sll_p_splitting_disgradEC_sub) then
+    elseif  (sim%splitting_case == sll_p_splitting_disgradEC_sub) then
        allocate( sll_t_time_propagator_pic_vm_1d2v_disgradEC_sub :: sim%propagator )
        select type( qpdgs=>sim%propagator )
        type is ( sll_t_time_propagator_pic_vm_1d2v_disgradEC_sub )
@@ -870,35 +828,6 @@ contains
                sim%efield_dofs, sim%bfield_dofs, &
                sim%domain(1), sim%domain(3), sim%bfilter, trim(filename) )
           sim%efield_dofs_n => qpdgs%helper%efield_dofs
-       end select
-    elseif  (sim%splitting_case == sll_p_splitting_subcyc) then
-       ! Read parameters from file
-       open(newunit = input_file, file=trim(filename), status='old', IOStat=io_stat)
-       if (io_stat /= 0) then
-          print*, 'init_pic_1d2v() failed to open file ', filename
-          STOP
-       end if
-       read(input_file, time_iterate)
-       close(input_file)
-       allocate( sll_t_time_propagator_pic_vm_1d2v_subcyc :: sim%propagator )
-       select type( qpsc=>sim%propagator )
-       type is ( sll_t_time_propagator_pic_vm_1d2v_subcyc )
-          call qpsc%init(  sim%maxwell_solver, &
-               sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
-               sim%efield_dofs, sim%bfield_dofs, &
-               sim%domain(1), sim%domain(3), n_sub_iter, sim%file_prefix, &
-               sim%bfilter, jmean, sim%control_variate, sim%no_weights)
-          sim%efield_dofs_n => qpsc%efield_dofs
-       end select
-    elseif( sim%splitting_case == sll_p_splitting_hs_trafo) then
-       allocate( sll_t_time_propagator_pic_vm_1d2v_hs_trafo :: sim%propagator )
-       select type( qphstrafo=>sim%propagator )
-       type is ( sll_t_time_propagator_pic_vm_1d2v_hs_trafo )
-          call qphstrafo%init( sim%maxwell_solver, &
-               sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
-               sim%efield_dofs, sim%bfield_dofs, &
-               sim%domain(1), sim%domain(3), sim%map, electrostatic=sim%electrostatic )!,betar=sim%plasma_betar(1:2))
-          sim%efield_dofs_n => qphstrafo%efield_dofs
        end select
     elseif( sim%splitting_case == sll_p_splitting_trafo) then
        allocate( sll_t_time_propagator_pic_vm_1d2v_trafo :: sim%propagator )
@@ -910,73 +839,35 @@ contains
                sim%domain(1), sim%domain(3), sim%map, trim(filename), sim%boundary_particles, force_sign=sim%force_sign, electrostatic=sim%electrostatic, jmean=jmean  )!,betar=sim%plasma_betar(1:2))
           sim%efield_dofs_n => qptrafo%efield_dofs
        end select
-    elseif  (sim%splitting_case == sll_p_splitting_subcyci) then
-       ! Read parameters from file
-       open(newunit = input_file, file=trim(filename), status='old', IOStat=io_stat)
-       if (io_stat /= 0) then
-          print*, 'init_pic_1d2v() failed to open file ', filename
-          STOP
-       end if
-       read(input_file, time_iterate)
-       close(input_file)
-       allocate( sll_t_time_propagator_pic_vm_1d2v_subcyci :: sim%propagator )
-       select type( qpsci=>sim%propagator )
-       type is ( sll_t_time_propagator_pic_vm_1d2v_subcyci )
-          call qpsci%init(  sim%maxwell_solver, &
-            sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
-            sim%efield_dofs, sim%bfield_dofs, &
-            sim%domain(1), sim%domain(3), n_sub_iter, sim%file_prefix, &
-            sim%bfilter, jmean, sim%control_variate, sim%no_weights)
-          sim%efield_dofs_n => qpsci%efield_dofs
-       end select
-    elseif  (sim%splitting_case == sll_p_splitting_zigsub) then
-       ! Read parameters from file
-       open(newunit = input_file, file=trim(filename), status='old', IOStat=io_stat)
-       if (io_stat /= 0) then
-          print*, 'init_pic_1d2v() failed to open file ', filename
-          STOP
-       end if
-       read(input_file, time_iterate)
-       close(input_file)
-       allocate( sll_t_time_propagator_pic_vm_1d2v_zigsub :: sim%propagator )
-       select type( qpsc=>sim%propagator )
-       type is ( sll_t_time_propagator_pic_vm_1d2v_zigsub )
-          call qpsc%init(  sim%maxwell_solver, &
-            sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
-            sim%efield_dofs, sim%bfield_dofs, &
-            sim%domain(1), sim%domain(3), n_sub_iter, &
-            sim%bfilter, jmean, sim%control_variate, sim%no_weights)
-          sim%efield_dofs_n => qpsc%efield_dofs
-       end select
-    elseif (sim%splitting_case == sll_p_splitting_momentum) then
-       call sll_s_new_time_propagator_pic_vm_1d2v_momentum(&
-            sim%propagator, sim%maxwell_solver, &
-            sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
-            sim%efield_dofs, sim%bfield_dofs, &
-            sim%domain(1), sim%domain(3), sim%bfilter, jmean, sim%control_variate, sim%no_weights)
-       sim%efield_dofs_n => sim%efield_dofs
-    elseif( sim%splitting_case == sll_p_splitting_trafo) then
-       allocate( sll_t_time_propagator_pic_vm_1d2v_trafo :: sim%propagator )
-       select type( qptrafo=>sim%propagator )
-       type is ( sll_t_time_propagator_pic_vm_1d2v_trafo )
-          call qptrafo%init_from_file( sim%maxwell_solver, &
-               sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
-               sim%efield_dofs, sim%bfield_dofs, &
-               sim%domain(1), sim%domain(3), sim%map, trim(filename), force_sign=sim%force_sign, electrostatic=sim%electrostatic )!,betar=sim%plasma_betar(1:2))
-          sim%efield_dofs_n => qptrafo%efield_dofs
-       end select       
     end if
+
+    ! Allocate the vector holding the values of the fields at the grid points
+    SLL_ALLOCATE(sim%fields_grid(sim%n_gcells,3), ierr)
+
+    allocate(sim%x_array(sim%n_gcells))
+    allocate(sim%field_grid(sim%n_gcells))
+
+    sim%x_array(1) = sim%domain(1)
+    do j=2,sim%n_gcells
+       sim%x_array(j) = sim%x_array(j-1) + (sim%domain(3)/real(sim%n_gcells, f64))
+    end do
+
+    sim%randomize_weights = randomize_weights
+    sim%randomize_weights_alpha = randomize_weights_alpha
+
 
     call sll_s_set_time_mark( end_init )
     if (sim%rank == 0 ) then
        sim%time = sll_f_time_elapsed_between( start_init, end_init)
        write(*, "(A, F10.3)") "Init run time [s] = ", sim%time
+
        open(newunit=file_id, file=trim(filename)//'_used.dat', position = 'append', status='old', action='write', iostat=ierr)
        write(file_id, *) 'delta t:', sim%delta_t
        write(file_id, *) 'n_time_steps:', sim%n_time_steps
        write(file_id, *) 'beta:', sim%beta
-       write(file_id, *) 'charge:', sim%charge
-       write(file_id, *) 'mass:', sim%mass
+       write(file_id, *) 'delta:', delta
+       write(file_id, *) 'charge:', charge
+       write(file_id, *) 'mass:', mass
        write(file_id, *) 'plasma betar:', sim%plasma_betar
        write(file_id, *) 'force sign simulation:', sim%force_sign
        write(file_id, *) 'electrostatic simulation:', sim%electrostatic
@@ -993,44 +884,74 @@ contains
        close(file_id)
     end if
 
+
   end subroutine init_pic_vm_1d2v
 
-
   !------------------------------------------------------------------------------!
+
   subroutine run_pic_vm_1d2v (sim)
-    class(sll_t_sim_pic_vm_1d2v_cart), intent(inout) :: sim
+    class(sll_t_sim_pic_vm_1d2v_cart_multispecies), intent(inout) :: sim
 
     ! Local variables
-    sll_int32 :: j, ierr, i_part,i
-    sll_real64, allocatable :: rho(:), rho_local(:), efield_poisson(:), scratch(:)
-    sll_int32 :: th_diag_id, dfield_id, efield_id, bfield_id
+    sll_int32 :: j, ierr, i_part, i, i_steps
+    sll_real64, allocatable :: rho(:), rho_local(:), efield_poisson(:)
+    sll_int32 :: th_diag_id, dfield_id, efield_id, bfield_id, rho_id
     character(len=4) :: crank
+    character(len=4) :: step
     character(len=256) :: diag_file_name
     sll_real64 :: wi(1)
     sll_real64 :: xi(3)
+    sll_int32 :: file_id
     type(sll_t_time_mark) :: start_loop, end_loop
     sll_int32 :: degreeb
+
+    print*, 'Resolution dt, dx', sim%delta_t, sim%delta_x
 
 
     ! Initialize file for diagnostics
     if (sim%rank == 0) then
        diag_file_name = trim(sim%file_prefix)//"_thdiag.dat"
-
        call sll_s_ascii_file_create(trim(diag_file_name), th_diag_id, ierr)
        if ( sim%output_fields ) then
           call sll_s_ascii_file_create(trim(sim%file_prefix)//'_dfield.dat', dfield_id, ierr)
           call sll_s_ascii_file_create(trim(sim%file_prefix)//'_efield.dat', efield_id, ierr)
           call sll_s_ascii_file_create(trim(sim%file_prefix)//'_bfield.dat', bfield_id, ierr)
+          call sll_s_ascii_file_create(trim(sim%file_prefix)//'_rho.dat', rho_id, ierr)
        end if
     end if
 
-    if(sim%ct) then
-       call sim%sampler%sample( sim%particle_group%group(1), sim%init_distrib_params, sim%domain(1:1), sim%domain(3:3), sim%map )
+
+    call sll_s_int2string( sim%rank, crank )
+    if ( sim%restart ) then
+       i_steps = real(sim%restart_steps, f64)*sim%delta_t
+       call sll_s_int2string( i_steps, step )
+       call sim%particle_group%group(1)%read(trim(sim%restart_file)//step//'_particles_end_'//crank//'_sp1.dat')
+       call sim%particle_group%group(2)%read(trim(sim%restart_file)//step//'_particles_end_'//crank//'_sp2.dat')
     else
-       if (sim%no_weights == 1) then
-          call sim%sampler%sample( sim%particle_group%group(1), sim%init_distrib_params, sim%domain(1:1), sim%domain(3:3) )
+       if(sim%ct) then
+          call sim%sampler%sample( sim%particle_group%group(1), sim%init_distrib_params_sp1, sim%domain(1:1), sim%domain(3:3), sim%map )
+          call sim%sampler%reset_seed_jump ( sim%n_total_particles )
+
+          call sim%sampler%sample( sim%particle_group%group(2), sim%init_distrib_params_sp2, sim%domain(1:1), sim%domain(3:3), sim%map )
        else
-          call sim%sampler%sample_cv( sim%particle_group%group(1), sim%init_distrib_params, sim%domain(1:1), sim%domain(3:3), sim%control_variate%cv(1) )
+          if (sim%no_weights == 1) then
+             call sim%sampler%sample( sim%particle_group%group(1), sim%init_distrib_params_sp1, sim%domain(1:1), sim%domain(3:3) )
+             call sim%sampler%reset_seed_jump ( sim%n_total_particles )
+             call sim%sampler%sample( sim%particle_group%group(2), sim%init_distrib_params_sp2, sim%domain(1:1), sim%domain(3:3) )
+          else
+             call sim%sampler%sample_cv( sim%particle_group%group(1), sim%init_distrib_params_sp1, sim%domain(1:1), sim%domain(3:3), sim%control_variate%cv(1) )
+             call sim%sampler%reset_seed_jump ( sim%n_total_particles )
+             call sim%sampler%sample_cv( sim%particle_group%group(2), sim%init_distrib_params_sp2, sim%domain(1:1), sim%domain(3:3), sim%control_variate%cv(2) )
+          end if
+       end if
+    end if
+
+    if ( sim%restart .eqv. .false. ) then
+       if ( sim%randomize_weights(1) .eqv. .true. ) then
+          call sll_s_particle_sampling_randomized_weights(sim%particle_group%group(1), sim%randomize_weights_alpha(1))
+       end if
+       if ( sim%randomize_weights(2) .eqv. .true. ) then
+          call sll_s_particle_sampling_randomized_weights(sim%particle_group%group(2), sim%randomize_weights_alpha(2))
        end if
     end if
 
@@ -1038,57 +959,57 @@ contains
     ! Print particle array to file
     if ( sim%output_particles ) then
        call sll_s_int2string( sim%rank, crank )
-       call sim%particle_group%group(1)%print(trim(sim%file_prefix)//'_particles_start_'//crank//'.dat')
+       call sim%particle_group%group(1)%print(trim(sim%file_prefix)//'_particles_start_1_'//crank//'.dat')
+       call sim%particle_group%group(2)%print(trim(sim%file_prefix)//'_particles_start_2_'//crank//'.dat')
     end if
 
     ! Set the initial fields
     SLL_ALLOCATE(rho_local(sim%n_total0), ierr)
     SLL_ALLOCATE(rho(sim%n_total0), ierr)
     SLL_ALLOCATE(efield_poisson(sim%n_total0), ierr)
-    SLL_ALLOCATE(scratch(sim%n_total0), ierr)
-    efield_poisson = 0._f64
-    scratch = 0._f64
-    ! Efield 1 by Poisson
-    call solve_poisson( sim, rho_local, rho, dfield_id )
 
-    
-    ! Efield 2 to zero
-    sim%efield_dofs(:,2) = 0.0_f64
-    ! Bfield = beta*cos(kx): Use b = M{-1}(N_i,beta*cos(kx))
 
-    if ( sim%strong_ampere .eqv. .true. ) then
-       degreeb = sim%degree_fem
+    if ( sim%restart ) then
+       open(newunit=file_id, file=trim(sim%restart_file)//step//'_efield.dat', status='old', action='read', iostat=ierr)
+       if (ierr /= 0 ) then
+          SLL_ERROR("run", "Restart file for efield does not exist: "//trim(sim%restart_file)//step//'_efield.dat')
+       end if
+       read(file_id, *) sim%efield_dofs
+       close(file_id)
+       open(newunit=file_id, file=trim(sim%restart_file)//step//'_bfield.dat', status='old', action='read', iostat=ierr)
+       if (ierr /= 0 ) then
+          SLL_ERROR("run", "Restart file for efield does not exist: "//trim(sim%restart_file)//step//'_bfield.dat')
+       end if
+       read(file_id, *) sim%bfield_dofs
+       close(file_id)
     else
-       degreeb = sim%degree_fem-1
+       ! Efield 1 by Poisson
+       call solve_poisson( sim, rho_local, rho )
+       ! Efield 2 to zero
+       sim%efield_dofs(:,2) = 0.0_f64
+
+       if ( sim%strong_ampere .eqv. .true. ) then
+          degreeb = sim%degree_fem
+       else
+          degreeb = sim%degree_fem-1
+       end if
+
+       ! Bfield = beta*cos(kx): Use b = M{-1}(N_i,beta*cos(kx))    
+       select case( sim%initial_bfield )
+       case (  sll_p_bfield_cos )
+          call sim%maxwell_solver%L2projection( beta_cos_k, degreeb, &
+               sim%bfield_dofs)
+       case ( sll_p_bfield_sin )
+          call sim%maxwell_solver%L2projection( beta_sin_k, degreeb, &
+               sim%bfield_dofs)
+       case ( sll_p_bfield_constant )
+          call sim%maxwell_solver%L2projection( beta_constant, degreeb, &
+               sim%bfield_dofs)
+       end select
     end if
-    
-    select case( sim%initial_bfield )
-    case (  sll_p_bfield_cos )
-       call sim%maxwell_solver%L2projection( beta_cos_k, degreeb, &
-            sim%bfield_dofs)
-    case ( sll_p_bfield_sin )
-       call sim%maxwell_solver%L2projection( beta_sin_k, degreeb, &
-            sim%bfield_dofs)
-    case ( sll_p_bfield_constant )
-       call sim%maxwell_solver%L2projection( beta_constant, degreeb, &
-            sim%bfield_dofs)
-    case ( sll_p_bfield_cos_const )
-       call sim%maxwell_solver%L2projection( beta_cos_const, sim%degree_smoother-1, &
-            sim%bfield_dofs)
-    end select
-!!$
-!!$    sim%bfield_dofs(1) = 0._f64
-!!$    sim%bfield_dofs(sim%n_total1) = 0._f64
 
     call sim%propagator%reinit_fields()
-    ! For the implicit subcyling scheme, we need to propagate the first step
-    select type( qpsci=>sim%propagator )
-    type is ( sll_t_time_propagator_pic_vm_1d2v_subcyci )
-       call qpsci%first_step_modified2( sim%delta_t )
-       print*, 'Warning: You need to adjust the time in the diagnostic file by dt - dtau'
-    end select
 
-    
     ! In case we use the Boris propagator, we need to initialize the staggering used in the scheme.
     select type( qp=>sim%propagator )
     type is ( sll_t_time_propagator_pic_vm_1d2v_boris)
@@ -1097,30 +1018,34 @@ contains
 
     ! End field initialization
 
-    ! Diagnostis
-    call sll_s_time_history_diagnostics_pic_vm_1d2v( &
-         sim, 0.0_f64, th_diag_id, rho, scratch)
+    !call solve_poisson( sim%particle_group, sim%kernel_smoother_0, sim%maxwell_solver, sim%delta_x, rho_local, rho, efield_poisson )
+    ! Diagnostics
+    if(sim%restart .eqv. .false.)then
+       call sll_s_time_history_diagnostics_pic_vm_1d2v( &
+            sim, 0.0_f64, th_diag_id, rho, efield_poisson)
+    end if
     if (sim%rank == 0 ) then
        call sll_s_set_time_mark(start_loop )
-       if ( sim%output_fields ) then
-          call print_fields( sim, sim%phi_dofs, efield_poisson, scratch )
+       if ( sim%output_fields ) then  
           call sll_s_ascii_write_array_1d_as_row( dfield_id, &
                sim%efield_dofs(:,1),  &
-               sim%n_total1 )
+               sim%n_gcells )
           call sll_s_ascii_write_array_1d_as_row( efield_id, &
                sim%efield_dofs(:,2),  &
-               sim%n_total0 )
+               sim%n_gcells )
           call sll_s_ascii_write_array_1d_as_row( bfield_id, &
                sim%bfield_dofs,  &
-               sim%n_total1 )
-
+               sim%n_gcells )
+          call sll_s_ascii_write_array_1d_as_row( rho_id, &
+               rho,  &
+               sim%n_gcells )
        end if
     end if
 
     ! Time loop
     select case (sim%splitting_type)
     case(sll_p_strang_splitting)
-       do j=1, sim%n_time_steps
+       do j=1+sim%restart_steps, sim%n_time_steps+sim%restart_steps
           !print*, 'TIME STEP', j
           call sim%propagator%strang_splitting(sim%delta_t,1)
           ! Diagnostics
@@ -1130,148 +1055,162 @@ contains
           if( sim%output_particles ) then
              if( modulo(j, 100) == 0 ) then
                 call sll_s_int2string( j, crank )
-                call sim%particle_group%group(1)%print(trim(sim%file_prefix)//'_particles_'//crank//'.dat')
+                call sim%particle_group%group(1)%print(trim(sim%file_prefix)//'_particles_1_'//crank//'.dat')
+                call sim%particle_group%group(2)%print(trim(sim%file_prefix)//'_particles_2_'//crank//'.dat')
              end if
           end if
 
-          if (sim%rank == 0 ) then
-            
-             if ( sim%output_fields ) then
-                call print_fields( sim, sim%phi_dofs, efield_poisson, scratch )
-                call sll_s_ascii_write_array_1d_as_row( dfield_id, &
-                     sim%efield_dofs(:,1),  &
-                     sim%n_total1 )
-                call sll_s_ascii_write_array_1d_as_row( efield_id, &
-                     sim%efield_dofs(:,2),  &
-                     sim%n_total0 )
-                call sll_s_ascii_write_array_1d_as_row( bfield_id, &
-                     sim%bfield_dofs,  &
-                     sim%n_total1 )
-             end if
-          end if
-
+!!$          if (sim%rank == 0 ) then     
+!!$             if ( sim%output_fields ) then     
+!!$                call sll_s_ascii_write_array_1d_as_row( dfield_id, &
+!!$                     sim%efield_dofs(:,1),  &
+!!$                     sim%n_gcells )
+!!$                call sll_s_ascii_write_array_1d_as_row( efield_id, &
+!!$                     sim%efield_dofs(:,2),  &
+!!$                     sim%n_gcells )
+!!$                call sll_s_ascii_write_array_1d_as_row( bfield_id, &
+!!$                     sim%bfield_dofs,  &
+!!$                     sim%n_gcells )
+!!$             end if
+!!$          end if
        end do
     case(sll_p_splitting_fourth)
-       do j=1, sim%n_time_steps
+       do j=1+sim%restart_steps, sim%n_time_steps+sim%restart_steps
           !print*, 'TIME STEP', j
           call sim%propagator%splitting_fourth(sim%delta_t,1)
           ! Diagnostics
           call sll_s_time_history_diagnostics_pic_vm_1d2v( &
                sim,  sim%delta_t*real(j,f64), th_diag_id, rho, efield_poisson)
-          if (sim%rank == 0 ) then
-             if ( sim%output_fields ) then
-                call sll_s_ascii_write_array_1d_as_row( dfield_id, &
-                     sim%efield_dofs(:,1),  &
-                     sim%n_total1 )
-                call sll_s_ascii_write_array_1d_as_row( efield_id, &
-                     sim%efield_dofs(:,2),  &
-                     sim%n_total0 )
-                call sll_s_ascii_write_array_1d_as_row( bfield_id, &
-                     sim%bfield_dofs,  &
-                     sim%n_total1 )
-             end if
-          end if
+
+!!$          if (sim%rank == 0 ) then    
+!!$             if ( sim%output_fields ) then      
+!!$                call sll_s_ascii_write_array_1d_as_row( dfield_id, &
+!!$                     sim%efield_dofs(:,1),  &
+!!$                     sim%n_gcells )
+!!$                call sll_s_ascii_write_array_1d_as_row( efield_id, &
+!!$                     sim%efield_dofs(:,2),  &
+!!$                     sim%n_gcells )
+!!$                call sll_s_ascii_write_array_1d_as_row( bfield_id, &
+!!$                     sim%bfield_dofs,  &
+!!$                     sim%n_gcells )
+!!$             end if
+!!$          end if
        end do
     case(sll_p_lie_splitting)
-       do j=1, sim%n_time_steps
+       do j=1+sim%restart_steps, sim%n_time_steps+sim%restart_steps
           call sim%propagator%lie_splitting(sim%delta_t,1)
           !print*, 'TIME STEP', j
           ! Diagnostics
           call sll_s_time_history_diagnostics_pic_vm_1d2v( &
                sim,  sim%delta_t*real(j,f64), th_diag_id, rho, efield_poisson)
-          if (sim%rank == 0 ) then
-             if ( sim%output_fields ) then
-                call sll_s_ascii_write_array_1d_as_row( dfield_id, &
-                     sim%efield_dofs(:,1),  &
-                     sim%n_total1 )
-                call sll_s_ascii_write_array_1d_as_row( efield_id, &
-                     sim%efield_dofs(:,2),  &
-                     sim%n_total0 )
-                call sll_s_ascii_write_array_1d_as_row( bfield_id, &
-                     sim%bfield_dofs,  &
-                     sim%n_total1 )
-             end if
-          end if
+
+!!$          if (sim%rank == 0 ) then     
+!!$             if ( sim%output_fields ) then     
+!!$                call sll_s_ascii_write_array_1d_as_row( dfield_id, &
+!!$                     sim%efield_dofs(:,1),  &
+!!$                     sim%n_gcells )
+!!$                call sll_s_ascii_write_array_1d_as_row( efield_id, &
+!!$                     sim%efield_dofs(:,2),  &
+!!$                     sim%n_gcells )
+!!$                call sll_s_ascii_write_array_1d_as_row( bfield_id, &
+!!$                     sim%bfield_dofs,  &
+!!$                     sim%n_gcells )
+!!$             end if
+!!$          end if
        end do
     case(sll_p_lie_splitting_back)
-       do j=1, sim%n_time_steps
+       do j=1+sim%restart_steps, sim%n_time_steps+sim%restart_steps
           !print*, 'TIME STEP', j
           call sim%propagator%lie_splitting_back(sim%delta_t,1)
           ! Diagnostics
           call sll_s_time_history_diagnostics_pic_vm_1d2v( &
                sim,  sim%delta_t*real(j,f64), th_diag_id, rho, efield_poisson)
-          if (sim%rank == 0 ) then
-             if ( sim%output_fields ) then
-                call sll_s_ascii_write_array_1d_as_row( dfield_id, &
-                     sim%efield_dofs(:,1),  &
-                     sim%n_total1 )
-                call sll_s_ascii_write_array_1d_as_row( efield_id, &
-                     sim%efield_dofs(:,2),  &
-                     sim%n_total0 )
-                call sll_s_ascii_write_array_1d_as_row( bfield_id, &
-                     sim%bfield_dofs,  &
-                     sim%n_total1 )
-             end if
-          end if
+
+!!$          if (sim%rank == 0 ) then      
+!!$             if ( sim%output_fields ) then    
+!!$                call sll_s_ascii_write_array_1d_as_row( dfield_id, &
+!!$                     sim%efield_dofs(:,1),  &
+!!$                     sim%n_gcells )
+!!$                call sll_s_ascii_write_array_1d_as_row( efield_id, &
+!!$                     sim%efield_dofs(:,2),  &
+!!$                     sim%n_gcells )
+!!$                call sll_s_ascii_write_array_1d_as_row( bfield_id, &
+!!$                     sim%bfield_dofs,  &
+!!$                     sim%n_gcells )
+!!$             end if
+!!$          end if
        end do
     case(sll_p_splitting_fourth_10steps)
-       do j=1, sim%n_time_steps
+       do j=1+sim%restart_steps, sim%n_time_steps+sim%restart_steps
           !print*, 'TIME STEP', j
           call sim%propagator%splitting_fourth_10steps(sim%delta_t,1)
           ! Diagnostics
           call sll_s_time_history_diagnostics_pic_vm_1d2v( &
                sim,  sim%delta_t*real(j,f64), th_diag_id, rho, efield_poisson)
-          if (sim%rank == 0 ) then
-             if ( sim%output_fields ) then
-                call sll_s_ascii_write_array_1d_as_row( dfield_id, &
-                     sim%efield_dofs(:,1),  &
-                     sim%n_total1 )
-                call sll_s_ascii_write_array_1d_as_row( efield_id, &
-                     sim%efield_dofs(:,2),  &
-                     sim%n_total0 )
-                call sll_s_ascii_write_array_1d_as_row( bfield_id, &
-                     sim%bfield_dofs,  &
-                     sim%n_total1 )
-             end if
-          end if
+
+!!$          if (sim%rank == 0 ) then    
+!!$             if ( sim%output_fields ) then      
+!!$                call sll_s_ascii_write_array_1d_as_row( dfield_id, &
+!!$                     sim%efield_dofs(:,1),  &
+!!$                     sim%n_gcells )
+!!$                call sll_s_ascii_write_array_1d_as_row( efield_id, &
+!!$                     sim%efield_dofs(:,2),  &
+!!$                     sim%n_gcells )
+!!$                call sll_s_ascii_write_array_1d_as_row( bfield_id, &
+!!$                     sim%bfield_dofs,  &
+!!$                     sim%n_gcells )
+!!$             end if
+!!$          end if
        end do
     case(sll_p_splitting_second_4steps)
-       do j=1, sim%n_time_steps
+       do j=1+sim%restart_steps, sim%n_time_steps+sim%restart_steps
           !print*, 'TIME STEP', j
           call sim%propagator%splitting_second_4steps(sim%delta_t,1)
           ! Diagnostics
           call sll_s_time_history_diagnostics_pic_vm_1d2v( &
                sim,  sim%delta_t*real(j,f64), th_diag_id, rho, efield_poisson)
-          if (sim%rank == 0 ) then
-             if ( sim%output_fields ) then
-                call sll_s_ascii_write_array_1d_as_row( dfield_id, &
-                     sim%efield_dofs(:,1),  &
-                     sim%n_total1 )
-                call sll_s_ascii_write_array_1d_as_row( efield_id, &
-                     sim%efield_dofs(:,2),  &
-                     sim%n_total0 )
-                call sll_s_ascii_write_array_1d_as_row( bfield_id, &
-                     sim%bfield_dofs,  &
-                     sim%n_total1 )
-             end if
-          end if
+
+!!$          if (sim%rank == 0 ) then    
+!!$             if ( sim%output_fields ) then      
+!!$                call sll_s_ascii_write_array_1d_as_row( dfield_id, &
+!!$                     sim%efield_dofs(:,1),  &
+!!$                     sim%n_gcells )
+!!$                call sll_s_ascii_write_array_1d_as_row( efield_id, &
+!!$                     sim%efield_dofs(:,2),  &
+!!$                     sim%n_gcells )
+!!$                call sll_s_ascii_write_array_1d_as_row( bfield_id, &
+!!$                     sim%bfield_dofs,  &
+!!$                     sim%n_gcells )
+!!$             end if
+!!$          end if
        end do
     case default
        print*, 'this splitting type is not implemented'
     end select
 
-
-
     if (sim%rank == 0 ) then
        call sll_s_set_time_mark( end_loop )
        write(*, "(A, F10.3)") "Main loop run time [s] = ", sll_f_time_elapsed_between( start_loop, end_loop)
        close(th_diag_id)
+       if(sim%output_fields)then
+          i_steps = real(sim%n_time_steps+sim%restart_steps, f64)*sim%delta_t
+          call sll_s_int2string( i_steps, step)
+          open(newunit=file_id, file=trim(sim%file_prefix)//step//'efield.dat')
+          write(file_id, *) sim%efield_dofs
+          close(file_id)
+          open(newunit=file_id, file=trim(sim%file_prefix)//step//'bfield.dat')
+          write(file_id, *) sim%bfield_dofs
+          close(file_id)
+       end if
     end if
 
     ! Print particle array to file
-    if (sim%output_particles ) then
+    if ( sim%output_particles ) then
        call sll_s_int2string( sim%rank, crank )
-       call sim%particle_group%group(1)%print(trim(sim%file_prefix)//'_particles_end_'//crank//'.dat')
+       i_steps = real(sim%n_time_steps+sim%restart_steps, f64)*sim%delta_t
+       call sll_s_int2string( i_steps, step)
+       call sim%particle_group%group(1)%print(trim(sim%file_prefix)//step//'_particles_end_1_'//crank//'.dat')
+       call sim%particle_group%group(2)%print(trim(sim%file_prefix)//step//'_particles_end_2_'//crank//'_.dat')
     end if
 
 !!! Part for ctest
@@ -1288,28 +1227,28 @@ contains
        call sll_o_collective_allreduce( sll_v_world_collective, &
             rho_local, &
             sim%n_total0, MPI_SUM, rho)
-       !write(115,*) rho
+       !write(95,*) rho
        if (sim%rank == 0) then
-
-          call ctest( rho, rho_local, trim(sim%ctest_ref_file_rho), sim%ctest_passed )
-          call sll_s_check_diagnostics(trim(sim%ctest_ref_file_thdiag),'ctest_thdiag.dat', 3E-13_f64, sim%ctest_passed)
+          call ctest( rho, rho_local, trim(sim%ctest_ref_file), sim%ctest_passed )
+          !call sll_s_check_diagnostics(trim(sim%ctest_ref_file_thdiag),'ctest.dat', 1E-13_f64, sim%ctest_passed)
        end if
     end if
 !!! Part for ctest end
+
 
   contains
     function beta_cos_k(x)
       sll_real64             :: beta_cos_k
       sll_real64, intent(in) :: x
 
-      beta_cos_k = sim%beta * cos(sll_p_twopi*x/sim%domain(3))
+      beta_cos_k = sim%beta * cos(sll_p_twopi*x/sim%domain(3)) 
     end function beta_cos_k
 
     function beta_sin_k(x)
       sll_real64             :: beta_sin_k
       sll_real64, intent(in) :: x
 
-      beta_sin_k = sim%beta * sin(sll_p_twopi*x/sim%domain(3))
+      beta_sin_k = sim%beta * sin(sll_p_twopi*x/sim%domain(3)) 
     end function beta_sin_k
 
     function beta_constant(x)
@@ -1318,14 +1257,7 @@ contains
 
       beta_constant = sim%beta
     end function beta_constant
-    
-    function beta_cos_const(x)
-      sll_real64             :: beta_cos_const
-      sll_real64, intent(in) :: x
 
-      beta_cos_const = sim%beta + 0.001_f64 * cos(sll_p_twopi*x/sim%domain(3))
-      
-    end function beta_cos_const
 
 
   end subroutine run_pic_vm_1d2v
@@ -1349,7 +1281,7 @@ contains
     rho_ref = rho_ref -  rho_simulated
     error = maxval(rho_ref)
     print*, 'Maximum error in rho is', error, '.'
-    if (abs(error)> 1d-14) then
+    if (abs(error)> 1E-14) then
        passed = .FALSE.
     else
        passed = .TRUE.
@@ -1361,26 +1293,32 @@ contains
   !------------------------------------------------------------------------------!
 
   subroutine delete_pic_vm_1d2v (sim)
-    class(sll_t_sim_pic_vm_1d2v_cart), intent(inout) :: sim
+    class(sll_t_sim_pic_vm_1d2v_cart_multispecies), intent(inout) :: sim
     SLL_ASSERT(storage_size(sim)>0)
 
     call sim%propagator%free()
     deallocate(sim%propagator)
     call sim%particle_group%group(1)%free()
+    call sim%particle_group%group(2)%free()
     deallocate (sim%particle_group)
     call sim%mesh%delete()
     deallocate(sim%mesh)
     call sim%maxwell_solver%free()
     deallocate(sim%maxwell_solver)
+    call sim%kernel_smoother_0%free()
     deallocate(sim%kernel_smoother_0)
+    call sim%kernel_smoother_1%free()
     deallocate(sim%kernel_smoother_1)
+    deallocate(sim%fields_grid)
     call sim%control_variate%cv(1)%free()
+    call sim%control_variate%cv(2)%free()
 
-    deallocate(sim%efield_dofs)
-    deallocate(sim%bfield_dofs)
-
-    call sim%init_distrib_params%free()
-    deallocate(sim%init_distrib_params)
+    if ( sim%restart .eqv. .false. ) then
+       call sim%init_distrib_params_sp1%free()
+       deallocate(sim%init_distrib_params_sp1)
+       call sim%init_distrib_params_sp2%free()
+       deallocate(sim%init_distrib_params_sp2)
+    end if
     call sim%sampler%free()
 
   end subroutine delete_pic_vm_1d2v
@@ -1401,6 +1339,7 @@ contains
 
   end function control_variate_equi
 
+
   !------------------------------------------------------------------------------!
   !Diagnostic functions and other helper functions
   !> Diagnostics for PIC Vlasov-Maxwell 1d2v 
@@ -1410,137 +1349,108 @@ contains
        time, &
        file_id, &
        rho, scratch)
-    class(sll_t_sim_pic_vm_1d2v_cart), intent(inout) :: sim
+    class(sll_t_sim_pic_vm_1d2v_cart_multispecies), intent(inout) :: sim
     sll_real64,                        intent(in   ) :: time
     sll_int32,                         intent(in   ) :: file_id
     sll_real64,                        intent(  out) :: rho(:)
     sll_real64,                        intent(  out) :: scratch(:)
+
     ! local variables
-    sll_real64 :: diagnostics_local(3)
-    sll_real64 :: diagnostics(3)
+    sll_real64 :: diagnostics_local(6)
+    sll_real64 :: diagnostics(6)
     sll_real64 :: potential_energy(3)
-    sll_int32  :: i_part
+    sll_int32  :: i_part, i_sp
     sll_int32  :: degree
     sll_real64 :: vi(3),  xi(3)
     sll_real64 :: wi(1)
     sll_real64 :: transfer(1), vvb(1), poynting
-    sll_real64 :: error, phi
-    sll_real64 :: v_max(3), v_max_all(3)
-    !local variable
-    sll_real64 :: boundary = 0._f64
+    sll_real64 :: efield(2), bfield, error
 
     degree = sim%degree_fem
 
-    v_max = 0.0_f64
     diagnostics_local = 0.0_f64
-    do i_part=1,sim%particle_group%group(1)%n_particles
-       vi = sim%particle_group%group(1)%get_v(i_part)
-       xi = sim%particle_group%group(1)%get_x(i_part)
-       wi = sim%particle_group%group(1)%get_mass(i_part)!, sim%no_weights)
+    do i_sp = 1, sim%particle_group%n_species
+       do i_part=1, sim%particle_group%group(i_sp)%n_particles
+          vi = sim%particle_group%group(i_sp)%get_v(i_part)
+          xi = sim%particle_group%group(i_sp)%get_x(i_part)
+          wi = sim%particle_group%group(i_sp)%get_mass(i_part)
 
-       ! Kinetic energy
-       diagnostics_local(1) = diagnostics_local(1) + &
-            (vi(1)**2+vi(2)**2)*wi(1)!*0.5_f64
-       ! Momentum 1
-       diagnostics_local(2) = diagnostics_local(2) + &
-            vi(1)*wi(1)
-       ! Momentum 2
-       diagnostics_local(3) = diagnostics_local(3) + &
-            vi(2)*wi(1)
-
-!!$       ! Find the maximum velocity of a particle
-!!$       v_max(1) = max( abs(vi(1)), v_max(1))
-!!$       v_max(2) = max( abs(vi(2)), v_max(2))
-!!$       v_max(3) = max( sqrt(vi(1)**2+vi(2)**2), v_max(3) )
-
+          ! Kinetic energy
+          diagnostics_local(2*i_sp-1) = diagnostics_local(2*i_sp-1) + &
+               0.5_f64*(vi(1)**2)*wi(1)
+          diagnostics_local(2*i_sp) = diagnostics_local(2*i_sp) + &
+               0.5_f64*(vi(2)**2)*wi(1)
+          ! Momentum 1
+          diagnostics_local(5) = diagnostics_local(5) + &
+               vi(1)*wi(1)
+          ! Momentum 2
+          diagnostics_local(6) = diagnostics_local(6) + &
+               vi(2)*wi(1)
+       end do
     end do
     diagnostics = 0.0_f64
-    call sll_s_collective_reduce_real64(sll_v_world_collective, diagnostics_local, 3,&
+    call sll_s_collective_reduce_real64(sll_v_world_collective, diagnostics_local, 6,&
          MPI_SUM, 0, diagnostics)
-!!$    call sll_s_collective_reduce_real64(sll_v_world_collective, v_max, 3,&
-!!$         MPI_MAX, 0, v_max_all)
     ! Add ExB part
-    if(sim%boundary )then !Todo mixed mass for trafo clamped
-       transfer = 0._f64
-       vvb = 0._f64
-       poynting = 0._f64
+    if( sim%boundary )then
+       !TODO?
+       diagnostics(5) = diagnostics(5) + sim%maxwell_solver%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree, degree-1 )
+
+       diagnostics(5) = diagnostics(6) - sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_total1,1), sim%bfield_dofs, degree-1 )
     else
-       if(sim%ct) then
-          diagnostics(2) = diagnostics(2) + sim%maxwell_solver%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree, degree-1 )
-
-          diagnostics(3) = diagnostics(3) - sim%maxwell_solver%inner_product( sim%efield_dofs(:,1), sim%bfield_dofs, degree-1 )
+       if ( sim%strong_ampere .eqv. .false. ) then
+          diagnostics(5) = diagnostics(5) + sim%maxwell_norm%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree, degree-1 )
+          diagnostics(6) = diagnostics(6) - sim%maxwell_solver%inner_product( sim%efield_dofs(:,1), sim%bfield_dofs, degree-1 )
        else
-          
-          if ( sim%strong_ampere .eqv. .false. ) then
-             diagnostics(2) = diagnostics(2) + sim%maxwell_norm%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree, degree-1 )
-
-             diagnostics(3) = diagnostics(3) - sim%maxwell_solver%inner_product( sim%efield_dofs(:,1), sim%bfield_dofs, degree-1 )
+          if ( degree == -1) then
+             diagnostics(5) = diagnostics(5) + sim%maxwell_solver%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree-1, degree )
+             diagnostics(6) = diagnostics(6) - sim%maxwell_solver%inner_product( sim%efield_dofs(:,1), sim%bfield_dofs, degree )
           else
-             if ( degree == -1) then             
-                diagnostics(2) = diagnostics(2) + sim%maxwell_solver%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree-1, degree )
-                diagnostics(3) = diagnostics(3) - sim%maxwell_solver%inner_product( sim%efield_dofs(:,1), sim%bfield_dofs, degree, degree )
-             else
-                ! This would be the form with mixed mass matrix
-                !diagnostics(2) = diagnostics(2) + sim%maxwell_norm%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree-1, degree )
-                ! First transform the electric field to a zero form
-                !  scratch(2:sim%n_gcells) = 0.5_f64 * (sim%efield_dofs(1:sim%n_gcells-1,2)+sim%efield_dofs(2:sim%n_gcells,2) )
-                ! scratch(1) = 0.5_f64 * (sim%efield_dofs(1,2)+sim%efield_dofs(sim%n_gcells,2) )
-                scratch(1:sim%n_gcells-1) = 0.5_f64 * (sim%efield_dofs(1:sim%n_gcells-1,2)+sim%efield_dofs(2:sim%n_gcells,2) )
-                scratch(sim%n_gcells) = 0.5_f64 * (sim%efield_dofs(1,2)+sim%efield_dofs(sim%n_gcells,2) )
-                diagnostics(2) = diagnostics(2) + sim%maxwell_solver%inner_product( sim%bfield_dofs, scratch,  degree )
-                diagnostics(3) = diagnostics(3) - sim%maxwell_solver%inner_product( sim%efield_dofs(:,1), sim%bfield_dofs, degree )
-             end if
+             !scratch(2:sim%n_gcells) = 0.5_f64 * (sim%efield_dofs(1:sim%n_gcells-1,2)+sim%efield_dofs(2:sim%n_gcells,2) )
+             !scratch(1) = 0.5_f64 * (sim%efield_dofs(1,2)+sim%efield_dofs(sim%n_gcells,2) )
+             scratch(1:sim%n_gcells-1) = 0.5_f64 * (sim%efield_dofs(1:sim%n_gcells-1,2)+sim%efield_dofs(2:sim%n_gcells,2) )
+             scratch(sim%n_gcells) = 0.5_f64 * (sim%efield_dofs(1,2)+sim%efield_dofs(sim%n_gcells,2) )
+
+             diagnostics(5) = diagnostics(5) + sim%maxwell_solver%inner_product( scratch, sim%bfield_dofs, degree )
+             !scratch(2:sim%n_gcells) = 0.5_f64 * (sim%efield_dofs(1:sim%n_gcells-1,1)+sim%efield_dofs(2:sim%n_gcells,1) )
+             !scratch(1) = 0.5_f64 * (sim%efield_dofs(1,1)+sim%efield_dofs(sim%n_gcells,1) )
+
+             diagnostics(6) = diagnostics(6) - sim%maxwell_solver%inner_product( sim%efield_dofs(:,1), sim%bfield_dofs, degree )
           end if
        end if
-       
-       
-       call sll_s_pic_diagnostics_transfer( sim%particle_group%group(1), sim%kernel_smoother_0, sim%kernel_smoother_1, sim%efield_dofs, transfer )
-
-       call sll_s_pic_diagnostics_vvb( sim%particle_group%group(1), sim%kernel_smoother_1, &
-            sim%bfield_dofs, vvb )
-       call sll_s_pic_diagnostics_poynting( sim%maxwell_solver, degree, sim%efield_dofs(:,2), sim%bfield_dofs, &
-            scratch, poynting )
     end if
- 
-    !print*,'poynting flux', poynting
-    call check_gauss_law( sim, rho, scratch, error )
 
+    ! Check error in Gauss law
+    call check_gauss_law( sim, rho, scratch, error )
 
     if (sim%rank == 0) then
        if( sim%boundary )then
           potential_energy(1) = sim%maxwell_solver%L2norm_squared( sim%efield_dofs(1:sim%n_total1,1), degree-1 )/sim%plasma_betar(2)
           potential_energy(2) = sim%maxwell_solver%L2norm_squared( sim%efield_dofs(:,2), degree )/sim%plasma_betar(2)
-          
-          potential_energy(3) = sim%maxwell_solver%L2norm_squared( sim%bfield_dofs, degree-1 )*sim%plasma_betar(3)
+          potential_energy(3) = sim%maxwell_solver%L2norm_squared&
+               ( sim%bfield_dofs, degree-1 )*sim%plasma_betar(3)
        else
-          if (sim%strong_ampere .eqv. .false. ) then
-             potential_energy(1) = sim%maxwell_solver%inner_product( sim%efield_dofs(:,1),  sim%efield_dofs_n(:,1), degree-1 )/sim%plasma_betar(2)
-             potential_energy(2) = sim%maxwell_solver%inner_product( sim%efield_dofs(:,2),  sim%efield_dofs_n(:,2), degree )/sim%plasma_betar(2)
-          else
-             potential_energy(1) = sim%maxwell_solver%inner_product( sim%efield_dofs(:,1),  sim%efield_dofs_n(:,1), degree, degree )/sim%plasma_betar(2)
-             potential_energy(2) = sim%maxwell_solver%inner_product( sim%efield_dofs(:,2),  sim%efield_dofs_n(:,2), degree-1, degree-1 )/sim%plasma_betar(2)
-          end if
           if ( sim%strong_ampere .eqv. .false. ) then
-             potential_energy(3) = sim%maxwell_solver%L2norm_squared( sim%bfield_dofs, degree-1 )*sim%plasma_betar(3)
+             potential_energy(1) = sim%maxwell_solver%inner_product&
+                  ( sim%efield_dofs(:,1), sim%efield_dofs_n(:,1), degree-1 )/sim%plasma_betar(2)
+             potential_energy(2) = sim%maxwell_solver%inner_product&
+                  ( sim%efield_dofs(:,2), sim%efield_dofs_n(:,2), degree )/sim%plasma_betar(2)
+             potential_energy(3) = sim%maxwell_solver%L2norm_squared&
+                  ( sim%bfield_dofs, degree-1 )*sim%plasma_betar(3)
           else
-             potential_energy(3) = sim%maxwell_solver%L2norm_squared( sim%bfield_dofs, degree )*sim%plasma_betar(3)
+             potential_energy(1) = sim%maxwell_solver%inner_product&
+                  ( sim%efield_dofs(:,1), sim%efield_dofs_n(:,1), degree )/sim%plasma_betar(2)
+             potential_energy(2) = sim%maxwell_solver%inner_product&
+                  ( sim%efield_dofs(:,2), sim%efield_dofs_n(:,2), degree-1 )/sim%plasma_betar(2)
+             potential_energy(3) = sim%maxwell_solver%L2norm_squared&
+                  ( sim%bfield_dofs, degree )*sim%plasma_betar(3)
           end if
        end if
-       if(sim%adiabatic_electrons) then
-          phi = sim%maxwell_solver%L2norm_squared( sim%phi_dofs, degree )
-          write(file_id,'(f12.5,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16)' ) &
-            time,  potential_energy, diagnostics(1), &
-            diagnostics(1) + phi, diagnostics(2:3), -transfer+vvb+poynting, &
-            error, phi!, v_max_all
-
-       else
-          write(file_id,'(f12.5,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16)' ) &
-               time,  potential_energy, diagnostics(1), &
-               diagnostics(1) + sim%force_sign * sum(potential_energy), diagnostics(2:3), -transfer+vvb+poynting, &
-               error!, v_max_all
-       end if
+       write(file_id,'(f12.5,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16)' ) &
+            time,  potential_energy, diagnostics(1:4), &
+            sum(diagnostics(1:4)) + sim%force_sign * 0.5_f64*sum(potential_energy), diagnostics(5:6), &
+            error
     end if
-!    call compare_projected_bfield( sim%kernel_smoother_0, sim%kernel_smoother_1, sim%maxwell_solver, sim%maxwell_norm, sim%particle_group%group(1), sim%bfield_dofs )
 
   end subroutine sll_s_time_history_diagnostics_pic_vm_1d2v
 
@@ -1564,7 +1474,6 @@ contains
 
 
   end subroutine sll_s_diagnostics_fields
-
   !> compute v(index)-part of kinetic energy
   subroutine sll_s_pic_diagnostics_Hpi ( particle_group,  index, kinetic )
     class(sll_c_particle_group_base), intent(in)  :: particle_group !< particle group
@@ -1592,7 +1501,6 @@ contains
 
   end subroutine sll_s_pic_diagnostics_Hpi
 
-
   !> Compute the spline coefficient of the derivative of some given spline expansion
   subroutine sll_s_pic_diagnostics_eval_derivative_spline( position, xmin, delta_x, n_grid, field_dofs, degree, derivative )
     sll_real64, intent( in    ) :: position(:) !< particle position
@@ -1614,6 +1522,7 @@ contains
     xi(1) = xi(1) - real(index-1, f64)
     index = index - der_degree
 
+    !call sll_s_uniform_b_splines_at_x( der_degree, xi(1), spline_val )
     call sll_s_uniform_bsplines_eval_basis( der_degree, xi(1), spline_val )
 
     derivative = 0.0_f64
@@ -1660,7 +1569,6 @@ contains
 
   end subroutine sll_s_pic_diagnostics_transfer
 
-
   !> Compute \sum(particles) w_p v_1,p b(x_p) v_2,p
   subroutine sll_s_pic_diagnostics_vvb ( particle_group, kernel_smoother_1, bfield_dofs, vvb )
     class(sll_c_particle_group_base), intent( in   )  :: particle_group   !< particle group object
@@ -1688,7 +1596,6 @@ contains
 
   end subroutine sll_s_pic_diagnostics_vvb
 
-
   !> Compute e^T M_0^{-1}  R^T b
   subroutine sll_s_pic_diagnostics_poynting ( maxwell_solver, degree, efield_dofs, bfield_dofs, scratch, poynting )
     class(sll_c_maxwell_1d_base) :: maxwell_solver !< maxwell solver object
@@ -1702,72 +1609,66 @@ contains
     ! Multiply B by M_0^{-1}  R^T
     call maxwell_solver%compute_e_from_b ( 1.0_f64, bfield_dofs, scratch )
 
-    poynting =  maxwell_solver%inner_product( efield_dofs, scratch, degree, degree )
+    poynting =  maxwell_solver%inner_product( efield_dofs, scratch, degree )
 
   end subroutine sll_s_pic_diagnostics_poynting
 
 
 
   !> Accumulate rho and solve Poisson
-  subroutine solve_poisson( sim, rho_local, rho, dfield_id )
-    class(sll_t_sim_pic_vm_1d2v_cart), intent(inout) :: sim
+  subroutine solve_poisson( sim, rho_local, rho)
+    class(sll_t_sim_pic_vm_1d2v_cart_multispecies), intent(inout) :: sim
     sll_real64,                        intent(  out) :: rho_local(:)
     sll_real64,                        intent(  out) :: rho(:)
-    sll_int32, optional :: dfield_id
-    !local variables
-    sll_int32 :: i_part
+    !loca variables
+    sll_int32 :: i_part, i_sp
     sll_real64 :: xi(3), wi(1)
-    sll_int32 :: iter
-    sll_real64 :: rho_cv(sim%n_total0)
+    sll_real64 :: rho_cv(sim%n_gcells)
 
     rho_local = 0.0_f64
-    do i_part = 1, sim%particle_group%group(1)%n_particles
-       xi = sim%particle_group%group(1)%get_x(i_part)
-       ! Get charge for accumulation of rho
-       wi(1) = sim%particle_group%group(1)%get_charge( i_part, sim%no_weights)
-       call sim%kernel_smoother_0%add_charge(xi(1), wi(1), rho_local)
+    do i_sp = 1, sim%particle_group%n_species
+       do i_part = 1, sim%particle_group%group(i_sp)%n_particles
+          xi = sim%particle_group%group(i_sp)%get_x(i_part)
+          wi(1) = sim%particle_group%group(i_sp)%get_charge( i_part, sim%no_weights)
+          call sim%kernel_smoother_0%add_charge(xi(1), wi(1), rho_local)
+       end do
     end do
     ! MPI to sum up contributions from each processor
     rho = 0.0_f64
-    call sll_o_collective_allreduce( sll_v_world_collective, rho_local, &
+    call sll_o_collective_allreduce( sll_v_world_collective, &
+         rho_local, &
          sim%n_total0, MPI_SUM, rho)
 
     call sim%filter%apply_inplace( rho )
 
     if ( sim%no_weights == 3 ) then
-       call sim%maxwell_solver%compute_rhs_from_function( one, sim%degree_smoother, rho_cv)
-       rho = rho + sim%charge*rho_cv
+       call sim%maxwell_solver%compute_rhs_from_function( one, sim%degree_fem, rho_cv)
+       rho = rho-rho_cv
     end if
 
-    rho_local = 0._f64
-    if ( sim%strong_ampere) then
-       rho = rho - sim%charge
-       ! Add this if there should not be an offset in rho
-       rho = rho - sum(rho)/ real(sim%n_gcells, f64)
+    ! Not needed here since the two control variates should cancel out each other in the x space (both are constant in x)
+    !if ( sim%no_weights == 3 ) then
+    !   call sim%maxwell_solver%compute_rhs_from_function( one, sim%degree_smoother, rho_cv)
+    !      rho = rho-rho_cv
+    !   end if
+    if(sim%delta(1) == 1.0_f64) then
+       rho = sim%force_sign *rho
     else
-       ! Add neutralizing background distribution
-       call add_background_charge(sim, rho_local)
-       rho = sim%force_sign*(rho - sim%charge * rho_local)
+       rho = sim%force_sign *(rho - sum(sim%delta)*sim%delta_x) 
     end if
-
     ! Solve Poisson problem
-    if( sim%adiabatic_electrons) then
-       call sim%maxwell_solver%compute_phi_from_rho ( rho, sim%phi_dofs, sim%efield_dofs(1:sim%n_total1,1) )
-    else
-       rho = rho * sim%plasma_betar(2)
-!!$       if(sim%boundary)then
-!!$          if(sim%ct) then
-!!$             rho(1)=rho(1)-sin_l(0._f64)/sim%map%jacobian( [0._f64, 0._f64, 0._f64] )
-!!$             rho(sim%n_total0)=rho(sim%n_total0) +sin_l(1._f64)/sim%map%jacobian( [1._f64, 0.0_f64, 0._f64] )!+ rad_l(1._f64)!
-!!$          else
-!!$             rho(1) = rho(1) - sin_l(0._f64) !homogeneous Neumann boundary
-!!$             rho(sim%n_total0) = rho(sim%n_total0) + sin_l(1._f64)!+ rad_l(1._f64)!
-!!$          end if
+!!$    if(sim%boundary)then
+!!$       if(sim%ct) then
+!!$          rho(1)=rho(1)-sin_l(0._f64)/sim%map%jacobian( [0._f64, 0._f64, 0._f64] )
+!!$          rho(sim%n_total0)=rho(sim%n_total0) +sin_l(1._f64)/sim%map%jacobian( [1._f64, 0.0_f64, 0._f64])!+ rad_l(1._f64)!
+!!$       else
+!!$          rho(1) = rho(1) - sin_l(0._f64) !homogeneous Neumann boundary
+!!$          rho(sim%n_total0) = rho(sim%n_total0) + sin_l(1._f64)!+ rad_l(1._f64)!
 !!$       end if
-    
-       call sim%maxwell_solver%compute_E_from_rho( rho, sim%efield_dofs(1:sim%n_total1,1) )
-    end if
-    
+!!$    end if
+
+    call sim%maxwell_solver%compute_E_from_rho( rho, sim%efield_dofs(1:sim%n_total1,1) )
+
   contains
 
     function one( x)
@@ -1783,152 +1684,57 @@ contains
       sll_real64, intent(in) :: eta
       !local variable
       sll_real64             :: x1
-      sll_real64             :: k=0.8_f64
-      sll_real64             :: alpha=0.01_f64
+      sll_real64             :: k=0.5_f64
+      sll_real64             :: alpha=0.5_f64
 
       if( sim%ct )then
          x1=sim%map%get_x1( [eta, 0._f64, 0._f64] )
       else
          x1 = sim%domain(3)*eta
       end if
-      sin_l = alpha/k*sin(k*x1)
+      sin_l = -alpha/k*sin(k*x1)
     end function sin_l
-
-    function rad_l(eta)
-      sll_real64             :: rad_l
-      sll_real64, intent(in) :: eta
-      !local variable
-      sll_real64             :: x1
-
-      if( sim%ct )then
-         x1=sim%map%get_x1( [eta, 0._f64, 0._f64] )
-      else
-         x1 = sim%domain(3)*eta
-      end if
-      rad_l = sim%delta_x/x1**2
-    end function rad_l
 
   end subroutine solve_poisson
 
 
-  subroutine sll_s_check_diagnostics(reffile, simfile, tol_error, passed)
-    character(*), intent(in) :: reffile !< Name of reference file (stored in same folder as source file)
-    character(*), intent(in) :: simfile !< Name of file with simulation result
-    sll_real64, intent(in)   :: tol_error
-    logical, intent(out)     :: passed
-
-    sll_real64 :: error
-    sll_real64 :: data_sim(3,10)
-    sll_real64 :: data_ref(3,10)
-    sll_int32  :: file_id
-    sll_int32   :: io_stat
-    character(len=256) :: reffile_full   
-    ! Read simulation result
-    open(newunit=file_id, file=simfile, status='old', action='read', IOStat=io_stat)
-    if (io_stat /= 0) then
-       print*, 'sll_s_check_diagnostics() failed to open file ', simfile
-       STOP
-    end if
-    read(unit=file_id,fmt=*) data_sim
-    close(file_id)
-
-    ! Read reference
-    call sll_s_concatenate_filename_and_path( trim(reffile), __FILE__,&
-         reffile_full)
-    open(newunit=file_id, file=reffile_full, status='old', action='read', IOStat=io_stat)
-    if (io_stat /= 0) then
-       print*, 'sll_s_check_diagnostics() failed to open file ', reffile
-       STOP
-    end if
-    read(unit=file_id,fmt=*) data_ref
-    close(file_id)
-
-
-    ! Compare
-    data_sim = data_sim - data_ref
-    error = maxval(abs(data_sim))
-
-    print*, 'Max error in time history diagnostics: ', error
-    if ( passed .eqv. .true. ) then
-       if (error < tol_error) then
-          passed = .true.
-       else
-          passed = .false.
-       end if
-    end if
-
-  end subroutine sll_s_check_diagnostics
-
-
-
   !> Accumulate rho and solve Poisson
   subroutine check_gauss_law( sim, rho, rho_gauss, error )
-    class(sll_t_sim_pic_vm_1d2v_cart), intent(inout) :: sim
-    sll_real64,                        intent(  out) :: rho(:)
-    sll_real64,                        intent(  out) :: rho_gauss(:)
-    sll_real64,                        intent(  out) :: error
+    class(sll_t_sim_pic_vm_1d2v_cart_multispecies), intent(inout) :: sim
+    sll_real64,                       intent(  out) :: rho(:)
+    sll_real64,                       intent(  out) :: rho_gauss(:)
+    sll_real64,                       intent(  out) :: error
     !local variables
-    sll_int32 :: i_part
-    sll_int32 :: iter
+    sll_int32 :: i_part, i_sp
     sll_real64 :: xi(3), wi(1)
-    sll_real64 :: rho_cv(sim%n_total0)
+    sll_real64 :: rho_cv(sim%n_gcells)
 
     rho_gauss = 0.0_f64
-    do i_part = 1, sim%particle_group%group(1)%n_particles
-       xi = sim%particle_group%group(1)%get_x(i_part)
-       if (xi(1) >= sim%domain(1) .and. xi(1) <= sim%domain(2)) then
-          wi(1) = sim%particle_group%group(1)%get_charge( i_part, sim%no_weights)
-          call sim%kernel_smoother_0%add_charge(xi(1), wi(1), rho_gauss)
-       end if
+    do i_sp = 1, sim%particle_group%n_species
+       do i_part = 1, sim%particle_group%group(i_sp)%n_particles
+          xi = sim%particle_group%group(i_sp)%get_x(i_part)
+          wi(1) = sim%particle_group%group(i_sp)%get_charge( i_part, sim%no_weights)
+          if (wi(1) /= 0._f64) then
+             call sim%kernel_smoother_0%add_charge(xi(1), wi(1), rho_gauss)
+          end if
+       end do
     end do
     ! MPI to sum up contributions from each processor
     rho = 0.0_f64
     call sll_o_collective_allreduce( sll_v_world_collective, &
          rho_gauss, sim%n_total0, MPI_SUM, rho)
-    rho_gauss = 0.0_f64
-    call sll_o_collective_allreduce( sll_v_world_collective, &
-         sim%rhob, sim%n_total0, MPI_SUM, rho_gauss)
-    rho = rho + rho_gauss
 
     call sim%filter%apply_inplace( rho )
-    !do iter = 1, sim%binomial_filter_double_iter
-    !   call filter( rho, rho_gauss, sim%n_gcells)
-    !   call filter( rho_gauss, rho, sim%n_gcells)
-    !end do
-    !if (sim%binomial_filter_odd) then
-    !   call filter( rho, rho_gauss, sim%n_gcells)
-    !   rho = rho_gauss
-    !end if
 
-    if ( sim%no_weights == 3 ) then
-       call sim%maxwell_solver%compute_rhs_from_function( one, sim%degree_smoother, rho_cv)
-       rho = rho+sim%charge*rho_cv
-    end if
+    ! if ( sim%no_weights == 3 ) then
+    !    call sim%maxwell_solver%compute_rhs_from_function( one, sim%degree_smoother, rho_cv)
+    !    rho = rho-rho_cv
+    ! end if
 
-    ! Add neutralizing background distribution
-    if ( sim%strong_ampere) then
-       rho = rho - sim%charge
-    else
-       call add_background_charge(sim, rho_gauss)
-       rho = sim%force_sign*(rho - sim%charge * rho_gauss)
-    end if
 
-    rho_gauss=0._f64
-    if( sim%adiabatic_electrons) then
-       call sim%maxwell_solver%multiply_mass( sim%phi_dofs, rho_gauss, sim%degree_smoother )
-    else
-       if( .not. sim%boundary ) then
-          ! subtract the constant error in rho
-          error = 0._f64
-          do i_part = 1, sim%n_total0
-             error = error + rho(i_part)
-          end do
-          error = error/real(sim%n_total0, f64)
-          rho = rho -error
-          !print*, 'constant gauss error', error
-       end if
-       call sim%maxwell_solver%compute_rho_from_e( sim%efield_dofs_n(:,1), rho_gauss )
-    end if
+    rho = rho - sum(sim%delta)*sim%delta_x 
+
+    call sim%maxwell_solver%compute_rho_from_e( sim%efield_dofs(1:sim%n_total1,1), rho_gauss )
     error = maxval(abs(rho-rho_gauss))
 
   contains
@@ -1940,8 +1746,8 @@ contains
       one = 1.0_f64
 
     end function one
-
   end subroutine check_gauss_law
+
 
 
   subroutine compare_projected_bfield( kernel_smoother_0, kernel_smoother_1, maxwell_solver, maxwell_norm, particle_group, bfield_dofs )
@@ -1961,7 +1767,7 @@ contains
     call maxwell_norm%mixed_mass%dot( bfield_dofs, scratch )
     select type( maxwell_solver )
     type is ( sll_t_maxwell_1d_fem ) 
-       call maxwell_solver%invert_mass(  scratch,   bfield_proj, maxwell_solver%s_deg_0  )
+       call maxwell_solver%invert_mass( scratch,   bfield_proj, maxwell_solver%s_deg_0  )
     end select
 
     do i_part = 1, particle_group%n_particles
@@ -1979,201 +1785,8 @@ contains
 
     end do
 
-    !write(15,*) vB
+    write(15,*) vB
 
   end subroutine compare_projected_bfield
 
-
-  !> Add charge of one particle
-  subroutine add_background_charge(sim, background_charge)
-    class(sll_t_sim_pic_vm_1d2v_cart), intent(inout) :: sim
-    sll_real64,                        intent(  out) :: background_charge(:) !< Coefficient vector of the charge distribution
-    !local variables
-    sll_int32 :: i, quad, cell, index1d, q
-    sll_real64, allocatable :: quad_xw(:,:), spline_val(:,:)
-    sll_real64 :: jacobian, c
-
-    background_charge=0._f64
-    q = sim%degree_smoother+1
-    allocate(quad_xw(2, q))
-    allocate(spline_val( sim%degree_fem+1, q ))
-    quad_xw = sll_f_gauss_legendre_points_and_weights( q , 0.0_f64, 1.0_f64 )
-
-    do i = 1, q
-       call sll_s_uniform_bsplines_eval_basis( sim%degree_fem, quad_xw(1,i), spline_val(:,i) )
-    end do
-
-    if( sim%ct) then
-       if( sim%boundary )then
-          do i = 1, sim%degree_smoother-1
-             ! loop over Gauss points
-             do quad = 1, q
-                c =  (quad_xw(1,quad)+ real(i-1,f64))/real(sim%n_gcells, f64)
-                jacobian = sim%map%jacobian( [c, 0._f64, 0._f64] )
-                do cell = 1, sim%degree_smoother + 1
-                   index1d = i+cell-1
-                   background_charge(index1d) = background_charge(index1d) + &
-                        sll_f_spline_pp_horner_1d( sim%degree_smoother, sim%spline0_pp%poly_coeffs_boundary_left(:,:,i), quad_xw(1,quad), cell) * quad_xw(2, quad) * abs(jacobian)
-                end do
-             enddo
-          enddo
-          do i = sim%degree_smoother, sim%n_gcells-sim%degree_smoother+1
-             ! loop over Gauss points
-             do quad = 1, q
-                c =  (quad_xw(1,quad)+ real(i-1,f64))/real(sim%n_gcells, f64)
-                jacobian = sim%map%jacobian( [c, 0._f64, 0._f64] )
-                do cell = 1, sim%degree_smoother + 1
-                   index1d = i+cell-1
-                   background_charge(index1d) = background_charge(index1d) + &
-                        spline_val(cell, quad) * quad_xw(2, quad) * abs(jacobian)
-                end do
-             enddo
-          enddo
-          do i = sim%n_gcells-sim%degree_smoother+2, sim%n_gcells 
-             ! loop over Gauss points
-             do quad = 1, q
-                c =  (quad_xw(1,quad)+ real(i-1,f64))/real(sim%n_gcells, f64)
-                jacobian = sim%map%jacobian( [c, 0._f64, 0._f64] )
-                do cell = 1, sim%degree_smoother + 1
-                   index1d = i+cell-1
-                   background_charge(index1d) = background_charge(index1d) + &
-                        sll_f_spline_pp_horner_1d( sim%degree_smoother, sim%spline0_pp%poly_coeffs_boundary_right(:,:,i-sim%n_gcells+sim%degree_smoother-1), quad_xw(1,quad), cell)* quad_xw(2, quad) * abs(jacobian)
-                end do
-             enddo
-          enddo
-          background_charge = background_charge/real(sim%n_gcells, f64)
-       else
-          do i = 1, sim%n_gcells
-             do quad = 1, q
-                c =  (quad_xw(1,quad)+ real(i-1,f64))/real(sim%n_gcells, f64)
-                jacobian = sim%map%jacobian( [c, 0._f64, 0._f64] )
-
-                do cell = 1, sim%degree_smoother + 1
-                   index1d = modulo(i-sim%degree_smoother+cell-2,sim%n_gcells) + 1
-                   background_charge(index1d) = background_charge(index1d) + &
-                        spline_val(cell, quad) * quad_xw(2, quad) * abs(jacobian)
-                end do
-             end do
-          end do
-          background_charge = background_charge/real(sim%n_gcells, f64)
-       end if
-    else
-       if( sim%boundary )then
-          do i = 1, sim%degree_smoother-1
-             ! loop over Gauss points
-             do quad = 1, q
-                do cell = 1, sim%degree_smoother + 1
-                   index1d = i+cell-1
-                   background_charge(index1d) = background_charge(index1d) + &
-                        sll_f_spline_pp_horner_1d( sim%degree_smoother, sim%spline0_pp%poly_coeffs_boundary_left(:,:,i), quad_xw(1,quad), cell) * quad_xw(2, quad) 
-                end do
-             enddo
-          enddo
-          do i = sim%degree_smoother, sim%n_gcells-sim%degree_smoother+1
-             ! loop over Gauss points
-             do quad = 1, q
-                do cell = 1, sim%degree_smoother + 1
-                   index1d = i+cell-1
-                   background_charge(index1d) = background_charge(index1d) + &
-                        spline_val(cell, quad) * quad_xw(2, quad) 
-                end do
-             enddo
-          enddo
-          do i = sim%n_gcells-sim%degree_smoother+2, sim%n_gcells 
-             ! loop over Gauss points
-             do quad = 1, q
-                do cell = 1, sim%degree_smoother + 1
-                   index1d = i+cell-1
-                   background_charge(index1d) = background_charge(index1d) + &
-                        sll_f_spline_pp_horner_1d( sim%degree_smoother, sim%spline0_pp%poly_coeffs_boundary_right(:,:,i-sim%n_gcells+sim%degree_smoother-1), quad_xw(1,quad), cell)* quad_xw(2, quad) 
-                end do
-             enddo
-          enddo
-          background_charge = sim%delta_x * background_charge
-       else
-          background_charge = sim%delta_x
-       end if
-    end if
-
-  end subroutine add_background_charge
-
-
-  subroutine print_fields(sim, rho, efield_poisson, scratch)
-    class(sll_t_sim_pic_vm_1d2v_cart), intent(inout) :: sim
-    sll_real64, intent( in    ) :: rho(sim%n_total0)
-    sll_real64, intent(   out ) :: efield_poisson(sim%n_gcells)
-    sll_real64, intent(   out ) :: scratch(sim%n_gcells)
-    ! Local variables
-    sll_int32 :: i
-    sll_real64 :: xi(3), x(3)
-    sll_int32  :: file_id2
-    sll_real64 :: val(sim%n_gcells+1)
-
-    if(sim%ct) then
-       do i=1, sim%n_gcells
-          xi(1)=real((i-1),f64)*sim%delta_x
-          call sim%kernel_smoother_0%evaluate(xi(1), rho, scratch(i))
-          call sim%kernel_smoother_1%evaluate(xi(1), sim%efield_dofs(1:sim%n_total1,1), efield_poisson(i))
-          efield_poisson(i)=efield_poisson(i)/sim%map%jacobian( [xi(1),0._f64,0._f64] )
-       end do
-       
-       val(1:sim%n_gcells) = scratch
-       val(sim%n_gcells+1) = val(1)
-       open(newunit=file_id2,file="rhot.dat")
-       write(file_id2,*) val
-       close(file_id2)
-
-       val(1:sim%n_gcells) = efield_poisson
-       val(sim%n_gcells+1) = val(1)
-       open(newunit=file_id2,file="Etrafo.dat")
-       write(file_id2,*) val
-       close(file_id2)
-    else
-!!$       do i=1, sim%n_gcells
-!!$          !xi(1)=real((i-1),f64)/real(sim%n_gcells,f64)
-!!$          !x(1)= sim%domain(3)*(xi(1)+0.1_f64*sin(sll_p_twopi*xi(1)))!transformation parameter hardcoded alpha=0.1
-!!$          x(1)=real((i-1),f64)*sim%delta_x
-!!$          
-!!$          call sim%kernel_smoother_0%evaluate(x(1), rho, scratch(i))
-!!$
-!!$          call sim%kernel_smoother_1%evaluate(x(1), sim%efield_dofs(:,1), efield_poisson(i))
-!!$       end do
-       call sll_s_eval_uniform_periodic_spline_curve(sim%degree_smoother, sim%phi_dofs, scratch)
-       call sll_s_eval_uniform_periodic_spline_curve(sim%degree_smoother-1, sim%efield_dofs(1:sim%n_total1,1), efield_poisson)
-       
-       !val(1:sim%n_gcells) = scratch
-       !val(sim%n_gcells+1) = val(1)
-       write(25,*) scratch!val
-       !open(newunit=file_id2,file="phi_"//dt//".dat")
-       !write(file_id2,*) val
-       !close(file_id2)
-
-       !val(1:sim%n_gcells) = efield_poisson
-       !val(sim%n_gcells+1) = val(1)
-       write(26,*) efield_poisson!val
-!!$       open(newunit=file_id2,file="Efield_"//dt//".dat")
-!!$       write(file_id2,*) val
-!!$       close(file_id2)
-    end if
-    !print rho_ion and rho_electron
-!!$     do i_part=1, sim%n_gcells
-!!$        xi(1)=real((i_part-1),f64)*sim%delta_x
-!!$        call sim%kernel_smoother_0%evaluate(xi(1), rho, val(i_part))
-!!$     end do
-!!$     val(sim%n_gcells+1)=val(1)
-!!$     open(newunit=file_id2,file="rhoe.dat")
-!!$     write(file_id2,*) val
-!!$     close(file_id2)
-!!$     
-!!$     do i_part=1, sim%n_gcells
-!!$        xi(1)=real((i_part-1),f64)*sim%delta_x
-!!$        call sim%kernel_smoother_0%evaluate(xi(1), rho_local, val(i_part))
-!!$     end do
-!!$     val(sim%n_gcells+1)=val(1)
-!!$     open(newunit=file_id2,file="rhoi.dat")
-!!$     write(file_id2,*) val
-!!$     close(file_id2)
-  end subroutine print_fields
-
-
-end module sll_m_sim_pic_vm_1d2v_cart
+end module sll_m_sim_pic_vm_1d2v_cart_multispecies

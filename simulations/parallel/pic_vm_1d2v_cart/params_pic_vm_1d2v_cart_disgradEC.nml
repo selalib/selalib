@@ -29,14 +29,14 @@
 &pic_params
         n_particles = 100000
         sampling_case = "particle_sampling_sobol_symmetric"
-        splitting_case = "splitting_disgradsub"     
+        splitting_case = "splitting_disgradEC"     
         spline_degree = 3
 	splitting_type = "strang"
-        smoothing = .true.
+        smoothing = .false.
 /
 
 &ctest
-	ctest_case = "disgradsub_smooth"
+	ctest_case = "disgradEC"
 /
 
 &maxwell_solver
@@ -53,5 +53,5 @@
         sub_iter_tolerance = 1D-10
         max_iter = 10
         max_iter_sub = 10
-        n_sub_iter = 4 1
+        n_sub_iter = 2 1
 /

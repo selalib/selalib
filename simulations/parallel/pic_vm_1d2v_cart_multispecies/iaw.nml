@@ -1,0 +1,34 @@
+&sim_params
+        delta_t = 0.01
+        n_time_steps = 1000
+        beta = 0.00
+	initial_distrib_sp1 = "initial_distribution_sp1.nml"
+	initial_distrib_sp2 = "initial_distribution_sp2.nml"
+	initial_bfield = "cos"
+        mass_electron = 1.0
+        mass_ion = 200.0
+        restart_file_sp1 = "no"
+        restart_file_sp2 = "no"
+        restart_file_efield = "no"
+        restart_file_bfield = "no"
+/
+
+&grid_dims
+        ng_x = 32
+        x1_min = 0.0
+        x1_max = 6.283185307179586
+/
+
+&pic_params
+        n_particles = 128000
+        sampling_case = "particle_sampling_sobol_symmetric"
+        splitting_case = "splitting_symplectic"
+	spline_degree = 3
+/
+
+&ctest
+ctest_case = "no"
+!make_ctest = .false.
+!ctest_ref_file = "tmp"
+/
+
