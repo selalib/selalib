@@ -12,26 +12,14 @@ module sll_m_sim_pic_vm_1d2v_cart_multispecies
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  use sll_m_low_level_bsplines, only: &
-       sll_s_uniform_bsplines_eval_basis
 
   use sll_m_ascii_io, only: &
        sll_s_ascii_file_create, &
        sll_s_ascii_write_array_1d, &
        sll_s_ascii_write_array_1d_as_row
 
-  use sll_m_filter_base_1d, only: &
-       sll_c_filter_base_1d
-
-  use sll_m_fft_filter_1d, only: &
-       sll_t_fft_filter_1d
-
   use sll_m_binomial_filter, only: &
        sll_t_binomial_filter
-
-  use sll_m_cartesian_meshes, only: &
-       sll_f_new_cartesian_mesh_1d, &
-       sll_t_cartesian_mesh_1d
 
   use sll_m_collective, only: &
        sll_o_collective_allreduce, &
@@ -41,11 +29,104 @@ module sll_m_sim_pic_vm_1d2v_cart_multispecies
        sll_v_world_collective
 
   use sll_m_constants, only: &
-       sll_p_pi, sll_p_twopi
+       sll_p_twopi
 
   use sll_m_control_variate, only: &
        sll_t_control_variate, &
        sll_t_control_variates
+
+  use sll_m_filter_base_1d, only: &
+       sll_c_filter_base_1d
+
+  use sll_m_fft_filter_1d, only: &
+       sll_t_fft_filter_1d
+
+  use sll_m_initial_distribution, only : &
+       sll_c_distribution_params, &
+       sll_s_initial_distribution_file_new
+
+  use sll_m_io_utilities, only : &
+       sll_s_read_data_real_array, &
+       sll_s_concatenate_filename_and_path
+
+  use sll_m_low_level_bsplines, only: &
+       sll_s_uniform_bsplines_eval_basis
+
+  use sll_m_mapping_3d, only: &
+       sll_t_mapping_3d
+
+  use sll_m_maxwell_1d_base, only: &
+       sll_c_maxwell_1d_base
+
+  use sll_m_maxwell_1d_fem, only: &
+       sll_t_maxwell_1d_fem
+
+  use sll_m_maxwell_1d_fem_sm, only: &
+       sll_t_maxwell_1d_fem_sm
+
+  use sll_m_maxwell_1d_trafo, only:&
+       sll_t_maxwell_1d_trafo
+
+  use sll_m_maxwell_1d_ps, only: &
+       sll_t_maxwell_1d_ps
+
+  use sll_m_maxwell_clamped_1d_fem_sm, only: &
+       sll_t_maxwell_clamped_1d_fem_sm
+
+  use sll_m_maxwell_clamped_1d_trafo, only:&
+       sll_t_maxwell_clamped_1d_trafo
+
+  use sll_mpi, only: &
+       mpi_sum, &
+       mpi_max
+
+  use sll_m_particle_mesh_coupling_base_1d, only: &
+       sll_p_galerkin, &
+       sll_c_particle_mesh_coupling_1d
+
+  use sll_m_particle_mesh_coupling_spline_1d, only: &
+       sll_t_particle_mesh_coupling_spline_1d, &
+       sll_s_new_particle_mesh_coupling_spline_1d, &
+       sll_s_new_particle_mesh_coupling_spline_1d_ptr
+
+  use sll_m_particle_mesh_coupling_spline_cl_1d, only: &
+       sll_t_particle_mesh_coupling_spline_cl_1d, &
+       sll_s_new_particle_mesh_coupling_spline_cl_1d, &
+       sll_s_new_particle_mesh_coupling_spline_cl_1d_ptr
+
+  use sll_m_particle_mesh_coupling_spline_strong_1d, only: &
+       sll_t_particle_mesh_coupling_spline_strong_1d, &
+       sll_s_new_particle_mesh_coupling_spline_strong_1d
+
+  use sll_m_particle_mesh_coupling_spline_smooth_1d, only: &
+       sll_t_particle_mesh_coupling_spline_smooth_1d, &
+       sll_s_new_particle_mesh_coupling_spline_smooth_1d, &
+       sll_s_new_particle_mesh_coupling_spline_smooth_1d_ptr
+
+  use sll_m_particle_group_1d2v, only: &
+       sll_t_particle_group_1d2v
+
+  use sll_m_particle_group_base, only: &
+       sll_c_particle_group_base, &
+       sll_t_particle_array
+
+  use sll_m_particle_sampling, only: &
+       sll_t_particle_sampling, &
+       sll_s_particle_sampling_randomized_weights
+
+  use sll_m_sim_base, only: &
+       sll_c_simulation_base_class
+
+  use sll_m_splines_pp, only: &
+       sll_t_spline_pp_1d, &
+       sll_s_spline_pp_init_1d, &
+       sll_s_spline_pp_free_1d, &
+       sll_f_spline_pp_horner_1d, &
+       sll_p_boundary_periodic, &
+       sll_p_boundary_clamped, &
+       sll_p_boundary_clamped_square, &
+       sll_p_boundary_clamped_cubic, &
+       sll_p_boundary_clampeddiri
 
   use sll_m_time_propagator_base, only: &
        sll_c_time_propagator_base
@@ -88,72 +169,6 @@ module sll_m_sim_pic_vm_1d2v_cart_multispecies
   use sll_m_time_propagator_pic_vm_1d2v_ecsim2o, only: &
        sll_t_time_propagator_pic_vm_1d2v_ecsim2o
 
-  use sll_m_initial_distribution, only : &
-       sll_c_distribution_params, &
-       sll_s_initial_distribution_file_new
-
-  use sll_m_io_utilities, only : &
-       sll_s_read_data_real_array, &
-       sll_s_concatenate_filename_and_path
-
-  use sll_m_particle_mesh_coupling_base_1d, only: &
-       sll_p_galerkin, &
-       sll_c_particle_mesh_coupling_1d
-
-  use sll_m_particle_mesh_coupling_spline_1d, only: &
-       sll_t_particle_mesh_coupling_spline_1d, &
-       sll_s_new_particle_mesh_coupling_spline_1d, &
-       sll_s_new_particle_mesh_coupling_spline_1d_ptr
-
-  use sll_m_particle_mesh_coupling_spline_strong_1d, only: &
-       sll_t_particle_mesh_coupling_spline_strong_1d, &
-       sll_s_new_particle_mesh_coupling_spline_strong_1d
-
-  use sll_m_particle_mesh_coupling_spline_cl_1d, only: &
-       sll_t_particle_mesh_coupling_spline_cl_1d, &
-       sll_s_new_particle_mesh_coupling_spline_cl_1d, &
-       sll_s_new_particle_mesh_coupling_spline_cl_1d_ptr
-
-  use sll_m_particle_mesh_coupling_spline_smooth_1d, only: &
-       sll_t_particle_mesh_coupling_spline_smooth_1d, &
-       sll_s_new_particle_mesh_coupling_spline_smooth_1d, &
-       sll_s_new_particle_mesh_coupling_spline_smooth_1d_ptr
-
-  use sll_m_maxwell_1d_base, only: &
-       sll_c_maxwell_1d_base
-
-  use sll_m_maxwell_1d_fem, only: &
-       sll_t_maxwell_1d_fem
-
-  use sll_m_maxwell_1d_fem_sm, only: &
-       sll_t_maxwell_1d_fem_sm
-
-  use sll_m_maxwell_1d_trafo, only:&
-       sll_t_maxwell_1d_trafo
-
-  use sll_m_maxwell_1d_ps, only: &
-       sll_t_maxwell_1d_ps
-
-  use sll_m_maxwell_clamped_1d_fem_sm, only: &
-       sll_t_maxwell_clamped_1d_fem_sm
-
-  use sll_m_maxwell_clamped_1d_trafo, only:&
-       sll_t_maxwell_clamped_1d_trafo
-
-  use sll_m_particle_group_1d2v, only: &
-       sll_t_particle_group_1d2v
-
-  use sll_m_particle_group_base, only: &
-       sll_c_particle_group_base, &
-       sll_t_particle_array
-
-  use sll_m_particle_sampling, only: &
-       sll_t_particle_sampling, &
-       sll_s_particle_sampling_randomized_weights
-
-  use sll_m_sim_base, only: &
-       sll_c_simulation_base_class
-
   use sll_m_timer, only: &
        sll_s_set_time_mark, &
        sll_f_time_elapsed_between, &
@@ -162,14 +177,6 @@ module sll_m_sim_pic_vm_1d2v_cart_multispecies
   use sll_m_utilities, only : &
        sll_s_int2string
 
-  use sll_mpi, only: &
-       mpi_sum, &
-       mpi_max
-
-  use sll_m_mapping_3d, only: &
-       sll_t_mapping_3d
-
-  use sll_m_splines_pp
 
   implicit none
 
@@ -220,7 +227,6 @@ module sll_m_sim_pic_vm_1d2v_cart_multispecies
      sll_real64, allocatable :: field_grid(:)
 
      ! Cartesian mesh
-     type(sll_t_cartesian_mesh_1d), pointer    :: mesh
      sll_real64 :: delta_x
 
      sll_real64 :: time
@@ -449,8 +455,6 @@ contains
     sim%output_particles = output_particles
 
     sim%n_gcells = ng_x
-    sim%mesh => sll_f_new_cartesian_mesh_1d( ng_x, &
-         x1_min, x1_max)
     sim%domain = [x1_min, x1_max, x1_max - x1_min ]
     sim%domain_logical = sim%domain
     sim%delta_x = (x1_max - x1_min)/real(ng_x, f64)
@@ -1301,8 +1305,6 @@ contains
     call sim%particle_group%group(1)%free()
     call sim%particle_group%group(2)%free()
     deallocate (sim%particle_group)
-    call sim%mesh%delete()
-    deallocate(sim%mesh)
     call sim%maxwell_solver%free()
     deallocate(sim%maxwell_solver)
     call sim%kernel_smoother_0%free()
