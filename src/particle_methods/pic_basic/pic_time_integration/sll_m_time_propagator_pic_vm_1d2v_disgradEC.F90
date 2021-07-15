@@ -1,4 +1,4 @@
-module sll_m_time_propagator_pic_vm_1d2v_disgrad
+module sll_m_time_propagator_pic_vm_1d2v_disgradEC
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_memory.h"
@@ -25,35 +25,35 @@ module sll_m_time_propagator_pic_vm_1d2v_disgrad
   implicit none
 
   public :: &
-    sll_t_time_propagator_pic_vm_1d2v_disgrad
+    sll_t_time_propagator_pic_vm_1d2v_disgradEC
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
-  type, extends(sll_c_time_propagator_base) :: sll_t_time_propagator_pic_vm_1d2v_disgrad
+  type, extends(sll_c_time_propagator_base) :: sll_t_time_propagator_pic_vm_1d2v_disgradEC
 
-     type(sll_t_time_propagator_pic_vm_1d2v_helper) :: helper
+     type(sll_t_time_propagator_pic_vm_1d2v_helper) :: helper !< helper
 
    contains
      
-     procedure :: lie_splitting => lie_splitting_pic_vm_1d2v_disgrad !> Lie splitting propagator
-     procedure :: lie_splitting_back => lie_splitting_back_pic_vm_1d2v_disgrad !> Lie splitting propagator
-     procedure :: strang_splitting => strang_splitting_pic_vm_1d2v_disgrad !> Strang splitting propagator
+     procedure :: lie_splitting => lie_splitting_pic_vm_1d2v_disgradEC !> Lie splitting propagator
+     procedure :: lie_splitting_back => lie_splitting_back_pic_vm_1d2v_disgradEC !> Lie splitting propagator
+     procedure :: strang_splitting => strang_splitting_pic_vm_1d2v_disgradEC !> Strang splitting propagator
 
-     procedure :: init => initialize_pic_vm_1d2v_disgrad !> Initialize the type
-     procedure :: free => delete_pic_vm_1d2v_disgrad !> Finalization
+     procedure :: init => initialize_pic_vm_1d2v_disgradEC !> Initialize the type
+     procedure :: free => delete_pic_vm_1d2v_disgradEC !> Finalization
 
-     procedure :: reinit_fields => reinit_fields_disgrad
+     procedure :: reinit_fields => reinit_fields_disgradEC
 
-  end type sll_t_time_propagator_pic_vm_1d2v_disgrad
+  end type sll_t_time_propagator_pic_vm_1d2v_disgradEC
 
 
 contains
 
   !> Strang splitting
-  subroutine strang_splitting_pic_vm_1d2v_disgrad(self,dt, number_steps)
-    class(sll_t_time_propagator_pic_vm_1d2v_disgrad), intent(inout) :: self !< time splitting object 
+  subroutine strang_splitting_pic_vm_1d2v_disgradEC(self,dt, number_steps)
+    class(sll_t_time_propagator_pic_vm_1d2v_disgradEC), intent(inout) :: self !< time splitting object 
     sll_real64,                                     intent(in)    :: dt   !< time step
     sll_int32,                                      intent(in)    :: number_steps !< number of time steps
 
@@ -74,11 +74,11 @@ contains
 
     end do
 
-  end subroutine strang_splitting_pic_vm_1d2v_disgrad
+  end subroutine strang_splitting_pic_vm_1d2v_disgradEC
 
   !> Lie splitting
-  subroutine lie_splitting_pic_vm_1d2v_disgrad(self,dt, number_steps)
-    class(sll_t_time_propagator_pic_vm_1d2v_disgrad), intent(inout) :: self !< time splitting object 
+  subroutine lie_splitting_pic_vm_1d2v_disgradEC(self,dt, number_steps)
+    class(sll_t_time_propagator_pic_vm_1d2v_disgradEC), intent(inout) :: self !< time splitting object 
     sll_real64,                                     intent(in)    :: dt   !< time step
     sll_int32,                                      intent(in)    :: number_steps !< number of time steps
 
@@ -91,12 +91,12 @@ contains
        call self%helper%advect_e_start_avf(dt)
     end do
 
-  end subroutine lie_splitting_pic_vm_1d2v_disgrad
+  end subroutine lie_splitting_pic_vm_1d2v_disgradEC
 
 
     !> Lie splitting
-  subroutine lie_splitting_back_pic_vm_1d2v_disgrad(self,dt, number_steps)
-    class(sll_t_time_propagator_pic_vm_1d2v_disgrad), intent(inout) :: self !< time splitting object 
+  subroutine lie_splitting_back_pic_vm_1d2v_disgradEC(self,dt, number_steps)
+    class(sll_t_time_propagator_pic_vm_1d2v_disgradEC), intent(inout) :: self !< time splitting object 
     sll_real64,                                     intent(in)    :: dt   !< time step
     sll_int32,                                      intent(in)    :: number_steps !< number of time steps
 
@@ -109,11 +109,11 @@ contains
        call self%helper%advect_eb(dt)
     end do
 
-  end subroutine lie_splitting_back_pic_vm_1d2v_disgrad
+  end subroutine lie_splitting_back_pic_vm_1d2v_disgradEC
   
 !---------------------------------------------------------------------------!
   !> Constructor.
-  subroutine initialize_pic_vm_1d2v_disgrad(&
+  subroutine initialize_pic_vm_1d2v_disgradEC(&
        self, &
        maxwell_solver, &
        kernel_smoother_0, &
@@ -125,7 +125,7 @@ contains
        Lx, &
        filter, &
        filename) 
-    class(sll_t_time_propagator_pic_vm_1d2v_disgrad), intent(out) :: self !< time splitting object 
+    class(sll_t_time_propagator_pic_vm_1d2v_disgradEC), intent(out) :: self !< time splitting object 
     class(sll_c_maxwell_1d_base), target,          intent(in)  :: maxwell_solver      !< Maxwell solver
     class(sll_c_particle_mesh_coupling_1d), target,          intent(in)  :: kernel_smoother_0  !< Kernel smoother
     class(sll_c_particle_mesh_coupling_1d), target,          intent(in)  :: kernel_smoother_1  !< Kernel smoother
@@ -149,21 +149,21 @@ contains
        filename, &
        .false. ) 
     
-  end subroutine initialize_pic_vm_1d2v_disgrad
+  end subroutine initialize_pic_vm_1d2v_disgradEC
 
-   subroutine delete_pic_vm_1d2v_disgrad(self)
-    class(sll_t_time_propagator_pic_vm_1d2v_disgrad), intent( inout ) :: self !< time splitting object 
+   subroutine delete_pic_vm_1d2v_disgradEC(self)
+    class(sll_t_time_propagator_pic_vm_1d2v_disgradEC), intent( inout ) :: self !< time splitting object 
 
     call self%helper%free()
 
-  end subroutine delete_pic_vm_1d2v_disgrad
+  end subroutine delete_pic_vm_1d2v_disgradEC
 
   
-  subroutine reinit_fields_disgrad( self ) 
-    class(sll_t_time_propagator_pic_vm_1d2v_disgrad), intent(inout) :: self !< time splitting object 
+  subroutine reinit_fields_disgradEC( self ) 
+    class(sll_t_time_propagator_pic_vm_1d2v_disgradEC), intent(inout) :: self !< time splitting object 
 
     call self%helper%reinit_fields()
     
-  end subroutine reinit_fields_disgrad
+  end subroutine reinit_fields_disgradEC
   
-end module sll_m_time_propagator_pic_vm_1d2v_disgrad
+end module sll_m_time_propagator_pic_vm_1d2v_disgradEC

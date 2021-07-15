@@ -10,8 +10,8 @@ SET( PIC_TIME_SRCS
   sll_m_time_propagator_pic_vm_1d2v_subcyci.F90
   sll_m_time_propagator_pic_vm_1d2v_helper.F90
   sll_m_time_propagator_pic_vm_1d2v_disgradE.F90
-  sll_m_time_propagator_pic_vm_1d2v_disgrad.F90
-  sll_m_time_propagator_pic_vm_1d2v_dgsub.F90
+  sll_m_time_propagator_pic_vm_1d2v_disgradEC.F90
+  sll_m_time_propagator_pic_vm_1d2v_disgradEC_sub.F90
   sll_m_time_propagator_pic_vm_1d2v_hs_trafo.F90
   sll_m_time_propagator_pic_vm_1d2v_trafo.F90
   sll_m_time_propagator_pic_vm_2d3v_hs.F90

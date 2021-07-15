@@ -1,0 +1,12 @@
+&initial_distribution
+	type = "cossum_onegaussian"
+/
+
+&cos_onegaussian
+	kx = 1.0 
+        modnum = 1.0
+        alpha = 0.1
+        v_thermal = 1.0 1.0
+        v_mean = 0.0 0.0
+/
+

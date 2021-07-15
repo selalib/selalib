@@ -29,14 +29,14 @@
 &pic_params
         n_particles = 100000
         sampling_case = "particle_sampling_sobol_symmetric"
-        splitting_case = "splitting_disgradsub"     
+        splitting_case = "splitting_disgradEC_sub"     
         spline_degree = 3
 	splitting_type = "strang"
         smoothing = .false.
 /
 
 &ctest
-	ctest_case = "disgradsub"
+	ctest_case = "disgradEC_sub"
 /
 
 &maxwell_solver

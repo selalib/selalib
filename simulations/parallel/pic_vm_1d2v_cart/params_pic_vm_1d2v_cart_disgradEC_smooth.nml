@@ -7,7 +7,8 @@
 /
 
 &cos_onegaussian
-        kx = 1.25
+	kx = 0.0
+	modnum = 0.0
         alpha = 0.0
 	phase_shift= 0.0
         v_thermal = 0.2  0.005773502691896
@@ -23,21 +24,19 @@
         ng_x = 32
         x1_min = 0.0
         x1_max = 5.02654824574
-        degree_fem = -1
 /
 
 &pic_params
         n_particles = 100000
         sampling_case = "particle_sampling_sobol_symmetric"
-        splitting_case = "splitting_disgrad"     
+        splitting_case = "splitting_disgradEC"     
         spline_degree = 3
 	splitting_type = "strang"
-        smoothing = .false.
-        strong_ampere = .true.
+        smoothing = .true.
 /
 
 &ctest
-	ctest_case = "disgrad_stronga"
+	ctest_case = "disgradEC_smooth"
 /
 
 &maxwell_solver
@@ -54,5 +53,5 @@
         sub_iter_tolerance = 1D-10
         max_iter = 10
         max_iter_sub = 10
-        n_sub_iter = 2 1
+        n_sub_iter = 4 1
 /
