@@ -244,7 +244,7 @@ module sll_m_sim_pic_vm_3d3v_cart
      sll_int32  :: n_totalcells !< product of gridcells
      sll_int32  :: n_totaldofs0 !< total number of Dofs for 0form
      sll_int32  :: n_totaldofs1  !< total number of Dofs for 1form
-     logical    :: boundary !< true for non periodic field boundary
+     logical    :: boundary = .false. !< true for non periodic field boundary
      sll_int32  :: boundary_fields(3) = 100 !< field boundary conditions
      sll_int32  :: boundary_particles = 100 !< particle boundary conditions
 
@@ -1242,7 +1242,7 @@ contains
     call sim%particle_group%group(1)%free()
     deallocate (sim%particle_group)
     call sim%maxwell_solver%free()
-    deallocate(sim%maxwell_solver)
+    !deallocate(sim%maxwell_solver)
     call sim%particle_mesh_coupling%free()
     deallocate(sim%particle_mesh_coupling)
     deallocate(sim%efield_dofs)
@@ -2057,7 +2057,7 @@ contains
     b_phys = 0.0_f64
     ecb = 0.0_f64
 
-    q = 2*maxval(deg)+1
+    q = 3*maxval(deg)+1
     allocate( xw_gauss_d1(1:2, 1:q(1)) )
     allocate( xw_gauss_d2(1:2, 1:q(2)) )
     allocate( xw_gauss_d3(1:2, 1:q(3)) )
