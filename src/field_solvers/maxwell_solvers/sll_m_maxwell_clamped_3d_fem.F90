@@ -1069,12 +1069,7 @@ contains
   subroutine free_3d_fem(self)
     class(sll_t_maxwell_clamped_3d_fem) :: self !< Maxwell_Clamped solver class
 
-    deallocate(self%work0)
-    deallocate(self%work01)
-    deallocate(self%work1)
-    deallocate(self%work12)
-    deallocate(self%work2)
-    deallocate(self%work22)
+    call self%mass0_solver%free()
     call self%mass1_solver%free()
     call self%mass2_solver%free()
     call self%mass1_operator%free()
@@ -1084,6 +1079,13 @@ contains
     call self%linear_solver_schur_eb%free()
     call self%linear_op_schur_eb%free()
 
+    deallocate(self%work0)
+    deallocate(self%work01)
+    deallocate(self%work1)
+    deallocate(self%work12)
+    deallocate(self%work2)
+    deallocate(self%work22)
+    
   end subroutine free_3d_fem
 
 
