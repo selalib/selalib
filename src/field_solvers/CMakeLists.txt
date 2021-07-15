@@ -1,3 +1,5 @@
+add_subdirectory(spline_matrix_helper)
+add_subdirectory(fem_spline)
 add_subdirectory(maxwell_solvers)
 add_subdirectory(general_coordinate_elliptic_solvers)
 add_subdirectory(poisson_solvers)

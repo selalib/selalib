@@ -20,7 +20,7 @@ if(MPI_ENABLED)
 
   target_link_libraries(
     sll_distribution_function sll_coordinate_transformations sll_meshes
-    sll_file_io sll_collective sll_remap)
+    sll_file_io sll_collective sll_remap prob)
   if(BUILD_TESTING)
     add_subdirectory(testing)
   endif(BUILD_TESTING)
@@ -30,6 +30,9 @@ else()
   add_library(sll_distribution_function STATIC ${DISTRIBUTION_SOURCES_LIBRARY})
 
   target_link_libraries(sll_distribution_function
-                        sll_coordinate_transformations sll_meshes sll_file_io)
+    sll_coordinate_transformations
+    sll_meshes
+    sll_file_io
+    prob)
 
 endif(MPI_ENABLED)
