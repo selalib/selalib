@@ -10,10 +10,6 @@ module sll_m_sim_pic_vm_1d2v_cart
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  
-  use sll_m_low_level_bsplines, only: &
-       sll_s_uniform_bsplines_eval_basis, &
-       sll_s_eval_uniform_periodic_spline_curve
 
   use sll_m_gauss_legendre_integration, only: &
        sll_f_gauss_legendre_points_and_weights
@@ -23,18 +19,8 @@ module sll_m_sim_pic_vm_1d2v_cart
        sll_s_ascii_write_array_1d, &
        sll_s_ascii_write_array_1d_as_row
 
-  use sll_m_filter_base_1d, only: &
-       sll_c_filter_base_1d
-
-  use sll_m_fft_filter_1d, only: &
-       sll_t_fft_filter_1d
-
   use sll_m_binomial_filter, only: &
        sll_t_binomial_filter
-
-  use sll_m_cartesian_meshes, only: &
-       sll_f_new_cartesian_mesh_1d, &
-       sll_t_cartesian_mesh_1d
 
   use sll_m_collective, only: &
        sll_o_collective_allreduce, &
@@ -44,11 +30,103 @@ module sll_m_sim_pic_vm_1d2v_cart
        sll_v_world_collective
 
   use sll_m_constants, only: &
-       sll_p_pi, sll_p_twopi
+       sll_p_twopi
 
   use sll_m_control_variate, only: &
        sll_t_control_variate, &
        sll_t_control_variates
+
+  use sll_m_filter_base_1d, only: &
+       sll_c_filter_base_1d
+
+  use sll_m_fft_filter_1d, only: &
+       sll_t_fft_filter_1d
+
+  use sll_m_initial_distribution, only : &
+       sll_c_distribution_params, &
+       sll_s_initial_distribution_new
+
+  use sll_m_io_utilities, only : &
+       sll_s_read_data_real_array, &
+       sll_s_concatenate_filename_and_path
+
+  use sll_m_low_level_bsplines, only: &
+       sll_s_uniform_bsplines_eval_basis
+
+  use sll_m_mapping_3d, only: &
+       sll_t_mapping_3d
+
+  use sll_m_maxwell_1d_base, only: &
+       sll_c_maxwell_1d_base
+
+  use sll_m_maxwell_1d_fem, only: &
+       sll_t_maxwell_1d_fem
+
+  use sll_m_maxwell_1d_fem_sm, only: &
+       sll_t_maxwell_1d_fem_sm
+
+  use sll_m_maxwell_1d_trafo, only:&
+       sll_t_maxwell_1d_trafo
+
+  use sll_m_maxwell_1d_ps, only: &
+       sll_t_maxwell_1d_ps
+
+  use sll_m_maxwell_clamped_1d_fem_sm, only: &
+       sll_t_maxwell_clamped_1d_fem_sm
+
+  use sll_m_maxwell_clamped_1d_trafo, only:&
+       sll_t_maxwell_clamped_1d_trafo
+
+  use sll_mpi, only: &
+       mpi_sum, &
+       mpi_max
+
+  use sll_m_particle_mesh_coupling_base_1d, only: &
+       sll_p_galerkin, &
+       sll_c_particle_mesh_coupling_1d
+
+  use sll_m_particle_mesh_coupling_spline_1d, only: &
+       sll_t_particle_mesh_coupling_spline_1d, &
+       sll_s_new_particle_mesh_coupling_spline_1d, &
+       sll_s_new_particle_mesh_coupling_spline_1d_ptr
+
+  use sll_m_particle_mesh_coupling_spline_cl_1d, only: &
+       sll_t_particle_mesh_coupling_spline_cl_1d, &
+       sll_s_new_particle_mesh_coupling_spline_cl_1d, &
+       sll_s_new_particle_mesh_coupling_spline_cl_1d_ptr
+
+  use sll_m_particle_mesh_coupling_spline_strong_1d, only: &
+       sll_t_particle_mesh_coupling_spline_strong_1d, &
+       sll_s_new_particle_mesh_coupling_spline_strong_1d
+
+  use sll_m_particle_mesh_coupling_spline_smooth_1d, only: &
+       sll_t_particle_mesh_coupling_spline_smooth_1d, &
+       sll_s_new_particle_mesh_coupling_spline_smooth_1d, &
+       sll_s_new_particle_mesh_coupling_spline_smooth_1d_ptr
+
+  use sll_m_particle_group_1d2v, only: &
+       sll_t_particle_group_1d2v
+
+  use sll_m_particle_group_base, only: &
+       sll_c_particle_group_base, &
+       sll_t_particle_array
+
+  use sll_m_particle_sampling, only: &
+       sll_t_particle_sampling
+
+  use sll_m_sim_base, only: &
+       sll_c_simulation_base_class
+
+  use sll_m_splines_pp, only: &
+       sll_t_spline_pp_1d, &
+       sll_s_spline_pp_init_1d, &
+       sll_s_spline_pp_free_1d, &
+       sll_f_spline_pp_horner_1d, &
+       sll_p_boundary_periodic, &
+       sll_p_boundary_clamped, &
+       sll_p_boundary_clamped_square, &
+       sll_p_boundary_clamped_cubic, &
+       sll_p_boundary_clampeddiri
 
   use sll_m_time_propagator_base, only: &
        sll_c_time_propagator_base
@@ -78,7 +156,7 @@ module sll_m_sim_pic_vm_1d2v_cart
 
   use sll_m_time_propagator_pic_vm_1d2v_trafo, only: &
        sll_t_time_propagator_pic_vm_1d2v_trafo
-  
+
   use sll_m_time_propagator_pic_vm_3d3v_cl_helper, only: &
        sll_p_boundary_particles_periodic, &
        sll_p_boundary_particles_singular, &
@@ -103,87 +181,14 @@ module sll_m_sim_pic_vm_1d2v_cart
   use sll_m_time_propagator_pic_vm_1d2v_zigsub, only: &
        sll_t_time_propagator_pic_vm_1d2v_zigsub
 
-  use sll_m_initial_distribution, only : &
-       sll_c_distribution_params, &
-       sll_s_initial_distribution_new
-
   use sll_m_timer, only: &
        sll_s_set_time_mark, &
        sll_f_time_elapsed_between, &
        sll_t_time_mark
 
-  use sll_m_io_utilities, only : &
-       sll_s_read_data_real_array, &
-       sll_s_concatenate_filename_and_path
-
-  use sll_m_particle_mesh_coupling_base_1d, only: &
-       sll_p_galerkin, &
-       sll_c_particle_mesh_coupling_1d
-
-  use sll_m_particle_mesh_coupling_spline_1d, only: &
-       sll_t_particle_mesh_coupling_spline_1d, &
-       sll_s_new_particle_mesh_coupling_spline_1d, &
-       sll_s_new_particle_mesh_coupling_spline_1d_ptr
-
-  use sll_m_particle_mesh_coupling_spline_cl_1d, only: &
-       sll_t_particle_mesh_coupling_spline_cl_1d, &
-       sll_s_new_particle_mesh_coupling_spline_cl_1d, &
-       sll_s_new_particle_mesh_coupling_spline_cl_1d_ptr
-  
-  use sll_m_particle_mesh_coupling_spline_strong_1d, only: &
-       sll_t_particle_mesh_coupling_spline_strong_1d, &
-       sll_s_new_particle_mesh_coupling_spline_strong_1d
-
-  use sll_m_particle_mesh_coupling_spline_smooth_1d, only: &
-       sll_t_particle_mesh_coupling_spline_smooth_1d, &
-       sll_s_new_particle_mesh_coupling_spline_smooth_1d, &
-       sll_s_new_particle_mesh_coupling_spline_smooth_1d_ptr
-
-  use sll_m_maxwell_1d_base, only: &
-       sll_c_maxwell_1d_base
-
-  use sll_m_maxwell_1d_fem, only: &
-       sll_t_maxwell_1d_fem
-
-  use sll_m_maxwell_1d_fem_sm, only: &
-       sll_t_maxwell_1d_fem_sm
-
-  use sll_m_maxwell_1d_trafo, only:&
-       sll_t_maxwell_1d_trafo
-
-  use sll_m_maxwell_1d_ps, only: &
-       sll_t_maxwell_1d_ps
-
-  use sll_m_maxwell_clamped_1d_fem_sm, only: &
-       sll_t_maxwell_clamped_1d_fem_sm
-  
-  use sll_m_maxwell_clamped_1d_trafo, only:&
-       sll_t_maxwell_clamped_1d_trafo
-  
-  use sll_m_particle_group_1d2v, only: &
-       sll_t_particle_group_1d2v
-
-  use sll_m_particle_group_base, only: &
-       sll_c_particle_group_base, &
-       sll_t_particle_array
-
-  use sll_m_particle_sampling, only: &
-       sll_t_particle_sampling
-
-  use sll_m_sim_base, only: &
-       sll_c_simulation_base_class
-
   use sll_m_utilities, only : &
        sll_s_int2string
 
-  use sll_mpi, only: &
-       mpi_sum, &
-       mpi_max
-
-  use sll_m_mapping_3d, only: &
-       sll_t_mapping_3d
-
-  use sll_m_splines_pp
 
   implicit none
 
@@ -207,7 +212,7 @@ module sll_m_sim_pic_vm_1d2v_cart
   sll_int32, parameter :: sll_p_splitting_subcyci = 18 !< implicit subcycling scheme
   sll_int32, parameter :: sll_p_splitting_zigsub = 19 !< subcycling with zig zagging
   sll_int32, parameter :: sll_p_splitting_momentum = 20
- 
+
 
   sll_int32, parameter :: sll_p_onegaussian = 0
   sll_int32, parameter :: sll_p_twogaussian = 1
@@ -240,7 +245,6 @@ module sll_m_sim_pic_vm_1d2v_cart
      sll_real64, allocatable :: field_grid(:)
 
      ! Cartesian mesh
-     type(sll_t_cartesian_mesh_1d), pointer    :: mesh
      sll_real64 :: delta_x
 
      sll_real64 :: time
@@ -322,7 +326,7 @@ module sll_m_sim_pic_vm_1d2v_cart
      ! Filter
      class(sll_c_filter_base_1d), allocatable :: filter
      type(sll_t_binomial_filter) :: bfilter
-     
+
    contains
      procedure :: init_from_file => init_pic_vm_1d2v
      procedure :: run => run_pic_vm_1d2v
@@ -390,7 +394,7 @@ contains
 
 
     call sll_s_set_time_mark( start_init )
-    
+
     ! Read parameters from file
     open(newunit = input_file, file=trim(filename), status='old', IOStat=io_stat)
     if (io_stat /= 0) then
@@ -448,8 +452,6 @@ contains
     sim%output_particles = output_particles
 
     sim%n_gcells = ng_x
-    sim%mesh => sll_f_new_cartesian_mesh_1d( ng_x, &
-         x1_min, x1_max)
     sim%domain = [x1_min, x1_max, x1_max - x1_min ]
     sim%delta_x = (x1_max - x1_min)/real(ng_x, f64)
 
@@ -767,7 +769,7 @@ contains
                sim%n_particles, sim%degree_smoother, sll_p_galerkin) 
        end if
     end if
-    
+
     ! Initialize the arrays for the spline coefficients of the fields
     SLL_ALLOCATE(sim%phi_dofs(sim%n_total0), ierr)
     SLL_ALLOCATE(sim%efield_dofs(sim%n_total0,2), ierr)
@@ -783,10 +785,10 @@ contains
     if (sim%splitting_case == sll_p_splitting_hs) then
        if (sim%no_weights == 1) then
           call sll_s_new_time_propagator_pic_vm_1d2v_hs(&
-            sim%propagator, sim%maxwell_solver, &
-            sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
-            sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
-            sim%domain(1), sim%domain(3), sim%filter, boundary_particles=sim%boundary_particles, force_sign=sim%force_sign, jmean=jmean, betar = sim%plasma_betar(1:2), electrostatic=sim%electrostatic, rhob = sim%rhob)
+               sim%propagator, sim%maxwell_solver, &
+               sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
+               sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
+               sim%domain(1), sim%domain(3), sim%filter, boundary_particles=sim%boundary_particles, force_sign=sim%force_sign, jmean=jmean, betar = sim%plasma_betar(1:2), electrostatic=sim%electrostatic, rhob = sim%rhob)
        else
           call sll_s_new_time_propagator_pic_vm_1d2v_hs(&
                sim%propagator, sim%maxwell_solver, &
@@ -861,7 +863,7 @@ contains
                sim%domain(1), sim%domain(3), sim%filter, trim(filename) )
           sim%efield_dofs_n => qpdisgradEC%helper%efield_dofs
        end select
-      elseif  (sim%splitting_case == sll_p_splitting_disgradEC_sub) then
+    elseif  (sim%splitting_case == sll_p_splitting_disgradEC_sub) then
        allocate( sll_t_time_propagator_pic_vm_1d2v_disgradEC_sub :: sim%propagator )
        select type( qpdgs=>sim%propagator )
        type is ( sll_t_time_propagator_pic_vm_1d2v_disgradEC_sub )
@@ -923,10 +925,10 @@ contains
        select type( qpsci=>sim%propagator )
        type is ( sll_t_time_propagator_pic_vm_1d2v_subcyci )
           call qpsci%init(  sim%maxwell_solver, &
-            sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
-            sim%efield_dofs, sim%bfield_dofs, &
-            sim%domain(1), sim%domain(3), n_sub_iter, sim%file_prefix, &
-            sim%bfilter, jmean, sim%control_variate, sim%no_weights)
+               sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
+               sim%efield_dofs, sim%bfield_dofs, &
+               sim%domain(1), sim%domain(3), n_sub_iter, sim%file_prefix, &
+               sim%bfilter, jmean, sim%control_variate, sim%no_weights)
           sim%efield_dofs_n => qpsci%efield_dofs
        end select
     elseif  (sim%splitting_case == sll_p_splitting_zigsub) then
@@ -942,10 +944,10 @@ contains
        select type( qpsc=>sim%propagator )
        type is ( sll_t_time_propagator_pic_vm_1d2v_zigsub )
           call qpsc%init(  sim%maxwell_solver, &
-            sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
-            sim%efield_dofs, sim%bfield_dofs, &
-            sim%domain(1), sim%domain(3), n_sub_iter, &
-            sim%bfilter, jmean, sim%control_variate, sim%no_weights)
+               sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
+               sim%efield_dofs, sim%bfield_dofs, &
+               sim%domain(1), sim%domain(3), n_sub_iter, &
+               sim%bfilter, jmean, sim%control_variate, sim%no_weights)
           sim%efield_dofs_n => qpsc%efield_dofs
        end select
     elseif (sim%splitting_case == sll_p_splitting_momentum) then
@@ -964,7 +966,7 @@ contains
                sim%efield_dofs, sim%bfield_dofs, &
                sim%domain(1), sim%domain(3), sim%map, trim(filename), force_sign=sim%force_sign, electrostatic=sim%electrostatic )!,betar=sim%plasma_betar(1:2))
           sim%efield_dofs_n => qptrafo%efield_dofs
-       end select       
+       end select
     end if
 
     call sll_s_set_time_mark( end_init )
@@ -1051,7 +1053,7 @@ contains
     ! Efield 1 by Poisson
     call solve_poisson( sim, rho_local, rho, dfield_id )
 
-    
+
     ! Efield 2 to zero
     sim%efield_dofs(:,2) = 0.0_f64
     ! Bfield = beta*cos(kx): Use b = M{-1}(N_i,beta*cos(kx))
@@ -1061,7 +1063,7 @@ contains
     else
        degreeb = sim%degree_fem-1
     end if
-    
+
     select case( sim%initial_bfield )
     case (  sll_p_bfield_cos )
        call sim%maxwell_solver%L2projection( beta_cos_k, degreeb, &
@@ -1088,7 +1090,7 @@ contains
        print*, 'Warning: You need to adjust the time in the diagnostic file by dt - dtau'
     end select
 
-    
+
     ! In case we use the Boris propagator, we need to initialize the staggering used in the scheme.
     select type( qp=>sim%propagator )
     type is ( sll_t_time_propagator_pic_vm_1d2v_boris)
@@ -1103,7 +1105,6 @@ contains
     if (sim%rank == 0 ) then
        call sll_s_set_time_mark(start_loop )
        if ( sim%output_fields ) then
-          call print_fields( sim, sim%phi_dofs, efield_poisson, scratch )
           call sll_s_ascii_write_array_1d_as_row( dfield_id, &
                sim%efield_dofs(:,1),  &
                sim%n_total1 )
@@ -1135,9 +1136,8 @@ contains
           end if
 
           if (sim%rank == 0 ) then
-            
+
              if ( sim%output_fields ) then
-                call print_fields( sim, sim%phi_dofs, efield_poisson, scratch )
                 call sll_s_ascii_write_array_1d_as_row( dfield_id, &
                      sim%efield_dofs(:,1),  &
                      sim%n_total1 )
@@ -1318,13 +1318,13 @@ contains
 
       beta_constant = sim%beta
     end function beta_constant
-    
+
     function beta_cos_const(x)
       sll_real64             :: beta_cos_const
       sll_real64, intent(in) :: x
 
       beta_cos_const = sim%beta + 0.001_f64 * cos(sll_p_twopi*x/sim%domain(3))
-      
+
     end function beta_cos_const
 
 
@@ -1368,8 +1368,6 @@ contains
     deallocate(sim%propagator)
     call sim%particle_group%group(1)%free()
     deallocate (sim%particle_group)
-    call sim%mesh%delete()
-    deallocate(sim%mesh)
     call sim%maxwell_solver%free()
     deallocate(sim%maxwell_solver)
     deallocate(sim%kernel_smoother_0)
@@ -1383,6 +1381,10 @@ contains
     deallocate(sim%init_distrib_params)
     call sim%sampler%free()
 
+    if( sim%boundary ) then
+       call sll_s_spline_pp_free_1d(sim%spline0_pp )
+    end if
+       
   end subroutine delete_pic_vm_1d2v
 
 
@@ -1470,7 +1472,7 @@ contains
 
           diagnostics(3) = diagnostics(3) - sim%maxwell_solver%inner_product( sim%efield_dofs(:,1), sim%bfield_dofs, degree-1 )
        else
-          
+
           if ( sim%strong_ampere .eqv. .false. ) then
              diagnostics(2) = diagnostics(2) + sim%maxwell_norm%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree, degree-1 )
 
@@ -1492,8 +1494,8 @@ contains
              end if
           end if
        end if
-       
-       
+
+
        call sll_s_pic_diagnostics_transfer( sim%particle_group%group(1), sim%kernel_smoother_0, sim%kernel_smoother_1, sim%efield_dofs, transfer )
 
        call sll_s_pic_diagnostics_vvb( sim%particle_group%group(1), sim%kernel_smoother_1, &
@@ -1501,7 +1503,7 @@ contains
        call sll_s_pic_diagnostics_poynting( sim%maxwell_solver, degree, sim%efield_dofs(:,2), sim%bfield_dofs, &
             scratch, poynting )
     end if
- 
+
     !print*,'poynting flux', poynting
     call check_gauss_law( sim, rho, scratch, error )
 
@@ -1510,7 +1512,7 @@ contains
        if( sim%boundary )then
           potential_energy(1) = sim%maxwell_solver%L2norm_squared( sim%efield_dofs(1:sim%n_total1,1), degree-1 )/sim%plasma_betar(2)
           potential_energy(2) = sim%maxwell_solver%L2norm_squared( sim%efield_dofs(:,2), degree )/sim%plasma_betar(2)
-          
+
           potential_energy(3) = sim%maxwell_solver%L2norm_squared( sim%bfield_dofs, degree-1 )*sim%plasma_betar(3)
        else
           if (sim%strong_ampere .eqv. .false. ) then
@@ -1529,9 +1531,9 @@ contains
        if(sim%adiabatic_electrons) then
           phi = sim%maxwell_solver%L2norm_squared( sim%phi_dofs, degree )
           write(file_id,'(f12.5,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16)' ) &
-            time,  potential_energy, diagnostics(1), &
-            diagnostics(1) + phi, diagnostics(2:3), -transfer+vvb+poynting, &
-            error, phi!, v_max_all
+               time,  potential_energy, diagnostics(1), &
+               diagnostics(1) + phi, diagnostics(2:3), -transfer+vvb+poynting, &
+               error, phi!, v_max_all
 
        else
           write(file_id,'(f12.5,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16)' ) &
@@ -1540,7 +1542,7 @@ contains
                error!, v_max_all
        end if
     end if
-!    call compare_projected_bfield( sim%kernel_smoother_0, sim%kernel_smoother_1, sim%maxwell_solver, sim%maxwell_norm, sim%particle_group%group(1), sim%bfield_dofs )
+    !    call compare_projected_bfield( sim%kernel_smoother_0, sim%kernel_smoother_1, sim%maxwell_solver, sim%maxwell_norm, sim%particle_group%group(1), sim%bfield_dofs )
 
   end subroutine sll_s_time_history_diagnostics_pic_vm_1d2v
 
@@ -1764,10 +1766,10 @@ contains
 !!$             rho(sim%n_total0) = rho(sim%n_total0) + sin_l(1._f64)!+ rad_l(1._f64)!
 !!$          end if
 !!$       end if
-    
+
        call sim%maxwell_solver%compute_E_from_rho( rho, sim%efield_dofs(1:sim%n_total1,1) )
     end if
-    
+
   contains
 
     function one( x)
@@ -2096,84 +2098,6 @@ contains
     end if
 
   end subroutine add_background_charge
-
-
-  subroutine print_fields(sim, rho, efield_poisson, scratch)
-    class(sll_t_sim_pic_vm_1d2v_cart), intent(inout) :: sim
-    sll_real64, intent( in    ) :: rho(sim%n_total0)
-    sll_real64, intent(   out ) :: efield_poisson(sim%n_gcells)
-    sll_real64, intent(   out ) :: scratch(sim%n_gcells)
-    ! Local variables
-    sll_int32 :: i
-    sll_real64 :: xi(3), x(3)
-    sll_int32  :: file_id2
-    sll_real64 :: val(sim%n_gcells+1)
-
-    if(sim%ct) then
-       do i=1, sim%n_gcells
-          xi(1)=real((i-1),f64)*sim%delta_x
-          call sim%kernel_smoother_0%evaluate(xi(1), rho, scratch(i))
-          call sim%kernel_smoother_1%evaluate(xi(1), sim%efield_dofs(1:sim%n_total1,1), efield_poisson(i))
-          efield_poisson(i)=efield_poisson(i)/sim%map%jacobian( [xi(1),0._f64,0._f64] )
-       end do
-       
-       val(1:sim%n_gcells) = scratch
-       val(sim%n_gcells+1) = val(1)
-       open(newunit=file_id2,file="rhot.dat")
-       write(file_id2,*) val
-       close(file_id2)
-
-       val(1:sim%n_gcells) = efield_poisson
-       val(sim%n_gcells+1) = val(1)
-       open(newunit=file_id2,file="Etrafo.dat")
-       write(file_id2,*) val
-       close(file_id2)
-    else
-!!$       do i=1, sim%n_gcells
-!!$          !xi(1)=real((i-1),f64)/real(sim%n_gcells,f64)
-!!$          !x(1)= sim%domain(3)*(xi(1)+0.1_f64*sin(sll_p_twopi*xi(1)))!transformation parameter hardcoded alpha=0.1
-!!$          x(1)=real((i-1),f64)*sim%delta_x
-!!$          
-!!$          call sim%kernel_smoother_0%evaluate(x(1), rho, scratch(i))
-!!$
-!!$          call sim%kernel_smoother_1%evaluate(x(1), sim%efield_dofs(:,1), efield_poisson(i))
-!!$       end do
-       call sll_s_eval_uniform_periodic_spline_curve(sim%degree_smoother, sim%phi_dofs, scratch)
-       call sll_s_eval_uniform_periodic_spline_curve(sim%degree_smoother-1, sim%efield_dofs(1:sim%n_total1,1), efield_poisson)
-       
-       !val(1:sim%n_gcells) = scratch
-       !val(sim%n_gcells+1) = val(1)
-       write(25,*) scratch!val
-       !open(newunit=file_id2,file="phi_"//dt//".dat")
-       !write(file_id2,*) val
-       !close(file_id2)
-
-       !val(1:sim%n_gcells) = efield_poisson
-       !val(sim%n_gcells+1) = val(1)
-       write(26,*) efield_poisson!val
-!!$       open(newunit=file_id2,file="Efield_"//dt//".dat")
-!!$       write(file_id2,*) val
-!!$       close(file_id2)
-    end if
-    !print rho_ion and rho_electron
-!!$     do i_part=1, sim%n_gcells
-!!$        xi(1)=real((i_part-1),f64)*sim%delta_x
-!!$        call sim%kernel_smoother_0%evaluate(xi(1), rho, val(i_part))
-!!$     end do
-!!$     val(sim%n_gcells+1)=val(1)
-!!$     open(newunit=file_id2,file="rhoe.dat")
-!!$     write(file_id2,*) val
-!!$     close(file_id2)
-!!$     
-!!$     do i_part=1, sim%n_gcells
-!!$        xi(1)=real((i_part-1),f64)*sim%delta_x
-!!$        call sim%kernel_smoother_0%evaluate(xi(1), rho_local, val(i_part))
-!!$     end do
-!!$     val(sim%n_gcells+1)=val(1)
-!!$     open(newunit=file_id2,file="rhoi.dat")
-!!$     write(file_id2,*) val
-!!$     close(file_id2)
-  end subroutine print_fields
 
 
 end module sll_m_sim_pic_vm_1d2v_cart
