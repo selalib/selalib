@@ -393,7 +393,7 @@ contains
                             do k3=1, degree(3)+1
                                coef = coef + xw_gauss_d1(2,k1)* xw_gauss_d2(2,k2)* &
                                     xw_gauss_d3(2,k3) *&
-                                    func1([self%delta_x(1)*(xw_gauss_d1(1,k1) + i1 + j1 - 2), self%delta_x(2)*(xw_gauss_d2(1,k2) + i2 + j2 - 2), self%delta_x(3)*(xw_gauss_d3(1,k3) + i3 + j3 - 2)] ) * &
+                                    func1([self%delta_x(1)*(xw_gauss_d1(1,k1) + real(i1 + j1 - 2,f64)), self%delta_x(2)*(xw_gauss_d2(1,k2) + real(i2 + j2 - 2,f64)), self%delta_x(3)*(xw_gauss_d3(1,k3) + real(i3 + j3 - 2,f64))] ) * &
                                     bspl_d1(k1,degree(1)+2-j1)*&
                                     bspl_d2(k2,degree(2)+2-j2)*&
                                     bspl_d3(k3,degree(3)+2-j3)

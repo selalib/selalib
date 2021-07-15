@@ -111,8 +111,7 @@ contains
     sll_int32,                               optional, intent(in)    :: n_block_cols
     sll_int32, dimension(:),                 optional, intent(in)    :: id_rows 
     sll_int32, dimension(:),                 optional, intent(in)    :: id_cols 
-    ! local
-    sll_int32 :: i 
+
     ! ...
     if (present(other)) then
        self % n_rows = other % n_rows

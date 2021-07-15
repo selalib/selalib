@@ -360,7 +360,7 @@ program test_maxwell_3d_fem_fft
         end do
      end do
   end do
-  time = (nsteps-0.5_f64)*delta_t
+  time = (real(nsteps,f64)-0.5_f64)*delta_t
   ind = 1
   do k = 1, nc_eta(3)
      do j = 1, nc_eta(2)

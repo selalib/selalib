@@ -178,7 +178,6 @@ contains
     ! local
     sll_int32, parameter :: input_file_id = 111
     sll_int32           :: int_maxiter        = sll_solver_maxiter                 
-    sll_int32           :: int_eigen_estimate = sll_solver_bool_false 
     sll_int32           :: int_null_space     = sll_solver_bool_false
     sll_int32           :: int_verbose        = sll_solver_bool_false 
     sll_real64 :: real_atol          = sll_solver_tolerance
@@ -234,7 +233,7 @@ contains
     ! local
     sll_real64, dimension(:), allocatable  :: l_rhs
     sll_int32, parameter :: current_dof = 1
-    sll_int32           :: itr_used, a, b
+    sll_int32           :: itr_used
     sll_real64 :: res
     logical :: flag
 

@@ -1037,9 +1037,9 @@ contains
          lx2 = mesh%coord(1, mesh%nodes(3, it)) - mesh%coord(1, mesh%nodes(1, it))
          ly2 = mesh%coord(2, mesh%nodes(2, it)) - mesh%coord(2, mesh%nodes(1, it))
 
-         mesh%area(it) = 0.5*abs(lx1*ly1 - lx2*ly2)
+         mesh%area(it) = 0.5_f64*abs(lx1*ly1 - lx2*ly2)
 
-         if (mesh%area(it) <= 0.) then
+         if (mesh%area(it) <= 0._f64) then
             write (6, *) " Triangle : ", it
             write (6, *) mesh%nodes(1, it), ":", mesh%coord(1:2, mesh%nodes(1, it))
             write (6, *) mesh%nodes(2, it), ":", mesh%coord(1:2, mesh%nodes(2, it))
