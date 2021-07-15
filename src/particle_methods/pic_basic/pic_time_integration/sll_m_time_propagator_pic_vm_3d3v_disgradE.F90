@@ -2,6 +2,7 @@
 !> @author Katharina Kormann, IPP
 !> @brief Particle pusher based on antisymmetric splitting with disgradE for 3d3v Vlasov-Maxwell.
 !> @details MPI parallelization by domain cloning. Periodic boundaries. Spline DoFs numerated by the point the spline starts.
+!> Reference: Kormann, Sonnendrücker, Energy-conserving time propagation for a structure-preserving particle-in-cell Vlasov–Maxwell solver, Journal of Computational Physics 425, 109890, 2021
 module sll_m_time_propagator_pic_vm_3d3v_disgradE
   !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
