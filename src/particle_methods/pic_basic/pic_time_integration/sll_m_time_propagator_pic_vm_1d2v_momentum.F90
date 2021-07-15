@@ -1,9 +1,8 @@
 !> @ingroup pic_time_integration
 !> @author Katharina Kormann, IPP
-!> @brief Particle pusher based on Hamiltonian splitting for 1d2v Vlasov-Poisson.
+!> @brief Particle pusher based on Hamiltonian splitting for 1d2v Vlasov-Maxwell in the momentum conserving, non-geometric form (see the reference)
 !> @details MPI parallelization by domain cloning. Periodic boundaries. Spline DoFs numerated by the point the spline starts.
-!> Reference: Kraus, Kormann, Sonnendrücker, Morrison: GEMPIC: Geometric ElectroMagnetic Particle-In-Cell Methods
-
+!> Reference: Campos Pinto, Kormann, Sonnendrücker: Variational Framework for Structure-Preserving Electromagnetic Particle-In-Cell Methods, arXiv 2101.09247, 2021.
 !> Control variate: Note the we do not account for the analytic j at the moment (TODO: control_variate for current)
 module sll_m_time_propagator_pic_vm_1d2v_momentum
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -122,7 +121,6 @@ contains
 
     
     do i_step = 1, number_steps
-       !call self%operatorHE(0.5_f64*dt)
        call self%operatorHB(0.5_f64*dt)
        call self%operatorHE(0.5_f64*dt)
        call self%operatorHp2(0.5_f64*dt)
@@ -130,7 +128,6 @@ contains
        call self%operatorHp2(0.5_f64*dt)
        call self%operatorHE(0.5_f64*dt)
        call self%operatorHB(0.5_f64*dt)
-       !call self%operatorHE(0.5_f64*dt)
        
     end do
 
