@@ -1,0 +1,40 @@
+&sim_params
+        delta_t = 0.05
+        n_time_steps = 3
+        beta = 0.01
+        initial_distrib = "cossum_onegaussian"
+        initial_bfield = "cos"
+        plasma_beta = 1.0
+/        
+  
+&cos_onegaussian
+	kx = 1.25 0.0 
+        modnum = 0.0 0.0
+        alpha = 0.0
+	phase_shift = 0.0 
+        v_thermal = 0.048989794855663557 0.048989794855663557 0.014142135623730949
+        v_mean = 0.0 0.0 0.0
+/
+
+&output
+        file_prefix = "weibel_sympl"
+/   
+
+&grid_dims
+        ng_x = 16 8
+        x_min = 0.0 0.0
+        x_max = 5.02654824574 5.02654824574
+/
+
+&pic_params
+        n_particles = 100000
+        sampling_case = "particle_sampling_sobol"
+        splitting_case = "splitting_hs"     
+        spline_degree = 3
+        with_control_variate = .false.
+/
+
+&ctest
+        make_ctest=.true.
+        ctest_ref_file = "reffile_pic_vm_2d3v_cart_hs.dat"
+/

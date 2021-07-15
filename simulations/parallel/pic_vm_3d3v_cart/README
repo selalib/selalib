@@ -1,0 +1,12 @@
+Directory structure
+===================
+   test_pic_vm_3d3v_cart                -- executable (simulation)
+   params_pic_vm_3d3v_cart_weibel.nml   -- input file for Weibel test case
+   README                               -- info (this file)
+
+HOWTO
+=====
+0. Build the library
+1. Copy the parameter file (and adjust it for your test case)
+2. Parallel run of the simulation
+   $ mpirun -np 2 ./bin/sim_pic_vm_3d3v_cart params_pic_vm_3d3v_cart_weibel.nml
