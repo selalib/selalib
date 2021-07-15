@@ -1,6 +1,6 @@
 !> @ingroup particle_mesh_coupling
 !> @author Katharina Kormann, IPP
-!> @brief Kernel smoother for 2d with splines of arbitrary degree placed on a uniform mesh.
+!> @brief Kernel smoother for 1d with splines of arbitrary degree placed on a uniform mesh.
 !> @details Spline with index i starts at point i
 module sll_m_particle_mesh_coupling_spline_1d
 
@@ -78,24 +78,23 @@ module sll_m_particle_mesh_coupling_spline_1d
      procedure :: evaluate_multiple => evaluate_multiple_spline_1d !> Evaluate multiple spline functions with given coefficients
      procedure :: add_current_update_v => add_current_update_v_spline_pp_1d !> Add contribution of pne particle to the current density and update velocity
      procedure :: add_current => add_current_spline_1d !> Add contribution of one particle to the current density (integrated over x)
-     procedure :: update_jv !> helper function to compute the integral of j using Gauss quadrature
 
      procedure :: init => init_spline_1d !> Constructor
      procedure :: free => free_spline_1d !> Destructor
 
+     procedure :: add_current_evaluate => add_current_evaluate_spline_1d !> Combines add_current and evaluate_int
+     procedure :: evaluate_int => evaluate_int_spline_1d !> Evaluates the integral int_{poisition_old}^{position_new} field(x) d x
+     procedure :: evaluate_int_quad => evaluate_int_quad_spline_1d !> For explicit subcycling propagator, evaluate_int based on quadrature formula for integration
+     procedure :: evaluate_int_linear_quad => evaluate_int_linear_quad_spline_1d !> Evaluates the integrals with tau function for implicit subcycling
 
-     procedure :: add_current_update_v_nldisgradE => add_current_update_v_nldisgradE_spline_1d
-     procedure :: add_current_evaluate => add_current_evaluate_spline_1d
-     procedure :: evaluate_int => evaluate_int_spline_1d
-     procedure :: evaluate_int_quad => evaluate_int_quad_spline_1d
-     procedure :: evaluate_int_linear_quad => evaluate_int_linear_quad_spline_1d
+     procedure :: evaluate_simple => evaluate_field_single_spline_1d !> The pointer points to the evaluation functions "evaluate". This pointer is provided, since the derive type (smooth version) needs to access this evaluation but not as its own evaluation function.
 
-     procedure :: evaluate_simple => evaluate_field_single_spline_1d
+     procedure :: evaluate_int_subnewton => evaluate_int_spline_1d_subnewton !> For explicit subcycling propagator, evaluates the integral needed for Newtons's method.
+     procedure :: evaluate_int_linear_quad_subnewton => evaluate_int_linear_quad_subnewton_spline_1d !> For implicit subcycling propagator
+     procedure :: add_current_split => add_current_split_spline_1d !> Add current version with tau and (1-tau) which is needed for the implicit subcycling scheme
+     procedure :: add_charge_int => add_charge_int_spline_1d !> For explicit version of the subcycling propagator (to evaluate the charge as it comes out integrated from the formulation)
 
-     procedure :: evaluate_int_subnewton => evaluate_int_spline_1d_subnewton
-     procedure :: evaluate_int_linear_quad_subnewton => evaluate_int_linear_quad_subnewton_spline_1d
-     procedure :: add_current_split => add_current_split_spline_1d
-     procedure :: add_charge_int => add_charge_int_spline_1d
+     procedure :: update_jv !> helper function to compute the integral of j using Gauss quadrature (needs to be provided for the derived type with smoothing)
 
   end type sll_t_particle_mesh_coupling_spline_1d
 
@@ -263,102 +262,6 @@ contains
 
 
   !> Add current with integration over x
-  subroutine add_current_1d( self, position_old, position_new, marker_charge, j_dofs )
-    class( sll_t_particle_mesh_coupling_spline_1d ), intent(inout)   :: self !< kernel smoother object
-    sll_real64,                               intent( in )    :: position_old(self%dim) !< Position of the particle
-    sll_real64,                               intent( in )    :: position_new(self%dim) !< Position of the particle
-    sll_real64,                               intent( in )    :: marker_charge !< Particle weights time charge
-    sll_real64,                               intent( inout ) :: j_dofs(self%n_cells) !< Coefficient vector of the current density
-    !local variables
-    sll_real64 :: xold, xnew, xnewtilde, xbox
-    sll_int32 :: boxold, boxnew, sigma_counter, boxdiff, increment, box
-    sll_real64 :: sigma_r, sigma_l, sigma, sigma_next, field_value, weight
-    sll_int32 :: j, q, bl
-    sll_real64, allocatable :: vals(:) 
-
-    call convert_x_to_xbox( self, position_old, xold, boxold )
-    call convert_x_to_xbox( self, position_new, xnew, boxnew )
-
-    ! Now we need to compute the normalized 1d line along which to integrate:
-    boxdiff = boxnew-boxold
-    xnewtilde = xnew + real(boxdiff,f64)
-
-    sigma_l = 0.0_f64
-    box = boxold ! We start in the old box
-    sigma_counter = 0
-
-    if (boxdiff > 0 ) then
-       allocate( vals(boxdiff+1) )
-       do bl = 1, boxdiff
-          vals(bl) = (real(bl,f64)  - xold)/(xnewtilde-xold)
-       end do
-       vals(boxdiff+1) = 1.0_f64
-       sigma_next = vals(1)
-       increment = 1
-    elseif (boxdiff < 0 ) then
-       allocate ( vals(-boxdiff+1) )
-       do bl = boxdiff+1, 0
-          vals(-bl+1) = (real(bl,f64)  - xold)/(xnewtilde-xold)
-       end do
-       vals(-boxdiff+1) = 1.0_f64
-       sigma_next = vals(1)
-       increment = -1
-    else
-       sigma_next = 1.0_f64
-       increment = 0
-    end if
-
-
-    sigma_r = 0.0_f64
-    do while ( sigma_r < 1.0_f64 )
-       sigma_r = sigma_next
-
-       do q = 1, self%n_quad_points_line
-          sigma = sigma_l + (sigma_r-sigma_l) * self%quad_xw_line(1,q)
-          xbox = xold* (1.0_f64 - sigma) + xnewtilde * sigma  - real(sigma_counter*increment, f64)
-          if (xbox > 1.0_f64 ) then
-             xbox = min(xbox, 1._f64)
-          elseif (xbox < 0.0_f64 ) then
-             xbox = max(xbox, 0._f64)
-          end if
-
-          weight = self%quad_xw_line(2,q)*(sigma_r-sigma_l)
-          call integrate_spline_1d(self, box, xbox, marker_charge*weight, j_dofs )
-       end do
-       if (sigma_r < 1.0_f64 ) then
-          ! Update the
-          sigma_counter = sigma_counter+1
-          sigma_next = vals(sigma_counter+1)
-          box = box + increment
-          sigma_l = sigma_r
-       end if
-    end do
-
-  end subroutine add_current_1d
-
-
-  subroutine integrate_spline_1d( self, box_in, xbox, weight, j_dofs )
-    class( sll_t_particle_mesh_coupling_spline_1d ), intent(inout)   :: self !< kernel smoother object
-    sll_int32,  intent( in    ) :: box_in
-    sll_real64, intent( in    ) :: xbox
-    sll_real64, intent( in    ) :: weight
-    sll_real64, intent( inout ) :: j_dofs(:)
-    !local variables
-    sll_int32 :: i
-    sll_int32 :: index1d, box
-
-    call sll_s_uniform_bsplines_eval_basis( self%spline_degree, xbox, self%spline_val  )
-
-    box = box_in-self%spline_degree
-    do i = 1, self%spline_degree+1
-       index1d = modulo(box+i-2,self%n_cells)+1
-       j_dofs(index1d) = j_dofs(index1d) + &
-            weight * self%spline_val(i) 
-    end do
-
-  end subroutine integrate_spline_1d
-
-  !> Add current with integration over x
   subroutine add_current_spline_1d( self, position_old, position_new, marker_charge, j_dofs )
     class( sll_t_particle_mesh_coupling_spline_1d ), intent(inout)   :: self !< kernel smoother object
     sll_real64,                               intent( in )    :: position_old(self%dim) !< Position of the particle
@@ -441,6 +344,7 @@ contains
     
   end subroutine add_current_spline_1d
 
+  !> Combines add_current and evaluate_int
   subroutine add_current_evaluate_spline_1d(self, position_old, position_new, marker_charge, vbar, field_dofs, j_dofs, field)
     class( sll_t_particle_mesh_coupling_spline_1d ), intent(inout)   :: self !< kernel smoother object
     sll_real64,                               intent( in )    :: position_old(self%dim) !< Position of the particle
@@ -540,6 +444,7 @@ contains
 
   end subroutine add_current_evaluate_spline_1d
 
+  !> Evaluates the integral int_{poisition_old}^{position_new} field(x) d x
   subroutine evaluate_int_spline_1d(self, position_old, position_new, vbar, field_dofs, field)
     class( sll_t_particle_mesh_coupling_spline_1d ), intent(inout)   :: self !< kernel smoother object
     sll_real64,                               intent( in )    :: position_old(self%dim) !< Position of the particle
@@ -621,6 +526,7 @@ contains
 
   end subroutine evaluate_int_spline_1d
 
+  !> Evaluates an integrated field (between position_old and position_new) but with a quadrature formula for the integration
   subroutine evaluate_int_quad_spline_1d(self, position_old, position_new, field_dofs, field)
     class( sll_t_particle_mesh_coupling_spline_1d ), intent(inout)   :: self !< kernel smoother object
     sll_real64,                               intent( in )    :: position_old(self%dim) !< Position of the particle
@@ -887,170 +793,7 @@ contains
 
   end subroutine update_jv
 
-
-  !> Add current for one particle and update v (according to H_p1 part in Hamiltonian splitting)
-  subroutine add_current_update_v_nldisgradE_spline_1d (self, position_old, position_new, marker_charge, qoverm, efield_dofs_old, efield_dofs_new, v_mean, vi, j_dofs)
-    class(sll_t_particle_mesh_coupling_spline_1d), intent(inout) :: self !< kernel smoother object
-    sll_real64, intent(in)    :: position_old(self%dim) !< Position at time t
-    sll_real64, intent(in)    :: position_new(self%dim) !< Position at time t + \Delta t
-    sll_real64, intent(in)    :: marker_charge !< Particle weight time charge
-    sll_real64, intent(in)    :: qoverm !< charge to mass ration
-    sll_real64, intent(in)    :: efield_dofs_old(self%n_cells) !< Coefficient of e-field expansion (old time)
-    sll_real64, intent(in)    :: efield_dofs_new(self%n_cells) !< Coefficient of e-field expansion (new time)
-    sll_real64, intent(inout) :: vi(:) !< Velocity of the particles
-    sll_real64, intent(in)    :: v_mean
-    sll_real64, intent(inout) :: j_dofs(self%n_cells) !< Coefficients of current expansion
-
-    ! local variables
-    sll_real64 :: xi
-    sll_int32  :: index_old, index_new, ind
-    sll_real64 :: r_old, r_new
-    sll_real64 :: lower, upper, rinterval
-
-    ! Read out particle position and velocity
-    ! Compute index_old, the index of the last DoF on the grid the particle contributes to, and r_old, its position (normalized to cell size one).
-    if ( abs(v_mean) > 1E-16_f64) then
-       xi = (position_old(1) - self%domain(1)) /&
-            self%delta_x
-       index_old = floor(xi)
-       r_old = xi - real(index_old,f64)
-
-       ! Compute the new box index index_new and normalized position r_old.
-       xi = (position_new(1) - self%domain(1)) /&
-            self%delta_x
-       index_new = floor(xi)
-       r_new = xi - real(index_new ,f64) 
-
-       if (index_old == index_new) then
-          if (r_old < r_new) then
-             call update_jv_nldisgradE( self, r_old, r_new, 0.0_f64, 1.0_f64, index_old, marker_charge, &
-                  qoverm, 1.0_f64, v_mean, vi(1), j_dofs, efield_dofs_new, efield_dofs_old)
-          else
-             call update_jv_nldisgradE( self, r_new, r_old, 1.0_f64, 0.0_f64, index_old, marker_charge, qoverm, &
-                  -1.0_f64, v_mean, vi(1), j_dofs, efield_dofs_new, efield_dofs_old)
-          end if
-       elseif (index_old < index_new) then
-          rinterval = self%delta_x/(position_new(1)-position_old(1))
-          upper = (1.0_f64-r_old)*rinterval
-          lower = 1.0_f64 - r_new*rinterval
-
-          call update_jv_nldisgradE ( self, r_old, 1.0_f64, 0.0_f64, upper, &
-               index_old, marker_charge, &
-               qoverm, 1.0_f64, v_mean, vi(1), j_dofs, efield_dofs_new, efield_dofs_old)
-          call update_jv_nldisgradE ( self, 0.0_f64, r_new, lower, 1.0_f64, &
-               index_new, marker_charge, &
-               qoverm, 1.0_f64, v_mean, vi(1), j_dofs, efield_dofs_new, efield_dofs_old)
-          do ind = index_old+1, index_new-1
-             lower = upper
-             upper = upper + rinterval
-             call update_jv_nldisgradE ( self, 0.0_f64, 1.0_f64, lower, upper, &
-                  ind, marker_charge, &
-                  qoverm, 1.0_f64, v_mean, vi(1), j_dofs, efield_dofs_new, efield_dofs_old)
-          end do
-       else
-          rinterval = self%delta_x/(position_old(1)-position_new(1))
-          upper = 1.0_f64 - (1.0_f64-r_new)*rinterval
-          lower = r_old*rinterval
-
-          call update_jv_nldisgradE ( self, r_new, 1.0_f64, 1.0_f64, upper, index_new, marker_charge, qoverm, &
-               -1.0_f64, v_mean, vi(1), j_dofs, efield_dofs_new, efield_dofs_old)
-          call update_jv_nldisgradE ( self, 0.0_f64, r_old, lower, 0.0_f64,&
-               index_old, marker_charge, qoverm, &
-               -1.0_f64, v_mean, vi(1), j_dofs, efield_dofs_new, efield_dofs_old)
-          do ind = index_new+1, index_old-1
-             lower = upper
-             upper = upper + rinterval
-             call update_jv_nldisgradE ( self, 0.0_f64, 1.0_f64, lower, upper, &
-                  ind, marker_charge, qoverm, &
-                  -1.0_f64, v_mean, vi(1), j_dofs, efield_dofs_new, efield_dofs_old)
-          end do
-       end if
-    end if
-
-  end subroutine add_current_update_v_nldisgradE_spline_1d
-
-
-  !> Helper function for \a add_current_update_v_nldisgradE.
-  subroutine update_jv_nldisgradE(self, lower, upper, lowert, uppert,index, marker_charge, qoverm, sign, v_mean, vi, j_dofs, efield_dofs_new, efield_dofs_old)
-    class(sll_t_particle_mesh_coupling_spline_1d), intent(inout) :: self !< time splitting object 
-    sll_real64,                             intent(in)    :: lower
-    sll_real64,                             intent(in)    :: upper 
-    sll_real64,                             intent(in)    :: lowert
-    sll_real64,                             intent(in)    :: uppert
-    sll_int32,                              intent(in)    :: index
-    sll_real64,                             intent(in)    :: marker_charge
-    sll_real64,                             intent(in)    :: qoverm
-    sll_real64,                             intent(in)    :: sign
-    sll_real64,                             intent(in)    :: v_mean
-    sll_real64,                             intent(inout) :: vi
-    sll_real64,                             intent(in)    :: efield_dofs_new(self%n_cells)
-    sll_real64,                             intent(in)    :: efield_dofs_old(self%n_cells)
-    sll_real64,                             intent(inout) :: j_dofs(self%n_cells)
-
-    !Local variables
-    sll_int32  :: ind, i_grid, i_mod, n_cells, j
-    sll_real64 :: c1, c2, cc1, cc2
-
-    n_cells = self%n_cells
-
-    c1 =  0.5_f64*(upper-lower)
-    c2 =  0.5_f64*(upper+lower)
-    cc1 =  0.5_f64*(uppert-lowert)
-    cc2 =  0.5_f64*(uppert+lowert)
-
-    call sll_s_uniform_bsplines_eval_basis(self%spline_degree, c1*self%quadp1_xw(1,1)+c2, &
-         self%spline_val)
-    !alternative version with horner and pp-form
-    !call sll_s_spline_pp_horner_m_1d(self%spline_pp, self%spline_val, self%spline_degree, c1*self%quadp1_xw(1,1)+c2)
-    self%spline_val = self%spline_val * (self%quadp1_xw(2,1)*c1)
-    self%spline_pol_val = self%spline_val * &
-         ( cc1*self%quadp1_xw(1,1)+cc2  )
-    do j=2,self%n_quadp1_points
-       call sll_s_uniform_bsplines_eval_basis(self%spline_degree, c1*self%quadp1_xw(1,j)+c2, &
-            self%spline_val_more)
-       !alternative version with horner and pp-form
-       !call sll_s_spline_pp_horner_m_1d(self%spline_pp, self%spline_val_more, self%spline_degree, c1*self%quadp1_xw(1,j)+c2)
-       self%spline_val = self%spline_val + self%spline_val_more * (self%quadp1_xw(2,j)*c1)
-       self%spline_pol_val = self%spline_pol_val + self%spline_val_more * &
-            ((self%quadp1_xw(2,j)*c1) * &
-            ( cc1*self%quadp1_xw(1,j)+cc2  ))
-    end do
-    self%spline_val = self%spline_val * (sign*self%delta_x)
-    self%spline_pol_val = self%spline_pol_val * (sign*self%delta_x)
-
-    call sll_s_uniform_bsplines_eval_basis(self%spline_degree, c1*self%quadp1_xw(1,1)+c2, &
-         self%spline_val)
-    !alternative version with horner and pp-form
-    !call sll_s_spline_pp_horner_m_1d(self%spline_pp, self%spline_val, self%spline_degree, c1*self%quadp1_xw(1,1)+c2)
-    self%spline_val = self%spline_val * (self%quadp1_xw(2,1)*c1)
-    self%spline_pol_val = self%spline_val * &
-         ( cc1*self%quadp1_xw(1,1)+cc2  )
-    do j=2,self%n_quadp1_points
-       call sll_s_uniform_bsplines_eval_basis(self%spline_degree, c1*self%quadp1_xw(1,j)+c2, &
-            self%spline_val_more)
-       !alternative version with horner and pp-form
-       !call sll_s_spline_pp_horner_m_1d(self%spline_pp, self%spline_val_more, self%spline_degree, c1*self%quadp1_xw(1,j)+c2)
-       self%spline_val = self%spline_val + self%spline_val_more * (self%quadp1_xw(2,j)*c1)
-       self%spline_pol_val = self%spline_pol_val + self%spline_val_more * &
-            ((self%quadp1_xw(2,j)*c1) * &
-            ( cc1*self%quadp1_xw(1,j)+cc2  ))
-    end do
-    self%spline_val = self%spline_val * (sign*self%delta_x)
-    self%spline_pol_val = self%spline_pol_val * (sign*self%delta_x)
-
-    ind = 1
-    do i_grid = index - self%spline_degree , index
-       i_mod = modulo(i_grid, n_cells ) + 1 
-       j_dofs(i_mod) = j_dofs(i_mod) + &
-            (marker_charge*self%spline_val(ind)* self%scaling)
-       vi = vi +  qoverm/v_mean * (self%spline_val(ind)*(efield_dofs_old(i_mod))+ &!+efield_dofs_new(i_mod))!+ &
-            self%spline_pol_val(ind)*(efield_dofs_new(i_mod)-  efield_dofs_old(i_mod)))
-       ind = ind + 1
-    end do
-
-  end subroutine update_jv_nldisgradE
-
-
+  !> Helper function for evaluate_int_quad (despite the name it evaluates a field and does not update v)
   subroutine update_v_partial(self, upper, lower, uppert, lowert, index, field_dofs, bint )
     class( sll_t_particle_mesh_coupling_spline_1d ), intent(inout)   :: self !< kernel smoother object
     sll_real64, intent( in    ) :: upper
@@ -1093,7 +836,9 @@ contains
 
   end subroutine update_v_partial
 
+  
 
+  !> Helper function for evaluate_int_quad_subnewton (despite the name it evaluates a field and does not update v)
   subroutine update_v_partial_newton(self, upper, lower, uppert, lowert, index, field_dofs, bint )
     class( sll_t_particle_mesh_coupling_spline_1d ), intent(inout)   :: self !< kernel smoother object
     sll_real64, intent( in    ) :: upper
@@ -1139,6 +884,7 @@ contains
   end subroutine update_v_partial_newton
 
 
+  !> Helper function that identifies in which box the particle is found and its normalized poistion in the box
   subroutine convert_x_to_xbox( self, position, xi, box )
     class( sll_t_particle_mesh_coupling_spline_1d ), intent(inout)   :: self !< kernel smoother object
     sll_real64,                               intent( in )    :: position(self%dim) !< Position of the particle
@@ -1365,6 +1111,7 @@ contains
   end subroutine add_current_split_spline_1d
 
 
+  !> Helper function for add_current_split
   subroutine update_current_partial(self, upper, lower, uppert, lowert, index, iter, total_iter,  marker_charge, j_dofs )
     class( sll_t_particle_mesh_coupling_spline_1d ), intent(inout)   :: self !< kernel smoother object
     sll_real64, intent( in    ) :: upper
@@ -1382,10 +1129,6 @@ contains
     sll_real64 :: c1, c2, c1t, c2t
     sll_real64 :: time
 
-    !  print*, 'input'
-    !  print*, lower, upper
-    !  print*, lowert, uppert
-
     n_cells = self%n_cells
 
     c1 = 0.5_f64*(upper-lower)
@@ -1393,9 +1136,6 @@ contains
 
     c1t = 0.5_f64*(uppert-lowert)
     c2t = 0.5_f64*(uppert+lowert)
-
-    ! print*, c1, c2, c1t, c2t
-    ! stop
 
     call sll_s_uniform_bsplines_eval_basis ( self%spline_degree, &
          c1*self%quadp1_xw(1,1) + c2, &
@@ -1426,7 +1166,7 @@ contains
 
   end subroutine update_current_partial
 
-
+  !> Evaluates the integrals with tau function for implicit subcycling
   subroutine evaluate_int_linear_quad_spline_1d(self, position_old, position_new, iter, total_iter, field_dofs_1, field_dofs_2, field)
     class( sll_t_particle_mesh_coupling_spline_1d ), intent(inout)   :: self !< kernel smoother object
     sll_real64,                               intent( in )    :: position_old(self%dim) !< Position of the particle
@@ -1490,6 +1230,7 @@ contains
   end subroutine evaluate_int_linear_quad_spline_1d
 
 
+  !> Helper function for evaluate_int_linear_quad (implements part within one cell)
   subroutine update_field_linear_partial(self, upper, lower, uppert, lowert, index, field_dofs_1, field_dofs_2, iter, total_iter, bint )
     class( sll_t_particle_mesh_coupling_spline_1d ), intent(inout)   :: self !< kernel smoother object
     sll_real64, intent( in    ) :: upper
@@ -1533,7 +1274,7 @@ contains
 
   end subroutine update_field_linear_partial
 
-
+  !> For implicit subcycling propagator, evaluates the integral needed for Newtons's method in the evaluate_int_linear_quad part.
   subroutine evaluate_int_linear_quad_subnewton_spline_1d(self, position_old, position_new, iter, total_iter, field_dofs_1, field_dofs_2, field)
     class( sll_t_particle_mesh_coupling_spline_1d ), intent(inout)   :: self !< kernel smoother object
     sll_real64,                               intent( in )    :: position_old(self%dim) !< Position of the particle
@@ -1594,7 +1335,7 @@ contains
   end subroutine evaluate_int_linear_quad_subnewton_spline_1d
 
 
-
+  !> Helper function for evaluate_int_linear_quad_subnewton (takes care of the per cell computations)
   subroutine update_field_linear_partial_newton(self, upper, lower, uppert, lowert, index, field_dofs_1, field_dofs_2, iter, total_iter, bint )
     class( sll_t_particle_mesh_coupling_spline_1d ), intent(inout)   :: self !< kernel smoother object
     sll_real64, intent( in    ) :: upper
@@ -1637,7 +1378,7 @@ contains
 
   end subroutine update_field_linear_partial_newton
 
-  !> Add current version with tau and (1-tau) which is needed for the implicit subcycling scheme
+  !> For explicit version of the subcycling propagator (to evaluate the charge as it comes out integrated from the formulation)
   subroutine add_charge_int_spline_1d(self, position_old, position_new, marker_charge, j_dofs )
     class( sll_t_particle_mesh_coupling_spline_1d ), intent(inout)   :: self !< kernel smoother object
     sll_real64,                               intent( in )    :: position_old(self%dim) !< Position of the particle
@@ -1694,6 +1435,7 @@ contains
   end subroutine add_charge_int_spline_1d
 
 
+  !> Helper function for add_charge_int (takes care of the per cell computations)
   subroutine update_charge_int_partial(self, upper, lower, uppert, lowert, index, marker_charge, j_dofs )
     class( sll_t_particle_mesh_coupling_spline_1d ), intent(inout)   :: self !< kernel smoother object
     sll_real64, intent( in    ) :: upper
