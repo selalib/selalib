@@ -52,8 +52,9 @@ module sll_m_particle_mesh_coupling_spline_smooth_1d
      procedure :: evaluate => evaluate_field_single_smoothened_spline_1d !> Evaluate spline function with given coefficients
      procedure :: add_current_update_v => add_current_update_v_smoothened_spline_1d !> Add contribution of pne particle to the current density and update velocity
      
-     procedure :: add_current_evaluate => add_current_evaluate_smoothened_spline_1d
-     procedure :: evaluate_int => evaluate_int_smoothened_spline_1d
+     procedure :: add_current_evaluate => add_current_evaluate_smoothened_spline_1d !> Add contribution of one particle to the current density (integrated over x)
+
+     procedure :: evaluate_int => evaluate_int_smoothened_spline_1d !> Evaluates the integral int_{poisition_old}^{position_new} field(x) d x
      
   end type sll_t_particle_mesh_coupling_spline_smooth_1d
 
@@ -121,35 +122,16 @@ contains
     
        do i1 = 1, self%n_span
           index1d = modulo(index- self%spline_degree+i1-2,self%n_cells)+1
-          rho_dofs(index1d) = rho_dofs(index1d)  +weight * integ(i1) !+&
-               !(marker_charge * integ(i1)* self%scaling * xi(1) * self%delta_x)
+          rho_dofs(index1d) = rho_dofs(index1d)  +weight * integ(i1)
        end do
        ! Fourth interval
        integ = self%quads1_xw(2,q)*self%spline_val* xi(1)*(1.0_f64-self%quads1_xw(1,q)) 
     
        do i1 = 1, self%n_span
           index1d = modulo(index- self%spline_degree+i1-1,self%n_cells)+1
-          rho_dofs(index1d) = rho_dofs(index1d)  +weight * integ(i1) !+&
-               !(marker_charge * integ(i1)* self%scaling * xi(1) * self%delta_x)
+          rho_dofs(index1d) = rho_dofs(index1d)  +weight * integ(i1) 
        end do
     end do
-   !print*, rho_dofs
-!!$
-!!$    rho_dofs = 0.0_f64
-!!$    xi(1) = (position(1) - self%domain(1))/self%delta_x
-!!$    index = floor(xi(1))+1
-!!$    xi(1) = xi(1) - real(index-1, f64)
-!!$    index = index - self%spline_degree
-!!$    !self%spline_val = sll_f_uniform_b_splines_at_x(self%spline_degree, xi(1))
-!!$    call sll_s_uniform_bsplines_eval_basis(self%spline_degree, xi(1), self%spline_val)
-!!$
-!!$    do i1 = 1, self%n_span
-!!$       index1d = modulo(index+i1-2,self%n_cells)+1
-!!$       rho_dofs(index1d) = rho_dofs(index1d) +&
-!!$            (marker_charge * self%spline_val(i1)* self%scaling)
-!!$    end do
-!!$    print*, rho_dofs
-!!$    stop
   end subroutine add_charge_single_smoothened_spline_1d
 
   
@@ -195,6 +177,7 @@ contains
     ! In this part, we can reuse the old update_jv routines since the prime of the kernel is just the 1
     
 
+    ! This version does the same based on the primitive
 !!$       if (index_old == index_new) then
 !!$          call self%update_jv_pp(r_old, r_new, index_old+1, marker_charge, &
 !!$                  qoverm,  vi(2), j_dofs, bfield_dofs)
@@ -295,7 +278,6 @@ contains
           vi = vi - qoverm * integ(i1) * bfield_dofs(index1d) * self%delta_x * scaling 
        end do
        ! Third interval
-       !pos_hat = 1.0_f64 - self%quads2_xw(1,q)* scaling
        pos_hat = self%quads2_xw(1,q)* scaling
        integ = self%quads2_xw(2,q)*self%spline_val* (pos_hat + (1.0_f64-pos_hat**2)*0.5_f64)
     
