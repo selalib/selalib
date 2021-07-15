@@ -28,7 +28,6 @@ SET( PIC_TIME_SRCS
   sll_m_linear_operator_particle_mass_cl_3d_diag.F90
   sll_m_linear_operator_particle_mass_cl_3d_od.F90
   sll_m_linear_operator_maxwell_eb_schur.F90
-  sll_m_linear_operator_newton.F90
   sll_m_linear_operator_schur_ev_1d.F90
   sll_m_linear_operator_schur_ev_3d.F90
   sll_m_linear_operator_schur_phiv_1d.F90
