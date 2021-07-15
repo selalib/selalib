@@ -195,7 +195,6 @@ contains
     sll_real64,dimension(:), intent(in   ) :: x
     sll_real64,dimension(:), intent(  out) :: y  
     ! local 
-    sll_int32 :: i
     sll_int32 :: n_block_rows
     sll_int32 :: n_block_cols 
     sll_int32 :: i_block_row

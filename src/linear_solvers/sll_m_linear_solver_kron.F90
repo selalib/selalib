@@ -383,7 +383,6 @@ contains
     sll_real64, dimension(:), intent(  out) :: unknown
     ! local
     sll_real64, dimension(:,:), allocatable :: y
-    sll_real64, dimension(:)  , allocatable :: x
     sll_real64, dimension(:,:), allocatable :: xprim
     sll_real64, dimension(:,:), allocatable :: xprim_trans
     sll_real64, dimension(:,:), allocatable :: x_sol_trans

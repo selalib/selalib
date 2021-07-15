@@ -260,7 +260,6 @@ contains
     sll_real64, dimension(:), intent(in   )  :: rhs 
     sll_real64, dimension(:), intent(  out)  :: unknown
     ! local
-    sll_int32          :: li_err
     sll_real64, dimension(:), allocatable  :: l_rhs
     sll_int32           :: itr_used
     sll_real64 :: res

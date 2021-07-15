@@ -263,9 +263,6 @@ contains
     sll_int32 :: n_global_rows
     sll_int32 :: n_global_cols
     sll_real64, dimension(:,:), allocatable :: arr_x
-    sll_int32 :: id
-    sll_real64 :: seconds
-    sll_int32 :: proc_num
 
     ! ...
     n_rows        = self % n_rows
@@ -350,7 +347,6 @@ contains
     sll_int32                        , intent(in)    :: i_col
     sll_real64, dimension(:), intent(in)    :: arr_x
     ! local
-    sll_int32 :: i
     sll_int32 :: j
     sll_int32 :: k
 
@@ -380,7 +376,6 @@ contains
     sll_int32                        , intent(in)    :: i_col
     sll_real64, dimension(:), intent(in)    :: arr_x
     ! local
-    sll_int32 :: i
     sll_int32 :: j
     sll_int32 :: k
 
@@ -576,7 +571,6 @@ contains
     sll_int32 :: n_rows
     sll_int32 :: n_cols
     sll_int32 :: n_nnz
-    sll_int32 :: i_dof
     sll_int32 :: i_err
     sll_int32 :: n_nnz_max
     sll_int32, parameter :: i_job = 1

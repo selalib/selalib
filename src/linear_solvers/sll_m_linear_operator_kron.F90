@@ -161,12 +161,10 @@ contains
     sll_real64, dimension(:),            intent(inout) :: y
     ! local
     sll_int32 :: i
-    sll_int32 :: j
     sll_int32 :: n_rows_a
     sll_int32 :: n_rows_b
     sll_int32 :: n_cols_a
     sll_int32 :: n_cols_b
-    sll_int32 :: i_col_b
 
     sll_real64,dimension(:,:), allocatable :: x_matrix
     sll_real64,dimension(:,:), allocatable :: x_matrix_trans

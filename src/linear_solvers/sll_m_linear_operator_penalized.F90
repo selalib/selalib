@@ -133,7 +133,7 @@ contains
 
     ! ... add penalization term
     do i = 1, self % n_dim_nullspace
-       y(:) = y(:) + dot_product(self % vecs(i, :), x(:)) / self % n_global_cols 
+       y(:) = y(:) + dot_product(self % vecs(i, :), x(:)) / real(self % n_global_cols, f64)
     end do
     ! ...
 
