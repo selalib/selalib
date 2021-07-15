@@ -5,13 +5,13 @@ set(   TEST_NAME_HSSA "${TEST_NAME}_hs_stronga" )
 set(   TEST_NAME_CEF   "${TEST_NAME}_cef"     )
 set(   TEST_NAME_ECSIM "${TEST_NAME}_ecsim"   )
 set(   TEST_NAME_disgradE   "${TEST_NAME}_disgradE"     )
-set(   TEST_NAME_DISGRAD   "${TEST_NAME}_disgrad"     )
-set(   TEST_NAME_DISGRAD_SA   "${TEST_NAME}_disgrad_stronga"     )
-set(   TEST_NAME_DISGRADSUB   "${TEST_NAME}_disgradsub"     )
+set(   TEST_NAME_DISGRADEC   "${TEST_NAME}_disgradEC"     )
+set(   TEST_NAME_DISGRADEC_SA   "${TEST_NAME}_disgradEC_stronga"     )
+set(   TEST_NAME_DISGRADECSUB   "${TEST_NAME}_disgradEC_sub"     )
 set(   TEST_NAME_hs_SMOOTH   "${TEST_NAME}_hs_smooth"     )
 set(   TEST_NAME_disgradE_SMOOTH   "${TEST_NAME_disgradE}_smooth"     )
-set(   TEST_NAME_DISGRAD_SMOOTH   "${TEST_NAME}_disgrad_smooth"     )
-set(   TEST_NAME_DISGRADSUB_SMOOTH   "${TEST_NAME}_disgradsub_smooth"     )
+set(   TEST_NAME_DISGRADEC_SMOOTH   "${TEST_NAME}_disgradEC_smooth"     )
+set(   TEST_NAME_DISGRADECSUB_SMOOTH   "${TEST_NAME}_disgradEC_sub_smooth"     )
 set(   TEST_NAME_TRAFO "${TEST_NAME}_trafo"   )
 set(  EXECUTABLE "${TEST_NAME}"               )
 set( INSTALL_DIR "${INSTALL_DIR}/${SIM_NAME}" )
@@ -52,19 +52,19 @@ if(BUILD_TESTING)
   set_tests_properties( ${TEST_NAME_disgradE} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED"
     TIMEOUT 5 )
 
-  set( NML_FILE ${CMAKE_CURRENT_SOURCE_DIR}/params_pic_vm_1d2v_cart_disgrad.nml )
-  add_mpi_test( ${TEST_NAME_DISGRAD} ${EXECUTABLE} ${PROCS} ${NML_FILE}  )
-  set_tests_properties( ${TEST_NAME_DISGRAD} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED"
+  set( NML_FILE ${CMAKE_CURRENT_SOURCE_DIR}/params_pic_vm_1d2v_cart_disgradEC.nml )
+  add_mpi_test( ${TEST_NAME_DISGRADEC} ${EXECUTABLE} ${PROCS} ${NML_FILE}  )
+  set_tests_properties( ${TEST_NAME_DISGRADEC} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED"
     TIMEOUT 5 )
     
-  set( NML_FILE ${CMAKE_CURRENT_SOURCE_DIR}/params_pic_vm_1d2v_cart_disgrad_stronga.nml )
-  add_mpi_test( ${TEST_NAME_DISGRAD_SA} ${EXECUTABLE} ${PROCS} ${NML_FILE} )
-  set_tests_properties( ${TEST_NAME_DISGRAD_SA} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED"
+  set( NML_FILE ${CMAKE_CURRENT_SOURCE_DIR}/params_pic_vm_1d2v_cart_disgradEC_stronga.nml )
+  add_mpi_test( ${TEST_NAME_DISGRADEC_SA} ${EXECUTABLE} ${PROCS} ${NML_FILE} )
+  set_tests_properties( ${TEST_NAME_DISGRADEC_SA} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED"
     TIMEOUT 5 )
   
-  set( NML_FILE ${CMAKE_CURRENT_SOURCE_DIR}/params_pic_vm_1d2v_cart_disgradsub.nml )
-  add_mpi_test( ${TEST_NAME_DISGRADSUB} ${EXECUTABLE} ${PROCS} ${NML_FILE}  )
-  set_tests_properties( ${TEST_NAME_DISGRADSUB} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED"
+  set( NML_FILE ${CMAKE_CURRENT_SOURCE_DIR}/params_pic_vm_1d2v_cart_disgradEC_sub.nml )
+  add_mpi_test( ${TEST_NAME_DISGRADECSUB} ${EXECUTABLE} ${PROCS} ${NML_FILE}  )
+  set_tests_properties( ${TEST_NAME_DISGRADECSUB} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED"
     TIMEOUT 50 )
 
   set( NML_FILE ${CMAKE_CURRENT_SOURCE_DIR}/params_pic_vm_1d2v_cart_hs_smooth.nml )
@@ -77,14 +77,14 @@ if(BUILD_TESTING)
   set_tests_properties( ${TEST_NAME_disgradE_SMOOTH} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED"
     TIMEOUT 20 )
 
-  set( NML_FILE ${CMAKE_CURRENT_SOURCE_DIR}/params_pic_vm_1d2v_cart_disgrad_smooth.nml )
-  add_mpi_test( ${TEST_NAME_DISGRAD_SMOOTH} ${EXECUTABLE} ${PROCS} ${NML_FILE}  )
-  set_tests_properties( ${TEST_NAME_DISGRAD_SMOOTH} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED"
+  set( NML_FILE ${CMAKE_CURRENT_SOURCE_DIR}/params_pic_vm_1d2v_cart_disgradEC_smooth.nml )
+  add_mpi_test( ${TEST_NAME_DISGRADEC_SMOOTH} ${EXECUTABLE} ${PROCS} ${NML_FILE}  )
+  set_tests_properties( ${TEST_NAME_DISGRADEC_SMOOTH} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED"
     TIMEOUT 20 )
   
-  set( NML_FILE ${CMAKE_CURRENT_SOURCE_DIR}/params_pic_vm_1d2v_cart_disgradsub_smooth.nml )
-  add_mpi_test( ${TEST_NAME_DISGRADSUB_SMOOTH} ${EXECUTABLE} ${PROCS} ${NML_FILE}  )
-  set_tests_properties( ${TEST_NAME_DISGRADSUB_SMOOTH} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED"
+  set( NML_FILE ${CMAKE_CURRENT_SOURCE_DIR}/params_pic_vm_1d2v_cart_disgradEC_sub_smooth.nml )
+  add_mpi_test( ${TEST_NAME_DISGRADECSUB_SMOOTH} ${EXECUTABLE} ${PROCS} ${NML_FILE}  )
+  set_tests_properties( ${TEST_NAME_DISGRADECSUB_SMOOTH} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED"
     TIMEOUT 50 )
 
   set( NML_FILE ${CMAKE_CURRENT_SOURCE_DIR}/params_pic_vm_1d2v_cart_trafo.nml )
