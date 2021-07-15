@@ -35,7 +35,7 @@ if(Fortran_COMPILER MATCHES IBM)
 endif()
 
 target_link_libraries(sll_linear_solvers sll_vector_space sll_errors sll_memory
-                      sll_assert)
+                      sll_assert sll_sparsekit)
 
 if(BUILD_TESTING)
   add_subdirectory(testing)

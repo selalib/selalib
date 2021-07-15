@@ -7,7 +7,7 @@ set(POISSON_SRCS
     sll_m_poisson_2d_base.F90
     sll_m_poisson_2d_periodic.F90
     sll_m_poisson_2d_fem.F90
-    sll_m_poisson_3d_base.F90
+    sll_m_poisson_2d_fem_fft.F90
     sll_m_hex_poisson.F90
     sll_m_poisson_2d_tri.F90
     sll_m_poisson_2d_fem_sps_weak_form.F90
@@ -18,7 +18,9 @@ set(POISSON_SRCS
     # sll_m_poisson_2d_fem_sps_stencil_projector.F90
     # sll_m_poisson_2d_fem_sps_stencil.F90
     sll_m_poisson_2d_fem_sps_stencil_new_assembler.F90
-    sll_m_poisson_2d_fem_sps_stencil_new.F90)
+    sll_m_poisson_2d_fem_sps_stencil_new.F90
+    sll_m_poisson_3d_base.F90
+    sll_m_poisson_3d_fem_fft.F90)
 
 if(FFT_LIB MATCHES FFTW)
   list(APPEND POISSON_SRCS sll_m_poisson_3d_periodic.F90)
@@ -45,6 +47,7 @@ target_link_libraries(
   sll_general_coordinate_elliptic_solvers
   sll_meshes
   sll_splines
+  sll_fem_spline
   sll_splines_smooth
   ${LAPACK_LIBRARIES})
 

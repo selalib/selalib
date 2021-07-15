@@ -1,0 +1,48 @@
+&sim_params
+        delta_t = 0.05
+        n_time_steps = 2
+        beta = 0.0001
+        initial_distrib = "cossum_onegaussian"
+        initial_bfield = "cos"
+/
+
+&cos_onegaussian
+	kx = 0.0
+        modnum = 0.0
+        alpha = 0.0
+	phase_shift= 0.0
+        v_thermal = 0.2  0.005773502691896
+        v_mean = 0.0 0.0
+/
+
+&output
+	file_prefix = "ctest"	
+
+/
+
+&grid_dims
+        ng_x = 32
+        x1_min = 0.0
+        x1_max = 5.02654824574
+/
+
+&pic_params
+        n_particles = 100000
+        sampling_case = "particle_sampling_sobol_symmetric"
+        splitting_case = "splitting_ecsim"     
+        spline_degree = 3
+	splitting_type = "strang"
+/
+
+&ctest
+	ctest_case = "ecsim"
+/
+
+&maxwell_solver
+        mass_tolerance = 1E-12
+        poisson_tolerance = 1E-12
+/
+
+&time_solver
+        maxwell_tolerance = 1E-14
+/
