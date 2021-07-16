@@ -341,6 +341,7 @@ contains
       if (abs(res - res2) > 5E-14) then
          fail = .true.
          print *, 'error in evaluate', res - res2
+         return
       end if
 
       !test horner for arbitrary polynomials
@@ -357,6 +358,7 @@ contains
          fail = .true.
          print *, xp
          print *, 'error in horner'
+         return
       end if
 
       !print*, 'res-res2=', res-res2
@@ -364,6 +366,8 @@ contains
       deallocate (val1)
       deallocate (val2)
       call sll_s_spline_pp_free_2d(spline_pp)
+
+      fail = .false.
 
    end subroutine spline_test
 
