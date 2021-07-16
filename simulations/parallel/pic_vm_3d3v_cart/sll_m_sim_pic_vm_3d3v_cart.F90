@@ -937,13 +937,13 @@ contains
   subroutine run_pic_vm_3d3v (sim)
     class(sll_t_sim_pic_vm_3d3v_cart), intent(inout) :: sim !< Singlespecies simulation
     ! Local variables
-    sll_int32  :: j, ierr, i_steps, limit
+    sll_int32  :: j, ierr, i_steps
     sll_real64, allocatable :: rho(:), rho_local(:), scratch(:)
     sll_int32  :: th_diag_id, file_id
     character(len=4) :: crank
     character(len=4) :: step
     character(len=256) :: diag_file_name
-    type(sll_t_time_mark) :: start_loop, end_loop, start_subloop, end_subloop
+    type(sll_t_time_mark) :: start_loop, end_loop
 
     ! Initialize file for diagnostics
     if (sim%rank == 0) then
@@ -1277,7 +1277,7 @@ contains
     sll_real64 :: diagnostics_local(6)
     sll_real64 :: diagnostics(6), phival
     sll_real64 :: potential_energy(6)
-    sll_int32  :: i_part, i, j, k
+    sll_int32  :: i_part
     sll_real64 :: vi(3),  xi(3)
     sll_real64 :: wi(1)
     sll_real64 :: error_gauss
@@ -1377,7 +1377,7 @@ contains
     sll_real64,                        intent(   out ) :: rho_local(:) !< charge local to mpi processors
     sll_real64,                        intent(   out ) :: rho(:) !< charge
     !local variables
-    sll_int32 :: i_part, i
+    sll_int32 :: i_part
     sll_real64 :: xi(3), wi(1), scratch(1:sim%n_totaldofs1+2*sim%n_totaldofs0)
 
     rho_local = 0.0_f64
@@ -1926,7 +1926,7 @@ contains
     sll_real64,                        intent(   out ) :: rho(:) !< charge
     sll_real64,                        intent(   out ) :: error !< error in Gauss' law
     !local variables
-    sll_int32 :: i_part, j
+    sll_int32 :: i_part
     sll_real64 :: xi(3), wi(1)
 
     rho_gauss = 0.0_f64

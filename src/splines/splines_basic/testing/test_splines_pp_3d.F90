@@ -110,7 +110,7 @@ contains
     end do
     !print*, 'res-res2=', res-res2
     !write(*,*) 'Fehler horner vs normal:', abs(res-res2)
-    if(abs(res-res2)>1E-13) then
+    if(abs(res-res2)>1d-13) then
        fail=.true.
        print*,'error in evaluate'
     end if
@@ -129,7 +129,7 @@ contains
           end do
        end do
     end do
-    if(abs(res-res2)>1E-12) then
+    if(abs(res-res2)>1d-12) then
        fail=.true.
        print*, xp
        print*,'error in horner'
