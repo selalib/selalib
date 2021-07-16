@@ -240,7 +240,7 @@ contains
     !local variables
     sll_int32 :: q, j, int, ind1, quad, interval, ind4
     sll_real64, allocatable :: quad_xw(:,:),spline_val_b(:,:,:), spline_val(:,:)
-    sll_real64 :: jacobian, c
+    sll_real64 :: c
 
     q = min(3*deg+1,10)
 
@@ -314,7 +314,7 @@ contains
     !local variables
     sll_int32 :: j, int, quad, q, ind2, ind3, ind4
     sll_real64, allocatable :: quad_xw(:,:), spline_val(:,:)
-    sll_real64 :: jacobian, c
+    sll_real64 :: c
 
     q = min(3*deg+1,10)
 
@@ -421,7 +421,7 @@ contains
     !local variables
     sll_int32 :: q, j, int, k, l, limit, ind1, ind2, ind3, ind4
     sll_real64, allocatable :: quad_xw(:,:), spline_val_1(:,:), spline_val_2(:,:)
-    sll_real64 :: jacobian, c
+    sll_real64 :: c
 
     q = min(deg1+deg2+1,10)
 
@@ -533,7 +533,7 @@ contains
        eig_values_mass(k+1) = mass_line(0)
        do j=1,degree
           eig_values_mass(k+1) = eig_values_mass(k+1)+ &
-               mass_line(j) * 2.0_f64 * cos( factor*k*j)
+               mass_line(j) * 2.0_f64 * cos( factor*real(k*j,f64))
        end do
     end do
 

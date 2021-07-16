@@ -1,7 +1,8 @@
 !> @ingroup particle_mesh_coupling
 !> @author Katharina Kormann, IPP
-!> @brief Kernel smoother for 1d with splines of arbitrary degree placed on a uniform mesh.
+!> @brief Kernel smoother for 1d with splines of arbitrary degree placed on a uniform mesh. This version is for a formulation of the Maxwell's equation with strong Ampere.
 !> @details Spline with index i starts at point i
+!> Reference: Campos Pinto, Kormann, Sonnendrücker: Variational Framework for Structure-Preserving Electromagnetic Particle-In-Cell Methods, arXiv 2101.09247, 2021.
 module sll_m_particle_mesh_coupling_spline_strong_1d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"

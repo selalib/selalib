@@ -1232,9 +1232,9 @@ contains
 
     !print*, pp_coeffs(:,index)
     !print*, x
-    res=pp_coeffs(1,index)*degree
+    res=pp_coeffs(1,index)*real(degree, f64)
     do i=1,degree-1
-       res=res*x+pp_coeffs(i+1,index)*(degree-i)
+       res=res*x+pp_coeffs(i+1,index)*real(degree-i,f64)
     end do
   end function sll_f_spline_pp_horner_derivative_1d
 
@@ -1308,7 +1308,7 @@ contains
        pp_coeffs_1d(i+1,1)=sll_f_spline_pp_horner_1d(degree(2), pp_coeffs_2d(1+i*(degree(2)+1):(degree(2)+1)*(i+1),:), x(2), 1)
     end do
     !> Perform a 1d hornerschema in the second dimension
-    res=sll_f_spline_pp_horner_1d(degree(3), pp_coeffs_1d, x(3),1) *n_cells(1)
+    res=sll_f_spline_pp_horner_1d(degree(3), pp_coeffs_1d, x(3),1) *real(n_cells(1),f64)
 
   end function sll_f_spline_pp_horner_3d_d1
 
@@ -1340,7 +1340,7 @@ contains
        pp_coeffs_1d(i+1,1)=sll_f_spline_pp_horner_derivative_1d(degree(2), pp_coeffs_2d(1+i*(degree(2)+1):(degree(2)+1)*(i+1),:), x(2), 1)
     end do
     !> Perform a 1d hornerschema in the second dimension
-    res=sll_f_spline_pp_horner_1d(degree(3), pp_coeffs_1d, x(3),1) *n_cells(2)
+    res=sll_f_spline_pp_horner_1d(degree(3), pp_coeffs_1d, x(3),1) *real(n_cells(2),f64)
 
   end function sll_f_spline_pp_horner_3d_d2
 
@@ -1372,7 +1372,7 @@ contains
        pp_coeffs_1d(i+1,1)=sll_f_spline_pp_horner_1d(degree(2), pp_coeffs_2d(1+i*(degree(2)+1):(degree(2)+1)*(i+1), :), x(2), 1)
     end do
     !> Perform a 1d hornerschema in the second dimension
-    res=sll_f_spline_pp_horner_derivative_1d(degree(3), pp_coeffs_1d, x(3),1) *n_cells(3)
+    res=sll_f_spline_pp_horner_derivative_1d(degree(3), pp_coeffs_1d, x(3),1) *real(n_cells(3),f64)
 
   end function sll_f_spline_pp_horner_3d_d3
 
@@ -1399,7 +1399,7 @@ contains
 
     exponents = 1._f64
     do i = 1, degree(component)
-       exponents(i, component) = degree(component)+1 -i
+       exponents(i, component) = real(degree(component)+1 -i,f64)
     end do
     !> Perform a 1d hornerschema in the first dimension
     do j = 0, deg(3)
@@ -1412,7 +1412,7 @@ contains
     end do
 
     !> Perform a 2d hornerschema in the second and third dimension
-    res=sll_f_spline_pp_horner_2d(deg(2:3), pp_coeffs_2d, x(2:3), [1,1], [1,1])*n_cells(component)
+    res=sll_f_spline_pp_horner_2d(deg(2:3), pp_coeffs_2d, x(2:3), [1,1], [1,1])*real(n_cells(component),f64)
 
   end function sll_f_spline_pp_horner_derivative_3d
 
