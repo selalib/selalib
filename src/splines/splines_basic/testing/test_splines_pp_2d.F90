@@ -39,10 +39,17 @@ program test_splines_pp_2d_boundary
    sll_real64 :: xnorm(2)
    logical   :: fail
 
+   sll_int32 :: nseed
+   sll_int32, allocatable :: seed(:)
+
+   call random_seed(size=nseed)
+   allocate (seed(nseed))
+   seed = 42
+   call random_seed(put=seed)
+
    fail = .false.
 
    n_cells = [50, 50]
-   call random_seed()
    call random_number(xnorm)
    print *, 'Order 3'
    degree = [3, 3]
@@ -175,7 +182,6 @@ contains
          breaks2(i + 1) = breaks2(i) + delta_x(2)
       end do
 
-      call random_seed()
       call random_number(b_coeffs)
 
       call sll_s_spline_pp_init_2d(spline_pp, degree, n_cells, boundary)
@@ -327,7 +333,6 @@ contains
       end if
 
       !test horner for arbitrary polynomials
-      call random_seed()
       call random_number(xp)
       res = sll_f_spline_pp_horner_2d(degree, pp_coeffs, xp, [1, 1], [1, 1])
       res2 = 0._f64
