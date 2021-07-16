@@ -80,7 +80,7 @@ contains
     sll_real64, intent(out) :: efield(:)
     
     sll_int32 :: n_dofs(2), ntotal
-    sll_int32 :: i,j, ind
+    sll_int32 :: i,j
     sll_real64 :: eig_val
     
     n_dofs = self%n_dofs
@@ -122,7 +122,7 @@ contains
     sll_real64, intent(out) :: phi(:)
     
     sll_int32 :: n_dofs(2)
-    sll_int32 :: i,j, ind
+    sll_int32 :: i,j
     sll_real64 :: eig_val
 
 
@@ -139,7 +139,7 @@ contains
           else
              eig_val = self%eig_values_dtm1d_1(i) * self%eig_values_mass_0_2(j) + &
                   self%eig_values_mass_0_1(i) * self%eig_values_dtm1d_2(j) 
-             self%scratch(i,j) = self%scratch(i,j) / eig_val
+             self%scratch(i,j) = self%scratch(i,j) / cmplx(eig_val, 0.0_f64, f64)
           end if
        end do
     end do
@@ -209,7 +209,7 @@ contains
     self%eig_values_d1(1) = cmplx(0.0_f64, 0.0_f64, f64)
     self%eig_values_dtm1d_1(1) = 0.0_f64
     do j=2,n_dofs(1)
-       angle = sll_p_twopi*(j-1)/real(n_dofs(1), f64)
+       angle = sll_p_twopi*real(j-1,f64)/real(n_dofs(1), f64)
        
        self%eig_values_d1(j) = cmplx((1.0_f64 - cos(angle))/delta_x(1),sin(angle)/delta_x(1), f64 )
        self%eig_values_dtm1d_1(j) = 2.0_f64/delta_x(1)**2*(1.0_f64-cos(angle))* eig_values_mass_1_1(j)
@@ -222,7 +222,7 @@ contains
     self%eig_values_d2(1) = cmplx(0.0_f64, 0.0_f64, f64)
     self%eig_values_dtm1d_2(1) = 0.0_f64
     do j=2,n_dofs(2)
-       angle = sll_p_twopi*(j-1)/real(n_dofs(2), f64)
+       angle = sll_p_twopi*real(j-1,f64)/real(n_dofs(2), f64)
        
        self%eig_values_d2(j) = cmplx((1.0_f64 - cos(angle))/delta_x(2),sin(angle)/delta_x(2), f64 )
        self%eig_values_dtm1d_2(j) = 2.0_f64/delta_x(2)**2*(1.0_f64-cos(angle))* eig_values_mass_1_2(j)

@@ -84,7 +84,8 @@ contains
     sll_real64, intent( in    ) :: x(:) !< Inputvariable
     sll_real64, intent(   out ) :: y(:) !< Outputvariable
     !local variables
-    sll_real64 :: scratch0(1:self%n_total0), scratch1(self%n_total1+2*self%n_total0), scratch2(self%n_total0+2*self%n_total1), scratch3(self%n_total0+2*self%n_total1)
+    !    sll_real64 :: scratch0(1:self%n_total0)
+    sll_real64 :: scratch1(self%n_total1+2*self%n_total0), scratch2(self%n_total0+2*self%n_total1), scratch3(self%n_total0+2*self%n_total1)
     
     ! Compute C x
     call sll_s_multiply_c_clamped( self%n_dofs, self%delta_x, self%s_deg_0, x, scratch2 )

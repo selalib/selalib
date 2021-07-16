@@ -140,9 +140,9 @@ contains
           do i=1,n_dofs(1)
 
              scratch(i,j,k) = scratch(i,j,k)* &
-                  self%inv_eig_values_1(i)* &
+                  cmplx(self%inv_eig_values_1(i)* &
                   self%inv_eig_values_2(j)* &
-                  self%inv_eig_values_3(k) /self%factor
+                  self%inv_eig_values_3(k) /self%factor, 0.0_f64, f64)
 
           end do
        end do
