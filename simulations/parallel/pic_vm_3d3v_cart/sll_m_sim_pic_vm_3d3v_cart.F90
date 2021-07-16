@@ -1273,7 +1273,7 @@ contains
     sll_real64 :: diagnostics_local(6)
     sll_real64 :: diagnostics(6), phival
     sll_real64 :: potential_energy(6)
-    sll_int32  :: i_part, i, j, k
+    sll_int32  :: i_part
     sll_real64 :: vi(3),  xi(3)
     sll_real64 :: wi(1)
     sll_real64 :: error_gauss
@@ -1373,7 +1373,7 @@ contains
     sll_real64,                        intent(   out ) :: rho_local(:) !< charge local to mpi processors
     sll_real64,                        intent(   out ) :: rho(:) !< charge
     !local variables
-    sll_int32 :: i_part, i
+    sll_int32 :: i_part
     sll_real64 :: xi(3), wi(1), scratch(1:sim%n_totaldofs1+2*sim%n_totaldofs0)
 
     rho_local = 0.0_f64
@@ -1922,7 +1922,7 @@ contains
     sll_real64,                        intent(   out ) :: rho(:) !< charge
     sll_real64,                        intent(   out ) :: error !< error in Gauss' law
     !local variables
-    sll_int32 :: i_part, j
+    sll_int32 :: i_part
     sll_real64 :: xi(3), wi(1)
 
     rho_gauss = 0.0_f64

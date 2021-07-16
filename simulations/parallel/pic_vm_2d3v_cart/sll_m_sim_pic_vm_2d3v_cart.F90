@@ -1,4 +1,4 @@
-! Simulation of 1d2v Vlasov-Maxwell with simple PIC method, periodic boundary conditions, Weibel instability. FEM with splines, degree 3 for B and 2 for E
+! Simulation of 1d2v Vlasov-Maxwell with GEMPIC method, periodic boundary conditions, Weibel instability. FEM with splines, degree 3 for B and 2 for E
 
 ! author: Katharina Kormann, IPP
 
@@ -197,7 +197,7 @@ contains
     character(len=256) :: ctest_ref_file
     
     sll_int32   :: input_file
-    sll_int32   :: ierr, j
+    sll_int32   :: ierr
     
 
     namelist /sim_params/         delta_t, n_time_steps, beta, initial_distrib, initial_bfield, plasma_beta
@@ -258,7 +258,7 @@ contains
     sim%domain(:,1) = x_min
     sim%domain(:,2) = x_max
     sim%domain(:,3) = x_max-x_min
-    sim%delta_x = sim%domain(:,3)/sim%n_gcells
+    sim%delta_x = sim%domain(:,3)/real(sim%n_gcells,f64)
     sim%volume = product(sim%delta_x)
     
     sim%n_particles = n_particles/sim%world_size
@@ -354,13 +354,11 @@ contains
     class(sll_t_sim_pic_vm_2d3v_cart), intent(inout) :: sim
 
     ! Local variables
-    sll_int32 :: j, ierr, i_part
+    sll_int32 :: j, ierr
     sll_real64, allocatable :: rho(:), rho_local(:), efield_poisson(:)
     sll_int32 :: th_diag_id, dfield_id, efield_id, bfield_id
     sll_real64 :: rhof0
     character(len=256) :: diag_file_name 
-    sll_real64 :: wi(1)
-    sll_real64 :: xi(3)
 
     type(sll_t_time_mark) :: start_loop, end_loop
 
@@ -553,8 +551,6 @@ contains
     sll_int32  :: i_part
     sll_real64 :: vi(3),  xi(3)
     sll_real64 :: wi(1)
-    sll_real64 :: transfer(1), vvb(1), poynting
-    sll_real64 :: efield(2), bfield
     sll_int32  :: n_dofs
     sll_real64 :: error_gauss
 

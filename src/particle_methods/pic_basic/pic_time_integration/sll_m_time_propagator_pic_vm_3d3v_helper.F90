@@ -247,7 +247,6 @@ contains
     end if
     xnew(2:3) = self%x_min(2:3) + modulo(xnew(2:3)-self%x_min(2:3), self%Lx(2:3))
 
-
   end subroutine compute_particle_boundary
 
 
@@ -616,7 +615,6 @@ contains
        self%phi_dofs_new = self%phi_dofs_work
        self%efield_dofs_new = self%efield_dofs_work
 
-       !print*, residual
     end do
 
     if ( residual(1) > self%iter_tolerance ) then
@@ -647,6 +645,9 @@ contains
   end subroutine advect_ex
 
 
+  !---------------------------------------------------------------------------!
+  !> advect_e_trunc: This is a version of advect_e where the Particle Mass is
+  !> approximated by the mass matrix
   subroutine advect_e_pic_vm_3d3v_avf_trunc( self, dt )
     class(sll_t_time_propagator_pic_vm_3d3v_helper), intent(inout) :: self !< time propagator object 
     sll_real64,                                     intent(in)    :: dt   !< time step

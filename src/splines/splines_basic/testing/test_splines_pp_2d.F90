@@ -330,7 +330,7 @@ contains
     !print*, res, res2
     !print*, 'res-res2=', res-res2
     !write(*,*) 'Fehler horner vs normal:', abs(res-res2)
-    if(abs(res-res2)>5E-14) then
+    if(abs(res-res2)>5d-14) then
        fail=.true.
        print*,'error in evaluate', res-res2
     end if
@@ -345,7 +345,7 @@ contains
           res2=res2+pp_coeffs(i+(j-1)*(degree(1)+1),1)*xp(1)**((degree(1)+1)-i)*xp(2)**((degree(2)+1)-j)
        end do
     end do
-    if(abs(res-res2)>1E-12) then
+    if(abs(res-res2)>1d-12) then
        fail=.true.
        print*, xp
        print*,'error in horner'
