@@ -165,7 +165,6 @@ function sll_f_cos_gaussian( self, x, v, m ) result( fval )
  sll_real64 :: fval
  !local variables
  sll_real64 :: fexp
- sll_int32  :: j
 
  fval = sll_f_cos( self, x )
  fexp = sll_f_gaussian( self, v, x, m )
@@ -259,8 +258,6 @@ function sll_f_noise_gaussian( self, x, v, m ) result( fval )
  sll_real64 :: v(:)
  sll_real64, optional :: m
  sll_real64 :: fval
- !local variables
- sll_int32  :: j
  
  fval = self%eval_x_density( x ) * self%eval_x_density( v )
  
@@ -274,7 +271,6 @@ function sll_f_cos_gaussian_screwpinch( self, x, v, m ) result( fval )
  sll_real64 :: fval
  !local variables
  sll_real64 :: fexp
- sll_int32  :: j
 
  fval = sll_f_cos_screwpinch( self, x, v )
  fexp = sll_f_gaussian_screwpinch( self, v, x, m )

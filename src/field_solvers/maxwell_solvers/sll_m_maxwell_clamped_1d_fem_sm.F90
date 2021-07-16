@@ -523,7 +523,6 @@ contains
     sll_int32 :: ierr
     sll_real64 :: mass_line_0(s_deg_0+1), mass_line_1(s_deg_0)
     sll_real64 :: mass_line_b0((s_deg_0+1)*s_deg_0), mass_line_b1(s_deg_0*(s_deg_0-1))
-    sll_real64, allocatable :: nullspace(:,:)
 
     if (present( mass_tolerance) ) then
        self%mass_solver_tolerance = mass_tolerance
@@ -684,8 +683,8 @@ contains
     call self%linear_solver_schur_eb%free()
     call self%linear_op_schur_eb%free()
 
-    call sll_s_spline_pp_init_1d( self%spline0_pp )
-    call sll_s_spline_pp_init_1d( self%spline1_pp )
+    call sll_s_spline_pp_free_1d( self%spline0_pp )
+    call sll_s_spline_pp_free_1d( self%spline1_pp )
     
   end subroutine free_1d_fem_sm
 
@@ -766,7 +765,7 @@ contains
     sll_real64, intent( in    )          :: bfield_dofs(:)  !< Bz
     sll_real64, intent(   out )          :: energy          !< field energy
     !local variables
-    sll_real64 :: field_energy(3), boundary
+    sll_real64 :: field_energy(3)
 
 
     field_energy(1) = self%l2norm_squared &
