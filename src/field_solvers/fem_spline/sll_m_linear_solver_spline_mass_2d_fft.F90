@@ -117,9 +117,9 @@ contains
           do i=1,n_dofs(1)
 
              scratch(i,j) = scratch(i,j)/ &
-                  (self%eig_values_1(i)* &
+                  cmplx(self%eig_values_1(i)* &
                   self%eig_values_2(j)* &
-                  self%factor)
+                  self%factor, 0.0_f64, f64)
 
           end do
        end do
