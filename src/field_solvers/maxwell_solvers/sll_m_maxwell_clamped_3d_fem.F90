@@ -1080,8 +1080,8 @@ contains
     call self%linear_solver_schur_eb%free()
     call self%linear_op_schur_eb%free()
 
-    call sll_s_spline_pp_init_1d( self%spline0_pp )
-    call sll_s_spline_pp_init_1d( self%spline1_pp )
+    call sll_s_spline_pp_free_1d( self%spline0_pp )
+    call sll_s_spline_pp_free_1d( self%spline1_pp )
 
     deallocate(self%work0)
     deallocate(self%work01)
@@ -1379,8 +1379,7 @@ contains
     sll_real64, intent( in    )          :: bfield_dofs(:) !< B
     sll_real64, intent(   out )          :: energy !< field energy
     !local variables
-    sll_real64 :: field_energy(6), boundary
-
+    sll_real64 :: field_energy(6)
 
     field_energy(1) = self%l2norm_squared &
          ( efield_dofs(1:self%n_total1), 1, 1 )

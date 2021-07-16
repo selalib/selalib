@@ -60,7 +60,7 @@ contains
     sll_int32, optional,   intent( in    ) :: n_cells_min(3) !< minimal cell number for mpi process 
     sll_int32, optional,   intent( in    ) :: n_cells_max(3) !< maximal cell number for mpi process
     !local variables
-    sll_int32  :: i1, i2, i3, ind, k, j, begin(3), limit(3)
+    sll_int32  :: i1, i2, i3, ind, k, begin(3), limit(3)
     sll_int32  :: q(3), start
     sll_real64 :: mass_line_b( 1:(7*deg(1)**2-deg(1)-2)/2*(2*deg(2)+1)*(2*deg(3)+1))
     sll_real64 :: mass_line( 1:(2*deg(1)+1)*(2*deg(2)+1)*(2*deg(3)+1))
@@ -280,7 +280,7 @@ contains
     sll_int32, optional,   intent( in    ) :: n_cells_max(3) !< maximal cell number for mpi process
     !local variables
     sll_int32 :: q(3),  begin(3), limit(3)
-    sll_int32  :: i1, i2, i3, ind, k, j, start
+    sll_int32  :: i1, i2, i3, ind, k, start
     sll_real64 :: mass_line_b( 1:((deg1(1)+deg2(1))**2+(2*deg2(1)+deg1(1)-deg1(1)**2)/2)*(deg1(2)+deg2(2)+1)*(deg1(3)+deg2(3)+1) ) 
     sll_real64 :: mass_line( 1:(deg1(1)+deg2(1)+1)*(deg1(2)+deg2(2)+1)*(deg1(3)+deg2(3)+1) )
     sll_real64, allocatable :: xw_gauss_d1(:,:), xw_gauss_d2(:,:), xw_gauss_d3(:,:)
