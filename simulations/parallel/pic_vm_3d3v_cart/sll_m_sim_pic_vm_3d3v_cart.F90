@@ -937,11 +937,11 @@ contains
   subroutine run_pic_vm_3d3v (sim)
     class(sll_t_sim_pic_vm_3d3v_cart), intent(inout) :: sim !< Singlespecies simulation
     ! Local variables
-    sll_int32  :: j, ierr, i_steps
+    sll_int32  :: j, ierr
     sll_real64, allocatable :: rho(:), rho_local(:), scratch(:)
     sll_int32  :: th_diag_id, file_id
     character(len=4) :: crank
-    character(len=4) :: step
+    character(len=6) :: step
     character(len=256) :: diag_file_name
     type(sll_t_time_mark) :: start_loop, end_loop
 
@@ -957,8 +957,7 @@ contains
 
     if ( sim%restart ) then
        call sll_s_int2string( sim%rank, crank )
-       i_steps= real(sim%restart_steps,f64)*sim%delta_t
-       call sll_s_int2string( i_steps, step )
+       call sll_s_int2string( sim%restart_steps, step )
        call sim%particle_group%group(1)%read(trim(sim%restart_file)//step//'_particles_'//crank//'.dat')
     else
        if(sim%ct) then
@@ -994,8 +993,7 @@ contains
 
 
     if ( sim%restart ) then
-       i_steps= real(sim%restart_steps,f64)*sim%delta_t
-       call sll_s_int2string( i_steps, step )
+       call sll_s_int2string( sim%restart_steps, step )
        open(newunit=file_id, file=trim(sim%restart_file)//step//'_efield.dat', status='old', action='read', iostat=ierr)
        if (ierr /= 0 ) then
           SLL_ERROR("run", "Restart file for efield does not exist: "//trim(sim%restart_file)//step//'_efield.dat')
@@ -1106,8 +1104,7 @@ contains
        write(*, "(A, F10.3)") "Main loop run time [s] = ", sll_f_time_elapsed_between( start_loop, end_loop)
        close(th_diag_id)
        if ( sim%output_fields ) then
-          i_steps = real(sim%n_time_steps+sim%restart_steps, f64)*sim%delta_t
-          call sll_s_int2string( i_steps, step )
+          call sll_s_int2string( sim%n_time_steps+sim%restart_steps, step )
           open(newunit=file_id, file=trim(sim%file_prefix)//step//'_efield.dat')
           write(file_id, *) sim%efield_dofs
           close(file_id)
@@ -1125,8 +1122,7 @@ contains
     ! Print particle array to file
     if ( sim%output_particles ) then
        call sll_s_int2string( sim%rank, crank )
-       i_steps = real(sim%n_time_steps+sim%restart_steps, f64)*sim%delta_t
-       call sll_s_int2string( i_steps, step )
+       call sll_s_int2string( sim%n_time_steps+sim%restart_steps, step )
        call sim%particle_group%group(1)%print(trim(sim%file_prefix)//step//'_particles_'//crank//'.dat')
     end if
 
