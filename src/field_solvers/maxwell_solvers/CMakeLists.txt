@@ -25,7 +25,8 @@ set(MAXWELL_SOLVERS_SRCS
   sll_m_linear_operator_schur_eb_1d.F90
   sll_m_linear_operator_schur_eb_3d.F90
   sll_m_linear_operator_schur_eb_cl_1d.F90
-  sll_m_linear_operator_schur_eb_cl_3d.F90 )
+  sll_m_linear_operator_schur_eb_cl_3d.F90
+  sll_m_linear_operator_maxwell_eb_schur.F90)
 
 list(APPEND MAXWELL_SOLVERS_SRCS sll_m_maxwell_2d_pstd.F90
      sll_m_maxwell_3d_pstd.F90)
