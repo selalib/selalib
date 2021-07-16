@@ -142,7 +142,7 @@ contains
              else
                 eig_val = factor2jk * self%eig_values_dtm1d_1(i) + &
                      factor1jk * self%eig_values_mass_0_1(i)
-                self%scratch(i,j,k) = self%scratch(i,j,k) / eig_val
+                self%scratch(i,j,k) = self%scratch(i,j,k) / cmplx(eig_val, 0.0_f64 , f64)
              end if
 
              self%scratchx(i,j,k) = -self%scratch(i,j,k)* self%eig_values_d1(i)
@@ -226,7 +226,7 @@ contains
              else
                 eig_val = factor2jk * self%eig_values_dtm1d_1(i) + &
                      factor1jk * self%eig_values_mass_0_1(i)
-                self%scratch(i,j,k) = self%scratch(i,j,k) / eig_val
+                self%scratch(i,j,k) = self%scratch(i,j,k) / cmplx(eig_val, 0.0_f64, f64)
              end if
           end do
        end do
@@ -314,7 +314,7 @@ contains
     self%eig_values_d1(1) = cmplx(0.0_f64, 0.0_f64, f64)
     self%eig_values_dtm1d_1(1) = 0.0_f64
     do j=2,n_dofs(1)
-       angle = sll_p_twopi*(j-1)/real(n_dofs(1), f64)
+       angle = sll_p_twopi*real(j-1,f64)/real(n_dofs(1), f64)
        
        self%eig_values_d1(j) = cmplx((1.0_f64 - cos(angle))/delta_x(1),sin(angle)/delta_x(1), f64 )
        self%eig_values_dtm1d_1(j) = 2.0_f64/delta_x(1)**2*(1.0_f64-cos(angle))* eig_values_mass_1_1(j)
@@ -327,7 +327,7 @@ contains
     self%eig_values_d2(1) = cmplx(0.0_f64, 0.0_f64, f64)
     self%eig_values_dtm1d_2(1) = 0.0_f64
     do j=2,n_dofs(2)
-       angle = sll_p_twopi*(j-1)/real(n_dofs(2), f64)
+       angle = sll_p_twopi*real(j-1,f64)/real(n_dofs(2), f64)
        
        self%eig_values_d2(j) = cmplx((1.0_f64 - cos(angle))/delta_x(2),sin(angle)/delta_x(2), f64 )
        self%eig_values_dtm1d_2(j) = 2.0_f64/delta_x(2)**2*(1.0_f64-cos(angle))* eig_values_mass_1_2(j)
@@ -341,7 +341,7 @@ contains
     self%eig_values_d3(1) = cmplx(0.0_f64, 0.0_f64, f64)
     self%eig_values_dtm1d_3(1) = 0.0_f64
     do j=2,n_dofs(3)
-       angle = sll_p_twopi*(j-1)/real(n_dofs(3), f64)
+       angle = sll_p_twopi*real(j-1,f64)/real(n_dofs(3), f64)
        
        self%eig_values_d3(j) = cmplx((1.0_f64 - cos(angle))/delta_x(3),sin(angle)/delta_x(3), f64 )
        self%eig_values_dtm1d_3(j) = 2.0_f64/delta_x(3)**2*(1.0_f64-cos(angle))* eig_values_mass_1_3(j)
@@ -413,7 +413,7 @@ contains
                              do k3=1, self%degree(3)+1
                                 coef = coef + xw_gauss_d1(2,k1)* xw_gauss_d2(2,k2)* &
                                      xw_gauss_d3(2,k3) *&
-                                     func([self%delta_x(1)*(xw_gauss_d1(1,k1) + i1 + j1 - 2), self%delta_x(2)*(xw_gauss_d2(1,k2) + i2 + j2 - 2), self%delta_x(3)*(xw_gauss_d3(1,k3) + i3 + j3 - 2)] ) * &
+                                     func([self%delta_x(1)*(xw_gauss_d1(1,k1) + real(i1 + j1 - 2,f64)), self%delta_x(2)*(xw_gauss_d2(1,k2) + real(i2 + j2 - 2,f64)), self%delta_x(3)*(xw_gauss_d3(1,k3) + real(i3 + j3 - 2,f64))] ) * &
                                      bspl_d1(k1,self%degree(1)+2-j1)*&
                                      bspl_d2(k2,self%degree(2)+2-j2)*&
                                      bspl_d3(k3,self%degree(3)+2-j3)

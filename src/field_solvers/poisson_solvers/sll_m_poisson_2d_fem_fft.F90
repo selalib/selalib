@@ -97,7 +97,7 @@ contains
           else
              eig_val = self%eig_values_dtm1d_1(i) * self%eig_values_mass_0_2(j) + &
                   self%eig_values_mass_0_1(i) * self%eig_values_dtm1d_2(j) 
-             self%scratch(i,j) = self%scratch(i,j) / eig_val
+             self%scratch(i,j) = self%scratch(i,j) / cmplx(eig_val,0._f64, f64)
           end if
           
           self%scratchx(i,j) = -self%scratch(i,j)* self%eig_values_d1(i)
