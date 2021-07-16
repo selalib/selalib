@@ -57,7 +57,7 @@ program test_maxwell_3d_fem_fft
   sll_real64, dimension(3,2)              :: domain
   sll_int32                               :: deg(3)
 
-  sll_real64                              :: error(6)
+  sll_real64                              :: error(8)
 
   ! Define computational domain
   eta1_min = .0_f64; eta1_max = 2.0_f64*sll_p_pi
@@ -193,8 +193,76 @@ program test_maxwell_3d_fem_fft
   end do
   error(3) = maxval(abs(efield_val-efield_ref))
   error(4) = maxval(abs(bfield_val-bfield_ref))
+  print*, 'compute_b_from_e followed by compute_e_from_b:'
   print*, 'Error efield:', error(3)
   print*, 'Error bfield:', error(4)
+
+
+   ! Now assemble initial efield and bfield
+  time = 0.0_f64
+
+  time = 0.0_f64
+   
+  call maxwell_3d%L2projection( 2, 1, bfield(1:nc_total), cos_k )
+  bfield(1:nc_total) =  w2 *  bfield(1:nc_total)
+  bfield(nc_total+1:nc_total*2) = 0.0_f64
+  call maxwell_3d%L2projection( 2, 3, bfield(nc_total*2+1:nc_total*3), cos_k )
+  bfield(nc_total*2+1:nc_total*3) = - w2 *  bfield(nc_total*2+1:nc_total*3)
+
+  time = 0.0_f64
+
+  call maxwell_3d%L2projection( 1, 1, efield(1:nc_total), cos_k )
+  call maxwell_3d%L2projection( 1, 2, efield(nc_total+1:nc_total*2), cos_k )
+  call maxwell_3d%L2projection( 1, 3, efield(nc_total*2+1:nc_total*3), cos_k )
+  efield(nc_total+1:nc_total*2) = - 2.0_f64 *  efield(nc_total+1:nc_total*2)
+
+  error(2) = abs(maxwell_3d%inner_product( efield(1:nc_total), efield(1:nc_total), 1, 1 ) - 4.0_f64*sll_p_pi**3)
+  print*, 'Error in L2 norm squared:', error(2)
+
+  ! Time stepping
+  do istep = 1, nsteps
+     call maxwell_3d%compute_curl_part( delta_t, efield, bfield )
+     !call maxwell_3d%compute_B_from_E( delta_t, efield, bfield )
+     !call maxwell_3d%compute_E_from_B( delta_t, bfield, efield )
+  end do
+
+  ! Evaluate E and B at the grid points
+  call  evaluate_spline_3d ( nc_eta, [deg(1),deg(2)-1,deg(3)-1], bfield(1:nc_total), bfield_val(1:nc_total) )
+  call  evaluate_spline_3d ( nc_eta, [deg(1)-1,deg(2),deg(3)-1], bfield(1+nc_total:2*nc_total), bfield_val(1+nc_total:2*nc_total)  )
+  call  evaluate_spline_3d ( nc_eta, [deg(1)-1,deg(2)-1,deg(3)], bfield(1+nc_total*2:3*nc_total), bfield_val(1+nc_total*2:3*nc_total) )
+  call  evaluate_spline_3d ( nc_eta, [deg(1)-1,deg(2),deg(3)], efield(1:nc_total), efield_val(1:nc_total) )
+  call  evaluate_spline_3d ( nc_eta, [deg(1),deg(2)-1,deg(3)], efield(1+nc_total:2*nc_total), efield_val(1+nc_total:2*nc_total) )
+  call  evaluate_spline_3d ( nc_eta, [deg(1),deg(2),deg(3)-1], efield(1+nc_total*2:3*nc_total), efield_val(1+nc_total*2:3*nc_total) )
+  
+  time = real(nsteps,f64)*delta_t
+  ind = 1
+  do k = 1, nc_eta(3)
+     do j = 1, nc_eta(2)
+        do i = 1, nc_eta(1)
+           efield_ref(ind) = cos_k([x(i,j,k), y(i,j,k), z(i,j,k)])
+           efield_ref(ind+nc_total) = -2.0_f64*efield_ref(ind)
+           efield_ref(ind+nc_total*2) = efield_ref(ind)
+           ind = ind+1
+        end do
+     end do
+  end do
+  time = (real(nsteps,f64))*delta_t
+  ind = 1
+  do k = 1, nc_eta(3)
+     do j = 1, nc_eta(2)
+        do i = 1, nc_eta(1)
+           bfield_ref(ind) = w2*cos_k([x(i,j,k), y(i,j,k), z(i,j,k)])
+           bfield_ref(ind+nc_total) = 0.0_f64
+           bfield_ref(ind+nc_total*2) = -bfield_ref(ind)
+           ind = ind+1
+        end do
+     end do
+  end do
+  error(7) = maxval(abs(efield_val-efield_ref))
+  error(8) = maxval(abs(bfield_val-bfield_ref))
+  print*, 'compute_curl_part'
+  print*, 'Error efield:', error(7)
+  print*, 'Error bfield:', error(8)
 
 
   ! Test compute_e_from_j
@@ -246,7 +314,7 @@ program test_maxwell_3d_fem_fft
   deallocate( rho )
   deallocate( rho_ref )
 
-  if ( error(1) < 5.5d-4 .AND. error(2) < 3.6d-5 .AND. error(3) < 3.3d-3 .AND. error(4) < 3.1d-3 .AND. error(5)<7.3d-4 .AND. error(6)<6.6d-8) then
+  if ( error(1) < 5.5d-4 .AND. error(2) < 3.6d-5 .AND. error(3) < 3.3d-3 .AND. error(4) < 3.1d-3 .AND. error(5)<7.3d-4 .AND. error(6)<6.6d-8 .AND. error(7) < 3.3d-3 .AND. error(8) < 3.1d-3) then
      print*, 'PASSED.'
   else
      print*, 'FAILED.'
