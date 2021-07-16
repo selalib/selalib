@@ -30,8 +30,11 @@ module sll_m_maxwell_3d_fem_fft
   use sll_m_linear_operator_kron, only : &
        sll_t_linear_operator_kron
 
-  use sll_m_linear_operator_schur_eb_3d, only : &
-       sll_t_linear_operator_schur_eb_3d
+ ! use sll_m_linear_operator_schur_eb_3d, only : &
+ !      sll_t_linear_operator_schur_eb_3d
+
+  use sll_m_linear_operator_maxwell_eb_schur, only : &
+       sll_t_linear_operator_maxwell_eb_schur
 
   use sll_m_linear_solver_cg, only : &
        sll_t_linear_solver_cg
@@ -120,7 +123,7 @@ module sll_m_maxwell_3d_fem_fft
      type(sll_t_linear_operator_block) :: mass2_operator   !< block mass matrix
      type(sll_t_linear_solver_cg) :: mass0_solver     !< mass matrix solver
      type(sll_t_preconditioner_fft) :: preconditioner_fft !< preconditioner for mass matrices
-     type( sll_t_linear_operator_schur_eb_3d ) :: linear_op_schur_eb !< Schur complement operator for advect_eb
+     type( sll_t_linear_operator_maxwell_eb_schur ) :: linear_op_schur_eb !< Schur complement operator for advect_eb
      type( sll_t_linear_solver_mgmres )        :: linear_solver_schur_eb !< Schur complement solver for advect_eb
      
    contains
@@ -229,7 +232,7 @@ contains
     call self%mass2_operator%dot( bfield, self%work )
     call self%multiply_ct( self%work, self%work2 ) 
 
-    self%linear_op_schur_eb%sign = -delta_t**2*factor*0.25_f64
+    self%linear_op_schur_eb%factor = -delta_t**2*factor*0.25_f64
     call self%linear_op_schur_eb%dot( efield, self%work )
     self%work = self%work + delta_t*factor*self%work2
 
@@ -237,7 +240,7 @@ contains
     self%work2 = efield
 
     ! Invert Schur complement matrix
-    self%linear_op_schur_eb%sign = delta_t**2*factor*0.25_f64
+    self%linear_op_schur_eb%factor = delta_t**2*factor*0.25_f64
     call self%linear_solver_schur_eb%set_guess( efield )
     call self%linear_solver_schur_eb%solve( self%work, efield)
 
@@ -741,8 +744,9 @@ contains
     end do
     call self%preconditioner_fft%init( self%Lx, n_dofs, s_deg_0 )
 
-    
-    call self%linear_op_schur_eb%create( self%mass1_operator, self%mass2_operator, self%n_total, self%n_dofs, self%delta_x   )
+
+    call self%linear_op_schur_eb%create( self )
+   ! call self%linear_op_schur_eb%create( self%mass1_operator, self%mass2_operator, self%n_total, self%n_dofs, self%delta_x   )
     call self%linear_solver_schur_eb%create( self%linear_op_schur_eb, self%preconditioner_fft%inverse_mass1_3d )
     self%linear_solver_schur_eb%atol = self%solver_tolerance
     self%linear_solver_schur_eb%rtol = self%solver_tolerance

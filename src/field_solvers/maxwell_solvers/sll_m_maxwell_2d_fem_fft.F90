@@ -272,7 +272,8 @@ contains
                           do k2=1, degree(2)+1
                              !do k3=1, degree(3)+1
                                 coef = coef + xw_gauss_d1(2,k1)* xw_gauss_d2(2,k2)* &
-                                     func([self%delta_x(1)*(xw_gauss_d1(1,k1) + i1 + j1 - 2), self%delta_x(2)*(xw_gauss_d2(1,k2) + i2 + j2 - 2)] ) * &
+                                     func([self%delta_x(1)*(xw_gauss_d1(1,k1) + real(i1 + j1 - 2, f64)), &
+                                     self%delta_x(2)*(xw_gauss_d2(1,k2) + real(i2 + j2 - 2, f64))] ) * &
                                      bspl_d1(k1,degree(1)+2-j1)*&
                                      bspl_d2(k2,degree(2)+2-j2)
                     
@@ -416,7 +417,7 @@ contains
      self%n_total = product(n_dofs)
      
      self%Lx = domain(:,2) - domain(:,1)
-     self%delta_x = self%Lx / n_dofs
+     self%delta_x = self%Lx /real( n_dofs, f64 )
      self%s_deg_0 = s_deg_0
      self%s_deg_1 = s_deg_0 - 1
 
