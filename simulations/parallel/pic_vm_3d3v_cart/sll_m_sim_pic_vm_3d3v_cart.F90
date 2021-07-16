@@ -656,7 +656,7 @@ contains
 
 
     if (sim%rank == 0 ) then
-       open(newunit=file_id, file=trim(filename)//'_used.dat')
+       open(newunit=file_id, file=trim(sim%file_prefix)//'_parameters_used.dat')
        close(file_id)
     end if
     if( sim%boundary ) then
@@ -904,7 +904,7 @@ contains
        sim%time = sll_f_time_elapsed_between( start_init, end_init)
        write(*, "(A, F10.3)") "Init run time [s] = ", sim%time
 
-       open(newunit=file_id, file=trim(filename)//'_used.dat', position = 'append', status='old', action='write', iostat=ierr)
+       open(newunit=file_id, file=trim(sim%file_prefix)//'parameters_used.dat', position = 'append', status='old', action='write', iostat=ierr)
        write(file_id, *) 'delta t:', sim%delta_t
        write(file_id, *) 'n_time_steps:', sim%n_time_steps
        write(file_id, *) 'charge:', sim%charge
