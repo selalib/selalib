@@ -208,7 +208,7 @@ contains
     self%work2 = efield
 
     ! Invert Schur complement matrix
-    self%linear_op_schur_eb%sign = delta_t**2*0.25_f64
+    self%linear_op_schur_eb%sign = delta_t**2*factor*0.25_f64
     call self%linear_solver_schur_eb%set_guess( efield )
     call self%linear_solver_schur_eb%solve( self%work, efield)
 
@@ -1137,6 +1137,7 @@ contains
     end select
   end subroutine multiply_mass_trafo
 
+  
   !> Multiply by the inverse mass matrix 
   subroutine multiply_mass_inverse_trafo( self, form, coefs_in, coefs_out )
     class(sll_t_maxwell_3d_trafo) :: self         !< Maxwell solver class

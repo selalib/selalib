@@ -208,7 +208,7 @@ contains
     self%wsave = efield
 
     ! Invert Schur complement matrix
-    self%linear_op_schur_eb%sign = delta_t**2*0.25_f64
+    self%linear_op_schur_eb%sign = delta_t**2*0.25_f64*factor
     call self%linear_solver_schur_eb%set_guess( efield )
     call self%linear_solver_schur_eb%solve( self%work, efield )
 

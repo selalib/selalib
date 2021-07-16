@@ -49,7 +49,11 @@ module sll_m_maxwell_clamped_1d_trafo
   use sll_m_spline_fem_utilities_sparse, only : &
        sll_s_spline_fem_mass1d_clamped_full
 
-  use sll_m_splines_pp
+  use sll_m_splines_pp, only: &
+       sll_t_spline_pp_1d, &
+       sll_s_spline_pp_init_1d, &
+       sll_s_spline_pp_free_1d, &
+       sll_f_spline_pp_horner_1d
 
   implicit none
 
@@ -121,7 +125,8 @@ module sll_m_maxwell_clamped_1d_trafo
   end type sll_t_maxwell_clamped_1d_trafo
 
 contains
-  
+
+
   !> compute Ey from Bz using weak Ampere formulation 
   subroutine sll_s_compute_e_from_b_1d_trafo(self, delta_t, field_in, field_out)
     class(sll_t_maxwell_clamped_1d_trafo) :: self         !< Maxwell_Clamped solver class
@@ -131,8 +136,7 @@ contains
 
     call self%multiply_mass( field_in, self%work1, self%s_deg_1 )
     call self%multiply_gt( self%work1, self%work0 )
-    !self%work0(1)= self%work0(1)+field_in(1)/self%map%jacobian( [0._f64, 0._f64, 0._f64] )
-    !self%work0(self%n_dofs0)= self%work0(self%n_dofs0)-field_in(self%n_dofs1)/self%map%jacobian( [1._f64, 0.0_f64, 0._f64])
+
     call self%invert_mass( self%work0, self%work01, self%s_deg_0 )
     ! Update Ey from self value
     field_out = field_out + delta_t*self%work01
@@ -155,6 +159,7 @@ contains
   end subroutine sll_s_compute_b_from_e_1d_trafo
 
 
+  !> Solve curl part of Maxwell's equations
   subroutine sll_s_compute_curl_part_1d_trafo( self, delta_t, efield, bfield, betar )
     class(sll_t_maxwell_clamped_1d_trafo) :: self !< Maxwell_Clamped solver class
     sll_real64, intent(in)     :: delta_t   !< Time step
@@ -169,7 +174,7 @@ contains
     else
        factor = 1._f64
     end if
-    
+
     self%work1 = 0._f64
     self%work0 = 0._f64
     self%work01 = 0._f64
@@ -177,9 +182,6 @@ contains
     ! Compute D^T M2 b
     call self%multiply_mass( bfield, self%work1, self%s_deg_1 )
     call self%multiply_gt( self%work1, self%work0 )
-
-    !self%work0(1)= self%work0(1)+bfield(1)/self%map%jacobian( [0._f64, 0._f64, 0._f64])
-    !self%work0(self%n_dofs0)= self%work0(self%n_dofs0)-bfield(self%n_dofs1)/self%map%jacobian( [1._f64, 0._f64, 0._f64] )
 
     self%linear_op_schur_eb%sign = -delta_t**2*0.25_f64*factor
     call self%linear_op_schur_eb%dot( efield, self%work01 )
@@ -189,7 +191,7 @@ contains
     self%work0 = efield
 
     ! Invert Schur complement matrix
-    self%linear_op_schur_eb%sign = delta_t**2*0.25_f64
+    self%linear_op_schur_eb%sign = delta_t**2*0.25_f64*factor
     call self%linear_solver_schur_eb%set_guess( efield )
     call self%linear_solver_schur_eb%solve( self%work01, efield )
 
@@ -200,7 +202,7 @@ contains
   end subroutine sll_s_compute_curl_part_1d_trafo
 
 
-  !> compute e from rho using weak Gauss law ( rho = G^T M_1 e ) 
+  !> compute e from rho using weak Poisson's equation ( rho = G^T M_1 G \phi, e = -G \phi ) 
   subroutine sll_s_compute_e_from_rho_1d_trafo(self, field_in, field_out )       
     class(sll_t_maxwell_clamped_1d_trafo) :: self         !< Maxwell_Clamped solver class
     sll_real64, intent( in    )           :: field_in(:)  !< rho
@@ -222,9 +224,6 @@ contains
     call self%multiply_mass( field_in, self%work1, self%s_deg_1 )
     call multiply_gt( self, self%work1, field_out )
     field_out = - field_out
-
-!!$    field_out(1)=field_out(1)-field_in(1)/self%map%jacobian( [0._f64, 0._f64, 0._f64] )
-!!$    field_out(self%n_dofs0)=field_out(self%n_dofs0)+field_in(self%n_dofs1)/self%map%jacobian( [1._f64, 0._f64, 0._f64] )
 
   end subroutine compute_rho_from_e_1d_trafo
 
@@ -249,7 +248,8 @@ contains
 
   end subroutine compute_e_from_j_1d_trafo
 
-   !> For model with adiabatic electrons
+
+  !> For model with adiabatic electrons
   subroutine compute_phi_from_rho_1d_trafo( self, in, phi, efield )
     class(sll_t_maxwell_clamped_1d_trafo) :: self !< Maxwell_Clamped solver class
     sll_real64, intent(in)                :: in(:) !< rho
@@ -265,7 +265,7 @@ contains
 
   end subroutine compute_phi_from_rho_1d_trafo
 
-  
+
   !> For model with adiabatic electrons
   subroutine compute_phi_from_j_1d_trafo( self, in, phi, efield )
     class(sll_t_maxwell_clamped_1d_trafo) :: self !< Maxwell_Clamped solver class
@@ -321,7 +321,7 @@ contains
                 jacobian= self%map%jacobian( [c, 0._f64, 0._f64])
                 coefs_dofs(i-1+j) = coefs_dofs(i-1+j) + &
                      self%delta_x* xw_gauss(2,quad) * func(self%map%get_x1( [c, 0._f64, 0._f64])) *&
-                     sll_f_spline_pp_horner_1d( degree, self%spline0_pp%poly_coeffs_boundary_left(:,:,i), xw_gauss(1,quad), j)*jacobian!abs(jacobian)
+                     sll_f_spline_pp_horner_1d( degree, self%spline0_pp%poly_coeffs_boundary_left(:,:,i), xw_gauss(1,quad), j)*abs(jacobian)
              enddo
           enddo
        enddo
@@ -343,7 +343,7 @@ contains
                 c = self%delta_x * (xw_gauss(1,quad)+ real(i - 1,f64))
                 jacobian= self%map%jacobian( [c, 0._f64, 0._f64])
                 coefs_dofs(i-1+j) = coefs_dofs(i-1+j) + &
-                     self%delta_x * xw_gauss(2,quad) * func(self%map%get_x1( [c, 0._f64, 0._f64])) * bspl(j,quad) * jacobian!abs(jacobian)
+                     self%delta_x * xw_gauss(2,quad) * func(self%map%get_x1( [c, 0._f64, 0._f64])) * bspl(j,quad) * abs(jacobian)
              enddo
           enddo
        enddo
@@ -359,7 +359,7 @@ contains
                 jacobian= self%map%jacobian( [c, 0._f64, 0._f64])
                 coefs_dofs(i-1+j) = coefs_dofs(i-1+j) + &
                      self%delta_x * xw_gauss(2,quad) * func(self%map%get_x1( [c, 0._f64, 0._f64])) *&
-                     sll_f_spline_pp_horner_1d( degree, self%spline0_pp%poly_coeffs_boundary_right(:,:,i-self%n_cells+degree-1), xw_gauss(1,quad), j) * jacobian!abs(jacobian)
+                     sll_f_spline_pp_horner_1d( degree, self%spline0_pp%poly_coeffs_boundary_right(:,:,i-self%n_cells+degree-1), xw_gauss(1,quad), j) * abs(jacobian)
              enddo
           enddo
        end do
@@ -377,7 +377,7 @@ contains
                 c = self%delta_x * (xw_gauss(1,quad) + real(i - 1,f64))
                 coefs_dofs(i-1+j) = coefs_dofs(i-1+j) + &
                      self%delta_x * xw_gauss(2,quad)*func(self%map%get_x1( [c, 0._f64, 0._f64])) *&
-                     sll_f_spline_pp_horner_1d( degree, self%spline1_pp%poly_coeffs_boundary_left(:,:,i), xw_gauss(1,quad), j) !* sign( 1._f64, self%map%jacobian( [c, 0._f64, 0._f64] ) )
+                     sll_f_spline_pp_horner_1d( degree, self%spline1_pp%poly_coeffs_boundary_left(:,:,i), xw_gauss(1,quad), j) * sign( 1._f64, self%map%jacobian( [c, 0._f64, 0._f64] ) )
              enddo
           enddo
        enddo
@@ -399,7 +399,7 @@ contains
              do quad = 1, q
                 c = self%delta_x * (xw_gauss(1,quad)+ real(i - 1,f64))
                 coefs_dofs(i-1+j) = coefs_dofs(i-1+j) + &
-                     self%delta_x * xw_gauss(2,quad) * func(self%map%get_x1( [c, 0._f64, 0._f64])) * bspl(j,quad) !* sign( 1._f64, self%map%jacobian( [c, 0._f64, 0._f64] ) )
+                     self%delta_x * xw_gauss(2,quad) * func(self%map%get_x1( [c, 0._f64, 0._f64])) * bspl(j,quad) * sign( 1._f64, self%map%jacobian( [c, 0._f64, 0._f64] ) )
              enddo
           enddo
        enddo
@@ -414,13 +414,12 @@ contains
                 c = self%delta_x * (xw_gauss(1,quad)+ real(i - 1,f64))
                 coefs_dofs(i-1+j) = coefs_dofs(i-1+j) + &
                      self%delta_x * xw_gauss(2,quad) * func(self%map%get_x1( [c, 0._f64, 0._f64])) *&
-                     sll_f_spline_pp_horner_1d( degree, self%spline1_pp%poly_coeffs_boundary_right(:,:,i-self%n_cells+degree-1), xw_gauss(1,quad), j) !* sign( 1._f64, self%map%jacobian( [c, 0._f64, 0._f64] ) )
+                     sll_f_spline_pp_horner_1d( degree, self%spline1_pp%poly_coeffs_boundary_right(:,:,i-self%n_cells+degree-1), xw_gauss(1,quad), j) * sign( 1._f64, self%map%jacobian( [c, 0._f64, 0._f64] ) )
              enddo
           enddo
        end do
 
     endif
-
 
   end subroutine sll_s_compute_rhs_trafo
 
@@ -467,8 +466,7 @@ contains
 
   end function L2norm_squared_1d_trafo
 
-
-
+  !> Compute inner product
   function inner_product_1d_trafo(self, coefs1_dofs, coefs2_dofs, degree, degree2) result (r)
     class(sll_t_maxwell_clamped_1d_trafo) :: self !< Maxwell_Clamped solver class
     sll_real64 :: coefs1_dofs(:) !< Coefficient for each DoF
@@ -515,7 +513,7 @@ contains
   end function inner_product_1d_trafo
 
 
-
+  !> Initialization
   subroutine init_1d_trafo( self, domain, n_cells, s_deg_0, boundary, map, mass_tolerance, poisson_tolerance, solver_tolerance )
     class(sll_t_maxwell_clamped_1d_trafo), intent(out) :: self !< Maxwell_Clamped solver class
     sll_real64, intent(in) :: domain(2)     !< xmin, xmax
@@ -616,7 +614,7 @@ contains
   end subroutine init_1d_trafo
 
 
-
+  !> Initialization from nml file
   subroutine init_from_file_1d_trafo( self, domain, n_cells, s_deg_0, boundary, map, nml_file )
     class(sll_t_maxwell_clamped_1d_trafo), intent(out) :: self !< Maxwell_Clamped solver class
     sll_real64, intent(in) :: domain(2)     !< xmin, xmax
@@ -677,7 +675,7 @@ contains
   end subroutine init_from_file_1d_trafo
 
 
-
+  !> Finalization
   subroutine free_1d_trafo(self)
     class(sll_t_maxwell_clamped_1d_trafo) :: self !< Maxwell_Clamped solver class
 
@@ -689,6 +687,9 @@ contains
     call self%linear_solver_schur_eb%free()
     call self%linear_op_schur_eb%free()
 
+    call sll_s_spline_pp_init_1d( self%spline0_pp )
+    call sll_s_spline_pp_init_1d( self%spline1_pp )
+
     deallocate(self%work1)
     deallocate(self%work0)
     deallocate(self%work01)
@@ -696,7 +697,7 @@ contains
   end subroutine free_1d_trafo
 
 
-
+  !> Multiply by dicrete gradient matrix
   subroutine multiply_g( self,  in, out)
     class(sll_t_maxwell_clamped_1d_trafo), intent(in) :: self !< Maxwell_Clamped solver class
     sll_real64, intent(in)  :: in(:) !< field_in 
@@ -707,7 +708,7 @@ contains
   end subroutine multiply_g
 
 
-
+  !> Multiply by transpose of dicrete gradient matrix
   subroutine multiply_gt( self,  in, out)
     class(sll_t_maxwell_clamped_1d_trafo), intent(in) :: self !< Maxwell_Clamped solver class
     sll_real64, intent(in)  :: in(:) !< field_in 
@@ -718,7 +719,7 @@ contains
   end subroutine multiply_gt
 
 
-
+  !> Multiply by the mass matrix 
   subroutine multiply_mass_1d_trafo( self,  in, out, degree)
     class(sll_t_maxwell_clamped_1d_trafo), intent(inout) :: self !< Maxwell_Clamped solver class
     sll_real64, intent(in)  :: in(:) !< Coefficient for each DoF
@@ -736,6 +737,8 @@ contains
 
   end subroutine multiply_mass_1d_trafo
 
+
+  !> Multiply by the inverse mass matrix 
   subroutine invert_mass_1d_trafo( self,  in, out, degree)
     class(sll_t_maxwell_clamped_1d_trafo), intent(inout) :: self !< Maxwell_Clamped solver class
     sll_real64, intent(in)  :: in(:) !< Coefficient for each DoF
@@ -756,6 +759,7 @@ contains
   end subroutine invert_mass_1d_trafo
 
 
+  !> Compute field energy
   subroutine compute_field_energy( self, efield_dofs1, efield_dofs2, bfield_dofs, energy)
     class(sll_t_maxwell_clamped_1d_trafo)  :: self !< Maxwell_Clamped solver class
     sll_real64, intent( in    )          :: efield_dofs1(:) !< Ex
@@ -773,9 +777,7 @@ contains
     field_energy(3) =self%l2norm_squared &
          ( bfield_dofs(1:self%n_dofs1), self%s_deg_1 )
 
-    boundary = bfield_dofs(self%n_dofs1)*efield_dofs2(self%n_dofs0)-bfield_dofs(1)*efield_dofs2(1)
-
-    energy = 0.5_f64*sum(field_energy) !+ boundary
+    energy = 0.5_f64*sum(field_energy) 
 
   end subroutine compute_field_energy
 

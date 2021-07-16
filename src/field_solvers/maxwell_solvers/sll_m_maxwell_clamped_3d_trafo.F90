@@ -71,6 +71,7 @@ module sll_m_maxwell_clamped_3d_trafo
   use sll_m_splines_pp, only: &
        sll_t_spline_pp_1d, &
        sll_s_spline_pp_init_1d, &
+       sll_s_spline_pp_free_1d, &
        sll_f_spline_pp_horner_1d
 
 
@@ -1306,6 +1307,9 @@ contains
     call self%poisson_matrix%free()
     call self%linear_solver_schur_eb%free()
     call self%linear_op_schur_eb%free()
+
+    call sll_s_spline_pp_init_1d( self%spline0_pp )
+    call sll_s_spline_pp_init_1d( self%spline1_pp )
 
     deallocate( self%work0 )
     deallocate( self%work01 )

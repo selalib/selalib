@@ -78,12 +78,13 @@ module sll_m_maxwell_clamped_3d_fem
        sll_s_multiply_gt_clamped, &
        sll_s_multiply_c_clamped, &
        sll_s_multiply_ct_clamped
-  
+
   use sll_m_splines_pp, only: &
        sll_t_spline_pp_1d, &
        sll_s_spline_pp_init_1d, &
+       sll_s_spline_pp_free_1d, &
        sll_f_spline_pp_horner_1d
-  
+
 
   implicit none
 
@@ -95,7 +96,7 @@ module sll_m_maxwell_clamped_3d_fem
   !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type, extends(sll_c_maxwell_3d_base) :: sll_t_maxwell_clamped_3d_fem
-     
+
      type(sll_t_spline_pp_1d), pointer :: spline0_pp !< spline for 0-form
      type(sll_t_spline_pp_1d), pointer :: spline1_pp !< spline for 1-from
      sll_real64, allocatable :: work0(:)  !< scratch data
@@ -127,7 +128,7 @@ module sll_m_maxwell_clamped_3d_fem
      type(sll_t_preconditioner_fft) :: preconditioner_fft !< preconditioner for mass matrices
      type(sll_t_preconditioner_singular) :: preconditioner1 !< preconditioner for mass matrices
      type(sll_t_preconditioner_singular) :: preconditioner2 !< preconditioner for mass matrices
-  
+
 
      type(sll_t_linear_operator_poisson_clamped_3d) :: poisson_matrix !< Poisson matrix 
      type(sll_t_linear_solver_cg) :: poisson_solver !< CG solver to invert Poisson matrix
@@ -180,7 +181,7 @@ module sll_m_maxwell_clamped_3d_fem
           multiply_mass => multiply_mass_3d_fem !< Product with the mass matrix
      procedure :: &
           multiply_mass_inverse => multiply_mass_inverse_3d_fem !< Invert mass matrix
-       procedure :: &
+     procedure :: &
           compute_field_energy !< Compute field energy
 
   end type sll_t_maxwell_clamped_3d_fem
@@ -220,7 +221,7 @@ contains
 
   end subroutine sll_s_compute_b_from_e_3d_fem
 
-  
+
   !> Solve curl part of Maxwell's equations
   subroutine sll_s_compute_curl_part_3d_fem( self, delta_t, efield, bfield, betar )
     class(sll_t_maxwell_clamped_3d_fem) :: self !< Maxwell_Clamped solver class
@@ -255,7 +256,7 @@ contains
     self%work1 = efield
 
     ! Invert Schur complement matrix
-    self%linear_op_schur_eb%sign = delta_t**2*0.25_f64
+    self%linear_op_schur_eb%sign = delta_t**2*0.25_f64*factor
     call self%linear_solver_schur_eb%set_guess( efield )
     call self%linear_solver_schur_eb%solve( self%work12, efield)
 
@@ -749,7 +750,7 @@ contains
     sll_int32 :: j,k, deg(3)
     sll_real64 :: mass_line_b0((s_deg_0(1)+1)*s_deg_0(1)), mass_line_b1(s_deg_0(1)*(s_deg_0(1)-1))
     sll_real64, allocatable ::  mass_line_0(:), mass_line_1(:)
-  
+
     if( present( mass_tolerance) ) then
        self%mass_solver_tolerance = mass_tolerance
     else
@@ -815,7 +816,7 @@ contains
     call sll_s_spline_fem_mass_line_boundary ( self%s_deg_0(1), self%spline0_pp, mass_line_b0 )
     call sll_s_spline_fem_mass_line ( self%s_deg_1(1), mass_line_1 )
     call sll_s_spline_fem_mass_line_boundary ( self%s_deg_1(1), self%spline1_pp, mass_line_b1 )
-    
+
 
     call sll_s_spline_fem_mass1d_clamped( n_cells(1), self%s_deg_0(1), mass_line_0, mass_line_b0, self%mass1d(1,1) )
     call sll_s_spline_fem_mass1d_clamped( n_cells(1), self%s_deg_1(1), mass_line_1, mass_line_b1, self%mass1d(2,1) )
@@ -830,7 +831,7 @@ contains
     do j=2, 3
        allocate( mass_line_0(s_deg_0(j)+1) ) 
        allocate( mass_line_1(s_deg_0(j)) )
-  
+
        call sll_s_spline_fem_mass_line ( self%s_deg_0(j), mass_line_0 )
        call sll_s_spline_fem_mass_line ( self%s_deg_1(j), mass_line_1 )
 
@@ -846,7 +847,7 @@ contains
 
        deallocate( mass_line_0 )
        deallocate( mass_line_1 )
-      end do
+    end do
 
     do j=1,3
        do k=1,2
@@ -1079,13 +1080,16 @@ contains
     call self%linear_solver_schur_eb%free()
     call self%linear_op_schur_eb%free()
 
+    call sll_s_spline_pp_init_1d( self%spline0_pp )
+    call sll_s_spline_pp_init_1d( self%spline1_pp )
+
     deallocate(self%work0)
     deallocate(self%work01)
     deallocate(self%work1)
     deallocate(self%work12)
     deallocate(self%work2)
     deallocate(self%work22)
-    
+
   end subroutine free_3d_fem
 
 
@@ -1114,7 +1118,7 @@ contains
   !> Multiply by discrete curl matrix
   subroutine multiply_c(self, field_in, field_out)
     class(sll_t_maxwell_clamped_3d_fem)  :: self !< Maxwell_Clamped solver class
-     sll_real64, intent( in    )  :: field_in(:) !< field_in 
+    sll_real64, intent( in    )  :: field_in(:) !< field_in 
     sll_real64, intent(   out )  :: field_out(:) !< C*field_in 
 
     call sll_s_multiply_c_clamped(self%n_dofs, self%delta_x, self%s_deg_0, field_in, field_out)
@@ -1284,7 +1288,7 @@ contains
     end select
   end subroutine multiply_mass_inverse_3d_fem
 
-  
+
   !> Multiply by the mass matrix 
   subroutine multiply_mass_2dkron(  self, deg, coefs_in, coefs_out )
     class(sll_t_maxwell_clamped_3d_fem) :: self !< Maxwell_Clamped solver class
@@ -1368,6 +1372,7 @@ contains
   end subroutine multiply_mass_2dkron
 
 
+  !> Compute field energy
   subroutine compute_field_energy( self, efield_dofs, bfield_dofs, energy)
     class(sll_t_maxwell_clamped_3d_fem)  :: self !< Maxwell_Clamped solver class
     sll_real64, intent( in    )          :: efield_dofs(:) !< E
@@ -1391,8 +1396,8 @@ contains
          ( bfield_dofs(self%n_total0+self%n_total1+1:self%n_total0+self%n_total1*2), 2, 3 )
 
     energy = 0.5_f64*sum(field_energy)
-    
+
   end subroutine compute_field_energy
 
-  
+
 end module sll_m_maxwell_clamped_3d_fem

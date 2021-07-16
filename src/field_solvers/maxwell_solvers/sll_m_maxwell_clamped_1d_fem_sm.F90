@@ -50,7 +50,11 @@ module sll_m_maxwell_clamped_1d_fem_sm
        sll_s_multiply_g_clamped_1d, &
        sll_s_multiply_gt_clamped_1d
 
-  use sll_m_splines_pp
+  use sll_m_splines_pp, only: &
+       sll_t_spline_pp_1d, &
+       sll_s_spline_pp_init_1d, &
+       sll_s_spline_pp_free_1d, &
+       sll_f_spline_pp_horner_1d
 
   implicit none
 
@@ -191,7 +195,7 @@ contains
     self%work0 = efield
 
     ! Invert Schur complement matrix
-    self%linear_op_schur_eb%sign = delta_t**2*0.25_f64
+    self%linear_op_schur_eb%sign = delta_t**2*0.25_f64*factor
     call self%linear_solver_schur_eb%set_guess( efield )
     call self%linear_solver_schur_eb%solve( self%work01, efield )
 
@@ -680,6 +684,9 @@ contains
     call self%linear_solver_schur_eb%free()
     call self%linear_op_schur_eb%free()
 
+    call sll_s_spline_pp_init_1d( self%spline0_pp )
+    call sll_s_spline_pp_init_1d( self%spline1_pp )
+    
   end subroutine free_1d_fem_sm
 
 
@@ -773,4 +780,5 @@ contains
 
   end subroutine compute_field_energy
 
+  
 end module sll_m_maxwell_clamped_1d_fem_sm

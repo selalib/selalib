@@ -188,7 +188,7 @@ contains
     self%work2 = efield
 
     ! Invert Schur complement matrix
-    self%linear_op_schur_eb%sign = delta_t**2*0.25_f64
+    self%linear_op_schur_eb%sign = delta_t**2*0.25_f64*factor
     call self%linear_solver_schur_eb%set_guess( efield )
     call self%linear_solver_schur_eb%solve( self%work1, efield )
 
@@ -199,7 +199,7 @@ contains
   end subroutine sll_s_compute_curl_part_1d_trafo
 
 
-  !> compute rho from e using weak Poisson's equation ( rho = G^T M_1 G \phi, e = -G \phi ) 
+  !> compute e from rho using weak Poisson's equation ( rho = G^T M_1 G \phi, e = -G \phi ) 
   subroutine sll_s_compute_e_from_rho_1d_trafo(self, field_in, field_out )       
     class(sll_t_maxwell_1d_trafo) :: self         !< Maxwell solver class
     sll_real64, intent( in    )   :: field_in(:)  !< rho
