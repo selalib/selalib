@@ -526,8 +526,7 @@ contains
     sll_real64, intent(in), optional :: solver_tolerance !< tolerance for Schur complement solver
     ! local variables
     sll_int32 :: ierr
-    sll_real64, allocatable :: nullspace(:,:)
-
+ 
     if (present( mass_tolerance) ) then
        self%mass_solver_tolerance = mass_tolerance
     else
@@ -687,8 +686,8 @@ contains
     call self%linear_solver_schur_eb%free()
     call self%linear_op_schur_eb%free()
 
-    call sll_s_spline_pp_init_1d( self%spline0_pp )
-    call sll_s_spline_pp_init_1d( self%spline1_pp )
+    call sll_s_spline_pp_free_1d( self%spline0_pp )
+    call sll_s_spline_pp_free_1d( self%spline1_pp )
 
     deallocate(self%work1)
     deallocate(self%work0)
@@ -767,7 +766,7 @@ contains
     sll_real64, intent( in    )          :: bfield_dofs(:) !< Bz
     sll_real64, intent(   out )          :: energy !< field energy
     !local variables
-    sll_real64 :: field_energy(3), boundary
+    sll_real64 :: field_energy(3)
 
 
     field_energy(1) = self%l2norm_squared &
