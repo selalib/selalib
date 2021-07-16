@@ -70,9 +70,6 @@ program test_maxwell_3d_trafo
   sll_real64                      :: params(6),jmatrix(3,3)
   sll_real64                      :: error(6)
   sll_real64, dimension(3,2)      :: domain
-  sll_real64, allocatable :: mass_line(:)
-  sll_int32  :: file_id
-  sll_real64 :: spline_val(4)
   sll_real64                      :: xvec(3)
   type(sll_t_time_mark) :: start, end
 
@@ -80,18 +77,9 @@ program test_maxwell_3d_trafo
   params(1)= sll_p_twopi
   params(2)= sll_p_twopi
   params(3)= sll_p_twopi
-!!$  params(4)= 0.1_f64
-!!$  params(5)= 0.1_f64
-
-    allocate(map)
-!!$  call map%init(params,&
-!!$       sll_f_scaling_x1,&
-!!$       sll_f_scaling_x2,&
-!!$       sll_f_scaling_x3,&
-!!$       n_cells=[2,2,2], deg=[1,1,1] )
-
-
-   call map%init(params,&
+  
+  allocate(map)
+  call map%init(params,&
        sll_f_scaling_x1,&
        sll_f_scaling_x2,&
        sll_f_scaling_x3,&
@@ -106,19 +94,19 @@ program test_maxwell_3d_trafo
        sll_f_scaling_jac33,&
        sll_f_scaling_jacobian, Lx=params(1:3))
 
-   print*,'Initialisation mapping finished'
+  print*,'Initialisation mapping finished'
 
-   ! Define computational domain in physical coordinates
+  ! Define computational domain in physical coordinates
   eta1_min = 0._f64
   eta1_max = 1._f64
-  nc_eta = [8, 8, 8 ]
+  nc_eta = [16, 16, 2 ]
   nc_total = product(nc_eta)
   delta_eta = 1._f64/real(nc_eta,f64)
   domain(1,:) = [eta1_min, params(1)]
   domain(2,:) = [eta1_min, params(2)]
   domain(3,:) = [eta1_min, params(3)]
   ! Set spline degree of 0-forms
-  deg = [3, 3, 3]
+  deg = [3, 3, 1]
   ! Time loop
   dt = 0.01_f64
   nsteps = 2
@@ -132,16 +120,6 @@ program test_maxwell_3d_trafo
   print*,'Initialisation finished'
   call sll_s_set_time_mark( end )
   write(*, "(A, F10.3)") "Maxwell init run time [s] = ", sll_f_time_elapsed_between( start, end)
-
-!!$  allocate(mass_line(maxwell_3d%mass0%n_nnz))
-!!$  open(newunit=file_id, file='refline.dat', status='old', action='read')
-!!$  read(unit=file_id,fmt=*) mass_line
-!!$  close(file_id)
-!!$  
-!!$   if( maxval(abs(maxwell_3d%mass0%arr_a(1,:)-mass_line)) > 1D-13 ) then
-!!$      print*, 'error'
-!!$      stop
-!!$   end if
    
   call sll_s_set_time_mark( start )
   allocate(x(1:nc_eta(1)+1,1:nc_eta(2)+1,1:nc_eta(3)+1) )
@@ -255,7 +233,7 @@ program test_maxwell_3d_trafo
            xvec = map%get_x([x(i,j,k), y(i,j,k), z(i,j,k)])
            efield_ref(ind) = sin_3k(xvec)
            efield_ref(ind+nc_total) = efield_ref(ind)
-           efield_ref(ind+nc_total*2) = efield_ref(ind)
+           efield_ref(ind+nc_total*2) = 0._f64!efield_ref(ind)
            ind = ind+1
         end do
      end do
@@ -414,9 +392,7 @@ program test_maxwell_3d_trafo
   deallocate( rho_ref )
   deallocate( current )
  
-  
-
-  if ( error(1) < 9.d-2 .AND. error(2) < 9.d-3 .AND. error(3) < 3.0d-2 .AND. error(4) < 9.d-3 .AND. error(5)<9.d-4 .AND. error(6)<9.d-6) then
+  if ( error(1) < 5.d-5 .AND. error(2) < 3.d-5 .AND. error(3) < 5.0d-2 .AND. error(4) < 5.d-2 .AND. error(5)<8.d-5 .AND. error(6)<1.d-8) then
      print*, 'PASSED.'
   else
      print*, 'FAILED.'
@@ -429,28 +405,28 @@ contains
     sll_real64             :: cos_k
     sll_real64, intent(in) :: x(3)
 
-    cos_k = cos((x(1)+x(2)+x(3))-w1*time) 
+    cos_k = cos((x(1)+x(2))-w1*time) 
   end function cos_k
 
   function sin_k(x)
     sll_real64             :: sin_k
     sll_real64, intent(in) :: x(3)
 
-    sin_k = sin((x(1)+x(2)+x(3))-w1*time) 
+    sin_k = sin((x(1)+x(2))-w1*time) 
   end function sin_k
 
    function sin_3k(x)
     sll_real64             :: sin_3k
     sll_real64, intent(in) :: x(3)
 
-    sin_3k = sin(x(1)+x(2)+x(3)-w1*time)/3._f64 
+    sin_3k = sin(x(1)+x(2)-w1*time)/2._f64 
   end function sin_3k
  
   function cos_3k(x)
     sll_real64             :: cos_3k
     sll_real64, intent(in) :: x(3)
 
-    cos_3k = cos(x(1)+x(2)+x(3)-w1*time)/3._f64
+    cos_3k = cos(x(1)+x(2)-w1*time)/2._f64
   end function cos_3k
 
   function constant(x)

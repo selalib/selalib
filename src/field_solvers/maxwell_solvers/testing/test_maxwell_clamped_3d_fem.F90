@@ -34,6 +34,11 @@ program test_maxwell_clamped_3d_fem
 
   use sll_m_constants, only: sll_p_pi, sll_p_twopi
 
+   use sll_m_timer, only: &
+       sll_s_set_time_mark, &
+       sll_f_time_elapsed_between, &
+       sll_t_time_mark
+
   implicit none
   !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -51,7 +56,6 @@ program test_maxwell_clamped_3d_fem
   sll_real64, allocatable :: rho_val(:), rho_val1(:)
 
   sll_int32                               :: i, j, k, istep, nsteps, ind
-  sll_real64                                :: w1, w2
   sll_real64                                :: time
   sll_real64                                :: delta_t
 
@@ -60,10 +64,8 @@ program test_maxwell_clamped_3d_fem
   sll_int32                               :: deg(3), boundary(3)
 
   sll_real64                              :: error(6), error1(3), energy(2)
-  
-  sll_real64 :: alpha = 1.0!0.01
-  sll_real64 :: kx = 1.0!0.8
-
+  sll_real64                              :: alpha, kx
+  type(sll_t_time_mark) :: start, end
   type(sll_t_spline_pp_3d) :: spline_pp_0
   type(sll_t_spline_pp_3d) :: spline_pp_11
   type(sll_t_spline_pp_3d) :: spline_pp_12
@@ -72,9 +74,14 @@ program test_maxwell_clamped_3d_fem
   type(sll_t_spline_pp_3d) :: spline_pp_22
   type(sll_t_spline_pp_3d) :: spline_pp_23
 
+  call sll_s_set_time_mark( start )
+
+  alpha = 0.01_f64
+  kx = 1._f64
+  
   ! Define computational domain
   eta1_min = .0_f64; eta1_max = sll_p_twopi/kx
-  nc_eta = [16,16,16]
+  nc_eta = [16,8,8]
   nc_total = product(nc_eta+1)
   Lx(1) = eta1_max-eta1_min
   Lx(2) = Lx(1); Lx(3) = Lx(2)
@@ -247,7 +254,7 @@ program test_maxwell_clamped_3d_fem
         end do
      end do
   end do
-  error1(1:3) = sqrt(error1(1:3)/nc_total)
+  error1(1:3) = sqrt(error1(1:3)/real(nc_total,f64))
   print*, 'L2 Error efield', error1(1:3)
   
   error1 = 0._f64
@@ -265,7 +272,7 @@ program test_maxwell_clamped_3d_fem
         end do
      end do
   end do
-  error1(1:3) = sqrt(error1(1:3)/nc_total)
+  error1(1:3) = sqrt(error1(1:3)/real(nc_total,f64))
   print*, 'L2 Error bfield', error1(1:3)
 
   error(3) = maxval(abs(efield_val-efield_ref))
@@ -328,13 +335,14 @@ program test_maxwell_clamped_3d_fem
   deallocate(efield_val)
   deallocate(bfield_val)
 
-
-  if ( error(1) < 7.0d-5 .AND. error(2) < 2.0d-5 .AND. error(3) < 3.d-5 .AND. error(4) < 4.d-4 .AND. error(5)<9.0d-4 .AND. error(6)<1.0d-14) then
+  
+  if ( error(1) < 5.0d-3 .AND. error(2) < 8.0d-5 .AND. error(3) < 6.d-4 .AND. error(4) < 7.d-3 .AND. error(5)<4.0d-3 .AND. error(6)<3.0d-14) then
      print*, 'PASSED.'
   else
      print*, 'FAILED.'
   end if
-
+  call sll_s_set_time_mark( end )
+  write(*, "(A, F10.3)") "Main part run time [s] = ", sll_f_time_elapsed_between( start, end)
 contains
   function rho_k(x)
     sll_real64             :: rho_k
