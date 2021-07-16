@@ -42,19 +42,6 @@ module sll_m_3d_coordinate_transformations
        sll_f_colbound_jac32,&
        sll_f_colbound_jac33,&
        sll_f_colbound_jacobian,&
-       sll_f_coltest_x1,&
-       sll_f_coltest_x2,&
-       sll_f_coltest_x3,&
-       sll_f_coltest_jac11,&
-       sll_f_coltest_jac12,&
-       sll_f_coltest_jac13,&
-       sll_f_coltest_jac21,&
-       sll_f_coltest_jac22,&
-       sll_f_coltest_jac23,&
-       sll_f_coltest_jac31,&
-       sll_f_coltest_jac32,&
-       sll_f_coltest_jac33,&
-       sll_f_coltest_jacobian,&
        sll_f_parallelogram_x1,&
        sll_f_parallelogram_x2,&
        sll_f_parallelogram_x3,&
@@ -463,7 +450,7 @@ contains
     sll_real64, dimension(:), intent(in) :: params
     !local variables
     sll_real64 :: L1, L2, L3
-    sll_real64 :: alpha1, alpha2, alpha3
+    sll_real64 :: alpha1
     
     SLL_ASSERT(size(params) >= 4)
     L1 =     params(1)
@@ -474,200 +461,6 @@ contains
   end function sll_f_parallelogram_jacobian
 
   
-
-
-    ! ***************************************************************************
-  !
-  ! <b> "Colella transformation with Boundary"; </b>
-  ! sinusoidal product (see P. Colella et al. JCP 230 (2011) formula 
-  ! (102) p 2968):
-  !
-  !  X1 = L1 * (\xi(1) + \alpha1 * cos(a * \xi(1)) * sin(b * \xi(2)) ) 
-  !  X2 = L2 * (\xi(2) + \alpha2 * cos(a * \xi(1)) * sin(b * \xi(2)) ) 
-  !  X3 = L3 * \xi(3)  
-  ! 
-  ! The parameters are:
-  !    - L1     = params(1)
-  !    - L2     = params(2)
-  !    - L3     = params(3)
-  !    - alpha1 = params(4)
-  !    - alpha2 = params(5)
-  !    - a = \pi
-  !    - b = 2*\pi
-  !
-  ! ***************************************************************************
-
-  
-  !> direct mapping
-  function sll_f_coltest_x1( xi, params )
-    sll_real64 :: sll_f_coltest_x1
-    sll_real64, intent(in) :: xi(3)
-    sll_real64, dimension(:), intent(in) :: params
-    !local variables
-    sll_real64 :: L1
-    sll_real64 :: alpha1
-
-    SLL_ASSERT(size(params) >= 5)
-    L1     = params(1)
-    alpha1 = params(4)
-    sll_f_coltest_x1 = L1*(xi(1)+alpha1* sin(b*xi(2)) ) !*cos(a*xi(1)) 
-  end function sll_f_coltest_x1
-
-  !> direct mapping
-  function sll_f_coltest_x2( xi, params )
-    sll_real64 :: sll_f_coltest_x2
-    sll_real64, intent(in) :: xi(3)
-    sll_real64, dimension(:), intent(in) :: params
-    !local variables
-    sll_real64 :: L2
-    sll_real64 :: alpha2
-
-    SLL_ASSERT(size(params) >= 5)
-    L2     = params(2)
-    alpha2 = params(5)
-    sll_f_coltest_x2 = L2*(xi(2))!+alpha2*sin(b*xi(2))) !*cos(a*xi(1)) 
-  end function sll_f_coltest_x2
-
-  !> direct mapping
-  function sll_f_coltest_x3( xi, params )
-    sll_real64 :: sll_f_coltest_x3
-    sll_real64, intent(in) :: xi(3)
-    sll_real64, dimension(:), intent(in) :: params
-    !local variables
-    sll_real64 :: L3
-    
-    SLL_ASSERT(size(params) >= 5)
-    L3     = params(3)
-    sll_f_coltest_x3 = L3*xi(3)
-  end function sll_f_coltest_x3
-
-  !> jacobian matrix
-  function sll_f_coltest_jac11 ( xi, params )
-    sll_real64  :: sll_f_coltest_jac11
-    sll_real64, intent(in)   :: xi(3)
-    sll_real64, dimension(:), intent(in) :: params
-    !local variables
-    sll_real64 :: L1
-    sll_real64 :: alpha1
-    
-    SLL_ASSERT(size(params) >= 5)
-    L1     = params(1)
-    alpha1 = params(4)
-    sll_f_coltest_jac11 = L1!*(1._f64-alpha1*a*sin(a*xi(1))*sin(b*xi(2)))
-  end function sll_f_coltest_jac11
-
-  !> jacobian matrix
-  function sll_f_coltest_jac12 ( xi, params )
-    sll_real64  :: sll_f_coltest_jac12
-    sll_real64, intent(in)   :: xi(3)
-    sll_real64, dimension(:), intent(in) :: params
-    !local variables
-    sll_real64 :: alpha1, L1
-    
-    SLL_ASSERT(size(params) >= 5)
-    L1     = params(1)
-    alpha1 = params(4)
-    sll_f_coltest_jac12 = L1*alpha1*cos(b*xi(2))*b !*cos(a*xi(1))
-  end function sll_f_coltest_jac12
-
-  !> jacobian matrix
-  function sll_f_coltest_jac13 ( xi, params )
-    sll_real64  :: sll_f_coltest_jac13
-    sll_real64, intent(in)   :: xi(3)
-    sll_real64, dimension(:), intent(in) :: params
-    
-    sll_f_coltest_jac13 =0._f64
-  end function sll_f_coltest_jac13
-
-  !> jacobian matrix
-  function sll_f_coltest_jac21 ( xi, params )
-    sll_real64  :: sll_f_coltest_jac21
-    sll_real64, intent(in)   :: xi(3)
-    sll_real64, dimension(:), intent(in) :: params
-    !local variables
-    sll_real64 :: alpha2, L2
-    
-    SLL_ASSERT(size(params) >= 5)
-    L2     = params(2)
-    alpha2 = params(5)
-    sll_f_coltest_jac21 = 0._f64!-L2*alpha2*a*sin(a*xi(1))*sin(b*xi(2))
-  end function sll_f_coltest_jac21
-
-  !> jacobian matrix
-  function sll_f_coltest_jac22 ( xi, params )
-    sll_real64  :: sll_f_coltest_jac22
-    sll_real64, intent(in)   :: xi(3)
-    sll_real64, dimension(:), intent(in) :: params
-    !local variables
-    sll_real64 :: L2
-    sll_real64 :: alpha2
-    
-    SLL_ASSERT(size(params) >= 5)
-    L2     = params(2)
-    alpha2 = params(5)
-    sll_f_coltest_jac22 =L2!*(1._f64+alpha2*cos(a*xi(1))*cos(b*xi(2))*b)
-  end function sll_f_coltest_jac22
-
-  !> jacobian matrix
-  function sll_f_coltest_jac23 ( xi, params )
-    sll_real64  :: sll_f_coltest_jac23
-    sll_real64, intent(in)   :: xi(3)
-    sll_real64, dimension(:), intent(in) :: params
-
-    sll_f_coltest_jac23 = 0._f64
-  end function sll_f_coltest_jac23
-
-  !> jacobian matrix
-  function sll_f_coltest_jac31 ( xi, params )
-    sll_real64  :: sll_f_coltest_jac31
-    sll_real64, intent(in)   :: xi(3)
-    sll_real64, dimension(:), intent(in) :: params
-    sll_f_coltest_jac31 = 0._f64
-  end function sll_f_coltest_jac31
-
-  !> jacobian matrix
-  function sll_f_coltest_jac32 ( xi, params )
-    sll_real64  :: sll_f_coltest_jac32
-    sll_real64, intent(in)   :: xi(3)
-    sll_real64, dimension(:), intent(in) :: params
-
-    sll_f_coltest_jac32 = 0._f64
-  end function sll_f_coltest_jac32
-
-  !> jacobian matrix
-  function sll_f_coltest_jac33 ( xi, params )
-    sll_real64  :: sll_f_coltest_jac33
-    sll_real64, intent(in)   :: xi(3)
-    sll_real64, dimension(:), intent(in) :: params
-    !local variables
-    sll_real64 :: L3
-    sll_real64 :: alpha3
-    
-    SLL_ASSERT(size(params) >= 5)
-    L3 = params(3)
-    sll_f_coltest_jac33 = L3
-  end function sll_f_coltest_jac33
-
-    !> jacobian 
-  function sll_f_coltest_jacobian ( xi, params )
-    sll_real64  :: sll_f_coltest_jacobian
-    sll_real64, intent(in)   :: xi(3)
-    sll_real64, dimension(:), intent(in) :: params
-    !local variables
-    sll_real64 :: L1, L2, L3
-    sll_real64 :: alpha1, alpha2, alpha3
-    
-    SLL_ASSERT(size(params) >= 5)
-    L1 =     params(1)
-    L2 =     params(2)
-    L3 =     params(3)
-    alpha1 = params(4)
-    alpha2 = params(5)
-    sll_f_coltest_jacobian = L3*L1*L2!*(1._f64+b*alpha2*cos(a*xi(1))*cos(b*xi(2))-a*alpha1*sin(a*xi(1))*sin(b*xi(2)))
-  end function sll_f_coltest_jacobian
-
-  
-
   ! ***************************************************************************
   !
   ! <b> "Colella transformation with Boundary"; </b>
@@ -1520,7 +1313,7 @@ contains
     sll_real64 :: res !Output
     !local variables
     sll_real64 :: L3
-    sll_real64 :: alpha1, alpha2,alpha3
+    sll_real64 :: alpha1, alpha2
         
     SLL_ASSERT(size(params) >= 9)
     L3     = params(3)
@@ -2876,7 +2669,6 @@ contains
     sll_real64, intent(in)   :: xi(3)
     sll_real64, dimension(:), intent(in) :: params
     sll_real64 :: kappa, delta
-    sll_real64 :: x_0
 
     SLL_ASSERT(size(params) >= 5)
     kappa = params(1)
@@ -2963,8 +2755,8 @@ contains
     sll_real64, intent(in)   :: xi(3)
     sll_real64, dimension(:), intent(in) :: params
     sll_real64 :: kappa, delta
-    sll_real64 :: x_0
     sll_real64 :: L
+
     SLL_ASSERT(size(params) >= 5)
     kappa = params(1)
     delta = params(2)
@@ -2991,7 +2783,6 @@ contains
     sll_real64, intent(in)   :: xi(3)
     sll_real64, dimension(:), intent(in) :: params
     sll_real64 :: kappa, delta
-    sll_real64 :: x_0
 
     SLL_ASSERT(size(params) >= 5)
     kappa = params(1)

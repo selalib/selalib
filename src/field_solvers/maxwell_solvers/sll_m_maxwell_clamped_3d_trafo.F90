@@ -1308,8 +1308,8 @@ contains
     call self%linear_solver_schur_eb%free()
     call self%linear_op_schur_eb%free()
 
-    call sll_s_spline_pp_init_1d( self%spline0_pp )
-    call sll_s_spline_pp_init_1d( self%spline1_pp )
+    call sll_s_spline_pp_free_1d( self%spline0_pp )
+    call sll_s_spline_pp_free_1d( self%spline1_pp )
 
     deallocate( self%work0 )
     deallocate( self%work01 )

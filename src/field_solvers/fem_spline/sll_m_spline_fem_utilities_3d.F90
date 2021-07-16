@@ -344,7 +344,7 @@ contains
     sll_real64, intent( in ) :: bspl_d1b(deg2(1)+1, q(1)), bspl_d2b(deg2(2)+1, q(2)), bspl_d3b(deg2(3)+1, q(3)) !< spline values
     ! local variables
     sll_int32  :: int1, int2, int3, j1, j2, j3, k1, k2, k3, l1, l2, l3
-    sll_real64 :: jacobian, metric, c(3)
+    sll_real64 :: c(3)
     sll_int32  :: limit(3), ind1(3), ind2(3), ind3(3), ind4(3)
 
     mass_line = 0._f64

@@ -22,9 +22,6 @@ module sll_m_mapping_3d
 
   use sll_m_3d_coordinate_transformations
 
-  use sll_m_matrix_csr, only: &
-       sll_t_matrix_csr
-
   use sll_m_linear_operator_kron, only : &
        sll_t_linear_operator_kron
 
@@ -34,6 +31,9 @@ module sll_m_mapping_3d
   use sll_m_linear_solver_mgmres, only : &
        sll_t_linear_solver_mgmres
 
+  use sll_m_matrix_csr, only: &
+       sll_t_matrix_csr
+  
   use sll_m_splines_pp, only :&
        sll_t_spline_pp_1d, &
        sll_t_spline_pp_3d, &
@@ -138,7 +138,8 @@ module sll_m_mapping_3d
 
 contains
 
-
+  
+  !> Compute x1
   function get_x1( self, xi ) result(x1)
     class(sll_t_mapping_3d), intent( inout )   :: self !< coordinate transformation
     sll_real64,              intent( in )   :: xi(3)  !< logical coordinates
@@ -157,7 +158,7 @@ contains
   end function get_x1
 
 
-
+  !> Compute x2
   function get_x2( self, xi ) result(x2)
     class(sll_t_mapping_3d), intent( inout )   :: self !< coordinate transformation
     sll_real64,              intent( in )   :: xi(3)  !< logical coordinates
@@ -176,7 +177,7 @@ contains
   end function get_x2
 
 
-
+  !> Compute x3
   function get_x3( self, xi ) result(x3)
     class(sll_t_mapping_3d), intent( inout )   :: self !< coordinate transformation
     sll_real64,              intent( in )   :: xi(3)  !< logical coordinates
@@ -195,7 +196,7 @@ contains
   end function get_x3
 
 
-
+  !> Compute all three components of X
   function get_x( self, xi ) result(x)
     class(sll_t_mapping_3d), intent( inout )   :: self !< coordinate transformation
     sll_real64,              intent( in )   :: xi(3)  !< logical coordinates
@@ -217,6 +218,8 @@ contains
 
   end function get_x
 
+
+  !> Compute the logical coordinate vector Xi
   function get_xi( self, x ) result(xi)
     class(sll_t_mapping_3d), intent( inout )   :: self !< coordinate transformation
     sll_real64,              intent( in )   :: x(3)  !< physical coordinates
@@ -228,6 +231,7 @@ contains
   end function get_xi
 
 
+  !> Compute the determinant of the Jacobi matrix
   function jacobian( self, xi )result(x)
     class(sll_t_mapping_3d), intent( inout )   :: self !< coordinate transformation
     sll_real64,              intent( in )   :: xi(3)  !< logical coordinates
@@ -254,7 +258,7 @@ contains
   end function jacobian
 
 
-
+  !> Compute the entries of the Jacobi matrix
   function jacobian_matrix( self, xi )result(y)
     class(sll_t_mapping_3d), intent( inout )   :: self !< coordinate transformation
     sll_real64,              intent( in )   :: xi(3)  !< logical coordinates
@@ -295,7 +299,7 @@ contains
   end function jacobian_matrix
 
 
-
+  !> Compute the entries of the transposed Jacobi matrix
   function jacobian_matrix_transposed( self, xi )result(y)
     class(sll_t_mapping_3d), intent( inout )   :: self !< coordinate transformation
     sll_real64,              intent( in )   :: xi(3)  !< logical coordinates
@@ -316,6 +320,8 @@ contains
 
   end function jacobian_matrix_transposed
 
+
+  !> Compute the entries of the inverse Jacobi matrix
   function jacobian_matrix_inverse( self, xi )result(y)
     class(sll_t_mapping_3d), intent( inout )   :: self !< coordinate transformation
     sll_real64,              intent( in )   :: xi(3)  !< logical coordinates
@@ -356,7 +362,7 @@ contains
   end function jacobian_matrix_inverse
 
 
-
+  !> Compute the entries of the transposed inverse Jacobi matrix
   function jacobian_matrix_inverse_transposed( self, xi )result(y)
     class(sll_t_mapping_3d), intent( inout )   :: self !< coordinate transformation
     sll_real64,              intent( in )   :: xi(3)  !< logical coordinates
@@ -378,8 +384,8 @@ contains
 
   end function jacobian_matrix_inverse_transposed
 
-
-
+  
+  !> Compute the entries of the metric
   function metric( self, xi )result(g)
     class(sll_t_mapping_3d), intent( inout )   :: self !< coordinate transformation
     sll_real64,              intent( in )   :: xi(3)  !< logical coordinates
@@ -399,7 +405,8 @@ contains
 
   end function metric
 
-
+  
+  !> Compute a single entriy of the metric
   function metric_single( self, xi, component1, component2 )result(g)
     class(sll_t_mapping_3d), intent( inout )   :: self !< coordinate transformation
     sll_real64,              intent( in )   :: xi(3)  !< logical coordinates
@@ -415,6 +422,8 @@ contains
 
   end function metric_single
 
+
+  !> Compute the entries of the inverse metric
   function metric_inverse( self, xi )result(g)
     class(sll_t_mapping_3d), intent( inout )   :: self !< coordinate transformation
     sll_real64,              intent( in )   :: xi(3)  !< logical coordinates
@@ -434,6 +443,8 @@ contains
 
   end function metric_inverse
 
+
+  !> Compute a single entriy of the inverse metric
   function metric_inverse_single( self, xi, component1, component2 )result(g)
     class(sll_t_mapping_3d), intent( inout )   :: self !< coordinate transformation
     sll_real64,              intent( in )   :: xi(3)  !< logical coordinates
@@ -448,6 +459,8 @@ contains
 
   end function metric_inverse_single
 
+
+  !> Compute a single entriy of the metric divided by the jacobian
   function metric_single_jacobian( self, xi, component1, component2 )result(g)
     class(sll_t_mapping_3d), intent( inout )   :: self !< coordinate transformation
     sll_real64,              intent( in )   :: xi(3)  !< logical coordinates
@@ -473,10 +486,10 @@ contains
             y(3,component1)*y(3,component2) )/ (y(3,3) * ( y(1,1) * y(2,2) - y(1,2) * y(2,1) ) )
     end if
 
-
-
   end function metric_single_jacobian
 
+
+  !> Compute a single entriy of the inverse metric multiplied by the jacobian
   function metric_inverse_single_jacobian( self, xi, component1, component2 )result(g)
     class(sll_t_mapping_3d), intent( inout )   :: self !< coordinate transformation
     sll_real64,              intent( in )   :: xi(3)  !< logical coordinates
@@ -486,29 +499,30 @@ contains
     sll_real64                 :: w(3,3), y(3,3) !< jacobian matrix
 
 
-    if( self%flag3d) then
+!!$    if( self%flag3d) then
        y = self%jacobian_matrix_inverse(xi)
        w(1,1) = self%jacobian(xi)
        g =  (y(component1,1)*y(component2,1)+&
             y(component1,2)*y(component2,2)+&
             y(component1,3)*y(component2,3)) *  w(1,1)
-    else
-       w = self%jacobian_matrix(xi)
-       y = 0._f64
-       y(1,1) = w(2,2) * w(3,3) 
-       y(1,2) = - w(1,2) * w(3,3)
-       y(2,1) = - w(2,1) * w(3,3)
-       y(2,2) = w(1,1) * w(3,3) 
-       y(3,3) = w(1,1) * w(2,2) - w(1,2) * w(2,1)
-
-       g =  (y(component1,1)*y(component2,1)+&
-            y(component1,2)*y(component2,2)+&
-            y(component1,3)*y(component2,3))/ (w(3,3) * ( w(1,1) * w(2,2) - w(1,2) * w(2,1) ) )
-    end if
+!!$    else
+!!$       w = self%jacobian_matrix(xi)
+!!$       y = 0._f64
+!!$       y(1,1) = w(2,2) * w(3,3) 
+!!$       y(1,2) = - w(1,2) * w(3,3)
+!!$       y(2,1) = - w(2,1) * w(3,3)
+!!$       y(2,2) = w(1,1) * w(3,3) 
+!!$       y(3,3) = w(1,1) * w(2,2) - w(1,2) * w(2,1)
+!!$
+!!$       g =  (y(component1,1)*y(component2,1)+&
+!!$            y(component1,2)*y(component2,2)+&
+!!$            y(component1,3)*y(component2,3))* (w(3,3) * ( w(1,1) * w(2,2) - w(1,2) * w(2,1) ) )
+!!$    end if
 
   end function metric_inverse_single_jacobian
 
 
+  !> Initialize the coordinate transformation
   subroutine init(  self, params, x1_func, x2_func, x3_func, jac11, jac12, jac13, jac21, jac22, jac23, jac31, jac32, jac33, jacob, xi1_func, xi2_func, xi3_func, flag2d, flag3d, n_cells, deg, Lx, volume  )
     class(sll_t_mapping_3d),  intent(   out ) :: self !< coordinate transformation
     sll_real64, dimension(:), intent( in    ) :: params !< transformation parameters
@@ -539,7 +553,6 @@ contains
     sll_real64, allocatable :: x1_func_dofs(:)
     sll_real64, allocatable :: x2_func_dofs(:)
     sll_real64, allocatable :: x3_func_dofs(:)
-    sll_real64, allocatable :: conp(:,:)
     type(sll_t_matrix_csr) :: matrix(3)
     type(sll_t_linear_solver_mgmres) :: matrix_solver(3)
     type(sll_t_linear_solver_kron) :: kron_solver
@@ -547,10 +560,7 @@ contains
     sll_real64, allocatable :: tk(:,:), xk(:,:)
     sll_int32 :: ntotal0, n_dofs0(3), ntotal1, n_dofs1(3)
     sll_int32 :: i, j, k
-    sll_real64, allocatable :: val(:)
-    sll_real64 :: tau
     sll_int32 :: deg1(3)
-    sll_real64, allocatable :: scratch0(:), scratch1(:), work0(:), work1(:)
 
     SLL_ALLOCATE(self%j_matrix(1:3,1:3), ierr)
     SLL_ALLOCATE(self%params(1:size(params)),ierr)
@@ -700,7 +710,7 @@ contains
 
 
        !rhs evaluation from transformation function
-       do  k = 1, n_dofs0(3)
+       do k = 1, n_dofs0(3)
           do j  = 1, n_dofs0(2)
              do i  = 1, n_dofs0(1)
                 rhs( i + (j-1)*n_dofs0(1) + (k-1)*n_dofs0(1)*n_dofs0(2), 1 ) = x1_func( [xk(i,1), xk(j,2), xk(k,3)], params )
@@ -723,6 +733,8 @@ contains
 
   end subroutine init
 
+
+  !> Initialize the coordinate transformation from nml file
   subroutine init_from_file(  self, filename   )
     class(sll_t_mapping_3d),  intent(   out ) :: self !< coordinate transformation
     character(len=*),         intent( in    ) :: filename
@@ -842,14 +854,6 @@ contains
             sll_f_parallelogram_jac21, sll_f_parallelogram_jac22, sll_f_parallelogram_jac23,&
             sll_f_parallelogram_jac31, sll_f_parallelogram_jac32, sll_f_parallelogram_jac33,&
             sll_f_parallelogram_jacobian, flag2d = .true., Lx=Lx, volume=vol)
-    case( "coltest" )
-       Lx = params(1:3)
-       vol = product(params(1:3))
-       call self%init(params, sll_f_coltest_x1, sll_f_coltest_x2, sll_f_coltest_x3, &
-            sll_f_coltest_jac11, sll_f_coltest_jac12, sll_f_coltest_jac13,&
-            sll_f_coltest_jac21, sll_f_coltest_jac22, sll_f_coltest_jac23,&
-            sll_f_coltest_jac31, sll_f_coltest_jac32, sll_f_coltest_jac33,&
-            sll_f_coltest_jacobian, flag2d = .true., Lx=Lx, volume=vol)
     case( "colbound" )
        Lx = params(1:3)
        vol = product(params(1:3))
@@ -915,6 +919,8 @@ contains
 
   end subroutine init_from_file
 
+
+  !> Finalize the coordinate transformation
   subroutine free (self )
     class(sll_t_mapping_3d), intent(inout) :: self
 
@@ -927,9 +933,11 @@ contains
 
   end subroutine free
 
+
+  !> Helper function for spline mapping
   subroutine calculate_interpolation_matrix_1d( n_cells, deg, xk, spline, matrix )
-    sll_int32,  intent( in ) :: n_cells !< number of cells (and grid points)
-    sll_int32,  intent( in ) :: deg     !< spline deg
+    sll_int32,  intent( in ) :: n_cells 
+    sll_int32,  intent( in ) :: deg   
     sll_real64, intent( in ) :: xk(:)
     type( sll_t_spline_pp_1d), intent( in ) :: spline
     type(sll_t_matrix_csr), intent( out ) :: matrix
@@ -1000,9 +1008,11 @@ contains
 
   end subroutine calculate_interpolation_matrix_1d
 
+
+  !> Helper function for spline mapping
   subroutine calculate_interpolation_matrix_1d_periodic( n_cells, deg, spline, matrix )
-    sll_int32,  intent( in ) :: n_cells !< number of cells (and grid points)
-    sll_int32,  intent( in ) :: deg     !< spline deg
+    sll_int32,  intent( in ) :: n_cells 
+    sll_int32,  intent( in ) :: deg    
     type( sll_t_spline_pp_1d), intent( in ) :: spline
     type(sll_t_matrix_csr), intent( out ) :: matrix
     !local variables
@@ -1073,6 +1083,8 @@ contains
 
   end subroutine calculate_interpolation_matrix_1d_periodic
 
+  
+  !> Helper function to compute xbox
   subroutine convert_x_to_xbox( self, position, xi, box )
     class(sll_t_mapping_3d), intent(inout)   :: self !< kernel smoother object
     sll_real64,                               intent( in )    :: position(3) !< Position of the particle

@@ -71,9 +71,6 @@ program test_maxwell_clamped_3d_trafo
   sll_real64, dimension(3,2)      :: domain
   type(sll_t_time_mark) :: start, end
 
-  sll_real64 :: alpha = 1.0!0.01
-  sll_real64 :: kx = 1.0!0.8
-
   type(sll_t_spline_pp_3d) :: spline_pp_0
   type(sll_t_spline_pp_3d) :: spline_pp_11
   type(sll_t_spline_pp_3d) :: spline_pp_12
@@ -299,7 +296,7 @@ program test_maxwell_clamped_3d_trafo
         end do
      end do
   end do
-  error1(1:3) = sqrt(error1(1:3)/nc_total)
+  error1(1:3) = sqrt(error1(1:3)/real(nc_total,f64))
   print*, 'L2 Error efield', error1(1:3)
   
   error1 = 0._f64
@@ -324,7 +321,7 @@ program test_maxwell_clamped_3d_trafo
         end do
      end do
   end do
-  error1(1:3) = sqrt(error1(1:3)/nc_total)
+  error1(1:3) = sqrt(error1(1:3)/real(nc_total,f64))
   print*, 'L2 Error bfield', error1(1:3)
 
   error(3) = maxval(abs(efield_val1-efield_ref))
