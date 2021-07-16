@@ -436,7 +436,6 @@ contains
     sll_real64, dimension(:), intent(in) :: params
     !local variables
     sll_real64 :: L3
-    sll_real64 :: alpha3
     
     SLL_ASSERT(size(params) >= 4)
     L3 = params(3)
