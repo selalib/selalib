@@ -242,8 +242,8 @@ module sll_m_sim_pic_vm_3d3v_cart
      sll_int32  :: degree_smoother(3) !< spline degrees
      sll_int32  :: n_gcells(3) !< numer of gridcells for each direction
      sll_int32  :: n_totalcells !< product of gridcells
-     sll_int32  :: n_totaldofs0 !< total number of Dofs for 0form
-     sll_int32  :: n_totaldofs1  !< total number of Dofs for 1form
+     sll_int32  :: n_totaldofs0 !< total number of Dofs for 0-form
+     sll_int32  :: n_totaldofs1  !< total number of Dofs for 1-form
      logical    :: boundary = .false. !< true for non periodic field boundary
      sll_int32  :: boundary_fields(3) = 100 !< field boundary conditions
      sll_int32  :: boundary_particles = 100 !< particle boundary conditions
@@ -655,12 +655,10 @@ contains
     !     sim%n_total_particles, -1.0_f64, 1.0_f64, sim%no_weights)
 
 
-
     if (sim%rank == 0 ) then
        open(newunit=file_id, file=trim(filename)//'_used.dat')
        close(file_id)
     end if
-
     if( sim%boundary ) then
        ! Initialize the field solver
        if (sim%ct) then
@@ -1059,6 +1057,28 @@ contains
           ! Diagnostics
           call sll_s_time_history_diagnostics_pic_vm_3d3v( &
                sim, sim%delta_t*real(j,f64), th_diag_id, rho, scratch)
+
+          if( sim%output_particles ) then
+             if( modulo(j, 100) == 0 ) then
+                call sll_s_int2string( sim%rank, crank )
+                call sll_s_int2string( j, step )
+                call sim%particle_group%group(1)%print(trim(sim%file_prefix)//step//'_particles_'//crank//'.dat')
+             end if
+          end if
+
+          if (sim%rank == 0 ) then     
+             if ( sim%output_fields ) then
+                if( modulo(j, 100) == 0 ) then
+                   call sll_s_int2string( j, step )
+                   open(newunit=file_id, file=trim(sim%file_prefix)//step//'_efield.dat')
+                   write(file_id, *) sim%efield_dofs
+                   close(file_id)
+                   open(newunit=file_id, file=trim(sim%file_prefix)//step//'_bfield.dat')
+                   write(file_id, *) sim%bfield_dofs
+                   close(file_id)
+                end if
+             end if
+          end if
        end do
     case(sll_p_splitting_fourth)
        do j=1+sim%restart_steps, sim%n_time_steps+sim%restart_steps
@@ -1215,7 +1235,6 @@ contains
 
     end function bfield_constant_k
 
-
     function zero(x)
       sll_real64             :: zero
       sll_real64, intent(in) :: x(3)
@@ -1233,6 +1252,7 @@ contains
     class(sll_t_sim_pic_vm_3d3v_cart), intent(inout) :: sim !< Singlespecies simulation
 
     SLL_ASSERT(storage_size(sim)>0)
+    
     call sim%propagator%free()
     deallocate(sim%propagator)
     call sim%particle_group%group(1)%free()
@@ -1253,6 +1273,35 @@ contains
     call sim%sampler%free()
 
   end subroutine delete_pic_vm_3d3v
+
+
+  !------------------------------------------------------------------------------!
+  !> As a control variate, we use the equilibrium (v part of the initial distribution)
+  function control_variate_equi( this, xi, vi, time) result(sll_f_control_variate)
+    class(sll_t_control_variate) :: this !> control variate
+    sll_real64, optional,  intent( in ) :: xi(:) !< particle position
+    sll_real64, optional,  intent( in ) :: vi(:) !< particle velocity
+    sll_real64, optional,  intent( in ) :: time  !< current time
+    sll_real64               :: sll_f_control_variate
+
+    sll_f_control_variate = &
+         this%control_variate_distribution_params%eval_v_density( vi, xi, 1._f64 ) 
+
+  end function control_variate_equi
+
+
+  !> As a control variate, we use the equilibrium (v part of the initial distribution)
+  function control_variate_xi( this, xi, vi, time) result(sll_f_control_variate)
+    class(sll_t_control_variate) :: this !> control variate
+    sll_real64, optional,  intent( in ) :: xi(:) !< particle position
+    sll_real64, optional,  intent( in ) :: vi(:) !< particle velocity
+    sll_real64, optional,  intent( in ) :: time  !< current time
+    sll_real64               :: sll_f_control_variate
+
+    sll_f_control_variate = &
+         this%control_variate_distribution_params%eval_v_density( vi, xi, m=1._f64  )
+
+  end function control_variate_xi
 
 
   !------------------------------------------------------------------------------!
@@ -1964,7 +2013,6 @@ contains
           end do
           error = error/real(sim%n_totaldofs0,f64)
           rho = rho - error
-          !print*, 'constant gauss error', error
           rho_gauss=0._f64
        end if
 
@@ -1974,35 +2022,6 @@ contains
     error = maxval(abs(rho - rho_gauss ))
 
   end subroutine check_gauss_law
-
-
-  !------------------------------------------------------------------------------!
-  !> As a control variate, we use the equilibrium (v part of the initial distribution)
-  function control_variate_equi( this, xi, vi, time) result(sll_f_control_variate)
-    class(sll_t_control_variate) :: this !> control variate
-    sll_real64, optional,  intent( in ) :: xi(:) !< particle position
-    sll_real64, optional,  intent( in ) :: vi(:) !< particle velocity
-    sll_real64, optional,  intent( in ) :: time  !< current time
-    sll_real64               :: sll_f_control_variate
-
-    sll_f_control_variate = &
-         this%control_variate_distribution_params%eval_v_density( vi, xi, 1._f64 ) 
-
-  end function control_variate_equi
-
-
-  !> As a control variate, we use the equilibrium (v part of the initial distribution)
-  function control_variate_xi( this, xi, vi, time) result(sll_f_control_variate)
-    class(sll_t_control_variate) :: this !> control variate
-    sll_real64, optional,  intent( in ) :: xi(:) !< particle position
-    sll_real64, optional,  intent( in ) :: vi(:) !< particle velocity
-    sll_real64, optional,  intent( in ) :: time  !< current time
-    sll_real64               :: sll_f_control_variate
-
-    sll_f_control_variate = &
-         this%control_variate_distribution_params%eval_v_density( vi, xi, m=1._f64  )
-
-  end function control_variate_xi
 
 
   !> Compute ExB

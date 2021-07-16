@@ -557,30 +557,6 @@ contains
     case ("hs")
        sim%make_ctest = .true.
        sim%ctest_ref_file = "reffile_pic_vm_3d3v_cart_multispecies_hs.dat"
-!!$    case("hs_trafo")
-!!$       sim%make_ctest = .true.
-!!$       sim%ctest_ref_file = "reffile_pic_vm_3d3v_cart_multispecies_hs_trafo.dat"
-!!$    case ("cef")
-!!$       sim%make_ctest = .true.
-!!$       sim%ctest_ref_file = "reffile_pic_vm_3d3v_cart_multispecies_cef.dat"
-!!$    case("cef_trafo")
-!!$       sim%make_ctest = .true.
-!!$       sim%ctest_ref_file = "reffile_pic_vm_3d3v_cart_multispecies_cef_trafo.dat"
-!!$    case("disgradE")
-!!$       sim%make_ctest = .true.
-!!$       sim%ctest_ref_file = "reffile_pic_vm_3d3v_cart_multispecies_disgradE.dat"
-!!$    case("disgradE_trunc")
-!!$       sim%make_ctest = .true.
-!!$       sim%ctest_ref_file = "reffile_pic_vm_3d3v_cart_multispecies_disgradE_trunc.dat"
-!!$    case("disgradEC")
-!!$       sim%make_ctest = .true.
-!!$       sim%ctest_ref_file = "reffile_pic_vm_3d3v_cart_multispecies_disgradEC.dat"
-!!$    case("disgradEC_trafo")
-!!$       sim%make_ctest = .true.
-!!$       sim%ctest_ref_file = "reffile_pic_vm_3d3v_cart_multispecies_disgradEC_trafo.dat"
-!!$    case("disgradE_trafo")
-!!$       sim%make_ctest = .true.
-!!$       sim%ctest_ref_file = "reffile_pic_vm_3d3v_cart_multispecies_disgradE_trafo.dat"
     end select
 
     ! Initialize the particles   
@@ -1006,8 +982,8 @@ contains
     ! Print particle array to file
     if ( sim%output_particles ) then
        call sll_s_int2string( sim%rank, crank )
-       call sim%particle_group%group(1)%print(trim(sim%file_prefix)//'_particles_start_1_'//crank//'.dat')
-       call sim%particle_group%group(2)%print(trim(sim%file_prefix)//'_particles_start_2_'//crank//'.dat')
+       call sim%particle_group%group(1)%print(trim(sim%file_prefix)//'_particles_start_'//crank//'_sp1.dat')
+       call sim%particle_group%group(2)%print(trim(sim%file_prefix)//'_particles_start_'//crank//'_sp2.dat')
     end if
     ! Set the initial fields
     SLL_ALLOCATE(rho_local(1:sim%n_totaldofs0), ierr)
@@ -1082,6 +1058,30 @@ contains
           ! Diagnostics
           call sll_s_time_history_diagnostics_pic_vm_3d3v( &
                sim, sim%delta_t*real(j,f64), th_diag_id, rho, scratch)
+          
+          if( sim%output_particles ) then
+             if( modulo(j, 100) == 0 ) then
+                call sll_s_int2string( sim%rank, crank )
+                call sll_s_int2string( j, step )
+                call sim%particle_group%group(1)%print(trim(sim%file_prefix)//step//'_particles_'//crank//'_sp1.dat')
+                call sim%particle_group%group(2)%print(trim(sim%file_prefix)//step//'_particles_'//crank//'_sp2.dat')
+             end if
+          end if
+
+          if (sim%rank == 0 ) then     
+             if ( sim%output_fields ) then
+                if( modulo(j, 100) == 0 ) then
+                   call sll_s_int2string( j, step )
+                   open(newunit=file_id, file=trim(sim%file_prefix)//step//'_efield.dat')
+                   write(file_id, *) sim%efield_dofs
+                   close(file_id)
+                   open(newunit=file_id, file=trim(sim%file_prefix)//step//'_bfield.dat')
+                   write(file_id, *) sim%bfield_dofs
+                   close(file_id)
+                end if
+             end if
+          end if
+          
        end do
     case(sll_p_splitting_fourth)
        do j=1+sim%restart_steps, sim%n_time_steps+sim%restart_steps
