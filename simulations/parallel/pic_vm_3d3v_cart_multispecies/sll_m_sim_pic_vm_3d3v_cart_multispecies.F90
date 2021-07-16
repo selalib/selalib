@@ -1,4 +1,4 @@
-! Simulation of 3d3v Vlasov-Maxwell with simple PIC method, FEM with splines
+! Simulation of 3d3v Vlasov-Maxwell with gempic method for two species, FEM with splines
 
 ! author: Katharina Kormann, Benedikt Perse, IPP
 

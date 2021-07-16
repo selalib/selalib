@@ -49,14 +49,14 @@ module sll_m_particle_sampling
   sll_int32, parameter :: sll_p_random_numbers = 0 !< draw random numbers
   sll_int32, parameter :: sll_p_sobol_numbers = 1 !< draw sobol numbers
 
-  sll_int32, parameter :: sll_p_standard = 0
-  sll_int32, parameter :: sll_p_symmetric_all = 1
-  sll_int32, parameter :: sll_p_symmetric_negative = 2
+  sll_int32, parameter :: sll_p_standard = 0 !< each particle is drawn separately
+  sll_int32, parameter :: sll_p_symmetric_all = 1 !<  2^(dim_x+dim_v) points constructed from each drawn particle, all possible combinations of reflections along each direction
+  sll_int32, parameter :: sll_p_symmetric_negative = 2 !< one additional point for each drawd point, the one reflected along all directions
   sll_int32, parameter :: sll_p_uniformx_negative = 3
 
   !> Data type for particle sampling
   type :: sll_t_particle_sampling
-     sll_int32               :: symmetric !< Various cases of symmetric loading.
+     sll_int32               :: symmetric !< Various cases of symmetric loading. 0: non-symmetric; symmetry is obtained by reflecting at the mean value of the Gaussian (for v) or the domain mid point (for x); 1: 2^(dim_x+dim_v) points with all possible combinations;  2: only one additional point per randomly drawn particle, the one reflected in each direction
      sll_int32               :: random_numbers !< How to draw (currently random or Sobol) defined by descriptors
      logical                 :: uniform = .false.!< Uniform loading.
      sll_int32,  allocatable :: random_seed(:) !< seed for random numbers
