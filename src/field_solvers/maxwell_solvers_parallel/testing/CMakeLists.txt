@@ -8,12 +8,12 @@ ADD_EXECUTABLE(test_maxwell_3d_trafo_parallel test_maxwell_3d_trafo_parallel.F90
 TARGET_LINK_LIBRARIES(test_maxwell_3d_trafo_parallel sll_maxwell_parallel sll_maxwell_solvers sll_mapping)
 
 add_mpi_test( maxwell_3d_trafo_parallel test_maxwell_3d_trafo_parallel ${PROCS} ${ARGS} )
-SET_TESTS_PROPERTIES(maxwell_3d_trafo_parallel PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 2000)
+SET_TESTS_PROPERTIES(maxwell_3d_trafo_parallel PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 200)
 
 
 ADD_EXECUTABLE(test_maxwell_clamped_3d_trafo_parallel test_maxwell_clamped_3d_trafo_parallel.F90)
 TARGET_LINK_LIBRARIES(test_maxwell_clamped_3d_trafo_parallel sll_maxwell_parallel sll_maxwell_solvers sll_mapping)
 
 add_mpi_test( maxwell_clamped_3d_trafo_parallel test_maxwell_clamped_3d_trafo_parallel ${PROCS} ${ARGS} )
-SET_TESTS_PROPERTIES(maxwell_clamped_3d_trafo_parallel PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 2000)
+SET_TESTS_PROPERTIES(maxwell_clamped_3d_trafo_parallel PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 200)
 

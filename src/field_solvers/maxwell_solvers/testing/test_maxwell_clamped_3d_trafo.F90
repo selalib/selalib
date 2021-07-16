@@ -78,8 +78,6 @@ program test_maxwell_clamped_3d_trafo
   type(sll_t_spline_pp_3d) :: spline_pp_21
   type(sll_t_spline_pp_3d) :: spline_pp_22
   type(sll_t_spline_pp_3d) :: spline_pp_23
-
-  
   
   call sll_s_set_time_mark( start )
   params=0._f64
@@ -97,7 +95,7 @@ program test_maxwell_clamped_3d_trafo
   domain(2,:) = [eta1_min, params(2)]
   domain(3,:) = [eta1_min, params(3)]
   ! Set spline degree of 0-forms
-  deg = [3,3,3]
+  deg = [2,3,2]
   nc_total0 = (nc_eta(1)+deg(1))*nc_eta(2)*nc_eta(3)
   nc_total1 = (nc_eta(1)+deg(1)-1)*nc_eta(2)*nc_eta(3)
   ! Time loop
@@ -114,35 +112,35 @@ program test_maxwell_clamped_3d_trafo
   end if
 
   allocate(map)
-!!$  call map%init(params,&
-!!$       sll_f_colbound_x1,&
-!!$       sll_f_colbound_x2,&
-!!$       sll_f_colbound_x3,&
-!!$       sll_f_colbound_jac11,&
-!!$       sll_f_colbound_jac12,&
-!!$       sll_f_colbound_jac13,&
-!!$       sll_f_colbound_jac21,&
-!!$       sll_f_colbound_jac22,&
-!!$       sll_f_colbound_jac23,&
-!!$       sll_f_colbound_jac31,&
-!!$       sll_f_colbound_jac32,&
-!!$       sll_f_colbound_jac33,&
-!!$       sll_f_colbound_jacobian, flag2d = .true.)
-!!$
-   call map%init(params,&
-       sll_f_colella_x1,&
-       sll_f_colella_x2,&
-       sll_f_colella_x3,&
-       sll_f_colella_jac11,&
-       sll_f_colella_jac12,&
-       sll_f_colella_jac13,&
-       sll_f_colella_jac21,&
-       sll_f_colella_jac22,&
-       sll_f_colella_jac23,&
-       sll_f_colella_jac31,&
-       sll_f_colella_jac32,&
-       sll_f_colella_jac33,&
-       sll_f_colella_jacobian, flag2d = .true., Lx=params(1:3))
+  call map%init(params,&
+       sll_f_colbound_x1,&
+       sll_f_colbound_x2,&
+       sll_f_colbound_x3,&
+       sll_f_colbound_jac11,&
+       sll_f_colbound_jac12,&
+       sll_f_colbound_jac13,&
+       sll_f_colbound_jac21,&
+       sll_f_colbound_jac22,&
+       sll_f_colbound_jac23,&
+       sll_f_colbound_jac31,&
+       sll_f_colbound_jac32,&
+       sll_f_colbound_jac33,&
+       sll_f_colbound_jacobian, flag2d = .true.)
+
+!!$   call map%init(params,&
+!!$       sll_f_colella_x1,&
+!!$       sll_f_colella_x2,&
+!!$       sll_f_colella_x3,&
+!!$       sll_f_colella_jac11,&
+!!$       sll_f_colella_jac12,&
+!!$       sll_f_colella_jac13,&
+!!$       sll_f_colella_jac21,&
+!!$       sll_f_colella_jac22,&
+!!$       sll_f_colella_jac23,&
+!!$       sll_f_colella_jac31,&
+!!$       sll_f_colella_jac32,&
+!!$       sll_f_colella_jac33,&
+!!$       sll_f_colella_jacobian, flag2d = .true., Lx=params(1:3))
 
   call sll_s_set_time_mark( end )
   write(*, "(A, F10.3)") "Mapping init run time [s] = ", sll_f_time_elapsed_between( start, end)
@@ -397,7 +395,8 @@ program test_maxwell_clamped_3d_trafo
   deallocate(efield_val)
   deallocate(bfield_val)
 
-  if ( error(1) < 2.0d-3 .AND. error(2) < 1.0d-3 .AND. error(3) < 3.5d-4 .AND. error(4) < 5.0d-3 .AND. error(5)<2.0d-3 .AND. error(6)<2.0d-5) then
+
+  if ( error(1) < 7.0d-2 .AND. error(2) < 9.0d-3 .AND. error(3) < 3.d-2 .AND. error(4) < 9.0d-2 .AND. error(5)<7.0d-2 .AND. error(6)<3.0d-4) then
      print*, 'PASSED.'
   else
      print*, 'FAILED.'

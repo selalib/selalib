@@ -79,7 +79,7 @@ ADD_EXECUTABLE(test_maxwell_3d_fem test_maxwell_3d_fem.F90)
 TARGET_LINK_LIBRARIES(test_maxwell_3d_fem sll_maxwell_solvers)
 
 ADD_TEST(NAME maxwell_3d_fem COMMAND test_maxwell_3d_fem)
-SET_TESTS_PROPERTIES(maxwell_3d_fem PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 1800)
+SET_TESTS_PROPERTIES(maxwell_3d_fem PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 120)
 
 
  ADD_EXECUTABLE(test_maxwell_1d_trafo test_maxwell_1d_trafo.F90)
@@ -92,7 +92,7 @@ SET_TESTS_PROPERTIES(maxwell_3d_fem PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" 
  TARGET_LINK_LIBRARIES(test_maxwell_3d_trafo sll_maxwell_solvers )
  
  ADD_TEST(NAME maxwell_3d_trafo COMMAND test_maxwell_3d_trafo)
- SET_TESTS_PROPERTIES(maxwell_3d_trafo PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 600) 
+ SET_TESTS_PROPERTIES(maxwell_3d_trafo PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 120) 
 
  ADD_EXECUTABLE(test_maxwell_clamped_1d_fem_sm test_maxwell_clamped_1d_fem_sm.F90)
  TARGET_LINK_LIBRARIES(test_maxwell_clamped_1d_fem_sm sll_maxwell_solvers)
@@ -104,7 +104,7 @@ SET_TESTS_PROPERTIES(maxwell_3d_fem PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" 
  TARGET_LINK_LIBRARIES(test_maxwell_clamped_3d_fem sll_maxwell_solvers)
  
  ADD_TEST(NAME maxwell_clamped_3d_fem COMMAND test_maxwell_clamped_3d_fem)
- SET_TESTS_PROPERTIES(maxwell_clamped_3d_fem PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 300)
+ SET_TESTS_PROPERTIES(maxwell_clamped_3d_fem PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 120)
 
 
  ADD_EXECUTABLE(test_maxwell_clamped_1d_trafo test_maxwell_clamped_1d_trafo.F90)
@@ -117,12 +117,4 @@ SET_TESTS_PROPERTIES(maxwell_3d_fem PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" 
  TARGET_LINK_LIBRARIES(test_maxwell_clamped_3d_trafo sll_maxwell_solvers )
 
  ADD_TEST(NAME maxwell_clamped_3d_trafo COMMAND test_maxwell_clamped_3d_trafo)
- SET_TESTS_PROPERTIES(maxwell_clamped_3d_trafo PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 400)
-
-# ADD_EXECUTABLE(test_maxwell_clamped_3d_singular test_maxwell_clamped_3d_singular.F90)
-# TARGET_LINK_LIBRARIES(test_maxwell_clamped_3d_singular sll_maxwell_solvers )
-
-# ADD_TEST(NAME maxwell_clamped_3d_singular COMMAND test_maxwell_clamped_3d_singular)
-# SET_TESTS_PROPERTIES(maxwell_clamped_3d_singular PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 2000)
-
-
+ SET_TESTS_PROPERTIES(maxwell_clamped_3d_trafo PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 120)
