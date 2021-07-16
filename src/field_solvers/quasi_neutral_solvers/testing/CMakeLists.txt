@@ -34,7 +34,7 @@ add_executable(${TEST_NAME} ${TEST_NAME}.F90)
 target_link_libraries(${TEST_NAME} sll_quasi_neutral_solvers)
 add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
 set_tests_properties(${TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED"
-                                             TIMEOUT 60)
+                                             TIMEOUT 120)
 
 # compile executable to produce grid for manufactured solution
 add_executable(${TEST_NAME}_grid ${TEST_NAME}_grid.F90)
