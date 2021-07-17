@@ -662,7 +662,7 @@ contains
     sll_int32, optional,                            intent(in) :: i_weight !< Index of weight to be used by propagator
     
     !local variables
-    sll_int32 :: ierr, j
+    sll_int32 :: ierr
 
     print*, 'Subcycling propagator with efield'
     
@@ -691,7 +691,7 @@ contains
     self%spline_degree = self%kernel_smoother_0%spline_degree
     self%x_min = x_min
     self%Lx = Lx
-    self%delta_x = self%Lx/self%kernel_smoother_1%n_dofs
+    self%delta_x = self%Lx/real(self%kernel_smoother_1%n_dofs, f64)
     
     self%cell_integrals_1 = [0.5_f64, 2.0_f64, 0.5_f64]
     self%cell_integrals_1 = self%cell_integrals_1 / 3.0_f64
@@ -890,6 +890,5 @@ contains
     end select
 
   end subroutine sll_s_new_time_propagator_pic_vm_1d2v_subcyc_ptr
-
 
 end module sll_m_time_propagator_pic_vm_1d2v_subcyc

@@ -83,7 +83,6 @@ contains
     sll_int32,                                      intent(in)    :: number_steps !< number of time steps
 
     sll_int32 :: i_step
-    sll_real64 :: transfer
 
     do i_step = 1, number_steps
        call self%helper%advect_eb(dt)
@@ -101,7 +100,6 @@ contains
     sll_int32,                                      intent(in)    :: number_steps !< number of time steps
 
     sll_int32 :: i_step
-    sll_real64 :: transfer
 
     do i_step = 1, number_steps
        call self%helper%advect_e_sub(dt)
@@ -169,4 +167,4 @@ contains
   end subroutine reinit_fields_disgradEC_sub
 
 
-end module sll_m_time_propagator_pic_vm_1d2v_disgradEC_sub
+end module

@@ -173,7 +173,7 @@ subroutine advect_e_pic_vm_1d2v_ecsim ( self, dt )
  class(sll_t_time_propagator_pic_vm_1d2v_ecsim), intent(inout) :: self !< time splitting object 
  sll_real64,                                     intent(in)    :: dt   !< time step
  ! local variables
- sll_int32 :: i_part,i, i_sp
+ sll_int32 :: i_part, i_sp
  sll_real64 :: vi(3),v_new(3), xi(3), wi !< particle velocity, position and charge times particle weight
  sll_real64 :: qm, beta  !< charge divided by mass, delta t/2 times qoverm 
  sll_real64 :: mu !< data for particle mass matrix
@@ -490,7 +490,7 @@ subroutine initialize_pic_vm_1d2v_ecsim(&
  self%x_min = x_min
  self%Lx = Lx
  self%domain=[x_min,x_min+Lx]
- self%delta_x = self%Lx/self%kernel_smoother_1%n_dofs
+ self%delta_x = self%Lx/real(self%kernel_smoother_1%n_dofs, f64)
  self%n_dofs=self%kernel_smoother_1%n_dofs
 
  self%cell_integrals_1 = [0.5_f64, 2.0_f64, 0.5_f64]
