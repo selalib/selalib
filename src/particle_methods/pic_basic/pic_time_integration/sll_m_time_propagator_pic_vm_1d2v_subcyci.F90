@@ -216,8 +216,8 @@ contains
     !local variables
   !  sll_int32 :: i_part
     sll_real64 :: x_new(3), v_new(3)
-    sll_int32  :: n_cells, i_sp, i_part, n_iter_inner
-    sll_real64 :: residual_field, residual_field_inner
+    sll_int32  :: n_cells, i_sp, i_part!, n_iter_inner
+    sll_real64 :: residual_field!, residual_field_inner
     sll_int32  :: n_iter_field
 
 
@@ -588,7 +588,7 @@ contains
     sll_real64 :: dtau
     sll_real64 :: gamma, residuum(2), gamma_e1, gamma_e2
     sll_real64 :: df11, df12, df21, df22, det
-    sll_real64 :: kinetic_energy
+  !  sll_real64 :: kinetic_energy
     
     dtau = dt/real(self%n_sub_iter,f64)
 
@@ -882,16 +882,11 @@ contains
     
     !local variables
     sll_int32 :: i_part
-    sll_real64 :: x_new(3), vi(3), wi(1), x_old(3), wp(3), x_future(3), v_new(3), v_nnew(3)
+    sll_real64 :: x_new(3), vi(3), wi(1), wp(3), x_future(3), v_new(3)
     sll_int32  :: n_cells, i_sp
     sll_real64 :: qoverm
-    sll_real64 :: efield(2),  efield_new(2), bfield_old(2), bfield_new(2)
-    sll_real64 :: residual
-    sll_int32  :: n_iter, n_iter_mean
-    sll_int32  :: iter
+    sll_int32  ::  n_iter_mean
     sll_real64 :: dtau
-    sll_real64 :: gamma, residuum(2), gamma_e1, gamma_e2
-    sll_real64 :: df11, df12, df21, df22, det
 
     
     dtau = dt/real(self%n_sub_iter,f64)

@@ -186,7 +186,7 @@ contains
     class(sll_t_time_propagator_pic_vm_3d3v_helper), intent(inout) :: self !< time propagator object 
     sll_real64,                                     intent(in)    :: dt   !< time step
     !local variables
-    sll_int32 :: i_part, j, i_sp
+    sll_int32 :: i_part, i_sp
     sll_real64 :: xi(3), xnew(3), vi(3), wall(3)
 
     do i_sp = 1, self%particle_group%n_species
@@ -538,7 +538,7 @@ contains
     ! local variables
     sll_int32 :: i_part, i_sp
     sll_real64 :: vi(3), xi(3), wi(1), vnew(3), xnew(3), vbar(3)
-    sll_real64 :: qoverm, factor, wall(3) 
+    sll_real64 :: qoverm, wall(3) 
     sll_real64 :: efield(3)
     sll_int32 :: niter
     sll_real64 :: residual(1), residual_local(1)
@@ -1379,4 +1379,4 @@ contains
   end subroutine delete_pic_vm_3d3v
 
 
-end module sll_m_time_propagator_pic_vm_3d3v_helper
+end module

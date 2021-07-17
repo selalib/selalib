@@ -357,7 +357,7 @@ contains
     class(sll_t_time_propagator_pic_vm_3d3v_hs), intent(inout) :: self !< time propagator object 
     sll_real64,                                     intent(in)    :: dt   !< time step
     !local variables
-    sll_int32 :: i_part, i_sp, j
+    sll_int32 :: i_part, i_sp
     sll_real64 :: xnew(3), vi(3), wi(1), xold(3), wall(3)
     sll_real64 :: qoverm
     sll_int32 :: i_weight
@@ -435,7 +435,7 @@ contains
     class(sll_t_time_propagator_pic_vm_3d3v_hs), intent(inout) :: self !< time propagator object 
     sll_real64,                                     intent(in)    :: dt   !< time step
     !local variables
-    sll_int32 :: i_part, i_sp, j
+    sll_int32 :: i_part, i_sp
     sll_real64 :: xnew(3), vi(3), wi(1), xold(3), wall(3)
     sll_real64 :: qoverm
     sll_int32 :: i_weight

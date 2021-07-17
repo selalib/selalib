@@ -329,7 +329,7 @@ contains
     sll_int32, optional,                            intent(in) :: i_weight !< Index of weight to be used by propagator
     logical, optional    :: electrostatic !< true for electrostatic simulation
     !local variables
-    sll_int32 :: ierr, j
+    sll_int32 :: ierr
 
     if( present(electrostatic) )then
        self%electrostatic = electrostatic
@@ -355,7 +355,7 @@ contains
     self%spline_degree = self%kernel_smoother_0%spline_degree
     self%x_min = x_min
     self%Lx = Lx
-    self%delta_x = self%Lx/self%kernel_smoother_1%n_dofs
+    self%delta_x = self%Lx/real(self%kernel_smoother_1%n_dofs, f64)
     
     self%cell_integrals_1 = [0.5_f64, 2.0_f64, 0.5_f64]
     self%cell_integrals_1 = self%cell_integrals_1 / 3.0_f64
