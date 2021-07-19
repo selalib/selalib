@@ -154,8 +154,6 @@ contains
     !local variables
     sll_int32 :: i_part, i_sp
     sll_real64 :: xnew(3), vi(3), wi(1), xi(3)
-    sll_int32  :: n_cells
-    sll_real64 :: qoverm
 
     self%j_dofs_local = 0.0_f64
     do i_sp = 1, self%particle_group%n_species
@@ -200,7 +198,7 @@ contains
     sll_real64,                                           intent( in    ) :: wi(1)
     sll_real64,                                           intent( in    ) :: dt
     !local variable
-    sll_real64 :: xmid(1), vh, xbar, dx
+    sll_real64 :: xmid(1), vh, xbar
 
     if(xnew(1) < self%x_min .or. xnew(1) > self%x_max )then
        if(xnew(1) < self%x_min  )then
@@ -240,7 +238,7 @@ contains
           call self%kernel_smoother_0%add_current( xmid, xnew, wi(1)*vh, self%j_dofs_local(:,2))
        end if
     else
-       if ( abs(vi(1))> 1E-16 ) then
+       if ( abs(vi(1))> 1d-16 ) then
           ! Scale vi by weight to combine both factors for accumulation of integral over j
           call self%kernel_smoother_1%add_current( xold, xnew, wi(1), self%j_dofs_local(1:self%n_total1,1))
           call self%kernel_smoother_0%add_current( xold, xnew, wi(1)*vi(2)/vi(1), self%j_dofs_local(:,2))
@@ -379,7 +377,7 @@ contains
     self%x_min = x_min
     self%x_max = x_min + Lx
     self%Lx = Lx
-    self%delta_x = self%Lx/self%maxwell_solver%n_cells
+    self%delta_x = self%Lx/real(self%maxwell_solver%n_cells, f64)
 
     self%n_cells = self%maxwell_solver%n_cells
     self%n_total0 = self%maxwell_solver%n_dofs0
