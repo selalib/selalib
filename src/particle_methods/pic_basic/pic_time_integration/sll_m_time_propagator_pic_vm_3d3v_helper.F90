@@ -1013,13 +1013,15 @@ contains
     logical, optional, intent(in) :: jmean !< logical for mean value of current
     logical, optional, intent(in) :: lindf !< true for linear delta f method
     !local variables
+    character(len=256) :: file_prefix
     sll_int32 :: input_file, rank
-    sll_int32 :: io_stat, io_stat1, file_id
+    sll_int32 :: io_stat, io_stat0, io_stat1, file_id
     sll_real64 :: maxwell_tolerance, iter_tolerance, betar_set(2), force_sign_set
     sll_int32 :: max_iter, boundary_particles_set
     logical :: jmean_set
     logical :: lindf_set
 
+    namelist /output/ file_prefix
     namelist /time_solver/ maxwell_tolerance
     namelist /time_iterate/ iter_tolerance, max_iter
 
@@ -1061,7 +1063,7 @@ contains
        if (io_stat /= 0) then
           if (rank == 0 ) then
              print*, 'sll_m_time_propagator_pic_vm_3d3v_helper: Input file does not exist. Set default tolerance.'
-             open(newunit=file_id, file=trim(filename)//'_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
+             open(newunit=file_id, file=trim(file_prefix)//'_parameters_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
              write(file_id, *) 'field solver tolerance:', 1d-12
              write(file_id, *) 'iter_tolerance:', 1d-10
              write(file_id, *) 'max_iter:', 20
@@ -1084,13 +1086,14 @@ contains
                control_variate = control_variate,&
                jmean=jmean_set, &
                lindf = lindf_set)
-       else       
+       else
+          read(input_file, output,IOStat=io_stat0)
           read(input_file, time_solver,IOStat=io_stat)
           read(input_file, time_iterate,IOStat=io_stat1)
           if (io_stat /= 0.and. io_stat1 /= 0) then
              if (rank == 0 ) then
                 print*, 'sll_m_time_propagator_pic_vm_3d3v_helper: Input parameter does not exist. Set default tolerance.'
-                open(newunit=file_id, file=trim(filename)//'_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
+                open(newunit=file_id, file=trim(file_prefix)//'_parameters_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
                 write(file_id, *) 'field solver tolerance:', 1d-12
                 write(file_id, *) 'iter_tolerance:', 1d-10
                 write(file_id, *) 'max_iter:', 20
@@ -1114,7 +1117,7 @@ contains
                   jmean=jmean_set)
           else if (io_stat == 0 .and. io_stat1 /= 0) then
              if (rank == 0 ) then
-                open(newunit=file_id, file=trim(filename)//'_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
+                open(newunit=file_id, file=trim(file_prefix)//'_parameters_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
                 write(file_id, *) 'field solver tolerance:', maxwell_tolerance
                 write(file_id, *) 'iter_tolerance:', 1d-10
                 write(file_id, *) 'max_iter:', 20
@@ -1140,7 +1143,7 @@ contains
                   lindf = lindf_set)
           else if (io_stat /= 0 .and. io_stat1 == 0) then
              if (rank == 0 ) then
-                open(newunit=file_id, file=trim(filename)//'_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
+                open(newunit=file_id, file=trim(file_prefix)//'_parameters_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
                 write(file_id, *) 'field solver tolerance:', 1d-12
                 write(file_id, *) 'iter_tolerance:', iter_tolerance
                 write(file_id, *) 'max_iter:', max_iter
@@ -1166,7 +1169,7 @@ contains
                   lindf = lindf_set)
           else
              if (rank == 0 ) then
-                open(newunit=file_id, file=trim(filename)//'_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
+                open(newunit=file_id, file=trim(file_prefix)//'_parameters_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
                 write(file_id, *) 'field solver tolerance:', maxwell_tolerance
                 write(file_id, *) 'iter_tolerance:', iter_tolerance
                 write(file_id, *) 'max_iter:', max_iter
@@ -1201,7 +1204,7 @@ contains
        if (io_stat /= 0) then
           if (rank == 0 ) then
              print*, 'sll_m_time_propagator_pic_vm_3d3v_helper: Input file does not exist. Set default tolerance.'
-             open(newunit=file_id, file=trim(filename)//'_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
+             open(newunit=file_id, file=trim(file_prefix)//'_parameters_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
              write(file_id, *) 'field solver tolerance:', 1d-12
              write(file_id, *) 'iter_tolerance:', 1d-10
              write(file_id, *) 'max_iter:', 20
@@ -1221,13 +1224,14 @@ contains
                force_sign=force_sign_set,&
                rhob = rhob, &
                jmean=jmean_set)
-       else       
+       else
+          read(input_file, output,IOStat=io_stat0)
           read(input_file, time_solver,IOStat=io_stat)
           read(input_file, time_iterate,IOStat=io_stat1)
           if (io_stat /= 0.and. io_stat1 /= 0) then
              if (rank == 0 ) then
                 print*, 'sll_m_time_propagator_pic_vm_3d3v_helper: Input parameter does not exist. Set default tolerance.'
-                open(newunit=file_id, file=trim(filename)//'_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
+                open(newunit=file_id, file=trim(file_prefix)//'_parameters_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
                 write(file_id, *) 'field solver tolerance:', 1d-12
                 write(file_id, *) 'iter_tolerance:', 1d-10
                 write(file_id, *) 'max_iter:', 20
@@ -1249,7 +1253,7 @@ contains
                   jmean=jmean_set)
           else if (io_stat == 0 .and. io_stat1 /= 0) then
              if (rank == 0 ) then
-                open(newunit=file_id, file=trim(filename)//'_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
+                open(newunit=file_id, file=trim(file_prefix)//'_parameters_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
                 write(file_id, *) 'field solver tolerance:', maxwell_tolerance
                 write(file_id, *) 'iter_tolerance:', 1d-10
                 write(file_id, *) 'max_iter:', 20
@@ -1271,7 +1275,7 @@ contains
                   rhob = rhob)
           else if (io_stat /= 0 .and. io_stat1 == 0) then
              if (rank == 0 ) then
-                open(newunit=file_id, file=trim(filename)//'_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
+                open(newunit=file_id, file=trim(file_prefix)//'_parameters_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
                 write(file_id, *) 'field solver tolerance:', 1d-12
                 write(file_id, *) 'iter_tolerance:', iter_tolerance
                 write(file_id, *) 'max_iter:', max_iter
@@ -1294,7 +1298,7 @@ contains
                   jmean=jmean_set)
           else
              if (rank == 0 ) then
-                open(newunit=file_id, file=trim(filename)//'_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
+                open(newunit=file_id, file=trim(file_prefix)//'_parameters_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
                 write(file_id, *) 'solver tolerance:', maxwell_tolerance
                 write(file_id, *) 'iter_tolerance:', iter_tolerance
                 write(file_id, *) 'max_iter:', max_iter

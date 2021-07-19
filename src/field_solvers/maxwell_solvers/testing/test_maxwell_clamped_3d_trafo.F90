@@ -127,21 +127,6 @@ program test_maxwell_clamped_3d_trafo
        sll_f_colbound_jac33,&
        sll_f_colbound_jacobian, flag2d = .true.)
 
-!!$   call map%init(params,&
-!!$       sll_f_colella_x1,&
-!!$       sll_f_colella_x2,&
-!!$       sll_f_colella_x3,&
-!!$       sll_f_colella_jac11,&
-!!$       sll_f_colella_jac12,&
-!!$       sll_f_colella_jac13,&
-!!$       sll_f_colella_jac21,&
-!!$       sll_f_colella_jac22,&
-!!$       sll_f_colella_jac23,&
-!!$       sll_f_colella_jac31,&
-!!$       sll_f_colella_jac32,&
-!!$       sll_f_colella_jac33,&
-!!$       sll_f_colella_jacobian, flag2d = .true., Lx=params(1:3))
-
   call sll_s_set_time_mark( end )
   write(*, "(A, F10.3)") "Mapping init run time [s] = ", sll_f_time_elapsed_between( start, end)
   call sll_s_set_time_mark( start )

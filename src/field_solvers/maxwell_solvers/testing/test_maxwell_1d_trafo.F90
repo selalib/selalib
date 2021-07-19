@@ -189,7 +189,7 @@ program test_maxwell_1d_trafo
   ! Test Ampere
   !-------------
   ! Set time step
-  dt = .5 * delta_eta1
+  dt = .5_f64 * delta_eta1
 
   call maxwell_1d%compute_rhs_from_function(cos_k, deg-1, rho)
   ex = 0.0_f64
@@ -224,7 +224,7 @@ program test_maxwell_1d_trafo
   !--------------------------
   ! Set time stepping parameters
   time  = 0.0_f64
-  dt = .5 * delta_eta1
+  dt = .5_f64 * delta_eta1
   nstep = 10
 
   ! Compute initial fields 

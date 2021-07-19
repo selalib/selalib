@@ -236,10 +236,6 @@ contains
     sll_real64, optional,                          intent( in ) :: betar(2) !< reciprocal plasma beta
     logical, optional    :: electrostatic !< true for electrostatic simulation
     !local variables
-    sll_int32 :: rank, file_id, io_stat
-    sll_int32 :: input_file
-    sll_real64 :: iter_tolerance
-    sll_int32 :: max_iter
     sll_real64 :: betar_set(2)
 
     if( present(electrostatic) )then
@@ -250,13 +246,6 @@ contains
        betar_set = betar
     else
        betar_set = 1d0
-    end if
-
-    rank = sll_f_get_collective_rank(sll_v_world_collective)
-    if (rank == 0 ) then
-       open(newunit=file_id, file=trim(filename)//'_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
-       write(file_id, *) 'electrostatic:', self%electrostatic
-       close(file_id) 
     end if
 
     call self%helper%init_from_file(  maxwell_solver, &

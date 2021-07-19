@@ -328,7 +328,6 @@ contains
     logical, optional, intent(in) :: jmean !< logical for mean value of current
     logical, optional, intent(in) :: lindf !< true for linear delta f method
     !local variables
-    sll_int32 :: rank, file_id, io_stat
     sll_real64 :: betar_set(2), force_sign_set
     sll_int32 :: boundary_particles_set
     logical :: jmean_set
@@ -366,13 +365,6 @@ contains
        lindf_set = lindf
     else
        lindf_set = .false.
-    end if
-
-    rank = sll_f_get_collective_rank(sll_v_world_collective)
-    if (rank == 0 ) then
-       open(newunit=file_id, file=trim(filename)//'_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
-       write(file_id, *) 'electrostatic:', self%electrostatic
-       close(file_id) 
     end if
 
     if( present( control_variate) ) then

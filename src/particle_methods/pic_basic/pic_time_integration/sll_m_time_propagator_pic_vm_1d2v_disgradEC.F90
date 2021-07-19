@@ -61,7 +61,7 @@ contains
     class(sll_t_time_propagator_pic_vm_1d2v_disgradEC), intent(inout) :: self !< time splitting object 
     sll_real64,                                     intent(in)    :: dt   !< time step
     sll_int32,                                      intent(in)    :: number_steps !< number of time steps
-
+    !local variable
     sll_int32 :: i_step
 
     do i_step = 1, number_steps
@@ -80,9 +80,8 @@ contains
     class(sll_t_time_propagator_pic_vm_1d2v_disgradEC), intent(inout) :: self !< time splitting object 
     sll_real64,                                     intent(in)    :: dt   !< time step
     sll_int32,                                      intent(in)    :: number_steps !< number of time steps
-
+    !local variable
     sll_int32 :: i_step
-    sll_real64 :: transfer
     
     do i_step = 1, number_steps
        call self%helper%advect_eb(dt)
@@ -98,9 +97,8 @@ contains
     class(sll_t_time_propagator_pic_vm_1d2v_disgradEC), intent(inout) :: self !< time splitting object 
     sll_real64,                                     intent(in)    :: dt   !< time step
     sll_int32,                                      intent(in)    :: number_steps !< number of time steps
-
+    !local variable
     sll_int32 :: i_step
-    sll_real64 :: transfer
     
     do i_step = 1, number_steps
        call self%helper%advect_e_start_avf(dt)

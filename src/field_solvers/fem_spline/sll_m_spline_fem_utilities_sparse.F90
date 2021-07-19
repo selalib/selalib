@@ -37,7 +37,7 @@ module sll_m_spline_fem_utilities_sparse
        !sll_s_spline_fem_assem_rtr, &
        !sll_s_spline_fem_assem_mass, &
        sll_s_spline_fem_sparsity_mass, &
-       sll_s_spline_fem_sparsity_mass_clamped, &
+       !sll_s_spline_fem_sparsity_mass_clamped, &
        sll_s_spline_fem_mixedmass1d, &
        sll_s_spline_fem_mixedmass1d_full!, &
        !sll_s_spline_fem_assemble_eb_matrix
