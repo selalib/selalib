@@ -71,15 +71,13 @@ program test_maxwell_clamped_1d_fem_sm
   sll_real64                              :: err_inner
   
   sll_real64                              :: dt
-  !sll_real64                              :: cfl = 0.5_f64
   sll_real64                              :: Lx
   sll_real64, dimension(2)                :: domain
   sll_int32                               :: deg, boundary
   sll_int32,  parameter                   :: mode = 1
-  sll_real64                              :: l2norm, energy(2)
-  sll_real64                              :: boundary_energy
-  sll_real64 :: alpha = 0.01
-  sll_real64 :: k = 0.8
+  sll_real64                              :: l2norm
+  sll_real64 :: alpha = 0.01_f64
+  sll_real64 :: k = 0.8_f64
 
   ! Define computational domain
   eta1_min = .0_f64; eta1_max = sll_p_twopi/k
@@ -188,7 +186,7 @@ program test_maxwell_clamped_1d_fem_sm
   ! Test Ampere
   !-------------
   ! Set time step
-  dt = .5 * delta_eta1
+  dt = .5_f64 * delta_eta1
   ! Set exact solution
   do i = 1, nc_eta1+1
      ex_exact(i) = -sin_k(x(i))*dt
@@ -223,7 +221,7 @@ program test_maxwell_clamped_1d_fem_sm
   !--------------------------
   ! Set time stepping parameters
   time  = 0.0_f64
-  dt = .5 * delta_eta1
+  dt = .5_f64 * delta_eta1
   nstep = 10
 
   ! Compute initial fields 
@@ -235,21 +233,13 @@ program test_maxwell_clamped_1d_fem_sm
   do istep = 1, nstep
      efield = ey
      bfield = bz
-     !call maxwell_clamped_1d%compute_field_energy( ex, ey, bz, energy(1) )
 
 !!$     call maxwell_clamped_1d%compute_b_from_e( 0.5_f64*dt, ey, bz)
 !!$     call maxwell_clamped_1d%compute_e_from_b(         dt, bz, ey)
 !!$     call maxwell_clamped_1d%compute_b_from_e( 0.5_f64*dt, ey, bz)
      call maxwell_clamped_1d%compute_curl_part( dt, ey, bz, 1._f64 )
 
-     !call maxwell_clamped_1d%compute_field_energy( ex, ey, bz, energy(2) )
-
-     
-!!$     bfield = 0.5_f64*( bfield + bz )
-!!$     efield = 0.5_f64*( efield + ey )
-!!$     boundary_energy = efield(maxwell_clamped_1d%n_dofs)*bfield(maxwell_clamped_1d%n_dofs-1)-efield(1)*bfield(1)
-!!$     print*, 'error total energy', energy(2)-energy(1) + dt*boundary_energy
-!!$     
+  
      time = time + dt
 
      do i = 1, nc_eta1+1
@@ -267,10 +257,7 @@ program test_maxwell_clamped_1d_fem_sm
      write(*,"(10x,' istep = ',I6)",advance="no") istep
      write(*,"(' time = ',g12.3,' sec')",advance="no") time
      write(*,"(' erreur L2 = ',2g15.5)") err_ey, err_bz
-
-     
-
-  end do ! next time step
+  end do
 
   tol = 1.0d-3
 

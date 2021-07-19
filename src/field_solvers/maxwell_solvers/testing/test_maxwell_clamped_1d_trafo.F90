@@ -62,7 +62,7 @@ program test_maxwell_clamped_1d_trafo
   sll_real64, dimension(:), allocatable :: current
   sll_real64, dimension(:), allocatable :: sval
   sll_real64, dimension(:), allocatable :: x
-  sll_int32                               :: i!, j
+  sll_int32                               :: i
   sll_real64                              :: time
   sll_int32                               :: istep, nstep
   sll_real64                              :: err_ex
@@ -70,7 +70,7 @@ program test_maxwell_clamped_1d_trafo
   sll_real64                              :: err_ey
   sll_real64                              :: err_bz
   sll_real64                              :: err_l2norm
-  sll_real64                              :: err_inner
+  !sll_real64                              :: err_inner
 
   sll_real64                              :: dt
   sll_real64                              :: Lx
@@ -169,7 +169,7 @@ program test_maxwell_clamped_1d_trafo
   ! Test Ampere
   !-------------
   ! Set time step
-  dt = .5 * delta_eta1
+  dt = .5_f64 * delta_eta1
   rho = 0._f64
   call maxwell_clamped_1d%compute_rhs_from_function(sin_k, deg-1, current)
   ex = 0.0_f64
@@ -191,20 +191,11 @@ program test_maxwell_clamped_1d_trafo
   err_l2norm = abs(l2norm - dt**2*sll_p_pi)
   print*, 'error l2 norm', err_l2norm
 
-!!$  ! Test mixed mass
-!!$  ex = 0.0_f64
-!!$  ey = 0.0_f64
-!!$  call maxwell_clamped_1d%L2projection( cos_k, deg-1, ex )
-!!$  call maxwell_clamped_1d%L2projection( cos_k, deg, ey )
-!!$  err_inner =  abs(maxwell_clamped_1d%inner_product( ex, ey, deg-1, deg ) - sll_p_pi)
-!!$  print*, 'error inner product', err_inner
-  err_inner = 0._f64
-
   ! Test Maxwell_Clamped on By and Ez 
   !--------------------------
   ! Set time stepping parameters
   time  = 0.0_f64
-  dt = .5 * delta_eta1
+  dt = .5_f64 * delta_eta1
   nstep = 10
 
   ! Compute initial fields 
@@ -247,7 +238,7 @@ program test_maxwell_clamped_1d_trafo
 
   tol = 1.0d-3
 
-  if ((err_bz < tol) .and. (err_ey < tol) .and. (err_ex < tol) .and. (err_ex2 < 1.0d-6) .and. (err_l2norm < 1.0d-5).and. (err_inner < tol)) then
+  if ((err_bz < tol) .and. (err_ey < tol) .and. (err_ex < tol) .and. (err_ex2 < 1.0d-6) .and. (err_l2norm < 1.0d-5)) then
      print*,'PASSED'
   endif
 
