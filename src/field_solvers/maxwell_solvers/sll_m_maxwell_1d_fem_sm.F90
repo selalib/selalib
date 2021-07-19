@@ -537,7 +537,10 @@ contains
     logical, intent(in), optional :: adiabatic_electrons !< flag if adiabatic electrons are used
     ! local variables
     sll_int32 :: input_file, rank
-    sll_int32 :: io_stat, io_stat1, file_id
+    sll_int32 :: io_stat, io_stat0, io_stat1, file_id 
+    character(len=256) :: file_prefix
+    logical            :: output_fields = .false.
+    logical            :: output_particles = .false.
     sll_real64 :: mass_tolerance
     sll_real64 :: poisson_tolerance
     sll_real64 :: maxwell_tolerance
@@ -547,10 +550,9 @@ contains
     character(len=256) :: initial_distrib
     character(len=256) :: initial_bfield
     sll_real64         :: charge
-
-
-
+    
     namelist /sim_params/ delta_t, n_time_steps, beta, initial_distrib, initial_bfield, charge
+    namelist /output/ file_prefix, output_fields, output_particles
     namelist /maxwell_solver/ mass_tolerance, poisson_tolerance
     namelist /time_solver/ maxwell_tolerance 
 
@@ -569,7 +571,7 @@ contains
     if (io_stat /= 0) then
        if (rank == 0 ) then
           print*, 'sll_m_maxwell_1d_fem_sm: Input file does not exist. Set default tolerance.'
-          open(newunit=file_id, file=trim(nml_file)//'_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
+          open(newunit=file_id, file=trim(file_prefix)//'_parameters_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
           write(file_id, *) 'mass solver tolerance:', 1d-12
           write(file_id, *) 'poisson solver tolerance:', 1d-12
           close(file_id)
@@ -577,12 +579,13 @@ contains
        call self%init( domain, n_dofs, s_deg_0, delta_t*0.5_f64 )
 
     else
+       read(input_file, output,IOStat=io_stat0)
        read(input_file, maxwell_solver,IOStat=io_stat)
        read(input_file, time_solver,IOStat=io_stat1)
        if (io_stat /= 0) then
           if (rank == 0 ) then
              print*, 'sll_m_maxwell_1d_fem_sm: Tolerance not given. Set default tolerance.'
-             open(newunit=file_id, file=trim(nml_file)//'_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
+             open(newunit=file_id, file=trim(file_prefix)//'_parameters_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
              write(file_id, *) 'mass solver tolerance:', 1d-12
              write(file_id, *) 'poisson solver tolerance:', 1d-12
              close(file_id)
@@ -590,7 +593,7 @@ contains
           call self%init( domain, n_dofs, s_deg_0, delta_t*0.5_f64 )
        else
           if (rank == 0 ) then
-             open(newunit=file_id, file=trim(nml_file)//'_used.dat', status='old', action='write', iostat=io_stat)
+             open(newunit=file_id, file=trim(file_prefix)//'_parameters_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
              write(file_id, *) 'mass solver tolerance:', mass_tolerance
              write(file_id, *) 'poisson solver tolerance:', poisson_tolerance
              close(file_id)

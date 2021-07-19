@@ -78,7 +78,7 @@ program test_maxwell_1d_fem_sm
   eta1_min = .0_f64; eta1_max = 2.0_f64*sll_p_pi
   nc_eta1 = 128
   Lx = eta1_max-eta1_min
-  delta_eta1 = Lx/nc_eta1
+  delta_eta1 = Lx/real(nc_eta1, f64)
   domain = [eta1_min, eta1_max]
   ! Set spline degree of 0-forms
   deg = 3
@@ -103,7 +103,7 @@ program test_maxwell_1d_fem_sm
   !-------------
   ! Set exact solution
   do i = 1, nc_eta1
-     xi = eta1_min + (i-1)*delta_eta1
+     xi = eta1_min + real(i-1, f64)*delta_eta1
      ex_exact(i) =   sin_k(xi)/(2*mode*sll_p_pi/Lx)
   end do
 
@@ -122,10 +122,10 @@ program test_maxwell_1d_fem_sm
   ! Test Ampere
   !-------------
   ! Set time step
-  dt = .5 * delta_eta1
+  dt = .5_f64 * delta_eta1
   ! Set exact solution
   do i = 1, nc_eta1
-     xi = eta1_min + (i-1)*delta_eta1
+     xi = eta1_min + real(i-1, f64)*delta_eta1
      ex_exact(i) =   -cos_k(xi)*dt
   end do
 
@@ -158,7 +158,7 @@ program test_maxwell_1d_fem_sm
   !--------------------------
   ! Set time stepping parameters
   time  = 0.0_f64
-  dt = .5 * delta_eta1
+  dt = .5_f64 * delta_eta1
   nstep = 10
 
   ! Compute initial fields 
@@ -211,7 +211,7 @@ program test_maxwell_1d_fem_sm
      time = time + dt
 
      do i = 1, nc_eta1
-        xi = eta1_min + (i-1)*delta_eta1
+        xi = eta1_min + real(i-1, f64)*delta_eta1
         ey_exact(i) =   sin(mode*2*sll_p_pi*xi/Lx) * sin(mode*2*sll_p_pi*time/Lx)
         bz_exact(i) =   cos(mode*2*sll_p_pi*xi/Lx) * cos(mode*2*sll_p_pi*time/Lx)
      end do

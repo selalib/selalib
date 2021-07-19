@@ -74,9 +74,6 @@ module sll_m_time_propagator_pic_vm_1d2v_disgradE
   use sll_m_spline_fem_utilities, only : &
        sll_s_spline_fem_mass_line
 
-  use sll_m_spline_fem_utilities_sparse, only : &
-       sll_s_spline_fem_sparsity_mass
-
 
   implicit none
 

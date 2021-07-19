@@ -335,7 +335,7 @@ contains
     character(len=*),                  intent(in)    :: filename !< filename
     !local variables
     sll_int32   :: io_stat
-    sll_int32   :: input_file, file_id
+    sll_int32   :: input_file, file_id 
     sll_int32   :: ierr
     type(sll_t_time_mark) :: start_init, end_init
     sll_real64         :: delta_t
@@ -670,7 +670,7 @@ contains
        open(newunit=file_id, file=trim(sim%file_prefix)//'_parameters_used.dat')
        close(file_id)
     end if
-
+    
     if( sim%boundary )then
        ! Initialize the field solver
        if (sim%ct) then
@@ -965,6 +965,7 @@ contains
     if (sim%rank == 0 ) then
        sim%time = sll_f_time_elapsed_between( start_init, end_init)
        write(*, "(A, F10.3)") "Init run time [s] = ", sim%time
+
        open(newunit=file_id, file=trim(sim%file_prefix)//'_parameters_used.dat', position = 'append', status='old', action='write', iostat=ierr)
        write(file_id, *) 'delta t:', sim%delta_t
        write(file_id, *) 'n_time_steps:', sim%n_time_steps
@@ -1363,40 +1364,32 @@ contains
     call sll_s_collective_reduce_real64(sll_v_world_collective, diagnostics_local, 3,&
          MPI_SUM, 0, diagnostics)
     ! Add ExB part
+    if ( sim%strong_ampere .eqv. .false. ) then
+       diagnostics(2) = diagnostics(2) + sim%maxwell_norm%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree, degree-1 )
+
+       diagnostics(3) = diagnostics(3) - sim%maxwell_solver%inner_product( sim%efield_dofs(:,1), sim%bfield_dofs, degree-1 )
+    else
+       if ( degree == -1) then             
+          diagnostics(2) = diagnostics(2) + sim%maxwell_solver%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree-1, degree )
+          diagnostics(3) = diagnostics(3) - sim%maxwell_solver%inner_product( sim%efield_dofs(:,1), sim%bfield_dofs, degree, degree )
+       else
+          ! This would be the form with mixed mass matrix
+          !diagnostics(2) = diagnostics(2) + sim%maxwell_norm%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree-1, degree )
+          ! First transform the electric field to a zero form
+          !  scratch(2:sim%n_gcells) = 0.5_f64 * (sim%efield_dofs(1:sim%n_gcells-1,2)+sim%efield_dofs(2:sim%n_gcells,2) )
+          ! scratch(1) = 0.5_f64 * (sim%efield_dofs(1,2)+sim%efield_dofs(sim%n_gcells,2) )
+          scratch(1:sim%n_gcells-1) = 0.5_f64 * (sim%efield_dofs(1:sim%n_gcells-1,2)+sim%efield_dofs(2:sim%n_gcells,2) )
+          scratch(sim%n_gcells) = 0.5_f64 * (sim%efield_dofs(1,2)+sim%efield_dofs(sim%n_gcells,2) )
+          diagnostics(2) = diagnostics(2) + sim%maxwell_solver%inner_product( sim%bfield_dofs, scratch,  degree )
+          diagnostics(3) = diagnostics(3) - sim%maxwell_solver%inner_product( sim%efield_dofs(:,1), sim%bfield_dofs, degree )
+       end if
+    end if
+    
     if(sim%boundary )then !Todo mixed mass for trafo clamped
        transfer = 0._f64
        vvb = 0._f64
        poynting = 0._f64
     else
-       if(sim%ct) then
-          diagnostics(2) = diagnostics(2) + sim%maxwell_solver%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree, degree-1 )
-
-          diagnostics(3) = diagnostics(3) - sim%maxwell_solver%inner_product( sim%efield_dofs(:,1), sim%bfield_dofs, degree-1 )
-       else
-
-          if ( sim%strong_ampere .eqv. .false. ) then
-             diagnostics(2) = diagnostics(2) + sim%maxwell_norm%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree, degree-1 )
-
-             diagnostics(3) = diagnostics(3) - sim%maxwell_solver%inner_product( sim%efield_dofs(:,1), sim%bfield_dofs, degree-1 )
-          else
-             if ( degree == -1) then             
-                diagnostics(2) = diagnostics(2) + sim%maxwell_solver%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree-1, degree )
-                diagnostics(3) = diagnostics(3) - sim%maxwell_solver%inner_product( sim%efield_dofs(:,1), sim%bfield_dofs, degree, degree )
-             else
-                ! This would be the form with mixed mass matrix
-                !diagnostics(2) = diagnostics(2) + sim%maxwell_norm%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree-1, degree )
-                ! First transform the electric field to a zero form
-                !  scratch(2:sim%n_gcells) = 0.5_f64 * (sim%efield_dofs(1:sim%n_gcells-1,2)+sim%efield_dofs(2:sim%n_gcells,2) )
-                ! scratch(1) = 0.5_f64 * (sim%efield_dofs(1,2)+sim%efield_dofs(sim%n_gcells,2) )
-                scratch(1:sim%n_gcells-1) = 0.5_f64 * (sim%efield_dofs(1:sim%n_gcells-1,2)+sim%efield_dofs(2:sim%n_gcells,2) )
-                scratch(sim%n_gcells) = 0.5_f64 * (sim%efield_dofs(1,2)+sim%efield_dofs(sim%n_gcells,2) )
-                diagnostics(2) = diagnostics(2) + sim%maxwell_solver%inner_product( sim%bfield_dofs, scratch,  degree )
-                diagnostics(3) = diagnostics(3) - sim%maxwell_solver%inner_product( sim%efield_dofs(:,1), sim%bfield_dofs, degree )
-             end if
-          end if
-       end if
-
-
        call sll_s_pic_diagnostics_transfer( sim%particle_group%group(1), sim%kernel_smoother_0, sim%kernel_smoother_1, sim%efield_dofs, transfer )
 
        call sll_s_pic_diagnostics_vvb( sim%particle_group%group(1), sim%kernel_smoother_1, &

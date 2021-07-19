@@ -700,7 +700,6 @@ contains
        close(input_file)
     end if
 
-
   end subroutine initialize_file_pic_vm_3d3v_cef_trafo
 
 
@@ -719,11 +718,7 @@ contains
     self%bfield_dofs => null()
     self%map => null()
 
-
-
   end subroutine delete_pic_vm_3d3v_cef_trafo
-
-
 
 
 end module sll_m_time_propagator_pic_vm_3d3v_cef_trafo
