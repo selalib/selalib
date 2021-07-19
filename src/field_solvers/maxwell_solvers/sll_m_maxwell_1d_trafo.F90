@@ -414,7 +414,6 @@ contains
           r = sum(coefs1_dofs*self%work1)
        else
           if (degree == self%s_deg_0) then
-
              call self%multiply_mass( coefs2_dofs, self%work1, 10 )
              ! Multiply by the coefficients from the left (inner product)
              r = sum(coefs1_dofs*self%work1)
