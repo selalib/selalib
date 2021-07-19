@@ -47,8 +47,9 @@ module sll_m_maxwell_clamped_1d_trafo
        sll_s_multiply_gt_clamped_1d
 
   use sll_m_spline_fem_utilities_sparse, only : &
-       sll_s_spline_fem_mass1d_clamped_full
-
+       sll_s_spline_fem_mass1d_clamped_full, &
+        sll_s_spline_fem_mixedmass1d_clamped_full
+       
   use sll_m_splines_pp, only: &
        sll_t_spline_pp_1d, &
        sll_s_spline_pp_init_1d, &
@@ -72,6 +73,7 @@ module sll_m_maxwell_clamped_1d_trafo
      sll_real64, allocatable :: work01(:)  !< scratch data
      type(sll_t_matrix_csr)  :: mass0 !< spline mass matrix for 0-form
      type(sll_t_matrix_csr)  :: mass1 !< spline mass matrix for 1-form
+     type(sll_t_matrix_csr)  :: mixed_mass !< spline mass matrix for mixed 0-1 form
      type(sll_t_linear_solver_cg) :: linear_solver_mass0 !< linear solver to invert 0-form mass matrix
      type(sll_t_linear_solver_cg) :: linear_solver_mass1 !< linear solver to invert 1-form mass matrix
 
@@ -571,6 +573,8 @@ contains
     !self%linear_solver_mass0%verbose = .true.
     !self%linear_solver_mass1%verbose = .true.
 
+    call sll_s_spline_fem_mixedmass1d_clamped_full( n_cells,  self%s_deg_0,  self%s_deg_1, self%mixed_mass, profile_m0, self%spline0_pp, self%spline1_pp )
+
 
     ! Poisson solver
     call self%poisson_matrix%create( self%mass1, self%s_deg_0, self%n_dofs0, self%delta_x )
@@ -731,6 +735,8 @@ contains
        call self%mass0%dot( in, out )
     elseif (degree == self%s_deg_1) then
        call self%mass1%dot( in, out )
+    elseif(degree == 10) then
+       call self%mixed_mass%dot( in, out )
     else
        print*, 'multiply mass for other form not yet implemented'
        stop

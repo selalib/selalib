@@ -22,13 +22,14 @@ module sll_m_spline_fem_utilities
 
   use sll_m_gauss_legendre_integration, only: &
        sll_f_gauss_legendre_points_and_weights
-  
+
   implicit none
 
   public :: &
        sll_s_spline_fem_mass_line, &
        sll_s_spline_fem_mass_line_boundary, &
        sll_s_spline_fem_mass_line_boundary_full, &
+       sll_s_spline_fem_mixedmass_line_boundary, &
        sll_s_spline_fem_mass_line_full, &
        sll_s_spline_fem_mixedmass_line, &
        sll_s_spline_fem_mixedmass_line_full, &
@@ -55,7 +56,7 @@ module sll_m_spline_fem_utilities
        sll_real64             :: res
      end function sll_i_profile_function_1d
   end interface
-  
+
 contains
 
   !---------------------------------------------------------------------------!
@@ -326,7 +327,7 @@ contains
     do quad = 1, q
        call sll_s_uniform_bsplines_eval_basis( deg, quad_xw(1,quad), spline_val(:,quad) )
     end do
-    
+
     mass_line = 0.0_f64
     do j = 1, deg
        do int = j, deg
@@ -358,60 +359,109 @@ contains
   end subroutine sll_s_spline_fem_mass_line_full
 
 
-
   !---------------------------------------------------------------------------!
-!!$  !> Helper function to find line of mass matrix ( N_i^p N_j^{p-1}))
-!!$  subroutine sll_s_spline_fem_mixedmass_line_full ( deg, mass_line, cell, n_cells) 
-!!$    sll_int32,  intent(in   ) :: deg
-!!$    sll_real64, intent(  out) :: mass_line(deg*2)
-!!$    sll_int32, intent(in) :: cell
-!!$    sll_int32, intent(in) :: n_cells
-!!$    !local variables
-!!$    sll_int32 :: q, i, int, quad
-!!$    sll_real64, allocatable :: quad_xw(:,:), spline_val_0(:,:), spline_val_1(:,:)
-!!$    ! sll_real64 :: jacobian
-!!$
-!!$    q = min(2*deg+1,10)
-!!$
-!!$    allocate(quad_xw(2, q))
-!!$    allocate(spline_val_0( deg+1, q ))
-!!$    allocate(spline_val_1( deg, q ))
-!!$
-!!$    quad_xw = sll_f_gauss_legendre_points_and_weights( q , 0.0_f64, 1.0_f64 )
-!!$
-!!$
-!!$    do quad = 1, q
-!!$       call sll_s_uniform_bsplines_eval_basis( deg, quad_xw(1,quad), spline_val_0(:,quad) )
-!!$       call sll_s_uniform_bsplines_eval_basis( deg-1, quad_xw(1,quad), spline_val_1(:,quad) )
-!!$    end do
-!!$
-!!$    mass_line = 0.0_f64
-!!$    do i= 2, deg+1
-!!$       do int= i, deg+1
-!!$          do quad = 1, q
-!!$             !jacobian= map%jacobian((quad_xw(1,quad)+cell+int-1)*delta_x, 0.0_f64)
-!!$             mass_line(i+deg-1) = mass_line(i+deg-1) + &
-!!$                  spline_val_0(int,quad) * spline_val_1(int-i+1,quad)*quad_xw(2,quad)!*jacobian
-!!$          end do
-!!$       end do
-!!$    end do
-!!$
-!!$    do  i= -deg+1, 0
-!!$       do int = 1, deg+i
-!!$          do quad = 1, q
-!!$             ! jacobian= map%jacobian((quad_xw(1,quad)+cell+int-1)*delta_x, 0.0_f64)
-!!$             mass_line(i+deg) = mass_line(i+deg) + &
-!!$                  spline_val_0(int,quad) * spline_val_1(int-i,quad)*quad_xw(2,quad)!*jacobian
-!!$          end do
-!!$       end do
-!!$    end do
-!!$
-!!$
-!!$  end subroutine sll_s_spline_fem_mixedmass_line_full
+  !for use of affine transformation
+  !> Function computing the boundary part for a mass matrix with clamped splines of \a degree (full version without symmetry part)
+  subroutine sll_s_spline_fem_mixedmass_line_boundary( deg1, deg2, profile, spline1, spline2, row, n_cells, mass_line )
+    sll_int32, intent( in   ) :: deg1  !< spline degree 1
+    sll_int32, intent( in   ) :: deg2  !< spline degree 2
+    procedure(sll_i_profile_function_1d) ::  profile !< profile function
+    type(sll_t_spline_pp_1d), intent( in    ) :: spline1 !< 1D pp-spline
+    type(sll_t_spline_pp_1d), intent( in    ) :: spline2 !< 1D pp-spline
+    sll_int32, intent( in   ) :: row  !< row of the mass line in the matrix
+    sll_int32, intent( in   ) :: n_cells !< no of grid cells
+    sll_real64, intent(  out) :: mass_line( (deg1+deg2)**2+(2*deg2+deg1-deg1**2)/2 ) !< Values of the boundary part of the mass line on output
+    !local variables
+    sll_int32 :: q, j, k, int, ind1, quad, interval, ind4
+    sll_real64, allocatable :: quad_xw(:,:),spline_val1(:,:), spline_val2(:,:)
+    sll_real64, allocatable :: bspl_b1(:,:,:), bspl_b2(:,:,:)
+    sll_real64 :: c
+
+    q = max(deg1,deg2)+1
+
+    allocate( quad_xw(2, q) )
+    allocate( spline_val1( deg1+1, q ) )
+    allocate( spline_val2( deg2+1, q ) )
+
+    allocate( bspl_b1(deg1+1, q, deg1+deg2) )
+    allocate( bspl_b2(deg2+1, q, deg1+deg2) )
+
+    quad_xw = sll_f_gauss_legendre_points_and_weights( q , 0.0_f64, 1.0_f64 )
+    spline_val1=0._f64
+    spline_val2=0._f64
+    do quad = 1, q
+       call sll_s_uniform_bsplines_eval_basis( deg1, quad_xw(1,quad), spline_val1(:, quad) )
+       call sll_s_uniform_bsplines_eval_basis( deg2, quad_xw(1,quad), spline_val2(:, quad) )
+    end do
+
+    do interval = 1, deg1-1
+       do k = 1, q
+          do j = 1, deg1+1
+             bspl_b1(j,k,interval) =   sll_f_spline_pp_horner_1d( deg1, spline1%poly_coeffs_boundary_left(:,:,interval), quad_xw(1,k), j)
+          end do
+       end do
+    end do
+    if( deg1 == 0 ) then
+       do interval = 1, deg2
+          bspl_b1(:,:,interval)=spline_val1
+       end do
+    else
+       do interval = deg1, deg1+deg2
+          bspl_b1(:,:,interval)=spline_val1
+       end do
+    end if
+
+    do interval = 1, deg2-1
+       do k = 1, q
+          do j = 1, deg2+1
+             bspl_b2(j,k,interval) =   sll_f_spline_pp_horner_1d( deg2, spline2%poly_coeffs_boundary_left(:,:,interval), quad_xw(1,k), j)
+          end do
+       end do
+    end do
+    if( deg2 == 0 ) then
+       do interval = 1, deg1
+          bspl_b2(:,:,interval)=spline_val2
+       end do
+    else
+       do interval = deg2, deg1+deg2
+          bspl_b2(:,:,interval)=spline_val2
+       end do
+    end if
+
+    if( row <= deg1+deg2 )then
+       ind4 = 1
+    else if( row > n_cells - deg2 .and. row <= n_cells+deg1 )then
+       ind4= -1
+    end if
+    mass_line = 0.0_f64
+
+    !interval
+    do interval = 1, deg1+deg2
+       !row
+       do j = interval, min(interval+deg1,deg1+deg2)
+          !column
+          do int = interval, deg2+interval
+             if(j <= deg1+1)then
+                ind1 = int + ((j-1)*(2*deg2+j))/2 !position in first dimension in massline
+             else if( j > deg1+1 .and. j < deg1+deg2)then
+                ind1 = int + (j-deg1-1)*(deg1+deg2) + (deg1*(2*deg2+deg1+1))/2 !position in first dimension in massline
+             end if
+             do quad = 1, q
+                c = (real(ind4,f64)*quad_xw(1,quad)+real(row-1+ind4*(interval-1),f64))/real(n_cells,f64)
+                mass_line(ind1) = mass_line(ind1) + &
+                     quad_xw(2,quad)* &
+                     bspl_b1(j-interval+1, quad, interval)* &
+                     bspl_b2(int-interval+1, quad, interval)* &
+                     profile(c)
+             end do
+          end do
+       end do
+    end do
+
+  end subroutine sll_s_spline_fem_mixedmass_line_boundary
 
 
-
-    !> Helper function to find line of mass matrix ( N_i^p N_j^{p-1}))
+  !> Helper function to find line of mass matrix ( N_i^p N_j^{p-1}))
   subroutine sll_s_spline_fem_mixedmass_line_full ( deg1, deg2, profile, mass_line, cell, n_cells) 
     sll_int32,  intent(in   ) :: deg1, deg2
     procedure(sll_i_profile_function_1d) ::  profile !< profile function
@@ -467,7 +517,7 @@ contains
           end do
        end do
     end do
-    
+
   end subroutine sll_s_spline_fem_mixedmass_line_full
 
   !---------------------------------------------------------------------------!
@@ -539,7 +589,7 @@ contains
 
   end subroutine sll_s_spline_fem_compute_mass_eig
 
-!> Multiply the vector \a invec with the spline FEM mass matrix with mass line \a mass 
+  !> Multiply the vector \a invec with the spline FEM mass matrix with mass line \a mass 
   subroutine sll_s_spline_fem_multiply_mass ( n_cells, degree, mass, invec, outvec )
     sll_int32,  intent( in    ) :: n_cells  !< no. of cells in the grid
     sll_int32,  intent( in    ) :: degree   !< spline degree
@@ -589,7 +639,7 @@ contains
   end subroutine sll_s_spline_fem_multiply_mass
 
 
-!> Multiplication of the mix mass matrix given by a mass line \a mass
+  !> Multiplication of the mix mass matrix given by a mass line \a mass
   subroutine sll_s_spline_fem_multiply_massmixed ( n_cells, degree, mass, invec, outvec )
     sll_int32,  intent( in    ) :: n_cells  !< no. of grid cells
     sll_int32,  intent( in    ) :: degree   !< spline degree
@@ -645,18 +695,18 @@ contains
     sll_int32 :: k
     sll_int32 :: p
     sll_real64 :: spline_coeff(degree+1)
-     sll_real64 :: ni !1/n_dofs in double precision
-     ni=1.0_f64/real(ndofs,f64)
+    sll_real64 :: ni !1/n_dofs in double precision
+    ni=1.0_f64/real(ndofs,f64)
 
-     if ( modulo( degree, 2) == 0 ) then
-        call sll_s_uniform_bsplines_eval_basis( degree, 0.5_f64, spline_coeff )
-     else
-        call sll_s_uniform_bsplines_eval_basis( degree, 0.0_f64, spline_coeff )
-     end if
-     print*, 'spline_coeffs', spline_coeff
+    if ( modulo( degree, 2) == 0 ) then
+       call sll_s_uniform_bsplines_eval_basis( degree, 0.5_f64, spline_coeff )
+    else
+       call sll_s_uniform_bsplines_eval_basis( degree, 0.0_f64, spline_coeff )
+    end if
+    print*, 'spline_coeffs', spline_coeff
 
     eig(1) = 1.0_f64
-    
+
     do k=1,(ndofs+1)/2-1
        ! real part
        eig(k+1) = spline_coeff(degree+1)
@@ -676,7 +726,7 @@ contains
           eig(ndofs/2+1) = eig(ndofs/2+1) + cos(sll_p_twopi*real(p,f64))*spline_coeff(degree+1-p)
        end do
     end if
-     
+
   end subroutine sll_s_spline_fem_interpolation_eigenvalues
 
   !> Multiplication of the input vector \a in by the derivative matrix G
@@ -687,13 +737,13 @@ contains
     sll_real64, intent(   out ) :: out(:) !< Coefficient for each DoF (output vector)
     !local variables
     sll_int32 :: i
-    
+
     ! treat Periodic point
     out(1) = ( in(1) - in(n_dofs)  )/delta_x
     do i = 2, n_dofs
        out(i) =  ( in(i) - in(i-1) )/delta_x
     end do
-    
+
   end subroutine sll_s_multiply_g_1d
 
 
@@ -706,7 +756,7 @@ contains
     sll_real64, intent(   out ) :: out(:) !< Coefficient for each DoF (output vector)
     !local variables
     sll_int32 :: i
-    
+
     do i= 1, n_dofs-1
        out(i) =  ( in(i) - in(i+1)  )/delta_x
     end do
@@ -716,8 +766,8 @@ contains
   end subroutine sll_s_multiply_gt_1d
 
 
-  
-   !> Multiply by dicrete gradient matrix (3d version)
+
+  !> Multiply by dicrete gradient matrix (3d version)
   subroutine sll_s_multiply_g( n_dofs, delta_x, field_in, field_out )
     sll_int32,  intent( in    )   :: n_dofs(3)   !< no. of degrees of freedom in each direction
     sll_real64, intent( in    )   :: delta_x(3)  !< grid spacing in each direction
@@ -872,7 +922,7 @@ contains
 
   end subroutine sll_s_multiply_gt
 
-  
+
   !> Multiply by discrete curl matrix
   subroutine sll_s_multiply_c( n_dofs, delta_x, field_in, field_out )
     sll_int32,  intent( in    )   :: n_dofs(3)   !< no. of degrees of freedom per direction
