@@ -1398,19 +1398,23 @@ contains
     sll_real64, intent( in    )   :: coefs_in(:)  !< Coefficient for each DoF
     sll_real64, intent(   out )   :: coefs_out(:) !< Coefficient for each DoF
 
-
-    SLL_ASSERT(deg(1)>=0 .and. deg(1)<=2)
-    select case(deg(1))
-    case(0)
-       call self%mass0%dot( coefs_in, coefs_out ) 
-    case(1)
-       call self%mass1_operator%dot( coefs_in, coefs_out )
-    case(2)
-       call self%mass2_operator%dot( coefs_in, coefs_out )
-    case default
-       print*, 'multiply mass for other form not yet implemented'
-       stop
-    end select
+    if( size(deg) == 1 )then
+       SLL_ASSERT(deg(1)>=0 .and. deg(1)<=2)
+       select case(deg(1))
+       case(0)
+          call self%mass0%dot( coefs_in, coefs_out ) 
+       case(1)
+          call self%mass1_operator%dot( coefs_in, coefs_out )
+       case(2)
+          call self%mass2_operator%dot( coefs_in, coefs_out )
+       case default
+          print*, 'multiply mass for other form not yet implemented'
+          stop
+       end select
+    else if( size(deg) == 3 ) then
+       coefs_out = 0._f64
+    end if
+    
   end subroutine multiply_mass_3d_trafo
 
 
