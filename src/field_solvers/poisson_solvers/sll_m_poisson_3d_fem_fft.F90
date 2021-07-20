@@ -249,9 +249,9 @@ contains
 
   subroutine init_fft( self, n_dofs, degree, delta_x)
     class(sll_t_poisson_3d_fem_fft), intent( out ) :: self
-    sll_int32, intent( in ) :: n_dofs(3)
-    sll_int32, intent( in ) :: degree(3)
-    sll_real64, intent( in ) :: delta_x(3)
+    sll_int32, intent( in ) :: n_dofs(3)     !< No. of degrees of freedom in each direction
+    sll_int32, intent( in ) :: degree(3)     !< spline degree in each direction
+    sll_real64, intent( in ) :: delta_x(3)   !< grid size in each direction
 
     
     sll_real64 :: mass_line0_1(degree(1)+1)

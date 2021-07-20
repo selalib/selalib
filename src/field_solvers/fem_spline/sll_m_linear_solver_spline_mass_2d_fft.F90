@@ -76,7 +76,7 @@ contains
   end subroutine create_mass1
 
   subroutine solve_real_mass1(self, rhs, unknown)
-    class( sll_t_linear_solver_spline_mass_2d_fft), intent( in ) :: self !< Fourier solver
+    class( sll_t_linear_solver_spline_mass_2d_fft), intent( inout ) :: self !< Fourier solver
     real(kind=f64), intent(in   ) :: rhs(:) !< given right-hand side
     real(kind=f64), intent(  out) :: unknown(:) !< unknown-left hand side
 

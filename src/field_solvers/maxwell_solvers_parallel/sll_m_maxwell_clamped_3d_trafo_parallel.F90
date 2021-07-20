@@ -50,6 +50,9 @@ module sll_m_maxwell_clamped_3d_trafo_parallel
   use sll_m_splines_pp, only: &
        sll_s_spline_pp_init_1d
 
+  use sll_m_preconditioner_poisson_fft, only : &
+       sll_t_preconditioner_poisson_fft
+
   implicit none
 
   public :: &
@@ -91,7 +94,7 @@ contains
     sll_int32  :: j, deg1(3), deg2(3)
     type(sll_t_matrix_csr) :: mass0_local
     type(sll_t_matrix_csr) :: mass1_local(3,3)
-    type(sll_t_matrix_csr) :: mass2_local(3,3) 
+    type(sll_t_matrix_csr) :: mass2_local(3,3)
 
     self%Lx = map%Lx
 
@@ -139,6 +142,7 @@ contains
     ! Allocate scratch data
     allocate(self%work0(1:self%n_total0))
     allocate(self%work01(1:self%n_total0))
+    allocate(self%work02(1:self%n_total0))
     allocate(self%work1(1:self%n_total1+2*self%n_total0))
     allocate(self%work12(1:self%n_total1+2*self%n_total0))
     allocate(self%work2(1:self%n_total0+2*self%n_total1))
@@ -333,6 +337,7 @@ contains
     call self%preconditioner1%create( self%preconditioner_fft%inverse_mass1_3d, self%work1, 2*self%n_total0+self%n_total1 )
     call self%preconditioner2%create( self%preconditioner_fft%inverse_mass2_3d, self%work2, 2*self%n_total1+self%n_total0 )
 
+    
     self%work0 = 0._f64
     self%work01 = 0._f64
     self%work1 = 0._f64
@@ -350,10 +355,29 @@ contains
     !self%mass1_solver%verbose = .true.
     !self%mass2_solver%verbose = .true.
 
+    
     call self%poisson_matrix%create( self%mass1_operator, self%s_deg_0, self%n_dofs, self%delta_x)
-    call self%poisson_solver%create( self%poisson_matrix)
+
+    ! Preconditioner for Poisson solver based on FFT inversion for periodic case
+
+    do j= 1, self%n_total0
+       self%work01 = 0._f64
+       self%work01(j) = 1._f64
+       call self%mass0%dot( self%work01, self%work02 )
+       if (abs(self%work02(j))< 1d-13) then
+          self%work0(j) = 1._f64
+       else
+          self%work0(j) = 1._f64/sqrt(self%work02(j))
+       end if
+    end do
+    
+    call self%poisson_preconditioner%create( self%n_dofs, self%s_deg_0, self%delta_x, self%work0 )
+    call self%poisson_solver%create( self%poisson_matrix, self%poisson_preconditioner )
     self%poisson_solver%atol = self%poisson_solver_tolerance
-    !self%poisson_solver%verbose = .true.
+    self%poisson_solver%verbose = .true.
+
+    self%work0 = 0._f64
+    self%work01 = 0._f64
 
     ! Only for Schur complement eb solver
     call self%linear_op_schur_eb%create( self%mass1_operator, self%mass2_operator, self%n_dofs, self%delta_x, self%s_deg_0 )

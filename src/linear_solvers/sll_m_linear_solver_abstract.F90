@@ -61,7 +61,7 @@ module sll_m_linear_solver_abstract
        use sll_m_working_precision
        import sll_t_linear_solver_abstract
 
-       class(sll_t_linear_solver_abstract), intent(in)  :: self
+       class(sll_t_linear_solver_abstract), intent(inout)  :: self
        sll_real64, dimension(:)         , intent(in   ) :: rhs
        sll_real64, dimension(:)         , intent(  out) :: unknown 
      end subroutine sll_p_solve_real_linear_solver_abstract

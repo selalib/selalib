@@ -45,7 +45,6 @@ module sll_m_linear_solver_spline_mass_fft
      procedure :: read_from_file => read_from_file_mass1
      procedure :: set_verbose => set_verbose_mass1
      procedure :: solve_real => solve_real_mass1
-     procedure :: solve_complex => solve_complex_mass1
      procedure :: print_info => print_info_mass1
      procedure :: create => create_mass1
      procedure :: free => free_mass1
@@ -87,7 +86,7 @@ contains
   end subroutine create_mass1
 
   subroutine solve_real_mass1(self, rhs, unknown)
-    class( sll_t_linear_solver_spline_mass_fft), intent( in ) :: self !< Fourier solver
+    class( sll_t_linear_solver_spline_mass_fft), intent( inOUT ) :: self !< Fourier solver
     real(kind=f64), intent(in    ) :: rhs(:) !< given right-hand side
     real(kind=f64), intent(  out ) :: unknown(:) !< unknown-left hand side
 
@@ -190,18 +189,6 @@ contains
     end do
     
   end subroutine solve_real_mass1
-
-
-  
-  
-  subroutine solve_complex_mass1(self, rhs, unknown)
-    class( sll_t_linear_solver_spline_mass_fft), intent( in ) :: self !< Fourier solver
-    sll_comp64, intent(in    ) :: rhs(:) !< given right-hand side
-    sll_comp64, intent(  out ) :: unknown(:) !< unknown left-hand side
-
-    SLL_ERROR('solve_complex', 'Procedure not implemented.')
-    
-  end subroutine solve_complex_mass1
     
   subroutine read_from_file_mass1(self, filename)
     class( sll_t_linear_solver_spline_mass_fft), intent( inout ) :: self !< Fourier solver
