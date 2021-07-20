@@ -227,7 +227,7 @@ contains
   !> @param[inout] unknown the solution 
   subroutine solve_real_linear_solver_cg(self, rhs, unknown)
     implicit none
-    class(sll_t_linear_solver_cg), intent(in) :: self 
+    class(sll_t_linear_solver_cg), intent(inout) :: self 
     sll_real64, dimension(:), intent(in   )  :: rhs 
     sll_real64, dimension(:), intent(  out)  :: unknown
     ! local

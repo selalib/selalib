@@ -74,6 +74,8 @@ module sll_m_maxwell_clamped_3d_trafo
        sll_s_spline_pp_free_1d, &
        sll_f_spline_pp_horner_1d
 
+  use sll_m_preconditioner_poisson_fft, only : &
+       sll_t_preconditioner_poisson_fft
 
   implicit none
 
@@ -90,6 +92,7 @@ module sll_m_maxwell_clamped_3d_trafo
 
      sll_real64, allocatable :: work0(:)  !< scratch data
      sll_real64, allocatable :: work01(:)  !< scratch data
+     sll_real64, allocatable :: work02(:)  !< scratch data
      sll_real64, allocatable :: work1(:)  !< scratch data
      sll_real64, allocatable :: work12(:)  !< scratch data
      sll_real64, allocatable :: work2(:)  !< scratch data
@@ -111,6 +114,8 @@ module sll_m_maxwell_clamped_3d_trafo
      type(sll_t_preconditioner_singular) :: preconditioner1 !< preconditioner for mass matrices
      type(sll_t_preconditioner_singular) :: preconditioner2 !< preconditioner for mass matrices
 
+     type(sll_t_preconditioner_poisson_fft ) :: poisson_preconditioner !< Fourier solver for Poisson matrix
+     
      logical :: adiabatic_electrons = .false.
 
    contains
@@ -995,6 +1000,7 @@ contains
     ! Allocate scratch data
     allocate(self%work0(1:self%n_total0))
     allocate(self%work01(1:self%n_total0))
+    allocate(self%work02(1:self%n_total0))
     allocate(self%work1(1:self%n_total1+2*self%n_total0))
     allocate(self%work12(1:self%n_total1+2*self%n_total0))
     allocate(self%work2(1:self%n_total0+2*self%n_total1))
@@ -1127,6 +1133,7 @@ contains
     call self%preconditioner1%create( self%preconditioner_fft%inverse_mass1_3d, self%work1, 2*self%n_total0+self%n_total1 )
     call self%preconditioner2%create( self%preconditioner_fft%inverse_mass2_3d, self%work2,  2*self%n_total1+self%n_total0 )
 
+    
     self%work1 = 0._f64
     self%work12 = 0._f64
     self%work2 = 0._f64
@@ -1143,8 +1150,23 @@ contains
     !self%mass1_solver%verbose = .true.
     !self%mass2_solver%verbose = .true.
 
+
+    
     call self%poisson_matrix%create( self%mass1_operator, self%s_deg_0, self%n_dofs, self%delta_x)
-    call self%poisson_solver%create( self%poisson_matrix )
+    ! Preconditioner for Poisson solver based on FFT inversion for periodic case
+    do j= 1, self%n_total0
+       self%work01 = 0._f64
+       self%work01(j) = 1._f64
+       call self%poisson_matrix%dot( self%work01, self%work02 )
+       if (abs(self%work02(j))< 1d-13) then
+          self%work0(j) = 1._f64
+       else
+          self%work0(j) = 1._f64/sqrt(self%work02(j))
+       end if
+    end do
+    self%work0 = 1._f64/sqrt(self%work0)
+    call self%poisson_preconditioner%create( self%n_dofs, self%s_deg_0, self%delta_x, self%work0 )
+    call self%poisson_solver%create( self%poisson_matrix, self%poisson_preconditioner )
     self%poisson_solver%atol = self%poisson_solver_tolerance
     !self%poisson_solver%verbose = .true.
 

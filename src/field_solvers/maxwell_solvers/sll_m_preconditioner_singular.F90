@@ -62,7 +62,7 @@ contains
   end subroutine create_3d_trafo
 
   subroutine solve_3d_trafo(self, rhs, unknown)
-    class(sll_t_preconditioner_singular), intent( in ) :: self !< preconditioner
+    class(sll_t_preconditioner_singular), intent( inout ) :: self !< preconditioner
     sll_real64, intent(in   ) :: rhs(:) !< right hand side
     sll_real64, intent(  out) :: unknown(:) !< result
     !local variables

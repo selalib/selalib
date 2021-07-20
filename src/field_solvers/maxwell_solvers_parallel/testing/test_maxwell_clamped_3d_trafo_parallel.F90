@@ -404,7 +404,7 @@ program test_maxwell_clamped_3d_trafo_parallel
   deallocate( rho_val1 )
   deallocate( map )
 
-  if ( error(1) < 2.d-11 .AND. error(2) < 6.0d-12 .AND. error(3) < 9.d-3 .AND. error(4) < 3.d-4 .AND. error(5)<7.d-5 .AND. error(6)<4.d-12) then
+  if ( error(1) < 2.1d-10 .AND. error(2) < 6.0d-12 .AND. error(3) < 9.d-3 .AND. error(4) < 3.d-4 .AND. error(5)<7.d-5 .AND. error(6)<4.d-12) then
      print*, 'PASSED.'
   else
      print*, 'FAILED.'

@@ -91,7 +91,7 @@ contains
   end subroutine create_mass1
 
   subroutine solve_real_mass1(self, rhs, unknown)
-    class( sll_t_linear_solver_mass1), intent( in ) :: self
+    class( sll_t_linear_solver_mass1), intent( inout ) :: self
     real(kind=f64), intent(in   ) :: rhs(:)
     real(kind=f64), intent(  out) :: unknown(:)
 
@@ -144,9 +144,9 @@ contains
           do i=1,n_dofs(1)
 
              scratch(i,j,k) = scratch(i,j,k)/ &
-                  (self%eig_values_1(i)* &
+                  cmplx(self%eig_values_1(i)* &
                   self%eig_values_2(j)* &
-                  self%eig_values_3(k) *self%factor)
+                  self%eig_values_3(k) *self%factor, 0.0_f64, f64)
 
           end do
        end do

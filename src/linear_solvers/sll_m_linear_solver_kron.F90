@@ -347,7 +347,7 @@ contains
   !> @param[inout] unknown the solution 
   subroutine solve_real_linear_solver_kron(self, rhs, unknown)
     implicit none
-    class(sll_t_linear_solver_kron), intent(in)    :: self 
+    class(sll_t_linear_solver_kron), intent(inout)    :: self 
     sll_real64, dimension(:), intent(in   ) :: rhs 
     sll_real64, dimension(:), intent(  out) :: unknown
     ! local
@@ -376,9 +376,9 @@ contains
        & linear_solver_a, linear_solver_b, &
        & rhs, unknown)
     implicit none
-    class(sll_t_linear_solver_kron), intent(in)    :: self 
-    class(sll_t_linear_solver_abstract), intent(in) :: linear_solver_a
-    class(sll_t_linear_solver_abstract), intent(in) :: linear_solver_b
+    class(sll_t_linear_solver_kron), intent(inout)    :: self 
+    class(sll_t_linear_solver_abstract), intent(inout) :: linear_solver_a
+    class(sll_t_linear_solver_abstract), intent(inout) :: linear_solver_b
     sll_real64, dimension(:), intent(in   ) :: rhs 
     sll_real64, dimension(:), intent(  out) :: unknown
     ! local

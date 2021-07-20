@@ -20,7 +20,8 @@ set(POISSON_SRCS
     sll_m_poisson_2d_fem_sps_stencil_new_assembler.F90
     sll_m_poisson_2d_fem_sps_stencil_new.F90
     sll_m_poisson_3d_base.F90
-    sll_m_poisson_3d_fem_fft.F90)
+    sll_m_poisson_3d_fem_fft.F90    
+    sll_m_preconditioner_poisson_fft.F90)
 
 if(FFT_LIB MATCHES FFTW)
   list(APPEND POISSON_SRCS sll_m_poisson_3d_periodic.F90)

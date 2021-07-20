@@ -176,7 +176,7 @@ contains
   !> @param[inout] y      a real valued vector 
   subroutine solve_real_linear_solver_block(self, rhs, unknown)
     implicit none
-    class(sll_t_linear_solver_block), intent(in) :: self
+    class(sll_t_linear_solver_block), intent(inout) :: self
     sll_real64,dimension(:), intent(in   ) :: rhs
     sll_real64,dimension(:), intent(  out) :: unknown  
     ! local 
