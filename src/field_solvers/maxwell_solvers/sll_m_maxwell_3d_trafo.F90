@@ -82,6 +82,7 @@ module sll_m_maxwell_3d_trafo
      type(sll_t_matrix_csr)            :: mass0            !< mass matrix
      type(sll_t_matrix_csr)            :: mass1(3,3)       !< mass matrix
      type(sll_t_matrix_csr)            :: mass2(3,3)       !< mass matrix
+     type(sll_t_matrix_csr)            :: mixed_mass(6)    !< mixed mass matrix
      type(sll_t_linear_operator_block) :: mass1_operator   !< block mass matrix
      type(sll_t_linear_operator_block) :: mass2_operator   !< block mass matrix
      type(sll_t_linear_solver_cg) :: mass0_solver     !< mass matrix solver
@@ -1125,19 +1126,23 @@ contains
     sll_real64, intent( in    )   :: coefs_in(:)  !< coefs_in
     sll_real64, intent(   out )   :: coefs_out(:) !< M*coefs_in
 
-
-    SLL_ASSERT(deg(1)>=0 .and. deg(1)<=2)
-    select case(deg(1))
-    case(0)
-       call self%mass0%dot( coefs_in, coefs_out ) 
-    case(1)
-       call self%mass1_operator%dot( coefs_in, coefs_out )
-    case(2)
-       call self%mass2_operator%dot( coefs_in, coefs_out )
-    case default
-       print*, 'multiply mass for other form not yet implemented'
-       stop
-    end select
+    if( size(deg) == 1 )then
+       SLL_ASSERT(deg(1)>=0 .and. deg(1)<=2)
+       select case(deg(1))
+       case(0)
+          call self%mass0%dot( coefs_in, coefs_out ) 
+       case(1)
+          call self%mass1_operator%dot( coefs_in, coefs_out )
+       case(2)
+          call self%mass2_operator%dot( coefs_in, coefs_out )
+       case default
+          print*, 'multiply mass for other form not yet implemented'
+          stop
+       end select
+    else if( size(deg) == 3 ) then
+       coefs_out = 0._f64
+    end if
+    
   end subroutine multiply_mass_trafo
 
   

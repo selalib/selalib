@@ -1355,15 +1355,7 @@ contains
          MPI_SUM, 0, diagnostics)
     diagnostics_local = 0._f64
 
-    if(sim%ct) then
-       call compute_e_cross_b_curvilinear( sim%particle_mesh_coupling, sim%degree_smoother, sim%map, sim%efield_dofs, sim%bfield_dofs, sim%n_totaldofs0, sim%n_totaldofs1, diagnostics_local(4:6) )
-    else
-       if(sim%boundary ) then
-          diagnostics_local(4:6) = 0._f64
-       else
-          call compute_e_cross_b ( sim%maxwell_solver, scratch1, sim%efield_dofs, sim%bfield_dofs, diagnostics_local(4:6) )
-       end if
-    end if
+    call compute_e_cross_b ( sim%maxwell_solver, scratch1, sim%efield_dofs, sim%bfield_dofs, diagnostics_local(4:6) )
     ! sum up the total momentum
     diagnostics(4:6) = diagnostics(4:6) + diagnostics_local(4:6)
 
@@ -2032,21 +2024,21 @@ contains
     sll_real64, intent( in  ) :: bfield(:) !> B
     sll_real64, intent( out ) :: e_cross_b(3)  !< E cross B
 
-    call  maxwell%multiply_mass( [3, 2, 1], bfield(maxwell%n_total*2+1:maxwell%n_total*3), scratch )
-    e_cross_b(1) = sum(efield(maxwell%n_total+1:maxwell%n_total*2)*scratch)
-    call  maxwell%multiply_mass([3, 1, 2], bfield(maxwell%n_total+1:maxwell%n_total*2), scratch )
-    e_cross_b(1) = e_cross_b(1) - sum(efield(maxwell%n_total*2+1:maxwell%n_total*3)*scratch)
+    call  maxwell%multiply_mass( [3, 2, 1], bfield(maxwell%n_total0+maxwell%n_total1+1:maxwell%n_total0+maxwell%n_total1*2), scratch )
+    e_cross_b(1) = sum(efield(maxwell%n_total1+1:maxwell%n_total1+maxwell%n_total0)*scratch)
+    call  maxwell%multiply_mass([3, 1, 2], bfield(maxwell%n_total0+1:maxwell%n_total0+maxwell%n_total1), scratch )
+    e_cross_b(1) = e_cross_b(1) - sum(efield(maxwell%n_total1+maxwell%n_total0+1:maxwell%n_total1+maxwell%n_total0*2)*scratch)
 
-    call maxwell%multiply_mass( [1, 3, 2], bfield(1:maxwell%n_total), scratch )
-    e_cross_b(2) = sum(efield(maxwell%n_total*2+1:maxwell%n_total*3)*scratch)
-    call maxwell%multiply_mass( [2, 3, 1], bfield(maxwell%n_total*2+1:maxwell%n_total*3), scratch )
-    e_cross_b(2) = e_cross_b(2) - sum(efield(1:maxwell%n_total)*scratch)
+    call maxwell%multiply_mass( [1, 3, 2], bfield(1:maxwell%n_total0), scratch )
+    e_cross_b(2) = sum(efield(maxwell%n_total1+maxwell%n_total0+1:maxwell%n_total1+maxwell%n_total0*2)*scratch)
+    call maxwell%multiply_mass( [2, 3, 1], bfield(maxwell%n_total0+maxwell%n_total1+1:maxwell%n_total0+maxwell%n_total1*2), scratch(1:maxwell%n_total1) )
+    e_cross_b(2) = e_cross_b(2) - sum(efield(1:maxwell%n_total1)*scratch(1:maxwell%n_total1))
 
 
-    call  maxwell%multiply_mass( [2, 1, 3], bfield(maxwell%n_total+1:maxwell%n_total*2), scratch )
-    e_cross_b(3) = sum(efield(1:maxwell%n_total)*scratch)
-    call  maxwell%multiply_mass( [1, 2, 3], bfield(1:maxwell%n_total), scratch )
-    e_cross_b(3) = e_cross_b(3) - sum(efield(maxwell%n_total+1:maxwell%n_total*2)*scratch)
+    call  maxwell%multiply_mass( [2, 1, 3], bfield(maxwell%n_total0+1:maxwell%n_total0+maxwell%n_total1), scratch(1:maxwell%n_total1) )
+    e_cross_b(3) = sum(efield(1:maxwell%n_total1)*scratch(1:maxwell%n_total1))
+    call  maxwell%multiply_mass( [1, 2, 3], bfield(1:maxwell%n_total0), scratch )
+    e_cross_b(3) = e_cross_b(3) - sum(efield(maxwell%n_total1+1:maxwell%n_total1+maxwell%n_total0)*scratch)
 
   end subroutine compute_e_cross_b
 
