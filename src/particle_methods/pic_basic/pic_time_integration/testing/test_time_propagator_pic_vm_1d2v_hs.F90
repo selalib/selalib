@@ -48,7 +48,7 @@ program test_time_propagator_pic_vm_1d2v_hs
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! Tolerance for comparison of real numbers: set it here!
-  sll_real64, parameter :: EQV_TOL = 1.0e-14_f64
+  sll_real64, parameter :: EQV_TOL = 1.0e-13_f64
 
   ! Abstract particle group
   class(sll_t_particle_array), pointer :: particle_group
@@ -141,11 +141,11 @@ program test_time_propagator_pic_vm_1d2v_hs
 
   SLL_ALLOCATE(particle_info_ref(n_particles,4), i_part)
   particle_info_ref = 0.0_f64
-  particle_info_ref = reshape([11.780972450961723_f64,        &
-5.4977871437821380_f64,       -1.5341205443525459_f64,       &
-0.15731068461017067_f64,       0.15731068461017067_f64,       &
--1.5341205443525459_f64,        6.8636759376074723_f64,        &
-5.7026946767517002_f64   ], [n_particles, 4])
+  particle_info_ref = reshape([11.78097245096172_f64,        &
+5.497787143782138_f64,       -1.534120544352545_f64,       &
+0.1573106846101706_f64,       0.1573106846101706_f64,       &
+-1.534120544352545_f64,        6.863675937607472_f64,        &
+5.7026946767517_f64   ], [n_particles, 4])
 
   ! Initialize particles from particle_info_ref
   xi = 0.0_f64
@@ -215,11 +215,11 @@ program test_time_propagator_pic_vm_1d2v_hs
 
   ! Compare to reference
   ! Particle information after operatorV application 
-  particle_info_ref = reshape([  11.627560396526469_f64,        &
-5.5135182122431550_f64,       -1.5341205443525459_f64,       &
-0.15731068461017067_f64,       0.31072273904542569_f64,       &
--1.5498516128135633_f64,        6.8636759376074723_f64,        &
-5.7026946767517002_f64    ], [n_particles, 4])
+  particle_info_ref = reshape([  11.6275603965264_f64,        &
+5.51351821224315_f64,       -1.53412054435254_f64,       &
+0.15731068461017_f64,       0.310722739045425_f64,       &
+-1.54985161281356_f64,        6.86367593760747_f64,        &
+5.7026946767517_f64    ], [n_particles, 4])
   ! Compare computed values to reference values
   do i_part=1,n_particles
      xi = particle_group%group(1)%get_x(i_part)
@@ -250,11 +250,11 @@ program test_time_propagator_pic_vm_1d2v_hs
 
   ! Compare to reference
   ! Particle information after operatorV application 
-  particle_info_ref = reshape([ 11.627560396526469_f64,        &
-5.5135182122431550_f64,       -1.5030482704480033_f64,       &
- 2.3255233288143329D-003,  0.31072273904542569_f64,       &
--1.5498516128135633_f64,        6.8636759376074723_f64,   &
-     5.7026946767517002_f64   ], [n_particles, 4])
+  particle_info_ref = reshape([ 11.6275603965264_f64,        &
+5.51351821224315_f64,       -1.503048270448_f64,       &
+ 2.32552332881433D-003,  0.310722739045425_f64,       &
+-1.54985161281356_f64,        6.86367593760747_f64,   &
+     5.7026946767517_f64   ], [n_particles, 4])
   ! Compare computed values to reference values
     do i_part=1,n_particles
      xi = particle_group%group(1)%get_x(i_part)
@@ -287,11 +287,11 @@ program test_time_propagator_pic_vm_1d2v_hs
 
   ! Compare to reference
   ! Particle information after operatorV application 
-  particle_info_ref = reshape([    11.627560396526469_f64,  &
-      5.5135182122431550_f64,       -1.4311461960364338_f64,&
-       2.7611337138493959E-002_f64,  0.39511488788223620_f64,  &
-     -1.3903131848268702_f64,        6.8636759376074723_f64,   &
-     5.7026946767517002_f64    ], [n_particles, 4])
+  particle_info_ref = reshape([    11.6275603965264_f64,  &
+      5.51351821224315_f64,       -1.43114619603643_f64,&
+       2.76113371384939E-002_f64,  0.395114887882236_f64,  &
+     -1.39031318482687_f64,        6.86367593760747_f64,   &
+     5.7026946767517_f64    ], [n_particles, 4])
   ! Compare computed values to reference values
     do i_part=1,n_particles
      xi = particle_group%group(1)%get_x(i_part)
@@ -324,11 +324,11 @@ program test_time_propagator_pic_vm_1d2v_hs
 
   ! Compare to reference
   ! Particle information after operatorV application 
-  particle_info_ref = reshape([   11.627560396526469_f64,    &
-    5.5135182122431550_f64,       -1.4311461960364338_f64,   &
-    2.7611337138493959E-002_f64,  0.39511488788223620_f64,    &
-   -1.3903131848268702_f64,       6.8636759376074723_f64,     &
-   5.7026946767517002_f64      ], [n_particles, 4])
+  particle_info_ref = reshape([   11.6275603965264_f64,    &
+    5.51351821224315_f64,       -1.431146196036438_f64,   &
+    2.76113371384939E-002_f64,  0.395114887882236_f64,    &
+   -1.39031318482687_f64,       6.86367593760747_f64,     &
+   5.7026946767517_f64      ], [n_particles, 4])
   ! Compare computed values to reference values
     do i_part=1,n_particles
      xi = particle_group%group(1)%get_x(i_part)
@@ -358,22 +358,22 @@ program test_time_propagator_pic_vm_1d2v_hs
   end if
 
 
-  bfield_ref = [ 0.96241425319343565_f64,        1.0704842857730226_f64, &
-       0.87749470807080665_f64,        1.0585080035598995_f64, &
-       1.0312067899733146_f64,       0.98524486372490983_f64, &
-       0.99163866889590213_f64,        1.0359265946162064_f64, &
-       0.96576229888372844_f64,        1.0213195333087741_f64 ];
+  bfield_ref = [ 0.962414253193435_f64,        1.070484285773022_f64, &
+       0.877494708070806_f64,        1.0585080035598995_f64, &
+       1.03120678997331_f64,         0.9852448637249098_f64, &
+       0.991638668895902_f64,        1.0359265946162064_f64, &
+       0.965762298883728_f64,        1.0213195333087741_f64 ];
 
-  efield_ref = reshape([ 0.3266896730082788_f64,  0.2111181666532525_f64, &
-       -3.2797353014133206_f64,       0.93182059869704992_f64, &
-       2.4099520529926513_f64,      -0.54074935301675420_f64, &
-       -6.6508143734355582E-002_f64,  -4.4526750013638647_f64, &
-       2.7314012140039408_f64,        2.4952249586987651_f64, &
-       1.2896538770270727_f64,        0.45428428470806997_f64, &
-       1.9372031866314203_f64,        1.2380946765497305_f64, &
-       0.83732795515227731_f64,        1.0244885213955153_f64, &
-       1.1187987978241094_f64,       0.68789307296286761_f64, &
-       1.0938576576751671_f64,       0.85201507883794003_f64 ], [num_cells,2]);
+  efield_ref = reshape([ 0.32668967300827_f64,  0.21111816665325_f64, &
+      -3.279735301413320_f64,       0.9318205986970499_f64, &
+       2.409952052992651_f64,      -0.5407493530167542_f64, &
+      -6.650814373435558E-002_f64, -4.4526750013638647_f64, &
+       2.731401214003940_f64,        2.495224958698765_f64, &
+       1.289653877027072_f64,        0.454284284708069_f64, &
+       1.937203186631420_f64,        1.238094676549730_f64, &
+       0.837327955152277_f64,        1.024488521395515_f64, &
+       1.118798797824109_f64,        0.687893072962867_f64, &
+       1.093857657675167_f64,        0.852015078837940_f64 ], [num_cells,2]);
 
 
   error = maxval(bfield-charge*bfield_ref)
