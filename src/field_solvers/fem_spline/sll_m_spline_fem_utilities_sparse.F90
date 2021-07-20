@@ -731,7 +731,7 @@ contains
 
     ! Compute number of non-zero elements
     n_nnz_per_row = deg1+deg2+1
-    n_nnz = n_nnz_per_row*(n_cells-deg1)+deg1*(2*deg1+deg1+1)
+    n_nnz = n_nnz_per_row*(n_cells-deg1)+deg1*(2*deg2+deg1+1)
 
     ! Create the csr matrix
     call spmat%create( n_rows=n_cells+deg1, n_cols=n_cells+deg2, n_nnz=n_nnz )

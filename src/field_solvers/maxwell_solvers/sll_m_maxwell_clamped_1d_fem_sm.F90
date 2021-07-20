@@ -726,14 +726,13 @@ contains
 
     ! Multiply coefficients by mass matrix 
     if (degree == self%s_deg_0 ) then
-
        call self%mass0%dot ( in, out)
-
     elseif (degree == self%s_deg_1) then
-
        call self%mass1%dot ( in, out)
+    elseif(degree == 10) then
+       call self%mixed_mass%dot( in, out )
     else
-       print*, 'multiply mass for other form not yet implemented'
+       print*, 'maxwell_solver_clamped_1d_fem_sm: multiply mass for other form not yet implemented'
        stop
     end if
 

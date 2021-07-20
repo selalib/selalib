@@ -45,12 +45,14 @@ module sll_m_maxwell_1d_fem
 
   use sll_m_spline_fem_utilities, only: &
        sll_s_spline_fem_mass_line, &
+       sll_s_spline_fem_mixedmass_line, &
        sll_s_spline_fem_interpolation_eigenvalues, &
        sll_s_multiply_g_1d, &
        sll_s_multiply_gt_1d
 
   use sll_m_spline_fem_utilities_sparse, only: &
-       sll_s_spline_fem_mass1d
+       sll_s_spline_fem_mass1d, &
+       sll_s_spline_fem_mixedmass1d
 
 
   implicit none
@@ -69,6 +71,7 @@ module sll_m_maxwell_1d_fem
 
      type(sll_t_matrix_csr)  :: mass0 !< 0-form mass matrix
      type(sll_t_matrix_csr)  :: mass1 !< 1-form mass matrix
+     type(sll_t_matrix_csr)  :: mixed_mass !< mixed mass matrix
 
      sll_real64, allocatable :: mass_0(:)      !< coefficients of 0-form mass matrix
      sll_real64, allocatable :: mass_1(:)      !< coefficients of 1-form mass matrix
@@ -544,19 +547,41 @@ contains
     sll_real64 :: r !< Result: squared L2 norm
 
     ! Multiply coefficients by mass matrix (use diagonalization FFT and mass matrix eigenvalues)
-    if (degree == self%s_deg_0 ) then
+    if (present(degree2)) then
+       if (degree == degree2) then
+          if (degree == self%s_deg_0 ) then
+             call solve_circulant(self, self%eig_mass0, coefs2_dofs, self%work)
+          elseif (degree == self%s_deg_1) then
+             call solve_circulant(self, self%eig_mass1, coefs2_dofs, self%work)
+          end if
+          ! Multiply by the coefficients from the left (inner product)
+          r = sum(coefs1_dofs*self%work)
+          ! Scale by delt_x
+          r = r*self%delta_x
+       else
+          if (degree == self%s_deg_0) then
+             call self%mixed_mass%dot( coefs2_dofs, self%work )
 
-       call solve_circulant(self, self%eig_mass0, coefs2_dofs, self%work)
+             ! Multiply by the coefficients from the left (inner product)
+             r = sum(coefs1_dofs*self%work)
+          else
+             call self%mixed_mass%dot( coefs1_dofs, self%work )
 
-    elseif (degree == self%s_deg_1) then
-
-       call solve_circulant(self, self%eig_mass1, coefs2_dofs, self%work)
-
+             ! Multiply by the coefficients from the left (inner product)
+             r = sum(coefs2_dofs*self%work)
+          end if
+       end if
+    else
+       if (degree == self%s_deg_0 ) then
+          call solve_circulant(self, self%eig_mass0, coefs2_dofs, self%work)
+       elseif (degree == self%s_deg_1) then
+          call solve_circulant(self, self%eig_mass1, coefs2_dofs, self%work)
+       end if
+       ! Multiply by the coefficients from the left (inner product)
+       r = sum(coefs1_dofs*self%work)
+       ! Scale by delt_x
+       r = r*self%delta_x
     end if
-    ! Multiply by the coefficients from the left (inner product)
-    r = sum(coefs1_dofs*self%work)
-    ! Scale by delt_x
-    r = r*self%delta_x
 
   end function inner_product_1d_fem
 
@@ -599,7 +624,7 @@ contains
     logical, intent(in), optional :: adiabatic_electrons !< flag if adiabatic electrons are used
     ! local variables
     sll_int32 :: ierr
-    sll_real64 :: mass_line_0(s_deg_0+1), mass_line_1(s_deg_0)
+    sll_real64 :: mass_line_0(s_deg_0+1), mass_line_1(s_deg_0), mass_line_mixed(s_deg_0*2)
     sll_int32 :: j, k ! loop variables
     sll_real64 :: coef0, coef1, sin_mode, cos_mode 
     sll_real64 :: ni !1/n_dofs in double precision
@@ -821,6 +846,10 @@ contains
        self%eig_mass1_inv(self%n_cells/2+1) = 1.0_f64 / self%eig_mass1(self%n_cells/2+1)
     end if
 
+    call sll_s_spline_fem_mixedmass_line( self%s_deg_0, mass_line_mixed)
+    mass_line_mixed=mass_line_mixed*self%delta_x
+    call sll_s_spline_fem_mixedmass1d( n_dofs, self%s_deg_0, mass_line_mixed, self%mixed_mass )
+
     ! Only for Schur complement eb solver
     call self%linear_op_schur_eb%create( self%mass0, self%mass1, self%n_cells, self%delta_x )
     call self%linear_solver_schur_eb%create( self%linear_op_schur_eb )
@@ -877,16 +906,19 @@ contains
 
     ! Multiply coefficients by mass matrix (use diagonalization FFT and mass matrix eigenvalues)
     if (degree == self%s_deg_0 ) then
-
        call solve_circulant(self, self%eig_mass0, in, out)
-
+       out = out*self%delta_x
     elseif (degree == self%s_deg_1) then
-
        call solve_circulant(self, self%eig_mass1, in, out)
-
+       out = out*self%delta_x
+    elseif(degree == 10) then
+       call self%mixed_mass%dot( in, out )
+    else
+       print*, 'maxwell_solver_1d_fem: multiply mass for other form not yet implemented'
+       stop
     end if
 
-    out = out*self%delta_x
+   
 
 
   end subroutine multiply_mass_1d_fem

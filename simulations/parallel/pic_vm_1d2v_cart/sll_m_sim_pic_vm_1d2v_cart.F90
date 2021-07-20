@@ -247,8 +247,7 @@ module sll_m_sim_pic_vm_1d2v_cart
      ! Maxwell solver 
      ! Abstract 
      class(sll_c_maxwell_1d_base), allocatable :: maxwell_solver !< Maxwell solver
-     type(sll_t_maxwell_1d_fem_sm) :: maxwell_norm !< Sparse matrix based Maxwell solver to compute the norm
-
+    
      ! Abstract kernel smoothers
      class(sll_c_particle_mesh_coupling_1d), allocatable :: kernel_smoother_0 !< Particle mesh coupling
      class(sll_c_particle_mesh_coupling_1d), allocatable :: kernel_smoother_1 !< Particle mesh coupling   
@@ -687,7 +686,6 @@ contains
                   sim%degree_smoother, sim%boundary_fields, trim(filename) )
           end select
        end if
-       call sim%maxwell_norm%init_from_file( sim%domain(1:2), sim%n_gcells, sim%degree_smoother, trim(filename) )
        ! Initialize kernel smoother
        call sll_s_new_particle_mesh_coupling_spline_cl_1d(sim%kernel_smoother_1, &
             sim%domain(1:2), sim%n_gcells, &
@@ -725,9 +723,6 @@ contains
                 call q%init( sim%domain(1:2), sim%n_gcells )
              end select
           end if
-       end if
-       if ( sim%degree_fem > -1 ) then
-          call sim%maxwell_norm%init_from_file( sim%domain(1:2), sim%n_gcells, sim%degree_fem, trim(filename), force_sign=sim%force_sign )
        end if
        ! Initialize kernel smoother
        if ( smoothing .eqv. .false. ) then
@@ -1365,32 +1360,27 @@ contains
          MPI_SUM, 0, diagnostics)
     ! Add ExB part
     if ( sim%strong_ampere .eqv. .false. ) then
-       diagnostics(2) = diagnostics(2) + sim%maxwell_norm%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree, degree-1 )
+       diagnostics(2) = diagnostics(2) + sim%maxwell_solver%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree, degree-1 )
 
-       diagnostics(3) = diagnostics(3) - sim%maxwell_solver%inner_product( sim%efield_dofs(:,1), sim%bfield_dofs, degree-1 )
+       diagnostics(3) = diagnostics(3) - sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_total1,1), sim%bfield_dofs, degree-1 )
     else
        if ( degree == -1) then             
           diagnostics(2) = diagnostics(2) + sim%maxwell_solver%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree-1, degree )
-          diagnostics(3) = diagnostics(3) - sim%maxwell_solver%inner_product( sim%efield_dofs(:,1), sim%bfield_dofs, degree, degree )
+          diagnostics(3) = diagnostics(3) - sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_total1,1), sim%bfield_dofs, degree, degree )
        else
-          ! This would be the form with mixed mass matrix
-          !diagnostics(2) = diagnostics(2) + sim%maxwell_norm%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree-1, degree )
-          ! First transform the electric field to a zero form
-          !  scratch(2:sim%n_gcells) = 0.5_f64 * (sim%efield_dofs(1:sim%n_gcells-1,2)+sim%efield_dofs(2:sim%n_gcells,2) )
-          ! scratch(1) = 0.5_f64 * (sim%efield_dofs(1,2)+sim%efield_dofs(sim%n_gcells,2) )
           scratch(1:sim%n_gcells-1) = 0.5_f64 * (sim%efield_dofs(1:sim%n_gcells-1,2)+sim%efield_dofs(2:sim%n_gcells,2) )
           scratch(sim%n_gcells) = 0.5_f64 * (sim%efield_dofs(1,2)+sim%efield_dofs(sim%n_gcells,2) )
           diagnostics(2) = diagnostics(2) + sim%maxwell_solver%inner_product( sim%bfield_dofs, scratch,  degree )
-          diagnostics(3) = diagnostics(3) - sim%maxwell_solver%inner_product( sim%efield_dofs(:,1), sim%bfield_dofs, degree )
+          diagnostics(3) = diagnostics(3) - sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_total1,1), sim%bfield_dofs, degree )
        end if
     end if
     
-    if(sim%boundary )then !Todo mixed mass for trafo clamped
+    if(sim%boundary )then 
        transfer = 0._f64
        vvb = 0._f64
        poynting = 0._f64
     else
-       call sll_s_pic_diagnostics_transfer( sim%particle_group%group(1), sim%kernel_smoother_0, sim%kernel_smoother_1, sim%efield_dofs, transfer )
+       call sll_s_pic_diagnostics_transfer( sim%particle_group%group(1), sim%kernel_smoother_0, sim%kernel_smoother_1, sim%efield_dofs(1:sim%n_total1,1), sim%efield_dofs(:,2), transfer )
 
        call sll_s_pic_diagnostics_vvb( sim%particle_group%group(1), sim%kernel_smoother_1, &
             sim%bfield_dofs, vvb )
@@ -1403,24 +1393,17 @@ contains
 
 
     if (sim%rank == 0) then
-       if( sim%boundary )then
-          potential_energy(1) = sim%maxwell_solver%L2norm_squared( sim%efield_dofs(1:sim%n_total1,1), degree-1 )/sim%plasma_betar(2)
-          potential_energy(2) = sim%maxwell_solver%L2norm_squared( sim%efield_dofs(:,2), degree )/sim%plasma_betar(2)
-
+       if (sim%strong_ampere .eqv. .false. ) then
+          potential_energy(1) = sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_total1,1),  sim%efield_dofs_n(1:sim%n_total1,1), degree-1 )/sim%plasma_betar(2)
+          potential_energy(2) = sim%maxwell_solver%inner_product( sim%efield_dofs(:,2),  sim%efield_dofs_n(:,2), degree )/sim%plasma_betar(2)
+       else
+          potential_energy(1) = sim%maxwell_solver%inner_product( sim%efield_dofs(:,1),  sim%efield_dofs_n(:,1), degree )/sim%plasma_betar(2)
+          potential_energy(2) = sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_total1,2),  sim%efield_dofs_n(1:sim%n_total1,2), degree-1 )/sim%plasma_betar(2)
+       end if
+       if ( sim%strong_ampere .eqv. .false. ) then
           potential_energy(3) = sim%maxwell_solver%L2norm_squared( sim%bfield_dofs, degree-1 )*sim%plasma_betar(3)
        else
-          if (sim%strong_ampere .eqv. .false. ) then
-             potential_energy(1) = sim%maxwell_solver%inner_product( sim%efield_dofs(:,1),  sim%efield_dofs_n(:,1), degree-1 )/sim%plasma_betar(2)
-             potential_energy(2) = sim%maxwell_solver%inner_product( sim%efield_dofs(:,2),  sim%efield_dofs_n(:,2), degree )/sim%plasma_betar(2)
-          else
-             potential_energy(1) = sim%maxwell_solver%inner_product( sim%efield_dofs(:,1),  sim%efield_dofs_n(:,1), degree, degree )/sim%plasma_betar(2)
-             potential_energy(2) = sim%maxwell_solver%inner_product( sim%efield_dofs(:,2),  sim%efield_dofs_n(:,2), degree-1, degree-1 )/sim%plasma_betar(2)
-          end if
-          if ( sim%strong_ampere .eqv. .false. ) then
-             potential_energy(3) = sim%maxwell_solver%L2norm_squared( sim%bfield_dofs, degree-1 )*sim%plasma_betar(3)
-          else
-             potential_energy(3) = sim%maxwell_solver%L2norm_squared( sim%bfield_dofs, degree )*sim%plasma_betar(3)
-          end if
+          potential_energy(3) = sim%maxwell_solver%L2norm_squared( sim%bfield_dofs, degree )*sim%plasma_betar(3)
        end if
        if(sim%adiabatic_electrons) then
           phi = sim%maxwell_solver%L2norm_squared( sim%phi_dofs, degree )
@@ -1706,11 +1689,12 @@ contains
 
 
   !> Compute \sum(particles)w_p( v_1,p e_1(x_p) + v_2,p e_2(x_p))
-  subroutine sll_s_pic_diagnostics_transfer ( particle_group, kernel_smoother_0, kernel_smoother_1, efield_dofs, transfer)
+  subroutine sll_s_pic_diagnostics_transfer ( particle_group, kernel_smoother_0, kernel_smoother_1, efield_dofs1, efield_dofs2, transfer)
     class(sll_c_particle_group_base), intent( in   )  :: particle_group !< particle group object
     class(sll_c_particle_mesh_coupling_1d) :: kernel_smoother_0  !< Kernel smoother (order p+1)
     class(sll_c_particle_mesh_coupling_1d) :: kernel_smoother_1  !< Kernel smoother (order p)   
-    sll_real64, intent( in    ) :: efield_dofs(:,:) !< coefficients of efield
+    sll_real64, intent( in    ) :: efield_dofs1(:) !< coefficients of efield
+    sll_real64, intent( in    ) :: efield_dofs2(:) !< coefficients of efield
     sll_real64, intent(   out ) :: transfer(1) !< result
 
     sll_int32 :: i_part
@@ -1723,9 +1707,9 @@ contains
        vi = particle_group%get_v( i_part )
 
        call kernel_smoother_1%evaluate &
-            (xi(1), efield_dofs(:,1), efield(1))
+            (xi(1), efield_dofs1, efield(1))
        call kernel_smoother_0%evaluate &
-            (xi(1), efield_dofs(:,2), efield(2))
+            (xi(1), efield_dofs2, efield(2))
 
        transfer_local(1) = transfer_local(1) + (vi(1) * efield(1) + vi(2) * efield(2))*wi
 
