@@ -1344,7 +1344,7 @@ contains
           call compute_e_cross_b ( sim%maxwell_solver, scratch1, sim%efield_dofs, sim%bfield_dofs, diagnostics_local(7:9) )
        end if
     end if
-    !total momentum
+    !sum up the total momentum
     diagnostics(7:9) = diagnostics(7:9) + diagnostics_local(7:9)
 
     ! Check error in Gauss law

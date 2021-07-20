@@ -25,8 +25,8 @@
 
 &pic_params
         n_particles = 100000
-        sampling_case = "particle_sampling_sobol_symmetric"
-        splitting_case = "splitting_cef"     
+        sampling_case = "particle_sampling_sobol"
+        splitting_case = "splitting_hs"     
         spline_degree = 3
 	splitting_type = "strang"
 	boundary_fields = "clamped"

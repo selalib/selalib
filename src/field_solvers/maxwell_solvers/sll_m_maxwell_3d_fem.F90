@@ -57,8 +57,8 @@ module sll_m_maxwell_3d_fem
   use sll_m_preconditioner_fft, only : &
        sll_t_preconditioner_fft
 
-  use sll_m_profile_functions!, only: &
-      ! sll_t_profile_functions
+  use sll_m_profile_functions, only: &
+       sll_t_profile_functions
 
   use sll_m_spline_fem_utilities, only : &
        sll_s_spline_fem_mass_line, &
