@@ -737,7 +737,11 @@ contains
     ! Initialize the arrays for the spline coefficients of the fields
     SLL_ALLOCATE(sim%phi_dofs(sim%n_total0), ierr)
     SLL_ALLOCATE(sim%efield_dofs(sim%n_total0,2), ierr)
-    SLL_ALLOCATE(sim%bfield_dofs(sim%n_total1), ierr)
+    if ( sim%strong_ampere .eqv. .false. ) then
+       SLL_ALLOCATE(sim%bfield_dofs(sim%n_total1), ierr)
+    else
+       SLL_ALLOCATE(sim%bfield_dofs(sim%n_total0), ierr)
+    end if
     sim%efield_dofs = 0._f64
     sim%bfield_dofs = 0._f64
 
@@ -1288,53 +1292,40 @@ contains
     call sll_s_collective_reduce_real64(sll_v_world_collective, diagnostics_local, 6,&
          MPI_SUM, 0, diagnostics)
     ! Add ExB part
-    if( sim%boundary )then
-       diagnostics(5) = diagnostics(5) + sim%maxwell_solver%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree, degree-1 )
-
-       diagnostics(5) = diagnostics(6) - sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_total1,1), sim%bfield_dofs, degree-1 )
+    if ( sim%strong_ampere .eqv. .false. ) then
+       diagnostics(5) = diagnostics(5) + sim%maxwell_norm%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree, degree-1 )
+       diagnostics(6) = diagnostics(6) - sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_total1,1), sim%bfield_dofs, degree-1 )
     else
-       if ( sim%strong_ampere .eqv. .false. ) then
-          diagnostics(5) = diagnostics(5) + sim%maxwell_norm%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree, degree-1 )
-          diagnostics(6) = diagnostics(6) - sim%maxwell_solver%inner_product( sim%efield_dofs(:,1), sim%bfield_dofs, degree-1 )
+       if ( degree == -1) then
+          diagnostics(5) = diagnostics(5) + sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_total1,2), sim%bfield_dofs, degree-1, degree )
+          diagnostics(6) = diagnostics(6) - sim%maxwell_solver%inner_product( sim%efield_dofs(:,1), sim%bfield_dofs, degree )
        else
-          if ( degree == -1) then
-             diagnostics(5) = diagnostics(5) + sim%maxwell_solver%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree-1, degree )
-             diagnostics(6) = diagnostics(6) - sim%maxwell_solver%inner_product( sim%efield_dofs(:,1), sim%bfield_dofs, degree )
-          else
-             scratch(1:sim%n_gcells-1) = 0.5_f64 * (sim%efield_dofs(1:sim%n_gcells-1,2)+sim%efield_dofs(2:sim%n_gcells,2) )
-             scratch(sim%n_gcells) = 0.5_f64 * (sim%efield_dofs(1,2)+sim%efield_dofs(sim%n_gcells,2) )
-
-             diagnostics(5) = diagnostics(5) + sim%maxwell_solver%inner_product( scratch, sim%bfield_dofs, degree )
-             diagnostics(6) = diagnostics(6) - sim%maxwell_solver%inner_product( sim%efield_dofs(:,1), sim%bfield_dofs, degree )
-          end if
+          scratch(1:sim%n_gcells-1) = 0.5_f64 * (sim%efield_dofs(1:sim%n_gcells-1,2)+sim%efield_dofs(2:sim%n_gcells,2) )
+          scratch(sim%n_gcells) = 0.5_f64 * (sim%efield_dofs(1,2)+sim%efield_dofs(sim%n_gcells,2) )
+          
+          diagnostics(5) = diagnostics(5) + sim%maxwell_solver%inner_product( scratch, sim%bfield_dofs, degree )
+          diagnostics(6) = diagnostics(6) - sim%maxwell_solver%inner_product( sim%efield_dofs(:,1), sim%bfield_dofs, degree )
        end if
     end if
-
+   
     ! Check error in Gauss law
     call check_gauss_law( sim, rho, scratch, error )
 
     if (sim%rank == 0) then
-       if( sim%boundary )then
-          potential_energy(1) = sim%maxwell_solver%L2norm_squared( sim%efield_dofs(1:sim%n_total1,1), degree-1 )/sim%plasma_betar(2)
-          potential_energy(2) = sim%maxwell_solver%L2norm_squared( sim%efield_dofs(:,2), degree )/sim%plasma_betar(2)
+       if ( sim%strong_ampere .eqv. .false. ) then
+          potential_energy(1) = sim%maxwell_solver%inner_product&
+               ( sim%efield_dofs(1:sim%n_total1,1), sim%efield_dofs_n(1:sim%n_total1,1), degree-1 )/sim%plasma_betar(2)
+          potential_energy(2) = sim%maxwell_solver%inner_product&
+               ( sim%efield_dofs(:,2), sim%efield_dofs_n(:,2), degree )/sim%plasma_betar(2)
           potential_energy(3) = sim%maxwell_solver%L2norm_squared&
                ( sim%bfield_dofs, degree-1 )*sim%plasma_betar(3)
        else
-          if ( sim%strong_ampere .eqv. .false. ) then
-             potential_energy(1) = sim%maxwell_solver%inner_product&
-                  ( sim%efield_dofs(:,1), sim%efield_dofs_n(:,1), degree-1 )/sim%plasma_betar(2)
-             potential_energy(2) = sim%maxwell_solver%inner_product&
-                  ( sim%efield_dofs(:,2), sim%efield_dofs_n(:,2), degree )/sim%plasma_betar(2)
-             potential_energy(3) = sim%maxwell_solver%L2norm_squared&
-                  ( sim%bfield_dofs, degree-1 )*sim%plasma_betar(3)
-          else
-             potential_energy(1) = sim%maxwell_solver%inner_product&
-                  ( sim%efield_dofs(:,1), sim%efield_dofs_n(:,1), degree )/sim%plasma_betar(2)
-             potential_energy(2) = sim%maxwell_solver%inner_product&
-                  ( sim%efield_dofs(:,2), sim%efield_dofs_n(:,2), degree-1 )/sim%plasma_betar(2)
-             potential_energy(3) = sim%maxwell_solver%L2norm_squared&
-                  ( sim%bfield_dofs, degree )*sim%plasma_betar(3)
-          end if
+          potential_energy(1) = sim%maxwell_solver%inner_product&
+               ( sim%efield_dofs(:,1), sim%efield_dofs_n(:,1), degree )/sim%plasma_betar(2)
+          potential_energy(2) = sim%maxwell_solver%inner_product&
+               ( sim%efield_dofs(1:sim%n_total1,2), sim%efield_dofs_n(1:sim%n_total1,2), degree-1 )/sim%plasma_betar(2)
+          potential_energy(3) = sim%maxwell_solver%L2norm_squared&
+               ( sim%bfield_dofs, degree )*sim%plasma_betar(3)
        end if
        write(file_id,'(f12.5,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16)' ) &
             time,  potential_energy, diagnostics(1:4), &

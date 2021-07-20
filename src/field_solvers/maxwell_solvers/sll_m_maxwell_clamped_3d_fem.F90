@@ -67,7 +67,8 @@ module sll_m_maxwell_clamped_3d_fem
 
   use sll_m_spline_fem_utilities_sparse, only : &
        sll_s_spline_fem_mass1d, &
-       sll_s_spline_fem_mass1d_clamped
+       sll_s_spline_fem_mass1d_clamped, &
+       sll_s_spline_fem_mixedmass1d_clamped_full
 
   use sll_m_spline_fem_utilities_3d, only: &
        sll_s_spline_fem_mass3d
@@ -749,7 +750,7 @@ contains
     ! local variables
     sll_int32 :: j,k, deg(3)
     sll_real64 :: mass_line_b0((s_deg_0(1)+1)*s_deg_0(1)), mass_line_b1(s_deg_0(1)*(s_deg_0(1)-1))
-    sll_real64, allocatable ::  mass_line_0(:), mass_line_1(:)
+    sll_real64, allocatable ::  mass_line_0(:), mass_line_1(:), mass_line_mixed(:)
 
     if( present( mass_tolerance) ) then
        self%mass_solver_tolerance = mass_tolerance
@@ -828,6 +829,8 @@ contains
     deallocate( mass_line_0 )
     deallocate( mass_line_1 )
 
+    call sll_s_spline_fem_mixedmass1d_clamped_full( n_cells(1),  self%s_deg_0(1),  self%s_deg_1(1), self%mass1d(3,1), profile_mix, self%spline0_pp, self%spline1_pp )
+
     do j=2, 3
        allocate( mass_line_0(s_deg_0(j)+1) ) 
        allocate( mass_line_1(s_deg_0(j)) )
@@ -844,9 +847,14 @@ contains
        call self%mass1d_solver(1,j)%create( self%mass1d(1,j) )
        call self%mass1d_solver(2,j)%create( self%mass1d(2,j) )
 
+        call sll_s_spline_fem_mixedmass1d( self%n_dofs(j), self%s_deg_0(j), mass_line_mixed*self%delta_x(j), &
+            self%mass1d(3,j) )
+
+
 
        deallocate( mass_line_0 )
        deallocate( mass_line_1 )
+       deallocate( mass_line_mixed )
     end do
 
     do j=1,3
@@ -985,6 +993,14 @@ contains
       profile_0 = product(self%Lx) 
 
     end function profile_0
+
+    function profile_mix( x)
+      sll_real64 :: profile_mix
+      sll_real64, intent(in) :: x
+    
+      profile_mix = product(self%Lx)
+
+    end function profile_mix
 
   end subroutine init_3d_fem
 
@@ -1245,7 +1261,7 @@ contains
           end do
        end do
     else
-       SLL_ERROR('maxwell_solver%multiply_mass','clamped mixed mass not yet implemented')
+       print*, 'mixed_mass not yet implemented'
     end if
     deallocate( self%work3d )
     deallocate( self%work_d1 )

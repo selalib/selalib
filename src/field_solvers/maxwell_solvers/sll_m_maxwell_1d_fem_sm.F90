@@ -380,7 +380,6 @@ contains
     sll_int32, optional  :: degree2 !< Specify the degree of the basis functions
     sll_real64 :: r !< Result: squared L2 norm
 
-    ! Multiply coefficients by mass matrix (use diagonalization FFT and mass matrix eigenvalues)
     if (present(degree2)) then
        if (degree == degree2) then
           if (degree == self%s_deg_0 ) then
@@ -399,13 +398,11 @@ contains
           r = sum(coefs1_dofs*self%work)
        else
           if (degree == self%s_deg_0) then
-             call self%mixed_mass%dot( coefs2_dofs, self%work )
-
+             call self%multiply_mass( coefs2_dofs, self%work, 10 )
              ! Multiply by the coefficients from the left (inner product)
              r = sum(coefs1_dofs*self%work)
           else
-             call self%mixed_mass%dot( coefs1_dofs, self%work )
-
+             call self%multiply_mass( coefs1_dofs, self%work, 10 )
              ! Multiply by the coefficients from the left (inner product)
              r = sum(coefs2_dofs*self%work)
           end if
@@ -650,13 +647,14 @@ contains
 
     ! Multiply coefficients by mass matrix 
     if (degree == self%s_deg_0 ) then
-
        call self%mass0%dot ( in, out)
-
     elseif (degree == self%s_deg_1) then
-
        call self%mass1%dot ( in, out)
-
+    elseif(degree == 10) then
+       call self%mixed_mass%dot( in, out )
+    else
+       print*, 'maxwell_solver_1d_fem_sm: multiply mass for other form not yet implemented'
+       stop
     end if
 
   end subroutine multiply_mass_1d_fem_sm

@@ -8,11 +8,15 @@
 
 &cos_onegaussian
         kx = 1.25
+	modnum = 0.0
         alpha = 0.0
         v_thermal = 0.2  0.005773502691896
         v_mean = 0.0 0.0
 /      
 
+&output
+	file_prefix = "test"
+/
 &grid_dims
         ng_x = 32
         x1_min = 0.0
@@ -22,6 +26,20 @@
 &pic_params
         n_particles = 100000
         sampling_case = "particle_sampling_sobol_symmetric"
-        splitting_case = "splitting_symplectic"     
+        splitting_case = "splitting_cef"     
         spline_degree = 3
+	splitting_type = "strang"
+	boundary_fields = "clamped"
+	boundary_particles = "reflection"
+/
+&ctest
+/
+
+&maxwell_solver
+        mass_tolerance = 1E-12
+        poisson_tolerance = 1E-12
+/
+
+&time_solver
+        maxwell_tolerance = 1E-14
 /

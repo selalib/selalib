@@ -679,7 +679,7 @@ contains
     elseif(degree == 10) then
        call self%mixed_mass%dot( in, out )
     else
-       print*, 'multiply mass for other form not yet implemented'
+       print*, 'maxwell_solver_1d_trafo: multiply mass for other form not yet implemented'
        stop
     end if
 
