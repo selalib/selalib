@@ -63,11 +63,13 @@ module sll_m_maxwell_clamped_3d_fem
 
   use sll_m_spline_fem_utilities, only : &
        sll_s_spline_fem_mass_line, &
+       sll_s_spline_fem_mixedmass_line, &
        sll_s_spline_fem_mass_line_boundary
 
   use sll_m_spline_fem_utilities_sparse, only : &
        sll_s_spline_fem_mass1d, &
        sll_s_spline_fem_mass1d_clamped, &
+       sll_s_spline_fem_mixedmass1d, & 
        sll_s_spline_fem_mixedmass1d_clamped_full
 
   use sll_m_spline_fem_utilities_3d, only: &
@@ -113,7 +115,7 @@ module sll_m_maxwell_clamped_3d_fem
      sll_real64, allocatable :: work_d2_out(:) !< scratch data
      sll_real64, allocatable :: work_d3_in(:) !< scratch data
      sll_real64, allocatable :: work_d3_out(:) !< scratch data
-     type(sll_t_matrix_csr)  :: mass1d(2,3)  !< 1D mass matrices
+     type(sll_t_matrix_csr)  :: mass1d(3,3)  !< 1D mass matrices
      type(sll_t_matrix_csr)  :: mass0       !< 0-form mass matrix
 
      type(sll_t_linear_operator_kron) :: mass1(3) !< Tensorproduct 1-form mass matrix
@@ -831,14 +833,12 @@ contains
 
     call sll_s_spline_fem_mixedmass1d_clamped_full( n_cells(1),  self%s_deg_0(1),  self%s_deg_1(1), self%mass1d(3,1), profile_mix, self%spline0_pp, self%spline1_pp )
 
-    do j=2, 3
+    do j = 2, 3
        allocate( mass_line_0(s_deg_0(j)+1) ) 
        allocate( mass_line_1(s_deg_0(j)) )
-
+       allocate( mass_line_mixed(s_deg_0(j)*2) )
        call sll_s_spline_fem_mass_line ( self%s_deg_0(j), mass_line_0 )
        call sll_s_spline_fem_mass_line ( self%s_deg_1(j), mass_line_1 )
-
-
 
        call sll_s_spline_fem_mass1d( n_cells(j), self%s_deg_0(j), mass_line_0, self%mass1d(1,j) )
        call sll_s_spline_fem_mass1d( n_cells(j), self%s_deg_1(j), mass_line_1, self%mass1d(2,j) )
@@ -847,9 +847,9 @@ contains
        call self%mass1d_solver(1,j)%create( self%mass1d(1,j) )
        call self%mass1d_solver(2,j)%create( self%mass1d(2,j) )
 
-        call sll_s_spline_fem_mixedmass1d( self%n_dofs(j), self%s_deg_0(j), mass_line_mixed*self%delta_x(j), &
+       call sll_s_spline_fem_mixedmass_line ( self%s_deg_0(j), mass_line_mixed )
+       call sll_s_spline_fem_mixedmass1d( self%n_dofs(j), self%s_deg_0(j), mass_line_mixed*self%delta_x(j), &
             self%mass1d(3,j) )
-
 
 
        deallocate( mass_line_0 )
@@ -997,7 +997,7 @@ contains
     function profile_mix( x)
       sll_real64 :: profile_mix
       sll_real64, intent(in) :: x
-    
+
       profile_mix = product(self%Lx)
 
     end function profile_mix
@@ -1192,14 +1192,13 @@ contains
     ! Local variables
     sll_int32 :: i,j,k,istart,iend
 
-    if(deg(1)==1)then
+    if(deg(1) == 1)then
        allocate( self%work3d(self%n_dofs(1), self%n_cells(2), self%n_cells(3)) )
        allocate( self%work_d1( self%n_dofs(1) )  ) 
        istart = 1
        iend = self%n_dofs(1)
-       do k=1,self%n_cells(3)
-          do j=1,self%n_cells(2)
-
+       do k = 1, self%n_cells(3)
+          do j = 1, self%n_cells(2)
              call self%mass1d(deg(1),1)%dot( coefs_in(istart:iend), self%work_d1 )
              self%work3d(:,j,k) = self%work_d1
              istart = iend+1
@@ -1207,8 +1206,8 @@ contains
           end do
        end do
 
-       do k=1,self%n_cells(3)
-          do i =1,self%n_dofs(1)
+       do k = 1, self%n_cells(3)
+          do i = 1, self%n_dofs(1)
              self%work_d2_in = self%work3d(i,:,k)
              call self%mass1d(deg(2),2)%dot( self%work_d2_in, self%work_d2_out )
              self%work3d(i,:,k) = self%work_d2_out
@@ -1216,24 +1215,23 @@ contains
        end do
 
        istart = 1
-       do j=1,self%n_cells(2)
-          do i =1,self%n_dofs(1)
+       do j = 1, self%n_cells(2)
+          do i = 1, self%n_dofs(1)
              self%work_d3_in = self%work3d(i,j,:)
              call self%mass1d(deg(3),3)%dot( self%work_d3_in, self%work_d3_out )
-             do k=1,self%n_cells(3)
+             do k = 1, self%n_cells(3)
                 coefs_out(istart+(k-1)*self%n_dofs(1)*self%n_cells(2)) = self%work_d3_out(k)
              end do
              istart = istart +1
           end do
        end do
-    else if (deg(1)==2)then
+    else if (deg(1) == 2)then
        allocate( self%work3d(self%n_dofs(1)-1, self%n_cells(2), self%n_cells(3)) )
        allocate( self%work_d1( self%n_dofs(1)-1 )  ) 
        istart = 1
        iend = self%n_dofs(1)-1
-       do k=1,self%n_cells(3)
-          do j=1,self%n_cells(2)
-
+       do k = 1, self%n_cells(3)
+          do j = 1, self%n_cells(2)
              call self%mass1d(deg(1),1)%dot( coefs_in(istart:iend), self%work_d1 )
              self%work3d(:,j,k) = self%work_d1
              istart = iend+1
@@ -1241,8 +1239,8 @@ contains
           end do
        end do
 
-       do k=1,self%n_cells(3)
-          do i =1, self%n_dofs(1)-1
+       do k = 1, self%n_cells(3)
+          do i = 1, self%n_dofs(1)-1
              self%work_d2_in = self%work3d(i,:,k)
              call self%mass1d(deg(2),2)%dot( self%work_d2_in, self%work_d2_out )
              self%work3d(i,:,k) = self%work_d2_out
@@ -1250,24 +1248,54 @@ contains
        end do
 
        istart = 1
-       do j=1,self%n_cells(2)
-          do i =1, self%n_dofs(1)-1
+       do j = 1, self%n_cells(2)
+          do i = 1, self%n_dofs(1)-1
              self%work_d3_in = self%work3d(i,j,:)
              call self%mass1d(deg(3),3)%dot( self%work_d3_in, self%work_d3_out )
-             do k=1,self%n_cells(3)
+             do k = 1, self%n_cells(3)
                 coefs_out(istart+(k-1)*(self%n_dofs(1)-1)*self%n_cells(2)) = self%work_d3_out(k)
              end do
              istart = istart +1
           end do
        end do
-    else
-       print*, 'mixed_mass not yet implemented'
+    else if(deg(1) == 3) then
+       allocate( self%work3d(self%n_dofs(1), self%n_cells(2), self%n_cells(3)) )
+       allocate( self%work_d1( self%n_dofs(1) )  ) 
+       istart = 1
+       iend = self%n_dofs(1)-1
+       do k = 1, self%n_cells(3)
+          do j = 1, self%n_cells(2)
+             call self%mass1d(deg(1),1)%dot( coefs_in(istart:iend), self%work_d1 )
+             self%work3d(:,j,k) = self%work_d1
+             istart = iend+1
+             iend = iend + self%n_dofs(1)-1
+          end do
+       end do
+
+       do k = 1, self%n_cells(3)
+          do i = 1, self%n_dofs(1)
+             self%work_d2_in = self%work3d(i,:,k)
+             call self%mass1d(deg(2),2)%dot( self%work_d2_in, self%work_d2_out )
+             self%work3d(i,:,k) = self%work_d2_out
+          end do
+       end do
+
+       istart = 1
+       do j = 1, self%n_cells(2)
+          do i = 1, self%n_dofs(1)
+             self%work_d3_in = self%work3d(i,j,:)
+             call self%mass1d(deg(3),3)%dot( self%work_d3_in, self%work_d3_out )
+             do k = 1, self%n_cells(3)
+                coefs_out(istart+(k-1)*self%n_dofs(1)*self%n_cells(2)) = self%work_d3_out(k)
+             end do
+             istart = istart +1
+          end do
+       end do
     end if
     deallocate( self%work3d )
     deallocate( self%work_d1 )
 
   end subroutine multiply_mass_3dkron
-
 
 
   !> Multiply by the inverse mass matrix 
@@ -1306,89 +1334,6 @@ contains
        stop
     end select
   end subroutine multiply_mass_inverse_3d_fem
-
-
-  !> Multiply by the mass matrix 
-  subroutine multiply_mass_2dkron(  self, deg, coefs_in, coefs_out )
-    class(sll_t_maxwell_clamped_3d_fem) :: self !< Maxwell_Clamped solver class
-    sll_int32,  intent( in   )  :: deg(:) !< \a deg(i) specifies the degree of the 1d mass matrix in dimension \a i (Note: 1 for 0-form, 2 for 1-form, 3 for 0-1-form mix)
-    sll_real64, intent( in    )  :: coefs_in(:) !< Coefficient for each DoF
-    sll_real64, intent(   out )  :: coefs_out(:)  !< Coefficient for each DoF
-    ! Local variables
-    sll_int32 :: j,k
-
-    coefs_out=0._f64
-    if (deg(1)==2)then
-       allocate( self%work3d(self%n_dofs(1), self%n_cells(2), self%n_cells(3)) )
-       self%work3d=0._f64
-       do k=1,self%n_cells(3)
-          do j=1,self%n_cells(2)
-             self%work3d(1,j,k) = -coefs_in(1+(j-1)*(self%n_dofs(1)-1)+(k-1)*(self%n_dofs(1)-1)*self%n_cells(2))
-             self%work3d(self%n_dofs(1),j,k) = coefs_in(self%n_dofs(1)-1+(j-1)*(self%n_dofs(1)-1)+(k-1)*(self%n_dofs(1)-1)*self%n_cells(2))
-          end do
-       end do
-
-       do k=1,self%n_cells(3)
-          self%work_d2_in = self%work3d(1,:,k)
-          call self%mass1d(deg(2),2)%dot( self%work_d2_in, self%work_d2_out )
-          self%work3d(1,:,k) = self%work_d2_out
-
-          self%work_d2_in = self%work3d(self%n_dofs(1),:,k)
-          call self%mass1d(deg(2),2)%dot( self%work_d2_in, self%work_d2_out )
-          self%work3d(self%n_dofs(1),:,k) = self%work_d2_out
-       end do
-
-       do j=1,self%n_cells(2)
-          self%work_d3_in = self%work3d(1,j,:)
-          call self%mass1d(deg(3),3)%dot( self%work_d3_in, self%work_d3_out )
-          do k=1,self%n_cells(3)
-             coefs_out(1+(j-1)*self%n_dofs(1)+(k-1)*self%n_dofs(1)*self%n_cells(2)) = self%work_d3_out(k)
-          end do
-          self%work_d3_in = self%work3d(self%n_dofs(1),j,:)
-          call self%mass1d(deg(3),3)%dot( self%work_d3_in, self%work_d3_out )
-          do k=1,self%n_cells(3)
-             coefs_out(self%n_dofs(1)+(j-1)*self%n_dofs(1)+(k-1)*self%n_dofs(1)*self%n_cells(2)) = self%work_d3_out(k)
-          end do
-       end do
-    else if(deg(1)==1)then
-       allocate( self%work3d(self%n_dofs(1), self%n_cells(2), self%n_cells(3)) )
-       self%work3d=0._f64
-       do k=1,self%n_cells(3)
-          do j=1,self%n_cells(2)
-             self%work3d(1,j,k) = -coefs_in(1+(j-1)*self%n_dofs(1)+(k-1)*self%n_dofs(1)*self%n_cells(2))
-             self%work3d(self%n_dofs(1),j,k) = coefs_in(self%n_dofs(1)+(j-1)*self%n_dofs(1)+(k-1)*self%n_dofs(1)*self%n_cells(2))
-          end do
-       end do
-
-       do k=1,self%n_cells(3)
-          self%work_d2_in = self%work3d(1,:,k)
-          call self%mass1d(deg(2),2)%dot( self%work_d2_in, self%work_d2_out )
-          self%work3d(1,:,k) = self%work_d2_out
-
-          self%work_d2_in = self%work3d(self%n_dofs(1),:,k)
-          call self%mass1d(deg(2),2)%dot( self%work_d2_in, self%work_d2_out )
-          self%work3d(self%n_dofs(1),:,k) = self%work_d2_out
-       end do
-
-       do j=1,self%n_cells(2)
-          self%work_d3_in = self%work3d(1,j,:)
-          call self%mass1d(deg(3),3)%dot( self%work_d3_in, self%work_d3_out )
-          do k=1,self%n_cells(3)
-             coefs_out(1+(j-1)*self%n_dofs(1)+(k-1)*self%n_dofs(1)*self%n_cells(2)) = self%work_d3_out(k)
-          end do
-          self%work_d3_in = self%work3d(self%n_dofs(1),j,:)
-          call self%mass1d(deg(3),3)%dot( self%work_d3_in, self%work_d3_out )
-          do k=1,self%n_cells(3)
-             coefs_out(self%n_dofs(1)+(j-1)*self%n_dofs(1)+(k-1)*self%n_dofs(1)*self%n_cells(2)) = self%work_d3_out(k)
-          end do
-       end do
-    else
-       print*, 'multiply_mass_2dkron not implemented for this degree'
-       stop
-    end if
-    deallocate( self%work3d)
-
-  end subroutine multiply_mass_2dkron
 
 
   !> Compute field energy
