@@ -481,7 +481,7 @@ program test_time_propagator_pic_3d3v_vm_disgradE
   call particle_mesh_coupling%free()
   deallocate(particle_mesh_coupling)
   call maxwell_solver%free()
-  deallocate(maxwell_solver)
+  !deallocate(maxwell_solver)
 
   call sll_s_halt_collective()
 
