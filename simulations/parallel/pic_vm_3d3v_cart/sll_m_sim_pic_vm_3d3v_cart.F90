@@ -2053,7 +2053,7 @@ contains
     sll_int32,  intent( in    )             :: n_total0, n_total1 !< total number of DoFs for 0- and 1-form
     sll_real64, intent(   out )             :: ecb(3) !< E cross B 
     !local variables
-    sll_int32  :: i, k3, k2, k1, q(3)
+    sll_int32  :: i, k3, k2, k1, j3, j2, j1, q(3)
     sll_real64, allocatable :: xw_gauss_d1(:,:), xw_gauss_d2(:,:), xw_gauss_d3(:,:)
     sll_real64 :: xi(3), N(3,3), DF(3,3)
     sll_real64 :: e_phys(3), b_phys(3), efield(3), bfield(3)
@@ -2064,7 +2064,7 @@ contains
     b_phys = 0.0_f64
     ecb = 0.0_f64
 
-    q = 3*maxval(deg)+1
+    q = 2*maxval(deg)+1
     allocate( xw_gauss_d1(1:2, 1:q(1)) )
     allocate( xw_gauss_d2(1:2, 1:q(2)) )
     allocate( xw_gauss_d3(1:2, 1:q(3)) )
@@ -2073,41 +2073,47 @@ contains
     xw_gauss_d2 = sll_f_gauss_legendre_points_and_weights( q(2), 0._f64, 1._f64 )
     xw_gauss_d3 = sll_f_gauss_legendre_points_and_weights( q(3), 0._f64, 1._f64 )
 
-    ! loop over Gauss points
-    do k3=1, q(3) 
-       xi(3)=xw_gauss_d3(1,k3)
-       do k2=1, q(2)
-          xi(2)=xw_gauss_d2(1,k2)
-          do k1=1, q(1)
-             xi(1)=xw_gauss_d1(1,k1)
+    do j3 = 1, particle_mesh_coupling%n_cells(3) 
+       do j2 = 1, particle_mesh_coupling%n_cells(2)
+          do j1 = 1, particle_mesh_coupling%n_cells(1)
+             ! loop over Gauss points
+             do k3 = 1, q(3) 
+                xi(3) = particle_mesh_coupling%delta_x(3)*(xw_gauss_d3(1,k3) + real(j3 - 1,f64))
+                do k2 = 1, q(2)
+                   xi(2) = particle_mesh_coupling%delta_x(2)*(xw_gauss_d2(1,k2) + real(j2 - 1,f64))
+                   do k1 = 1, q(1)
+                      xi(1) = particle_mesh_coupling%delta_x(1)*(xw_gauss_d1(1,k1) + real(j1 - 1,f64))
+                      
+                      call particle_mesh_coupling%evaluate( xi, [deg(1)-1, deg(2), deg(3)], &
+                           efield_dofs(1:n_total1), efield(1))
+                      call particle_mesh_coupling%evaluate( xi, [deg(1), deg(2)-1, deg(3)], &
+                           efield_dofs(1+n_total1:n_total1+n_total0), efield(2))
+                      call particle_mesh_coupling%evaluate( xi, [deg(1), deg(2), deg(3)-1], &
+                           efield_dofs(1+n_total1+n_total0:n_total1+2*n_total0), efield(3))
 
-             call particle_mesh_coupling%evaluate( xi, [deg(1)-1, deg(2), deg(3)], &
-                  efield_dofs(1:n_total1), efield(1))
-             call particle_mesh_coupling%evaluate( xi, [deg(1), deg(2)-1, deg(3)], &
-                  efield_dofs(1+n_total1:n_total1+n_total0), efield(2))
-             call particle_mesh_coupling%evaluate( xi, [deg(1), deg(2), deg(3)-1], &
-                  efield_dofs(1+n_total1+n_total0:n_total1+2*n_total0), efield(3))
+                      call particle_mesh_coupling%evaluate( xi, [deg(1), deg(2)-1, deg(3)-1], &
+                           bfield_dofs(1:n_total0), bfield(1))
+                      call particle_mesh_coupling%evaluate( xi, [deg(1)-1, deg(2), deg(3)-1], &
+                           bfield_dofs(1+n_total0:n_total0+n_total1), bfield(2))
+                      call particle_mesh_coupling%evaluate( xi, [deg(1)-1, deg(2)-1, deg(3)], &
+                           bfield_dofs(1+n_total0+n_total1:n_total0+2*n_total1), bfield(3))
 
-             call particle_mesh_coupling%evaluate( xi, [deg(1), deg(2)-1, deg(3)-1], &
-                  bfield_dofs(1:n_total0), bfield(1))
-             call particle_mesh_coupling%evaluate( xi, [deg(1)-1, deg(2), deg(3)-1], &
-                  bfield_dofs(1+n_total0:n_total0+n_total1), bfield(2))
-             call particle_mesh_coupling%evaluate( xi, [deg(1)-1, deg(2)-1, deg(3)], &
-                  bfield_dofs(1+n_total0+n_total1:n_total0+2*n_total1), bfield(3))
+                      N = map%jacobian_matrix_inverse( xi )
+                      DF = map%jacobian_matrix( xi ) 
 
-             N = map%jacobian_matrix_inverse( xi )
-             DF = map%jacobian_matrix( xi ) 
-
-             do i = 1, 3
-                e_phys(i) = (N(i,1)* efield(1)+N(i,2)* efield(2)+N(i,3)* efield(3)) *&
-                     xw_gauss_d1(2,k1)* xw_gauss_d2(2,k2)* xw_gauss_d3(2,k3)
-                b_phys(i) = (DF(i,1)* bfield(1)+DF(i,2)* bfield(2)+DF(i,3)* bfield(3)) *&
-                     xw_gauss_d1(2,k1)* xw_gauss_d2(2,k2)* xw_gauss_d3(2,k3)
+                      do i = 1, 3
+                         e_phys(i) = (N(i,1)* efield(1)+N(i,2)* efield(2)+N(i,3)* efield(3)) *&
+                              xw_gauss_d1(2,k1)* xw_gauss_d2(2,k2)* xw_gauss_d3(2,k3)
+                         b_phys(i) = (DF(i,1)* bfield(1)+DF(i,2)* bfield(2)+DF(i,3)* bfield(3)) *&
+                              xw_gauss_d1(2,k1)* xw_gauss_d2(2,k2)* xw_gauss_d3(2,k3)
+                      end do
+                      
+                      ecb(1) = ecb(1) + e_phys(2) * b_phys(3) - e_phys(3) * b_phys(2)
+                      ecb(2) = ecb(2) + e_phys(3) * b_phys(1) - e_phys(1) * b_phys(3)
+                      ecb(3) = ecb(3) + e_phys(1) * b_phys(2) - e_phys(2) * b_phys(1)
+                   end do
+                end do
              end do
-
-             ecb(1) = ecb(1) + e_phys(2) * b_phys(3) - e_phys(3) * b_phys(2)
-             ecb(2) = ecb(2) + e_phys(3) * b_phys(1) - e_phys(1) * b_phys(3)
-             ecb(3) = ecb(3) + e_phys(1) * b_phys(2) - e_phys(2) * b_phys(1)
           end do
        end do
     end do
