@@ -790,13 +790,14 @@ contains
     logical, optional, intent(in)    :: electrostatic !< true for electrostatic simulation
     logical, optional, intent(in)    :: jmean !< logical for mean value of current
     !local variables
+    character(len=256) :: file_prefix
     sll_int32 :: input_file, rank
-    sll_int32 :: io_stat, file_id, boundary_particles_set 
+    sll_int32 :: io_stat, io_stat0, file_id, boundary_particles_set 
     sll_real64 :: maxwell_tolerance, force_sign_set, betar_set(2)
     logical :: electrostatic_set
     logical :: jmean_set
 
-
+    namelist /output/ file_prefix
     namelist /time_solver/ maxwell_tolerance
 
     rank = sll_f_get_collective_rank(sll_v_world_collective)
@@ -838,7 +839,7 @@ contains
        if (io_stat /= 0) then
           if (rank == 0 ) then
              print*, 'sll_m_time_propagator_pic_vm_1d2v_disgradE: Input file does not exist. Set default tolerance.'
-             open(newunit=file_id, file=trim(filename)//'_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
+             open(newunit=file_id, file=trim(file_prefix)//'_parameters_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
              write(file_id, *) 'solver tolerance:', 1d-12
              write(file_id, *) 'force_sign:', force_sign_set
              write(file_id, *) 'betar:', betar_set
@@ -863,10 +864,11 @@ contains
                electrostatic=electrostatic_set,&
                jmean=jmean_set)
        else
+          read(input_file, output, IOStat=io_stat0)
           read(input_file, time_solver,IOStat=io_stat)
           if (io_stat /= 0) then
              if (rank == 0 ) then
-                open(newunit=file_id, file=trim(filename)//'_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
+                open(newunit=file_id, file=trim(file_prefix)//'_parameters_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
                 write(file_id, *) 'solver tolerance:', 1d-12
                 write(file_id, *) 'force_sign:', force_sign_set
                 write(file_id, *) 'betar:', betar_set
@@ -892,7 +894,7 @@ contains
                   jmean=jmean_set)
           else
              if (rank == 0 ) then
-                open(newunit=file_id, file=trim(filename)//'_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
+                open(newunit=file_id, file=trim(file_prefix)//'_parameters_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
                 write(file_id, *) 'solver tolerance:', maxwell_tolerance
                 write(file_id, *) 'force_sign:', force_sign_set
                 write(file_id, *) 'betar:', betar_set
@@ -927,7 +929,7 @@ contains
        if (io_stat /= 0) then
           if (rank == 0 ) then
              print*, 'sll_m_time_propagator_pic_vm_1d2v_disgradE: Input file does not exist. Set default tolerance.'
-             open(newunit=file_id, file=trim(filename)//'_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
+             open(newunit=file_id, file=trim(file_prefix)//'_parameters_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
              write(file_id, *) 'solver tolerance:', 1d-12
              write(file_id, *) 'force_sign:', force_sign_set
              write(file_id, *) 'betar:', betar_set
@@ -950,10 +952,11 @@ contains
                electrostatic=electrostatic_set,&
                jmean=jmean_set)
        else
+          read(input_file, output, IOStat=io_stat0)
           read(input_file, time_solver,IOStat=io_stat)
           if (io_stat /= 0) then
              if (rank == 0 ) then
-                open(newunit=file_id, file=trim(filename)//'_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
+                open(newunit=file_id, file=trim(file_prefix)//'_parameters_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
                 write(file_id, *) 'solver tolerance:', 1d-12
                 write(file_id, *) 'force_sign:', force_sign_set
                 write(file_id, *) 'betar:', betar_set
@@ -977,7 +980,7 @@ contains
                   jmean=jmean_set)
           else
              if (rank == 0 ) then
-                open(newunit=file_id, file=trim(filename)//'_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
+                open(newunit=file_id, file=trim(file_prefix)//'_parameters_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
                 write(file_id, *) 'solver tolerance:', maxwell_tolerance
                 write(file_id, *) 'force_sign:', force_sign_set
                 write(file_id, *) 'betar:', betar_set

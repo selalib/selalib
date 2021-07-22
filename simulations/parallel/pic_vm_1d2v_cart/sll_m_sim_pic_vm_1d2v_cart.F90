@@ -247,7 +247,7 @@ module sll_m_sim_pic_vm_1d2v_cart
      ! Maxwell solver 
      ! Abstract 
      class(sll_c_maxwell_1d_base), allocatable :: maxwell_solver !< Maxwell solver
-    
+
      ! Abstract kernel smoothers
      class(sll_c_particle_mesh_coupling_1d), allocatable :: kernel_smoother_0 !< Particle mesh coupling
      class(sll_c_particle_mesh_coupling_1d), allocatable :: kernel_smoother_1 !< Particle mesh coupling   
@@ -292,6 +292,8 @@ module sll_m_sim_pic_vm_1d2v_cart
      ! Case definitions
      sll_int32  :: initial_bfield !< case for intial magnetic field
      sll_real64 :: charge !< charge of particle species
+
+     sll_real64, allocatable :: background_charge(:) !< background distribution of neutralizing ions
 
      ! Output
      character(len=256)   :: file_prefix !< name of diagnostic file
@@ -669,7 +671,7 @@ contains
        open(newunit=file_id, file=trim(sim%file_prefix)//'_parameters_used.dat')
        close(file_id)
     end if
-    
+
     if( sim%boundary )then
        ! Initialize the field solver
        if (sim%ct) then
@@ -766,7 +768,11 @@ contains
     sim%bfield_dofs = 0._f64
 
     SLL_ALLOCATE(sim%rhob(1:sim%n_total0), ierr)
+    SLL_ALLOCATE(sim%background_charge(1:sim%n_total0), ierr)
     sim%rhob = 0._f64
+    sim%background_charge = 0.0_f64
+
+    call add_background_charge(sim, sim%background_charge)
 
     ! Initialize the time-splitting propagator
     if (sim%splitting_case == sll_p_splitting_hs) then
@@ -1311,196 +1317,6 @@ contains
   end function control_variate_equi
 
 
-  !------------------------------------------------------------------------------!
-  !Diagnostic functions and other helper functions
-  !> Diagnostics for PIC Vlasov-Maxwell 1d2v 
-  !> @todo (should be part of the library)
-  subroutine sll_s_time_history_diagnostics_pic_vm_1d2v(&
-       sim,&
-       time, &
-       file_id, &
-       rho, scratch)
-    class(sll_t_sim_pic_vm_1d2v_cart), intent(inout) :: sim !< Singlespecies simulation
-    sll_real64,                        intent(in   ) :: time !< time
-    sll_int32,                         intent(in   ) :: file_id !< file ide
-    sll_real64,                        intent(  out) :: rho(:) !< scratch data
-    sll_real64,                        intent(  out) :: scratch(:) !< scratch data
-    ! local variables
-    sll_real64 :: diagnostics_local(3)
-    sll_real64 :: diagnostics(3)
-    sll_real64 :: potential_energy(3)
-    sll_int32  :: i_part
-    sll_int32  :: degree
-    sll_real64 :: vi(3),  xi(3)
-    sll_real64 :: wi(1)
-    sll_real64 :: transfer(1), vvb(1), poynting
-    sll_real64 :: error, phi
-
-    degree = sim%degree_fem
-
-    diagnostics_local = 0.0_f64
-    do i_part=1,sim%particle_group%group(1)%n_particles
-       vi = sim%particle_group%group(1)%get_v(i_part)
-       xi = sim%particle_group%group(1)%get_x(i_part)
-       wi = sim%particle_group%group(1)%get_mass(i_part)
-
-       ! Kinetic energy
-       diagnostics_local(1) = diagnostics_local(1) + &
-            (vi(1)**2+vi(2)**2)*wi(1)!*0.5_f64
-       ! Momentum 1
-       diagnostics_local(2) = diagnostics_local(2) + &
-            vi(1)*wi(1)
-       ! Momentum 2
-       diagnostics_local(3) = diagnostics_local(3) + &
-            vi(2)*wi(1)
-
-    end do
-    diagnostics = 0.0_f64
-    call sll_s_collective_reduce_real64(sll_v_world_collective, diagnostics_local, 3,&
-         MPI_SUM, 0, diagnostics)
-    ! Add ExB part
-    if ( sim%strong_ampere .eqv. .false. ) then
-       diagnostics(2) = diagnostics(2) + sim%maxwell_solver%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree, degree-1 )
-
-       diagnostics(3) = diagnostics(3) - sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_total1,1), sim%bfield_dofs, degree-1 )
-    else
-       if ( degree == -1) then             
-          diagnostics(2) = diagnostics(2) + sim%maxwell_solver%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree-1, degree )
-          diagnostics(3) = diagnostics(3) - sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_total1,1), sim%bfield_dofs, degree, degree )
-       else
-          scratch(1:sim%n_gcells-1) = 0.5_f64 * (sim%efield_dofs(1:sim%n_gcells-1,2)+sim%efield_dofs(2:sim%n_gcells,2) )
-          scratch(sim%n_gcells) = 0.5_f64 * (sim%efield_dofs(1,2)+sim%efield_dofs(sim%n_gcells,2) )
-          diagnostics(2) = diagnostics(2) + sim%maxwell_solver%inner_product( sim%bfield_dofs, scratch,  degree )
-          diagnostics(3) = diagnostics(3) - sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_total1,1), sim%bfield_dofs, degree )
-       end if
-    end if
-    
-    if(sim%boundary )then 
-       transfer = 0._f64
-       vvb = 0._f64
-       poynting = 0._f64
-    else
-       call sll_s_pic_diagnostics_transfer( sim%particle_group%group(1), sim%kernel_smoother_0, sim%kernel_smoother_1, sim%efield_dofs(1:sim%n_total1,1), sim%efield_dofs(:,2), transfer )
-
-       call sll_s_pic_diagnostics_vvb( sim%particle_group%group(1), sim%kernel_smoother_1, &
-            sim%bfield_dofs, vvb )
-       call sll_s_pic_diagnostics_poynting( sim%maxwell_solver, degree, sim%efield_dofs(:,2), sim%bfield_dofs, &
-            scratch, poynting )
-    end if
-
-    ! Check error in Gauss law
-    call check_gauss_law( sim, rho, scratch, error )
-
-
-    if (sim%rank == 0) then
-       if (sim%strong_ampere .eqv. .false. ) then
-          potential_energy(1) = sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_total1,1),  sim%efield_dofs_n(1:sim%n_total1,1), degree-1 )/sim%plasma_betar(2)
-          potential_energy(2) = sim%maxwell_solver%inner_product( sim%efield_dofs(:,2),  sim%efield_dofs_n(:,2), degree )/sim%plasma_betar(2)
-       else
-          potential_energy(1) = sim%maxwell_solver%inner_product( sim%efield_dofs(:,1),  sim%efield_dofs_n(:,1), degree )/sim%plasma_betar(2)
-          potential_energy(2) = sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_total1,2),  sim%efield_dofs_n(1:sim%n_total1,2), degree-1 )/sim%plasma_betar(2)
-       end if
-       if ( sim%strong_ampere .eqv. .false. ) then
-          potential_energy(3) = sim%maxwell_solver%L2norm_squared( sim%bfield_dofs, degree-1 )*sim%plasma_betar(3)
-       else
-          potential_energy(3) = sim%maxwell_solver%L2norm_squared( sim%bfield_dofs, degree )*sim%plasma_betar(3)
-       end if
-       if(sim%adiabatic_electrons) then
-          phi = sim%maxwell_solver%L2norm_squared( sim%phi_dofs, degree )
-          write(file_id,'(f12.5,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16)' ) &
-               time,  potential_energy, diagnostics(1), &
-               diagnostics(1) + phi, diagnostics(2:3), -transfer+vvb+poynting, &
-               error, phi
-
-       else
-          write(file_id,'(f12.5,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16)' ) &
-               time,  potential_energy, diagnostics(1), &
-               diagnostics(1) + sim%force_sign * sum(potential_energy), diagnostics(2:3), -transfer+vvb+poynting, &
-               error
-       end if
-    end if
-
-  end subroutine sll_s_time_history_diagnostics_pic_vm_1d2v
-
-
-  !> Accumulate rho and solve Poisson
-  subroutine solve_poisson( sim, rho_local, rho )
-    class(sll_t_sim_pic_vm_1d2v_cart), intent(inout) :: sim !< Singlespecies simulation
-    sll_real64,                        intent(  out) :: rho_local(:) !< charge local to mpi processors
-    sll_real64,                        intent(  out) :: rho(:) !< charge
-    !local variables
-    sll_int32 :: i_part
-    sll_real64 :: xi(3), wi(1)
-    sll_real64 :: rho_cv(sim%n_total0)
-
-    rho_local = 0.0_f64
-    do i_part = 1, sim%particle_group%group(1)%n_particles
-       xi = sim%particle_group%group(1)%get_x(i_part)
-       ! Get charge for accumulation of rho
-       wi(1) = sim%particle_group%group(1)%get_charge( i_part, sim%no_weights)
-       call sim%kernel_smoother_0%add_charge(xi(1), wi(1), rho_local)
-    end do
-    ! MPI to sum up contributions from each processor
-    rho = 0.0_f64
-    call sll_o_collective_allreduce( sll_v_world_collective, rho_local, &
-         sim%n_total0, MPI_SUM, rho)
-
-    call sim%filter%apply_inplace( rho )
-
-    if ( sim%no_weights == 3 ) then
-       call sim%maxwell_solver%compute_rhs_from_function( one, sim%degree_smoother, rho_cv)
-       rho = rho + sim%charge*rho_cv
-    end if
-
-    rho_local = 0._f64
-    if ( sim%strong_ampere) then
-       rho = rho - sim%charge
-       ! Add this if there should not be an offset in rho
-       rho = rho - sum(rho)/ real(sim%n_total0, f64)
-    else
-       ! Add neutralizing background distribution
-       call add_background_charge(sim, rho_local)
-       rho = sim%force_sign*(rho - sim%charge * rho_local)
-    end if
-
-    ! Solve Poisson problem
-    if( sim%adiabatic_electrons) then
-       call sim%maxwell_solver%compute_phi_from_rho ( rho, sim%phi_dofs, sim%efield_dofs(1:sim%n_total1,1) )
-    else
-       rho = rho * sim%plasma_betar(2)
-       call sim%maxwell_solver%compute_E_from_rho( rho, sim%efield_dofs(1:sim%n_total1,1) )
-    end if
-
-  contains
-
-    function one( x)
-      sll_real64 :: one
-      sll_real64, intent(in) :: x
-
-      one = 1.0_f64
-
-    end function one
-
-    function sin_l(eta)
-      sll_real64             :: sin_l
-      sll_real64, intent(in) :: eta
-      !local variables
-      sll_real64             :: x1
-      sll_real64             :: k=0.8_f64
-      sll_real64             :: alpha=0.01_f64
-
-      if( sim%ct )then
-         x1=sim%map%get_x1( [eta, 0._f64, 0._f64] )
-      else
-         x1 = sim%domain(3)*eta
-      end if
-      sin_l = alpha/k*sin(k*x1)
-    end function sin_l
-
-
-  end subroutine solve_poisson
-
-
   !> Add background charge
   subroutine add_background_charge(sim, background_charge)
     class(sll_t_sim_pic_vm_1d2v_cart), intent(inout) :: sim !< Singlespecies simulation
@@ -1513,11 +1329,11 @@ contains
     background_charge=0._f64
     q = sim%degree_smoother+1
     allocate(quad_xw(2, q))
-    allocate(spline_val( sim%degree_fem+1, q ))
+    allocate(spline_val( sim%degree_smoother+1, q ))
     quad_xw = sll_f_gauss_legendre_points_and_weights( q , 0.0_f64, 1.0_f64 )
 
     do i = 1, q
-       call sll_s_uniform_bsplines_eval_basis( sim%degree_fem, quad_xw(1,i), spline_val(:,i) )
+       call sll_s_uniform_bsplines_eval_basis( sim%degree_smoother, quad_xw(1,i), spline_val(:,i) )
     end do
 
     if( sim%ct) then
@@ -1615,6 +1431,191 @@ contains
   end subroutine add_background_charge
 
 
+  !------------------------------------------------------------------------------!
+  !Diagnostic functions and other helper functions
+  !> Diagnostics for PIC Vlasov-Maxwell 1d2v 
+  !> @todo (should be part of the library)
+  subroutine sll_s_time_history_diagnostics_pic_vm_1d2v(&
+       sim,&
+       time, &
+       file_id, &
+       rho, scratch)
+    class(sll_t_sim_pic_vm_1d2v_cart), intent(inout) :: sim !< Singlespecies simulation
+    sll_real64,                        intent(in   ) :: time !< time
+    sll_int32,                         intent(in   ) :: file_id !< file ide
+    sll_real64,                        intent(  out) :: rho(:) !< scratch data
+    sll_real64,                        intent(  out) :: scratch(:) !< scratch data
+    ! local variables
+    sll_real64 :: diagnostics_local(4)
+    sll_real64 :: diagnostics(4)
+    sll_real64 :: potential_energy(3)
+    sll_int32  :: i_part
+    sll_int32  :: degree
+    sll_real64 :: vi(3),  xi(3)
+    sll_real64 :: wi(1)
+    sll_real64 :: transfer(1), vvb(1), poynting
+    sll_real64 :: error, phi
+
+    degree = sim%degree_fem
+
+    diagnostics_local = 0.0_f64
+    do i_part=1,sim%particle_group%group(1)%n_particles
+       vi = sim%particle_group%group(1)%get_v(i_part)
+       xi = sim%particle_group%group(1)%get_x(i_part)
+       wi = sim%particle_group%group(1)%get_mass(i_part)
+
+       ! Kinetic energy
+       diagnostics_local(1) = diagnostics_local(1) + &
+            0.5_f64*(vi(1)**2)*wi(1)
+       diagnostics_local(2) = diagnostics_local(2) + &
+            0.5_f64*(vi(2)**2)*wi(1)
+       ! Momentum 1
+       diagnostics_local(3) = diagnostics_local(3) + &
+            vi(1)*wi(1)
+       ! Momentum 2
+       diagnostics_local(4) = diagnostics_local(4) + &
+            vi(2)*wi(1)
+
+    end do
+    diagnostics = 0.0_f64
+    call sll_s_collective_reduce_real64(sll_v_world_collective, diagnostics_local, 4,&
+         MPI_SUM, 0, diagnostics)
+    ! Add ExB part
+    if ( sim%strong_ampere .eqv. .false. ) then
+       diagnostics(3) = diagnostics(3) + sim%maxwell_solver%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree, degree-1 )
+
+       diagnostics(4) = diagnostics(4) - sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_total1,1), sim%bfield_dofs, degree-1 )
+    else
+       if ( degree == -1) then             
+          diagnostics(3) = diagnostics(3) + sim%maxwell_solver%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree-1, degree )
+          diagnostics(4) = diagnostics(4) - sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_total1,1), sim%bfield_dofs, degree, degree )
+       else
+          scratch(1:sim%n_gcells-1) = 0.5_f64 * (sim%efield_dofs(1:sim%n_gcells-1,2)+sim%efield_dofs(2:sim%n_gcells,2) )
+          scratch(sim%n_gcells) = 0.5_f64 * (sim%efield_dofs(1,2)+sim%efield_dofs(sim%n_gcells,2) )
+          diagnostics(3) = diagnostics(3) + sim%maxwell_solver%inner_product( sim%bfield_dofs, scratch,  degree )
+          diagnostics(4) = diagnostics(4) - sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_total1,1), sim%bfield_dofs, degree )
+       end if
+    end if
+
+    call sll_s_pic_diagnostics_transfer( sim%particle_group%group(1), sim%kernel_smoother_0, sim%kernel_smoother_1, sim%efield_dofs(1:sim%n_total1,1), sim%efield_dofs(:,2), transfer )
+
+    call sll_s_pic_diagnostics_vvb( sim%particle_group%group(1), sim%kernel_smoother_1, &
+         sim%bfield_dofs, vvb )
+    call sll_s_pic_diagnostics_poynting( sim%maxwell_solver, degree, sim%efield_dofs(:,2), sim%bfield_dofs, &
+         scratch, poynting )
+
+    ! Check error in Gauss law
+    call check_gauss_law( sim, rho, scratch, error )
+
+
+    if (sim%rank == 0) then
+       if (sim%strong_ampere .eqv. .false. ) then
+          potential_energy(1) = sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_total1,1),  sim%efield_dofs_n(1:sim%n_total1,1), degree-1 )/sim%plasma_betar(2)
+          potential_energy(2) = sim%maxwell_solver%inner_product( sim%efield_dofs(:,2),  sim%efield_dofs_n(:,2), degree )/sim%plasma_betar(2)
+       else
+          potential_energy(1) = sim%maxwell_solver%inner_product( sim%efield_dofs(:,1),  sim%efield_dofs_n(:,1), degree )/sim%plasma_betar(2)
+          potential_energy(2) = sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_total1,2),  sim%efield_dofs_n(1:sim%n_total1,2), degree-1 )/sim%plasma_betar(2)
+       end if
+       if ( sim%strong_ampere .eqv. .false. ) then
+          potential_energy(3) = sim%maxwell_solver%L2norm_squared( sim%bfield_dofs, degree-1 )*sim%plasma_betar(3)
+       else
+          potential_energy(3) = sim%maxwell_solver%L2norm_squared( sim%bfield_dofs, degree )*sim%plasma_betar(3)
+       end if
+       if(sim%adiabatic_electrons) then
+          phi = sim%maxwell_solver%L2norm_squared( sim%phi_dofs, degree )
+          write(file_id,'(f12.5,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16)' ) &
+               time,  0.5_f64*potential_energy, 0.5_f64*phi, diagnostics(1), diagnostics(2), &
+               sum(diagnostics(1:2)) + 0.5_f64*phi, diagnostics(3:4), -transfer+vvb+poynting, &
+               error
+
+       else
+          write(file_id,'(f12.5,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16)' ) &
+               time, 0.5_f64*potential_energy, diagnostics(1:2), &
+               sum(diagnostics(1:2)) + sim%force_sign * 0.5_f64*sum(potential_energy), diagnostics(3:4), -transfer+vvb+poynting, &
+               error
+       end if
+    end if
+
+  end subroutine sll_s_time_history_diagnostics_pic_vm_1d2v
+
+
+  !> Accumulate rho and solve Poisson
+  subroutine solve_poisson( sim, rho_local, rho )
+    class(sll_t_sim_pic_vm_1d2v_cart), intent(inout) :: sim !< Singlespecies simulation
+    sll_real64,                        intent(  out) :: rho_local(:) !< charge local to mpi processors
+    sll_real64,                        intent(  out) :: rho(:) !< charge
+    !local variables
+    sll_int32 :: i_part
+    sll_real64 :: xi(3), wi(1)
+    sll_real64 :: rho_cv(sim%n_total0)
+
+    rho_local = 0.0_f64
+    do i_part = 1, sim%particle_group%group(1)%n_particles
+       xi = sim%particle_group%group(1)%get_x(i_part)
+       ! Get charge for accumulation of rho
+       wi(1) = sim%particle_group%group(1)%get_charge( i_part, sim%no_weights)
+       call sim%kernel_smoother_0%add_charge(xi(1), wi(1), rho_local)
+    end do
+    ! MPI to sum up contributions from each processor
+    rho = 0.0_f64
+    call sll_o_collective_allreduce( sll_v_world_collective, rho_local, &
+         sim%n_total0, MPI_SUM, rho)
+
+    call sim%filter%apply_inplace( rho )
+
+    if ( sim%no_weights == 3 ) then
+       call sim%maxwell_solver%compute_rhs_from_function( one, sim%degree_smoother, rho_cv)
+       rho = rho + sim%charge*rho_cv
+    end if
+
+    rho_local = 0._f64
+    if ( sim%strong_ampere) then
+       rho = rho - sim%charge
+       ! Add this if there should not be an offset in rho
+       rho = rho - sum(rho)/ real(sim%n_total0, f64)
+    else
+       ! Add neutralizing background distribution
+       rho = sim%force_sign*(rho - sim%charge * sim%background_charge)
+    end if
+
+    ! Solve Poisson problem
+    if( sim%adiabatic_electrons) then
+       call sim%maxwell_solver%compute_phi_from_rho ( rho, sim%phi_dofs, sim%efield_dofs(1:sim%n_total1,1) )
+    else
+       rho = rho * sim%plasma_betar(2)
+       call sim%maxwell_solver%compute_E_from_rho( rho, sim%efield_dofs(1:sim%n_total1,1) )
+    end if
+
+  contains
+
+    function one( x)
+      sll_real64 :: one
+      sll_real64, intent(in) :: x
+
+      one = 1.0_f64
+
+    end function one
+
+    function sin_l(eta)
+      sll_real64             :: sin_l
+      sll_real64, intent(in) :: eta
+      !local variables
+      sll_real64             :: x1
+      sll_real64             :: k=0.8_f64
+      sll_real64             :: alpha=0.01_f64
+
+      if( sim%ct )then
+         x1=sim%map%get_x1( [eta, 0._f64, 0._f64] )
+      else
+         x1 = sim%domain(3)*eta
+      end if
+      sin_l = alpha/k*sin(k*x1)
+    end function sin_l
+
+
+  end subroutine solve_poisson
+
+
   !> check Gauss' law
   subroutine check_gauss_law( sim, rho, rho_gauss, error )
     class(sll_t_sim_pic_vm_1d2v_cart), intent(inout) :: sim !< Singlespecies simulation
@@ -1654,8 +1655,7 @@ contains
     if ( sim%strong_ampere) then
        rho = rho - sim%charge
     else
-       call add_background_charge(sim, rho_gauss)
-       rho = sim%force_sign*(rho - sim%charge * rho_gauss)
+       rho = sim%force_sign*(rho - sim%charge * sim%background_charge)
     end if
 
     rho_gauss=0._f64
@@ -1774,8 +1774,8 @@ contains
     logical, intent(out)     :: passed !< true if diagnostics checks out
 
     sll_real64 :: error
-    sll_real64 :: data_sim(3,10)
-    sll_real64 :: data_ref(3,10)
+    sll_real64 :: data_sim(3,11)
+    sll_real64 :: data_ref(3,11)
     sll_int32  :: file_id
     sll_int32   :: io_stat
     character(len=256) :: reffile_full   
