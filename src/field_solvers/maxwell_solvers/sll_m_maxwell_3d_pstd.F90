@@ -154,25 +154,25 @@ contains
       SLL_ALLOCATE(self%ky(nc_y/2 + 1), error)
       SLL_ALLOCATE(self%kz(nc_z/2 + 1), error)
 
-      dx = (xmax - xmin)/nc_x
-      dy = (ymax - ymin)/nc_y
-      dz = (zmax - zmin)/nc_z
+      dx = (xmax - xmin)/real(nc_x,f64)
+      dy = (ymax - ymin)/real(nc_y,f64)
+      dz = (zmax - zmin)/real(nc_z,f64)
 
-      kx0 = 2._f64*sll_p_pi/(nc_x*dx)
-      ky0 = 2._f64*sll_p_pi/(nc_y*dy)
-      kz0 = 2._f64*sll_p_pi/(nc_z*dz)
+      kx0 = 2._f64*sll_p_pi/(real(nc_x,f64)*dx)
+      ky0 = 2._f64*sll_p_pi/(real(nc_y,f64)*dy)
+      kz0 = 2._f64*sll_p_pi/(real(nc_z,f64)*dz)
 
       self%kx(1) = 1.0_f64
       do i = 2, nc_x/2 + 1
-         self%kx(i) = (i - 1)*kx0
+         self%kx(i) = real(i - 1, f64)*kx0
       end do
       self%ky(1) = 1.0_f64
       do j = 2, nc_y/2 + 1
-         self%ky(j) = (j - 1)*ky0
+         self%ky(j) = real(j - 1, f64)*ky0
       end do
       self%kz(1) = 1.0_f64
       do k = 2, nc_z/2 + 1
-         self%kz(k) = (k - 1)*kz0
+         self%kz(k) = real(k - 1, f64)*kz0
       end do
 
    end subroutine sll_s_maxwell_3d_pstd_init

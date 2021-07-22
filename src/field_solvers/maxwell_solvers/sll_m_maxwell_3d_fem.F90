@@ -771,7 +771,6 @@ contains
        close(input_file)
     end if
 
-
   end subroutine init_from_file_3d_fem
 
 

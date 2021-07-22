@@ -49,9 +49,9 @@ program test_maxwell_3d_pstd
 
    nc_x = 64; nc_y = 64; nc_z = 64
 
-   delta_x = (x_max - x_min)/nc_x
-   delta_y = (y_max - y_min)/nc_y
-   delta_z = (z_max - z_min)/nc_z
+   delta_x = (x_max - x_min)/real(nc_x,f64)
+   delta_y = (y_max - y_min)/real(nc_y,f64)
+   delta_z = (z_max - z_min)/real(nc_z,f64)
 
    SLL_CLEAR_ALLOCATE(x(1:nc_x + 1, 1:nc_y + 1, 1:nc_z + 1), error)
    SLL_CLEAR_ALLOCATE(y(1:nc_x + 1, 1:nc_y + 1, 1:nc_z + 1), error)
@@ -60,14 +60,14 @@ program test_maxwell_3d_pstd
    do k = 1, nc_z + 1
       do j = 1, nc_y + 1
          do i = 1, nc_x + 1
-            x(i, j, k) = x_min + (i - 1)*delta_x
-            y(i, j, k) = y_min + (j - 1)*delta_y
-            z(i, j, k) = z_min + (k - 1)*delta_z
+            x(i, j, k) = x_min + real(i - 1,f64)*delta_x
+            y(i, j, k) = y_min + real(j - 1,f64)*delta_y
+            z(i, j, k) = z_min + real(k - 1,f64)*delta_z
          end do
       end do
    end do
 
-   dt = cfl/sqrt(1./delta_x**2 + 1./delta_y**2 + 1./delta_z**2)
+   dt = cfl/sqrt(1._f64/delta_x**2 + 1._f64/delta_y**2 + 1._f64/delta_z**2)
    nstep = 10
 
    SLL_CLEAR_ALLOCATE(hx(1:nc_x + 1, 1:nc_y + 1, 1:nc_z + 1), error)
@@ -103,18 +103,18 @@ program test_maxwell_3d_pstd
       write (*, "(', time  = ',g12.3,' sec')") time
 
       call sll_s_maxwell_3d_pstd_faraday(maxwell, ex, ey, ez, hx, hy, hz, dt)
-      time = time + 0.5*dt
+      time = time + 0.5_f64*dt
       !call plot_field("hx",hx, w2*cos(2*pi*(x+y+z)-w1*time))
       !call plot_field("hz",hz,-w2*cos(2*pi*(x+y+z)-w1*time))
       call sll_s_maxwell_3d_pstd_ampere(maxwell, hx, hy, hz, ex, ey, ez, dt)
-      time = time + 0.5*dt
+      time = time + 0.5_f64*dt
       !call plot_field("ex",ex,cos(2*pi*(x+y+z)-w1*time))
       !call plot_field("ez",ez,cos(2*pi*(x+y+z)-w1*time))
 
    end do ! next time step
 
-   print *, "ex error :", maxval(abs(ex - cos(2*pi*(x + y + z) - w1*time)))
-   print *, "ey error :", maxval(abs(ey + 2.*cos(2*pi*(x + y + z) - w1*time)))
+   print *, "ex error :", maxval(abs(ex - cos(2._f64*pi*(x + y + z) - w1*time)))
+   print *, "ey error :", maxval(abs(ey + 2._f64*cos(2*pi*(x + y + z) - w1*time)))
    print *, "ez error :", maxval(abs(ex - cos(2*pi*(x + y + z) - w1*time)))
    time = time - 0.5_f64*dt
    print *, "hx error :", maxval(abs(hx - w2*cos(2*pi*(x + y + z) - w1*time)))
@@ -153,7 +153,7 @@ contains
       open (10, file=prefix//"_"//cstep//".dat")
       do i = 1, n1
          do j = 1, n2
-            write (10, *) (i - 1)*delta_x, (j - 1)*delta_y, &
+            write (10, *) real(i - 1,f64)*delta_x, real(j - 1,f64)*delta_y, &
                sngl(field1(i, j, n3/2)), sngl(field2(i, j, n3/2))
          end do
          write (10, *)
