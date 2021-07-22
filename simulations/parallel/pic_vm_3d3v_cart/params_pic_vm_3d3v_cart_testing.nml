@@ -17,12 +17,12 @@
 /   
 &bfield
 	bkx = 1.25 0.0 0.0	
-	balpha = 0.0 0.0 0.01
+	balpha = 0.0 0.0 0.1
 	bphase_shift= 0.0 0.0 0.0
 	bconstant = 0.0 0.0 0.0
 / 
 &output
-        file_prefix = "weibel_hs"
+        file_prefix = "weibel_cef_trafo"
 /
 
 &grid_dims
@@ -34,31 +34,23 @@
 &pic_params
         n_particles = 100000
         sampling_case = "particle_sampling_sobol"
-        splitting_case = "splitting_hs"     
+        splitting_case = "splitting_cef_trafo"     
 	spline_degree = 3 2 2
 	splitting_type = "strang"
 	boundary_fields = "clamped"
 	boundary_particles = "reflection"
         with_control_variate = .false.
+		
+/
+&trafo
+	nparams = 6
+	params = 5.026548245743669 5.026548245743669 5.026548245743669 0.0 0.0 0.0 
+	mapping_case = "scaling"
 /
 &ctest
 	
 /
 
-&maxwell_solver
-        mass_tolerance = 1E-12
-        poisson_tolerance = 1E-12
-/
-
-&time_solver
-        maxwell_tolerance = 1E-12
-/
-
-&time_iterate
-	iter_tolerance = 1E-10
-	max_iter = 5
-
-/
 
 
 
