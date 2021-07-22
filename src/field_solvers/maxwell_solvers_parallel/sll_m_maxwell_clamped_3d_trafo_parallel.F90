@@ -374,7 +374,7 @@ contains
     call self%poisson_preconditioner%create( self%n_dofs, self%s_deg_0, self%delta_x, self%work0 )
     call self%poisson_solver%create( self%poisson_matrix, self%poisson_preconditioner )
     self%poisson_solver%atol = self%poisson_solver_tolerance
-    self%poisson_solver%verbose = .true.
+    !self%poisson_solver%verbose = .true.
 
     self%work0 = 0._f64
     self%work01 = 0._f64
