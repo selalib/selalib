@@ -45,7 +45,7 @@ program test_time_propagator_pic_1d2v_vm_cef
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! Tolerance for comparison of real numbers: set it here!
-  sll_real64, parameter :: EQV_TOL = 1.0e-14_f64
+  sll_real64, parameter :: EQV_TOL = 1.0e-12_f64
 
   ! Abstract particle group
   class(sll_t_particle_array), pointer :: particle_group
@@ -135,11 +135,11 @@ program test_time_propagator_pic_1d2v_vm_cef
 
   SLL_ALLOCATE(particle_info_ref(n_particles,4), i_part)
   particle_info_ref = 0.0_f64
-  particle_info_ref = reshape([11.78097245096172_f64,        &
-5.497787143782138_f64,       -1.534120544352545_f64,       &
-0.1573106846101706_f64,       0.1573106846101706_f64,       &
--1.534120544352545_f64,        6.863675937607472_f64,        &
-5.7026946767517_f64   ], [n_particles, 4])
+  particle_info_ref = reshape([11.780972450961723_f64,        &
+       5.497787143782138_f64,       -1.534120544352545_f64,       &
+       0.1573106846101706_f64,       0.1573106846101706_f64,       &
+      -1.534120544352545_f64,        6.863675937607472_f64,        &
+       5.7026946767517_f64   ], [n_particles, 4])
 
   ! Initialize particles from particle_info_ref
   xi = 0.0_f64
@@ -208,10 +208,10 @@ program test_time_propagator_pic_1d2v_vm_cef
   ! Compare to reference
   ! Particle information after operatorV application 
   particle_info_ref = reshape([  11.62756039652646_f64,        &
-5.51351821224315_f64,       -1.5341205443525459_f64,       &
-0.1573106846101706_f64,       0.3107227390454256_f64,       &
--1.549851612813563_f64,        6.863675937607472_f64,        &
-5.7026946767517_f64    ], [n_particles, 4])
+       5.513518212243155_f64,       -1.534120544352545_f64,       &
+       0.157310684610170_f64,        0.15731068461017059_f64,       &
+      -1.5341205443525450_f64,        6.863675937607472_f64,        &
+       5.7026946767517_f64    ], [n_particles, 4])
   ! Compare computed values to reference values
   do i_part=1,n_particles
      xi = particle_group%group(1)%get_x(i_part)
@@ -242,11 +242,11 @@ program test_time_propagator_pic_1d2v_vm_cef
 
   ! Compare to reference
   ! Particle information after operatorV application 
-  particle_info_ref = reshape([    11.62756039652646_f64,  &
-      5.51351821224315_f64,       -1.431146196036433_f64,&
-       2.761133713849395E-002_f64,  0.395114887882236_f64,  &
-     -1.39031318482687_f64,        6.863675937607472_f64,   &
-     5.7026946767517_f64    ], [n_particles, 4])
+  particle_info_ref = reshape([    11.627560396526469_f64,  &
+      5.513518212243155_f64,       -1.431146196036433_f64,&
+      2.761133713849395E-002_f64,   0.395114887882236_f64,  &
+     -1.390313184826870_f64,        6.863675937607472_f64,   &
+      5.702694676751700_f64    ], [n_particles, 4])
   ! Compare computed values to reference values
     do i_part=1,n_particles
      xi = particle_group%group(1)%get_x(i_part)

@@ -14,11 +14,11 @@ install( FILES  ${INPUT_FILES} README ${POST_PROC} DESTINATION ${INSTALL_DIR} )
 
 ## Ctest
 if(BUILD_TESTING)
-  set( INPUT_FILES ${CMAKE_CURRENT_SOURCE_DIR}/initial_distribution_sp1.nml ${CMAKE_CURRENT_SOURCE_DIR}/initial_distribution_sp2.nml  ${CMAKE_CURRENT_SOURCE_DIR}/reffile_pic_vm_3d3v_cart_multispecies_hs.dat )
+  set( INPUT_FILES ${CMAKE_CURRENT_SOURCE_DIR}/initial_distribution_sp1.nml ${CMAKE_CURRENT_SOURCE_DIR}/initial_distribution_sp2.nml )
   file( COPY ${INPUT_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
   set( NML_FILE ${CMAKE_CURRENT_SOURCE_DIR}/params_pic_vm_3d3v_cart_multispecies_hs_testing.nml )
   file( COPY ${NML_FILE} DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
-  add_mpi_test( ${TEST_NAME} ${EXECUTABLE} ${PROCS} ${NML_FILE} ${REFERENCE_FILE} )
+  add_mpi_test( ${TEST_NAME} ${EXECUTABLE} ${PROCS} ${NML_FILE} )
   set_tests_properties( ${TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED"
     TIMEOUT 500 )
   
