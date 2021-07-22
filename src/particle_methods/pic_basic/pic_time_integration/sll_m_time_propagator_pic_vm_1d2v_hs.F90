@@ -529,7 +529,7 @@ contains
     logical, optional    :: electrostatic
     sll_real64, optional, target,                  intent( in ) :: rhob(:)
     !local variables
-    sll_int32 :: ierr, j
+    sll_int32 :: ierr
 
     if( present(electrostatic) )then
        self%electrostatic = electrostatic
@@ -559,7 +559,7 @@ contains
     self%x_min = x_min
     self%x_max = x_min + Lx
     self%Lx = Lx
-    self%delta_x = self%Lx/self%maxwell_solver%n_cells
+    self%delta_x = self%Lx/real(self%maxwell_solver%n_cells,f64)
     self%n_cells = self%maxwell_solver%n_cells
     self%n_total0 = self%maxwell_solver%n_dofs0
     self%n_total1 = self%maxwell_solver%n_dofs1

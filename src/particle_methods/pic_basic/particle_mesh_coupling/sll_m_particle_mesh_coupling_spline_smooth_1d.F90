@@ -507,7 +507,6 @@ contains
     sll_int32 :: j, i1, index1d
     sll_int32 :: index
     sll_real64 :: dx
-    sll_real64 :: field_val
     sll_real64 :: scaling
     sll_int32 :: degree
     sll_int32 :: ierr
@@ -848,7 +847,7 @@ contains
 
     !local variables
     sll_int32 :: i1, q
-    sll_int32 :: index1d, index
+    sll_int32 :: index1d
     sll_real64 :: xi(1), pos, scaling, weight
     sll_int32 :: n_quad_points
     sll_real64 :: integ(1:self%n_span)

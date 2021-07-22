@@ -43,10 +43,7 @@ module sll_m_particle_mesh_coupling_spline_cl_1d
   !>  Spline kernel smoother in1d.
   type, extends(sll_c_particle_mesh_coupling_1d) :: sll_t_particle_mesh_coupling_spline_cl_1d
      type(sll_t_spline_pp_1d) :: spline_pp !< 1d pp-spline
-     ! Information about the 1d mesh
-     sll_real64 :: delta_x  !< Value of grid spacing along both directions.
-     sll_real64 :: domain(2) !< Definition of the domain: domain(1) = x1_min  domain(2) = x1_max
-
+     
      ! Information about the particles
      sll_int32  :: no_particles !< Number of particles of underlying PIC method (processor local)
      sll_int32  :: n_span !< Number of intervals where spline non zero (spline_degree + 1)
@@ -232,8 +229,8 @@ contains
     !local variables
     sll_real64 :: xold, xnew, xnewtilde, xbox
     sll_int32 :: boxold, boxnew, sigma_counter, boxdiff, increment, box
-    sll_real64 :: sigma_r, sigma_l, sigma, sigma_next, field_value, weight
-    sll_int32 :: j, q, bl
+    sll_real64 :: sigma_r, sigma_l, sigma, sigma_next, weight
+    sll_int32 :: q, bl
     sll_real64, allocatable :: vals(:) 
 
     call convert_x_to_xbox( self, position_old, xold, boxold )
@@ -377,7 +374,7 @@ contains
     sll_real64,                             intent(in)    :: bfield_dofs(:)
     sll_real64,                             intent(inout) :: j_dofs(:)
     !Local variables
-    sll_int32  :: ind, i_grid, i_mod, n_cells, j
+    sll_int32  :: ind, i_grid, j
     sll_real64 :: c1, c2
 
     c1 =  0.5_f64*(upper-lower)

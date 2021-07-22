@@ -37,8 +37,8 @@ module sll_m_particle_mesh_coupling_spline_2d
   type, extends(sll_c_particle_mesh_coupling_1d) :: sll_t_particle_mesh_coupling_spline_2d
      type(sll_t_spline_pp_2d) spline_pp
      ! Information about the 2d mesh
-     sll_real64 :: delta_x(2)  !< Value of grid spacing along both directions.
-     sll_real64 :: domain(2,2) !< Definition of the domain: domain(1,1) = x1_min, domain(2,1) = x2_min,  domain(1,2) = x1_max, domain(2,2) = x2_max
+     sll_real64 :: delta_x2(2)  !< Value of grid spacing along both directions.
+     sll_real64 :: domain2(2,2) !< Definition of the domain: domain(1,1) = x1_min, domain(2,1) = x2_min,  domain(1,2) = x1_max, domain(2,2) = x2_max
      
      ! Information about the particles
      sll_int32 :: no_particles !< Number of particles of underlying PIC method (processor local)
@@ -81,8 +81,8 @@ contains
     sll_real64 :: xi(2)
 
 
-    xi(1:2) = (position(1:2) - self%domain(:,1)) /&
-         self%delta_x
+    xi(1:2) = (position(1:2) - self%domain2(:,1)) /&
+         self%delta_x2
     indices = ceiling(xi(1:2))
     xi(1:2) = xi(1:2) - real(indices -1,f64)
     indices =  indices - self%spline_degree
@@ -107,7 +107,7 @@ contains
     sll_int32 :: i1, i2, index2d
     sll_int32 :: index1d(2)
    
-    xi(1:2) = (position(1:2) - self%domain(:,1)) /self%delta_x
+    xi(1:2) = (position(1:2) - self%domain2(:,1)) /self%delta_x2
     indices = floor(xi(1:2))+1
     xi(1:2) = xi(1:2) - real(indices -1,f64)
     indices =  indices - self%spline_degree
@@ -252,7 +252,7 @@ contains
 !!$    end do
 !!$   
 !!$    if (self%smoothing_type == sll_p_collocation) then
-!!$       j_dofs = j_dofs /product(self%delta_x)
+!!$       j_dofs = j_dofs /product(self%delta_x2)
 !!$    end if
 !!$
 !!$  end subroutine accumulate_j_from_klimontovich_spline_2d
@@ -270,7 +270,7 @@ contains
     sll_real64 :: xi(2)
     sll_int32  :: indices(2)
    
-    xi(1:2) = (position(1:2) - self%domain(:,1)) /self%delta_x
+    xi(1:2) = (position(1:2) - self%domain2(:,1)) /self%delta_x2
     indices = floor(xi(1:2))+1
     xi(1:2) = xi(1:2) - real(indices -1,f64)
      
@@ -372,11 +372,11 @@ contains
     self%dim = 2
 
     ! Store grid information
-    self%domain = domain
+    self%domain2 = domain
     SLL_ALLOCATE(self%n_grid(2), ierr)
     self%n_grid = n_grid
     self%n_dofs = product(n_grid)
-    self%delta_x = (domain(:,2)-domain(:,1))/real(n_grid, f64)
+    self%delta_x2 = (domain(:,2)-domain(:,1))/real(n_grid, f64)
 
     ! Store basis function information
     self%no_particles = no_particles
@@ -387,7 +387,7 @@ contains
 
     ! Initialize information on smoothing type
     if (smoothing_type == sll_p_collocation) then
-       self%scaling = 1.0_f64/product(self%delta_x)
+       self%scaling = 1.0_f64/product(self%delta_x2)
     elseif (smoothing_type == sll_p_galerkin) then
        self%scaling = 1.0_f64
     else

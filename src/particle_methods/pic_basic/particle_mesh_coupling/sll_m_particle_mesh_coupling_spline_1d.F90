@@ -45,10 +45,7 @@ module sll_m_particle_mesh_coupling_spline_1d
   !>  Spline kernel smoother in1d.
   type, extends(sll_c_particle_mesh_coupling_1d) :: sll_t_particle_mesh_coupling_spline_1d
      type(sll_t_spline_pp_1d) :: spline_pp !< 1d pp-spline
-     ! Information about the 1d mesh
-     sll_real64 :: delta_x  !< Value of grid spacing along both directions.
-     sll_real64 :: domain(2) !< Definition of the domain: domain(1) = x1_min  domain(2) = x1_max
-
+     
      ! Information about the particles
      sll_int32  :: no_particles !< Number of particles of underlying PIC method (processor local)
      sll_int32  :: n_span !< Number of intervals where spline non zero (spline_degree + 1)
@@ -533,9 +530,9 @@ contains
     sll_real64,                               intent( in )    :: position_new(self%dim) !< Position of the particle
     sll_real64,                               intent( in    ) :: field_dofs(self%n_cells) !< Coefficient vector of the current density
     sll_real64,                               intent( out   ) :: field !< Efield
-
+    !local variables
     sll_real64 :: dx_new, dx_old
-    sll_int32 :: box_new, box_old, i, index, ind, j
+    sll_int32 :: box_new, box_old, ind
     sll_real64 :: rinterval, lowert, uppert
 
     call convert_x_to_xbox( self, position_new, dx_new, box_new )
@@ -579,9 +576,9 @@ contains
     sll_real64,                               intent( in )    :: position_new(self%dim) !< Position of the particle
     sll_real64,                               intent( in    ) :: field_dofs(self%n_cells) !< Coefficient vector of the current density
     sll_real64,                               intent( out   ) :: field
-
+    !local variables
     sll_real64 :: dx_new, dx_old
-    sll_int32 :: box_new, box_old, i, index, ind, j
+    sll_int32 :: box_new, box_old, ind
     sll_real64 :: rinterval, lowert, uppert
 
     call convert_x_to_xbox( self, position_new, dx_new, box_new )
@@ -630,7 +627,6 @@ contains
     sll_real64, intent(inout) :: vi(:) !< Velocity of the particles
     sll_real64, intent(inout) :: j_dofs(:) !< Coefficients of current expansion
     ! local variables
-    sll_real64 :: xi
     sll_int32  :: index_old, index_new, ind
     sll_real64 :: r_old, r_new
 
@@ -1061,10 +1057,9 @@ contains
     sll_int32,                                intent( in    ) :: total_iter
     sll_real64,                               intent( in )    :: marker_charge !< Particle weights time charge
     sll_real64,                               intent( inout ) :: j_dofs(self%n_cells,2) !< Coefficient vector of the current density
-
-
+    !local variables
     sll_real64 :: dx_new, dx_old
-    sll_int32 :: box_new, box_old, i, index, ind, j
+    sll_int32 :: box_new, box_old, ind
     sll_real64 :: rinterval, lowert, uppert
 
     dx_new = (position_new(1)-self%domain(1))/self%delta_x
@@ -1176,9 +1171,9 @@ contains
     sll_int32,  intent( in    ) :: iter
     sll_int32,  intent( in    ) :: total_iter
     sll_real64,                               intent( out   ) :: field(2)
-
+    !local variables
     sll_real64 :: dx_new, dx_old
-    sll_int32 :: box_new, box_old, i, index, ind, j
+    sll_int32 :: box_new, box_old, ind
     sll_real64 :: rinterval, lowert, uppert
 
     dx_new = (position_new(1)-self%domain(1))/self%delta_x
@@ -1284,9 +1279,9 @@ contains
     sll_int32,  intent( in    ) :: iter
     sll_int32,  intent( in    ) :: total_iter
     sll_real64,                               intent( out   ) :: field
-
+    !local variables
     sll_real64 :: dx_new, dx_old
-    sll_int32 :: box_new, box_old, i, index, ind, j
+    sll_int32 :: box_new, box_old, ind
     sll_real64 :: rinterval, lowert, uppert
 
     dx_new = (position_new(1)-self%domain(1))/self%delta_x
@@ -1385,12 +1380,11 @@ contains
     sll_real64,                               intent( in )    :: position_new(self%dim) !< Position of the particle
     sll_real64,                               intent( in )    :: marker_charge !< Particle weights time charge
     sll_real64,                               intent( inout ) :: j_dofs(self%n_cells) !< Coefficient vector of the current density
-
-
+    !local variables
     sll_real64 :: dx_new, dx_old
-    sll_int32 :: box_new, box_old, i, index, ind, j
+    sll_int32 :: box_new, box_old, ind
     sll_real64 :: rinterval, lowert, uppert
-
+    
     dx_new = (position_new(1)-self%domain(1))/self%delta_x
     box_new = floor(dx_new)+1
     dx_new = dx_new - real(box_new-1,f64)
@@ -1445,16 +1439,10 @@ contains
     sll_int32,  intent( in    ) :: index
     sll_real64, intent( in    ) :: marker_charge !< Particle weights time charge
     sll_real64, intent( inout ) :: j_dofs(self%n_cells) !< Coefficient vector of the current density
-
-
+    !local variables
     sll_int32 :: j, ind, i_mod, i_grid, n_cells
     sll_real64 :: c1, c2, c1t, c2t
-    sll_real64 :: time
-
-    !  print*, 'input'
-    !  print*, lower, upper
-    !  print*, lowert, uppert
-
+   
     n_cells = self%n_cells
 
     c1 = 0.5_f64*(upper-lower)
@@ -1462,9 +1450,6 @@ contains
 
     c1t = 0.5_f64*(uppert-lowert)
     c2t = 0.5_f64*(uppert+lowert)
-
-    ! print*, c1, c2, c1t, c2t
-    ! stop
 
     call sll_s_uniform_bsplines_eval_basis ( self%spline_degree, &
          c1*self%quadp1_xw(1,1) + c2, &
