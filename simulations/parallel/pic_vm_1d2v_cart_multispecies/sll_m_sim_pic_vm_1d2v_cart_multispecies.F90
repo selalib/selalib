@@ -1302,12 +1302,12 @@ contains
        else
           scratch(1:sim%n_gcells-1) = 0.5_f64 * (sim%efield_dofs(1:sim%n_gcells-1,2)+sim%efield_dofs(2:sim%n_gcells,2) )
           scratch(sim%n_gcells) = 0.5_f64 * (sim%efield_dofs(1,2)+sim%efield_dofs(sim%n_gcells,2) )
-          
+
           diagnostics(5) = diagnostics(5) + sim%maxwell_solver%inner_product( scratch, sim%bfield_dofs, degree )
           diagnostics(6) = diagnostics(6) - sim%maxwell_solver%inner_product( sim%efield_dofs(:,1), sim%bfield_dofs, degree )
        end if
     end if
-   
+
     ! Check error in Gauss law
     call check_gauss_law( sim, rho, scratch, error )
 
@@ -1328,7 +1328,7 @@ contains
                ( sim%bfield_dofs, degree )*sim%plasma_betar(3)
        end if
        write(file_id,'(f12.5,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16)' ) &
-            time,  potential_energy, diagnostics(1:4), &
+            time, 0.5_f64*potential_energy, diagnostics(1:4), &
             sum(diagnostics(1:4)) + sim%force_sign * 0.5_f64*sum(potential_energy), diagnostics(5:6), &
             error
     end if
@@ -1451,8 +1451,8 @@ contains
     logical, intent(out)     :: passed !< true if diagnostics checks out
 
     sll_real64 :: error
-    sll_real64 :: data_sim(3,10)
-    sll_real64 :: data_ref(3,10)
+    sll_real64 :: data_sim(3,12)
+    sll_real64 :: data_ref(3,12)
     sll_int32  :: file_id
     sll_int32   :: io_stat
     character(len=256) :: reffile_full   
