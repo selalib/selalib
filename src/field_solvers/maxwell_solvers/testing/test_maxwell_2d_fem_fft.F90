@@ -65,7 +65,7 @@ program test_maxwell_2d_fem_fft
   nc_total = product(nc_eta)
   Lx(1) = eta1_max-eta1_min
   Lx(2) = Lx(1); 
-  delta_eta = Lx/nc_eta
+  delta_eta = Lx/real(nc_eta,f64)
   domain(1,:) = [eta1_min, eta1_max]
   domain(2,:) = [eta1_min, eta1_max]
   ! Set spline degree of 0-forms
@@ -89,8 +89,8 @@ program test_maxwell_2d_fem_fft
   
   do j = 1, nc_eta(2)+1
      do i = 1, nc_eta(1)+1
-        x(i,j) = eta1_min + (i-1)*delta_eta(1)
-        y(i,j) = eta1_min + (j-1)*delta_eta(2)
+        x(i,j) = eta1_min + real(i-1, f64)*delta_eta(1)
+        y(i,j) = eta1_min + real(j-1, f64)*delta_eta(2)
      end do
   end do
 
@@ -156,7 +156,7 @@ program test_maxwell_2d_fem_fft
   call  evaluate_spline_2d ( nc_eta, [deg,deg], efield(1+nc_total*2:3*nc_total), efield_val(1+nc_total*2:3*nc_total) )
 
   ! Reference solutions
-  time = (nsteps)*delta_t
+  time = real(nsteps, f64)*delta_t
   ind = 1
   do j = 1, nc_eta(2)
      do i = 1, nc_eta(1)
@@ -166,7 +166,7 @@ program test_maxwell_2d_fem_fft
         ind = ind+1
      end do
   end do
-  time = (nsteps-0.5_f64)*delta_t
+  time = (real(nsteps,f64)-0.5_f64)*delta_t
   ind = 1
   do j = 1, nc_eta(2)
      do i = 1, nc_eta(1)
@@ -230,7 +230,7 @@ program test_maxwell_2d_fem_fft
   deallocate(bfield_val)
 
 
-  if ( error(1) < 5.0E-5 .AND. error(2) < 2.0E-6 .AND. error(3) < 3.2E-5 .AND. error(4) < 9.9E-5 .AND. error(5)<1.4E-4 .AND. error(6)<1.4E-9) then
+  if ( error(1) < 5.0d-5 .AND. error(2) < 2.0d-6 .AND. error(3) < 3.2d-5 .AND. error(4) < 9.9d-5 .AND. error(5)<1.4d-4 .AND. error(6)<1.4d-9) then
      print*, 'PASSED.'
   else
      print*, 'FAILED.'

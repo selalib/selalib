@@ -41,9 +41,6 @@ module sll_m_time_propagator_pic_vm_3d3v_helper
   use sll_m_linear_operator_particle_mass_cl_3d_diag, only : &
        sll_t_linear_operator_particle_mass_cl_3d_diag
 
-  use sll_m_linear_operator_maxwell_eb_schur, only: &
-       sll_t_linear_operator_maxwell_eb_schur
-
   use sll_m_linear_operator_schur_ev_3d, only : &
        sll_t_linear_operator_schur_ev_3d
 
@@ -52,9 +49,6 @@ module sll_m_time_propagator_pic_vm_3d3v_helper
 
   use sll_m_linear_solver_cg, only : &
        sll_t_linear_solver_cg
-
-  use sll_m_linear_solver_mass1, only : &
-       sll_t_linear_solver_mass1
 
   use sll_m_maxwell_3d_base, only: &
        sll_c_maxwell_3d_base
@@ -90,12 +84,6 @@ module sll_m_time_propagator_pic_vm_3d3v_helper
      class(sll_c_maxwell_3d_base), pointer :: maxwell_solver      !< Maxwell solver
      class(sll_c_particle_mesh_coupling_3d), pointer :: particle_mesh_coupling
      class(sll_t_particle_array), pointer  :: particle_group    !< Particle group
-
-     type(sll_t_linear_operator_maxwell_eb_schur) :: linear_op_eb_schur
-
-     type(sll_t_linear_solver_mass1) :: inv_mass_11
-     type(sll_t_linear_solver_mass1) :: inv_mass_12
-     type(sll_t_linear_solver_mass1) :: inv_mass_13
 
      type( sll_t_linear_operator_schur_phiv_3d ) :: linear_op_schur_phiv !< Schur complement operator for advect_e
      type( sll_t_linear_solver_cg )         :: linear_solver_schur_phiv !< Schur complement solver for advect_e
@@ -713,21 +701,12 @@ contains
     self%j_dofs_local( 1:self%n_total1 ) = (1.0_f64-dt**2*0.25_f64*qoverm)*&
          self%j_dofs_local( 1:self%n_total1 ) - dt* self%j_dofs( 1:self%n_total1 )
 
-    ! Solve Schur complement
-    call self%inv_mass_11%solve ( self%j_dofs_local( 1:self%n_total1 ) , self%efield_dofs( 1:self%n_total1 ) )
-
-
-
     ! Ey part
     ! Multiply E by mass matrix and add current
     call self%maxwell_solver%multiply_mass( [1,2,1], &
          self%efield_dofs(1+self%n_total1:self%n_total1+self%n_total0 ), self%j_dofs_local(1+self%n_total1:self%n_total1+self%n_total0) )
     self%j_dofs_local( 1+self%n_total1:self%n_total1+self%n_total0 ) = (1.0_f64-dt**2*0.25_f64*qoverm)*&
          self%j_dofs_local( 1+self%n_total1:self%n_total1+self%n_total0 ) - dt* self%j_dofs( 1+self%n_total1:self%n_total1+self%n_total0 )
-
-    ! Solve Schur complement
-    call self%inv_mass_12%solve ( self%j_dofs_local( 1+self%n_total1:self%n_total1+self%n_total0 ) &
-         , self%efield_dofs( 1+self%n_total1:self%n_total1+self%n_total0 ) )
 
     ! Ez part
     ! Multiply E by mass matrix and add current
@@ -737,10 +716,9 @@ contains
          self%j_dofs_local( 1+self%n_total1+self%n_total0:self%n_total1+2*self%n_total0 ) - dt* self%j_dofs( 1+self%n_total1+self%n_total0:self%n_total1+2*self%n_total0 )
 
     ! Solve Schur complement
-    call self%inv_mass_13%solve ( self%j_dofs_local( 1+self%n_total1+self%n_total0:self%n_total1+2*self%n_total0 ) , &
-         self%efield_dofs( 1+self%n_total1+self%n_total0:self%n_total1+2*self%n_total0 ) )
-
-
+    ! Solve efield components together
+    call self%maxwell_solver%multiply_mass_inverse( 1, self%j_dofs_local, self%efield_dofs )
+    
     ! Second particle loop (second half step of particle propagation)
     do i_sp = 1, self%particle_group%n_species
        do i_part = 1, self%particle_group%group(i_sp)%n_particles
@@ -859,11 +837,6 @@ contains
     self%Lx = Lx
     self%filter => filter
 
-    ! Only for Schur complement eb solver
-    call self%linear_op_eb_schur%create( self%maxwell_solver )
-
-
-
     self%nspan(1) =  (2*self%spline_degree(1)-1)*(2*self%spline_degree(2)+1)*(2*self%spline_degree(3)+1)
     self%nspan(2) =  (2*self%spline_degree(1)+1)*(2*self%spline_degree(2)-1)*(2*self%spline_degree(3)+1)
     self%nspan(3) =  (2*self%spline_degree(1)+1)*(2*self%spline_degree(2)+1)*(2*self%spline_degree(3)-1)
@@ -929,13 +902,6 @@ contains
        self%linear_solver_schur_ev%atol = self%solver_tolerance
        !self%linear_solver_schur_ev%verbose = .true.
        self%linear_solver_schur_ev%n_maxiter = 2000
-
-       call self%inv_mass_11%create(self%maxwell_solver%n_dofs, self%linear_op_eb_schur%eig_values_mass_1_1, &
-            self%linear_op_eb_schur%eig_values_mass_0_2,self%linear_op_eb_schur%eig_values_mass_0_3)
-       call self%inv_mass_12%create(self%maxwell_solver%n_dofs, self%linear_op_eb_schur%eig_values_mass_0_1, &
-            self%linear_op_eb_schur%eig_values_mass_1_2,self%linear_op_eb_schur%eig_values_mass_0_3)
-       call self%inv_mass_13%create(self%maxwell_solver%n_dofs, self%linear_op_eb_schur%eig_values_mass_0_1, &
-            self%linear_op_eb_schur%eig_values_mass_0_2,self%linear_op_eb_schur%eig_values_mass_1_3)
 
     end if
 
@@ -1341,8 +1307,6 @@ contains
     else
        call self%linear_solver_schur_ev%free()
        call self%linear_op_schur_ev%free()
-       call self%inv_mass_12%free()
-       call self%inv_mass_13%free()
     end if
 
     call self%particle_mass_op%free()

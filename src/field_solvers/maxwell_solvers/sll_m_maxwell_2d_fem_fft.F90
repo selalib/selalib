@@ -22,9 +22,6 @@ module sll_m_maxwell_2d_fem_fft
   use sll_m_low_level_bsplines, only: &
     sll_s_uniform_bsplines_eval_basis
 
-  use sll_m_constants, only: &
-    sll_p_pi
-
   use sll_m_gauss_legendre_integration, only: &
        sll_f_gauss_legendre_points_and_weights
 

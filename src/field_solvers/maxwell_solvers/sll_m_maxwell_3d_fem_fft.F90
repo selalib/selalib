@@ -29,7 +29,7 @@ module sll_m_maxwell_3d_fem_fft
 
   use sll_m_linear_operator_kron, only : &
        sll_t_linear_operator_kron
-  
+
   use sll_m_linear_operator_maxwell_eb_schur, only : &
        sll_t_linear_operator_maxwell_eb_schur
 
@@ -210,6 +210,7 @@ contains
   end subroutine sll_s_compute_b_from_e_3d_fem_fft
 
 
+  !> Solve curl part of Maxwell's equations
   subroutine sll_s_compute_curl_part_3d_fem_fft( self, delta_t, efield, bfield, betar )
     class(sll_t_maxwell_3d_fem_fft) :: self       !< Maxwell solver class
     sll_real64, intent( in    )     :: delta_t    !< Time step
@@ -248,6 +249,7 @@ contains
   end subroutine sll_s_compute_curl_part_3d_fem_fft
 
 
+  !> Compute E_i from rho_i integrated over the time interval using weak Poisson's equation
   subroutine sll_s_compute_e_from_rho_3d_fem_fft(self, field_in, field_out )  
     class(sll_t_maxwell_3d_fem_fft) :: self         !< Maxwell solver class
     sll_real64, intent( in    )     :: field_in(:)  !< rho
@@ -291,6 +293,7 @@ contains
 
   end subroutine sll_s_compute_E_from_j_3d_fem_fft
 
+
   !> Compute phi from rho_i integrated over the time interval
   subroutine sll_s_compute_phi_from_rho_3d_fem_fft( self, field_in, field_out, efield_dofs )  
     class(sll_t_maxwell_3d_fem_fft) :: self         !< Maxwell solver class
@@ -303,6 +306,7 @@ contains
     efield_dofs = -efield_dofs
 
   end subroutine sll_s_compute_phi_from_rho_3d_fem_fft
+
 
   !> Compute phi from j_i integrated over the time interval, delta_t is already included 
   subroutine sll_s_compute_phi_from_j_3d_fem_fft( self, field_in, field_out, efield_dofs )
@@ -435,16 +439,8 @@ contains
     procedure(sll_i_function_3d_real64), optional  :: func2         !< Function second component
     procedure(sll_i_function_3d_real64), optional  :: func3         !< Function third component
 
-
-    ! local variables
-    !sll_real64 :: coef
-    !sll_real64, dimension(2,degree+1) :: xw_gauss
-    !sll_real64, dimension(degree+1,degree+1) :: bspl
-
     ! Compute right-hand-side
     call sll_s_compute_rhs_fem_fft( self, form,  component, self%work(1:self%n_total), func1 )
-
-
 
     select case( form )
     case( 0 )
@@ -456,9 +452,6 @@ contains
     case  default
        print*, 'L2projection for', form, '-form not implemented.'
     end select
-
-    ! Account for scaling in the mass matrix by dx
-    !coefs_dofs = coefs_dofs/self%volume
 
   end subroutine L2projection_3d_fem_fft
 
@@ -476,7 +469,7 @@ contains
   end function L2norm_squared_3d_fem_fft
 
 
-
+  !> Compute inner product
   function inner_product_3d_fem_fft(self, coefs1, coefs2, form, component) result (r)
     class(sll_t_maxwell_3d_fem_fft) :: self !< Maxwell solver class
     sll_real64 :: coefs1(:) !< Coefficient for each DoF
@@ -538,7 +531,7 @@ contains
   end function inner_product_3d_fem_fft
 
 
-
+  !> Initialization
   subroutine init_3d_fem_fft( self, domain, n_dofs, s_deg_0, adiabatic_electrons, profile  )
     class(sll_t_maxwell_3d_fem_fft), intent(out) :: self !< Maxwell solver class
     sll_real64, intent(in) :: domain(3,2)     !< xmin, xmax
@@ -657,13 +650,6 @@ contains
     call sll_s_spline_fem_compute_mass_eig( n_dofs(3), self%s_deg_1(3), self%mass_line1_3, &
          eig_values_mass_1_3 )
 
-!!$    inv_eig_values_mass_0_1 = 1._f64/eig_values_mass_0_1
-!!$    inv_eig_values_mass_0_2 = 1._f64/eig_values_mass_0_2
-!!$    inv_eig_values_mass_0_3 = 1._f64/eig_values_mass_0_3
-!!$    inv_eig_values_mass_1_1 = 1._f64/eig_values_mass_1_1
-!!$    inv_eig_values_mass_1_2 = 1._f64/eig_values_mass_1_2
-!!$    inv_eig_values_mass_1_3 = 1._f64/eig_values_mass_1_3
-!!$    
     inv_eig_values_mass_0_1(1) = 1._f64/eig_values_mass_0_1(1)
     inv_eig_values_mass_0_1(n_dofs(1)/2+1) = 1._f64/eig_values_mass_0_1(n_dofs(1)/2+1)
     inv_eig_values_mass_1_1(1) = 1._f64/eig_values_mass_1_1(1)
@@ -788,7 +774,7 @@ contains
   end subroutine init_3d_fem_fft
 
 
-
+  !> Finalization
   subroutine free_3d_fem_fft(self)
     class(sll_t_maxwell_3d_fem_fft) :: self !< Maxwell solver class
     !local variable
@@ -866,60 +852,6 @@ contains
   end subroutine multiply_ct
 
 
-
-  subroutine multiply_mass_1form( self, coefs_in, coefs_out )
-    class(sll_t_maxwell_3d_fem_fft), intent( inout ) :: self !< Maxwell solver class
-    sll_real64, intent( in    )                      :: coefs_in(:) !< Coefficient for each DoF
-    sll_real64, intent(   out )                      :: coefs_out(:) !< Coefficient for each DoF
-
-
-    sll_int32:: iend, istart
-
-    istart = 1
-    iend = self%n_total
-    call multiply_mass_3dkron(  self, self%mass_line1_1, &
-         self%mass_line0_2, self%mass_line0_3, &
-         coefs_in(istart:iend), coefs_out(istart:iend) )
-    istart = iend+1
-    iend = iend + self%n_total
-    call multiply_mass_3dkron(  self, self%mass_line0_1, &
-         self%mass_line1_2, self%mass_line0_3, &
-         coefs_in(istart:iend), coefs_out(istart:iend) )
-    istart = iend+1
-    iend = iend + self%n_total
-    call multiply_mass_3dkron(  self, self%mass_line0_1, &
-         self%mass_line0_2, self%mass_line1_3, &
-         coefs_in(istart:iend), coefs_out(istart:iend) )
-
-  end subroutine multiply_mass_1form
-
-
-
-  subroutine multiply_mass_2form( self, coefs_in, coefs_out )
-    class(sll_t_maxwell_3d_fem_fft), intent( inout )  :: self !< Maxwell solver class
-    sll_real64, intent(in)     :: coefs_in(:) !< Coefficient for each DoF
-    sll_real64, intent(out)  :: coefs_out(:) !< Coefficient for each DoF
-
-    sll_int32:: iend, istart
-
-    istart = 1
-    iend = self%n_total
-    call multiply_mass_3dkron(  self, self%mass_line0_1, &
-         self%mass_line1_2, self%mass_line1_3, &
-         coefs_in(istart:iend), coefs_out(istart:iend) )
-    istart = iend+1
-    iend = iend + self%n_total
-    call multiply_mass_3dkron(  self, self%mass_line1_1, &
-         self%mass_line0_2, self%mass_line1_3, &
-         coefs_in(istart:iend), coefs_out(istart:iend) )
-    istart = iend+1
-    iend = iend + self%n_total
-    call multiply_mass_3dkron(  self, self%mass_line1_1, &
-         self%mass_line1_2, self%mass_line0_3, &
-         coefs_in(istart:iend), coefs_out(istart:iend) )
-
-  end subroutine multiply_mass_2form
-
   !> Multiply by the mass matrix 
   subroutine multiply_mass_3d_fem_fft( self, deg, coefs_in, coefs_out )
     class(sll_t_maxwell_3d_fem_fft) :: self         !< Maxwell solver class
@@ -947,6 +879,60 @@ contains
   end subroutine multiply_mass_3d_fem_fft
 
 
+  !> Helper function for multiply_mass
+  subroutine multiply_mass_1form( self, coefs_in, coefs_out )
+    class(sll_t_maxwell_3d_fem_fft), intent( inout ) :: self !< Maxwell solver class
+    sll_real64, intent( in    )                      :: coefs_in(:) !< Coefficient for each DoF
+    sll_real64, intent(   out )                      :: coefs_out(:) !< Coefficient for each DoF
+    !local variables
+    sll_int32:: iend, istart
+
+    istart = 1
+    iend = self%n_total
+    call multiply_mass_3dkron(  self, self%mass_line1_1, &
+         self%mass_line0_2, self%mass_line0_3, &
+         coefs_in(istart:iend), coefs_out(istart:iend) )
+    istart = iend+1
+    iend = iend + self%n_total
+    call multiply_mass_3dkron(  self, self%mass_line0_1, &
+         self%mass_line1_2, self%mass_line0_3, &
+         coefs_in(istart:iend), coefs_out(istart:iend) )
+    istart = iend+1
+    iend = iend + self%n_total
+    call multiply_mass_3dkron(  self, self%mass_line0_1, &
+         self%mass_line0_2, self%mass_line1_3, &
+         coefs_in(istart:iend), coefs_out(istart:iend) )
+
+  end subroutine multiply_mass_1form
+
+
+  !> Helper function for multiply_mass
+  subroutine multiply_mass_2form( self, coefs_in, coefs_out )
+    class(sll_t_maxwell_3d_fem_fft), intent( inout )  :: self !< Maxwell solver class
+    sll_real64, intent(in)     :: coefs_in(:) !< Coefficient for each DoF
+    sll_real64, intent(out)  :: coefs_out(:) !< Coefficient for each DoF
+    !local variables
+    sll_int32:: iend, istart
+
+    istart = 1
+    iend = self%n_total
+    call multiply_mass_3dkron(  self, self%mass_line0_1, &
+         self%mass_line1_2, self%mass_line1_3, &
+         coefs_in(istart:iend), coefs_out(istart:iend) )
+    istart = iend+1
+    iend = iend + self%n_total
+    call multiply_mass_3dkron(  self, self%mass_line1_1, &
+         self%mass_line0_2, self%mass_line1_3, &
+         coefs_in(istart:iend), coefs_out(istart:iend) )
+    istart = iend+1
+    iend = iend + self%n_total
+    call multiply_mass_3dkron(  self, self%mass_line1_1, &
+         self%mass_line1_2, self%mass_line0_3, &
+         coefs_in(istart:iend), coefs_out(istart:iend) )
+
+  end subroutine multiply_mass_2form
+
+
   !> Multiply by the mass matrix 
   subroutine multiply_mass_3dkron(  self, mass_line_1, mass_line_2, mass_line_3, coefs_in, coefs_out )
     class(sll_t_maxwell_3d_fem_fft), intent( inout )  :: self !< Maxwell solver class
@@ -956,7 +942,6 @@ contains
     sll_real64, intent(in)    :: mass_line_3(:) !< massline
     sll_real64, intent(in)     :: coefs_in(:) !< Coefficient for each DoF
     sll_real64, intent(out)  :: coefs_out(:)  !< Coefficient for each DoF 
-
     ! Local variables
     sll_int32 :: i,j,k,istart,iend
     sll_int32 :: deg(3)
@@ -1088,13 +1073,31 @@ contains
   end subroutine multiply_mass_all
 
 
-  !> Multiply by the mass matrix 
+  !> Multiply by the inverse mass matrix 
   subroutine multiply_mass_inverse_all(  self, form, coefs_in, coefs_out )
     class(sll_t_maxwell_3d_fem_fft) :: self !< Maxwell solver class
     sll_int32,  intent( in    )     :: form !< \a form specifies the form (Note: 0 for 0-form, 1 for 1-form, 2 for 2-form, 3 for 0-1-form mix)
     sll_real64, intent( in    )    :: coefs_in(:) !< Coefficient for each DoF
     sll_real64, intent(   out )    :: coefs_out(:) !< Coefficient for each DoF
 
+    select case( form )
+    case( 0 )
+       call self%inverse_mass_0%solve( coefs_in, coefs_out )
+    case( 1 )
+       call self%inverse_mass_1(1)%solve( coefs_in(1:self%n_total), coefs_out(1:self%n_total) )
+       call self%inverse_mass_1(2)%solve( coefs_in(self%n_total+1:2*self%n_total), coefs_out(self%n_total+1:2*self%n_total) )
+       call self%inverse_mass_1(3)%solve( coefs_in(2*self%n_total+1:3*self%n_total), coefs_out(2*self%n_total+1:3*self%n_total) )
+    case( 2 )
+       call self%inverse_mass_2(1)%solve( coefs_in(1:self%n_total), coefs_out(1:self%n_total) )
+       call self%inverse_mass_2(2)%solve( coefs_in(self%n_total+1:2*self%n_total), coefs_out(self%n_total+1:2*self%n_total) )
+       call self%inverse_mass_2(3)%solve( coefs_in(2*self%n_total+1:3*self%n_total), coefs_out(2*self%n_total+1:3*self%n_total) )
+    case  default
+       print*, 'inverse_mass for', form, '-form not implemented.'
+    end select
+
+
+
   end subroutine multiply_mass_inverse_all
+
 
 end module sll_m_maxwell_3d_fem_fft

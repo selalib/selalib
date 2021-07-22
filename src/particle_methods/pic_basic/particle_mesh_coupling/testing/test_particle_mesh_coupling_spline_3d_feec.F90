@@ -45,7 +45,7 @@ program test_particle_mesh_coupling_spline_3d_feec
   logical :: passed
   sll_real64 :: error
 
-  sll_real64 :: eval, eval_ref, evalpp
+  sll_real64 :: eval, eval_ref
 
   character(len=256) :: reference_add_charge
   character(len=256) :: reference_add_particle_mass
@@ -53,12 +53,10 @@ program test_particle_mesh_coupling_spline_3d_feec
   logical    :: file_exists
   
   ! Sparse structure for shape factors (for reference)
-  !sll_int32 :: index_grid(1,4)    !< First dof index with contribution from th
   sll_real64 :: values_grid(4,1,4) !< Values of the space factors in each dimesion.
 
   ! Rho dofs
   sll_real64 :: rho_dofs(n_grid**3)
-  !sll_real64 :: rho_dofs_pp(n_grid**3)
   sll_real64 :: rho_dofs_ref(n_grid**3)
   ! J dofs
   sll_real64 :: j_dofs(n_grid**3*3)
@@ -66,7 +64,6 @@ program test_particle_mesh_coupling_spline_3d_feec
   ! B dofs
   sll_real64 :: b_dofs(n_grid**3*3)
   sll_real64 :: e_dofs(n_grid**3)
-  !sll_real64 :: e_dofs_pp((spline_degree*(spline_degree+1)**2),n_grid**3)
   ! Particle mass
   sll_real64 :: particle_mass((2*spline_degree+1)**2*(2*spline_degree-1),n_grid**3)
   sll_real64 :: particle_mass_ref((2*spline_degree+1)**2*(2*spline_degree-1)*n_grid**3)
@@ -111,8 +108,6 @@ program test_particle_mesh_coupling_spline_3d_feec
   ! Test parameters
   n_cells = n_grid; ! Number of cells
   n_dofs = n_grid**3
-  !n_particles = 4 ! Number of particles
-  !spline_degree = 3 ! Spline degree
   domain(1,:) = [0.0_f64, 2.0_f64] ! x_min, x_max
   domain(2,:) = [0.0_f64, 2.0_f64] ! x_min, x_max
   domain(3,:) = [0.0_f64, 2.0_f64] ! x_min, x_max
@@ -141,12 +136,12 @@ program test_particle_mesh_coupling_spline_3d_feec
      call particle_group%set_v(i_part, xi)
   end do
   
-  values_grid(:,1,1) = [ 2.0833333333333332E-002_f64,  0.47916666666666663_f64,    &
-       0.47916666666666663_f64,        2.0833333333333332E-002_f64]
+  values_grid(:,1,1) = [ 2.083333333333333E-002_f64,  0.479166666666666_f64,    &
+       0.479166666666666_f64,        2.08333333333333E-002_f64]
   values_grid(:,1,3) = values_grid(:,1,1)   
   values_grid(:,1,4) = values_grid(:,1,1) 
-  values_grid(:,1,2) = [7.0312500000000000E-002_f64,  0.61197916666666663_f64, &
-       0.31510416666666663_f64,        2.6041666666666665E-003_f64 ]
+  values_grid(:,1,2) = [7.03125E-002_f64,  0.611979166666666_f64, &
+       0.315104166666666_f64,        2.60416666666666E-003_f64 ]
 
   ! Initialize the particle mesh coupler
   call particle_mesh%init( n_cells, domain, [spline_degree,spline_degree,spline_degree], n_particles )
@@ -162,51 +157,31 @@ program test_particle_mesh_coupling_spline_3d_feec
   call particle_mesh%evaluate( xi, [spline_degree-1, spline_degree, spline_degree],  &
        e_dofs, eval )
 
-  !call sll_s_spline_pp_b_to_pp_3d(particle_mesh%spline_pp_11, n_cells, e_dofs(1:n_dofs), e_dofs_pp)
-  !call particle_mesh%evaluate_pp( xi, [spline_degree-1, spline_degree, spline_degree],  &
-  !     e_dofs_pp, evalpp )
   eval_ref = test_func( xi )
 
   error = eval_ref -eval;
-  if (error > 1.1e-3) then
+  if (error > 1.1d-3) then
      print*, 'Error in procedure evaluate', error
      passed = .false.
   end if
-
-!!$  error = eval_ref -evalpp;
-!!$  if (error > 1.1e-3) then
-!!$     print*, 'Error in procedure evaluate_pp', error
-!!$     passed = .false.
-!!$  end if
   
   ! Accumulate rho
   rho_dofs = 0.0_f64
-  !rho_dofs_pp = 0.0_f64
   do i_part = 1, n_particles
      xi = particle_group%get_x(i_part)
      wi = particle_group%get_charge(i_part)
      call particle_mesh%add_charge(xi, wi(1), &
           [spline_degree, spline_degree, spline_degree], rho_dofs)
-!!$     call particle_mesh%add_charge_pp(xi, wi(1), &
-!!$               [spline_degree, spline_degree, spline_degree], rho_dofs_pp)
   end do
 
   call sll_s_read_data_real_array( reference_add_charge, rho_dofs_ref)
   
   error = maxval(abs(rho_dofs-rho_dofs_ref))
 
-  if (error > 1.e-14) then
+  if (error > 1.d-14) then
      passed = .FALSE.
      print*, 'Error in procedure add_charge.'
   end if
-
-!!$  error = maxval(abs(rho_dofs_pp-rho_dofs_ref))
-!!$
-!!$  if (error > 1.e-14) then
-!!$     passed = .FALSE.
-!!$     print*, 'Error in procedure add_charge_pp.'
-!!$     print*, error
-!!$  end if
 
   ! add_particle_mass
   particle_mass = 0.0_f64
@@ -220,7 +195,7 @@ program test_particle_mesh_coupling_spline_3d_feec
   call sll_s_read_data_real_array( reference_add_particle_mass, particle_mass_ref)
   error = maxval(abs(rho_dofs-rho_dofs_ref))
 
-  if (error > 1.e-14) then
+  if (error > 1.d-14) then
      passed = .FALSE.
      print*, 'Error in procedure add_particle_mass.'
   end if
@@ -241,13 +216,7 @@ program test_particle_mesh_coupling_spline_3d_feec
      call particle_mesh%add_current_update_v_component1( xi, x_new , wi(1), -1.0_f64, b_dofs, vi, &
           j_dofs(1:n_dofs) )
      call particle_group%set_v( i_part, vi )
-     
-     !call particle_mesh%add_current( xi, [x_new,xi(2:3)] , wi(1), -1.0_f64, b_dofs, vi, &
-     !     j_dofs(1+n_dofs:2*n_dofs) )
   end do
-
-  !write(32,*) j_dofs(1:n_dofs)
-
 
   j_dofs(1+n_dofs:2*n_dofs) = 0.0_f64
   do i_part = 1, n_particles
@@ -277,16 +246,16 @@ program test_particle_mesh_coupling_spline_3d_feec
   error = maxval(abs(j_dofs-j_dofs_ref))
   print*, error
 
-  if (error > 1.e-14) then
+  if (error > 1.d-14) then
      passed = .false.
      print*, 'Error in procedure add_current_update_v.'
   end if
 
 
-  v_ref(:,1) = [1.4997595685995817_f64,        1.2813668151793720E-002_f64,  -1.2573455555138887E-002_f64]
-  v_ref(:,2) = [-2.9988581733991584_f64,        0.50112449479898813_f64,       0.24773040617754805_f64]
-  v_ref(:,3) = [0.0000000000000000_f64,        0.0000000000000000_f64,        0.0000000000000000_f64]     
-  v_ref(:,4) = [6.0000000000000000_f64,        4.1677425955085001E-002_f64,  -4.1677425955084960E-002_f64]
+  v_ref(:,1) = [1.499759568599581_f64,        1.281366815179372E-002_f64,  -1.25734555551388E-002_f64]
+  v_ref(:,2) = [-2.998858173399158_f64,        0.5011244947989881_f64,       0.247730406177548_f64]
+  v_ref(:,3) = [0.0_f64,        0.0_f64,        0.0_f64]     
+  v_ref(:,4) = [6.0_f64,        4.1677425955085E-002_f64,  -4.167742595508496E-002_f64]
 
   do i_part = 1, n_particles
      vi = particle_group%get_v( i_part )
@@ -324,7 +293,7 @@ contains
 
       r=1
 
-      beta_cos_k = 0.1_f64 * cos(2*sll_p_pi*x(r)/domain(r,2)) 
+      beta_cos_k = 0.1_f64 * cos(2._f64*sll_p_pi*x(r)/domain(r,2)) 
     end function beta_cos_k
     
 end program test_particle_mesh_coupling_spline_3d_feec
