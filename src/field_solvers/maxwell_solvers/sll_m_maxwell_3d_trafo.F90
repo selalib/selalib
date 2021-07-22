@@ -468,11 +468,11 @@ contains
                    do j1 = 1, deg(1)+1
                       ! loop over Gauss points
                       do k3 = 1, q(3)
-                         c(3) = self%delta_x(3) * (xw_gauss_d3(1,k3) + real(i3 + j3 - 2-((i3 + j3 - 2)/self%n_dofs(3)) * self%n_dofs(3),f64))
+                         c(3) = self%delta_x(3) * (xw_gauss_d3(1,k3) + real(i3 + j3 - 2, f64))
                          do k2 = 1, q(2)
-                            c(2) = self%delta_x(2) * (xw_gauss_d2(1,k2) + real(i2 + j2 - 2-((i2 + j2 - 2)/self%n_dofs(2)) * self%n_dofs(2),f64))
+                            c(2) = self%delta_x(2) * (xw_gauss_d2(1,k2) + real(i2 + j2 - 2, f64))
                             do k1 = 1, q(1)
-                               c(1) = self%delta_x(1) * (xw_gauss_d1(1,k1) + real(i1 + j1 - 2-((i1 + j1 - 2)/self%n_dofs(1)) * self%n_dofs(1),f64))
+                               c(1) = self%delta_x(1) * (xw_gauss_d1(1,k1) + real(i1 + j1 - 2, f64))
                                jacobian = self%map%jacobian( c ) 
                                jmatrix = self%map%jacobian_matrix_inverse_transposed( c )
                                coef = coef + xw_gauss_d1(2,k1)* xw_gauss_d2(2,k2)* xw_gauss_d3(2,k3) *&
@@ -558,11 +558,11 @@ contains
                    do j1 = 1, deg(1)+1
                       ! loop over Gauss points
                       do k3 = 1, q(3)
-                         c(3) = self%delta_x(3) * (xw_gauss_d3(1,k3) + real(i3 + j3 - 2-((i3 + j3 - 2)/self%n_dofs(3)) * self%n_dofs(3),f64))
+                         c(3) = self%delta_x(3) * (xw_gauss_d3(1,k3) + real(i3 + j3 - 2, f64))
                          do k2 = 1, q(2)
-                            c(2) = self%delta_x(2) * (xw_gauss_d2(1,k2) + real(i2 + j2 - 2-((i2 + j2 - 2)/self%n_dofs(2)) * self%n_dofs(2),f64))
+                            c(2) = self%delta_x(2) * (xw_gauss_d2(1,k2) + real(i2 + j2 - 2, f64))
                             do k1 = 1, q(1)
-                               c(1) = self%delta_x(1) * (xw_gauss_d1(1,k1) + real(i1 + j1 - 2-((i1 + j1 - 2)/self%n_dofs(1)) * self%n_dofs(1),f64))
+                               c(1) = self%delta_x(1) * (xw_gauss_d1(1,k1) + real(i1 + j1 - 2, f64))
 
                                jmatrix = self%map%jacobian_matrix( c ) * sign( 1._f64, self%map%jacobian( c ) )
                                coef = coef + xw_gauss_d1(2,k1)* xw_gauss_d2(2,k2)* xw_gauss_d3(2,k3) *&
@@ -641,11 +641,11 @@ contains
                    do j1 = 1, deg(1)+1
                       ! loop over Gauss points
                       do k3 = 1, q(3)
-                         c(3) = self%delta_x(3) * (xw_gauss_d3(1,k3) + real(i3 + j3 - 2-((i3 + j3 - 2)/self%n_dofs(3)) * self%n_dofs(3),f64))
+                         c(3) = self%delta_x(3) * (xw_gauss_d3(1,k3) + real(i3 + j3 - 2, f64))
                          do k2 = 1, q(2)
-                            c(2) = self%delta_x(2) * (xw_gauss_d2(1,k2) + real(i2 + j2 - 2-((i2 + j2 - 2)/self%n_dofs(2)) * self%n_dofs(2),f64))
+                            c(2) = self%delta_x(2) * (xw_gauss_d2(1,k2) + real(i2 + j2 - 2, f64))
                             do k1 = 1, q(1)
-                               c(1) = self%delta_x(1) * (xw_gauss_d1(1,k1) + real(i1 + j1 - 2-((i1 + j1 - 2)/self%n_dofs(1)) * self%n_dofs(1),f64))
+                               c(1) = self%delta_x(1) * (xw_gauss_d1(1,k1) + real(i1 + j1 - 2, f64))
                                coef = coef + xw_gauss_d1(2,k1)* xw_gauss_d2(2,k2)* xw_gauss_d3(2,k3) *&
                                     func(self%map%get_x(c) ) * &
                                     bspl_d1(k1,deg(1)+2-j1)*&
@@ -682,7 +682,7 @@ contains
        call sll_s_compute_rhs_trafo( self, form, 1, self%work(1:self%n_total), func1, func2, func3 )
        call sll_s_compute_rhs_trafo( self, form, 2, self%work(1+self%n_total:2*self%n_total), func1, func2, func3 )
        call sll_s_compute_rhs_trafo( self, form, 3, self%work(1+2*self%n_total:3*self%n_total), func1, func2, func3 )
-
+       
        select case( form )
        case( 1 )
           call self%mass1_solver%solve( self%work, coefs_dofs )

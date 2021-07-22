@@ -51,7 +51,7 @@ program test_time_propagator_pic_1d2v_vm_trafo
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! Tolerance for comparison of real numbers: set it here!
-  sll_real64, parameter :: EQV_TOL = 1.5e-12_f64
+  sll_real64, parameter :: EQV_TOL = 1.5e-11_f64
 
   ! Abstract particle group
   class(sll_t_particle_array), pointer :: particle_group
@@ -148,7 +148,10 @@ program test_time_propagator_pic_1d2v_vm_trafo
   SLL_ALLOCATE(particle_info_ref(n_particles,4), i_part)
   SLL_ALLOCATE(particle_info_check(n_particles,4), i_part)
   particle_info_ref = 0.0_f64
-  particle_info_ref = reshape([0.937500000000000_f64,        0.437500000000000_f64,       -1.5341205443525459_f64,       0.15731068461017067_f64,       0.15731068461017067_f64,       -1.5341205443525459_f64,        6.8636759376074723_f64,        5.7026946767517002_f64], [n_particles, 4])
+  particle_info_ref = reshape([0.9375_f64,        0.4375_f64,    &
+      -1.534120544352545_f64,        0.157310684610170_f64,    &
+       0.157310684610170_f64,       -1.534120544352545_f64,    &
+       6.863675937607472_f64,        5.702694676751700_f64], [n_particles, 4])
 
   ! Initialize particles from particle_info_ref
   xi = 0.0_f64
@@ -211,10 +214,10 @@ program test_time_propagator_pic_1d2v_vm_trafo
 
   ! Compare to reference
   ! Particle information after advect_x application 
-  particle_info_check(:,1) = [11.146655277439535_f64, 5.9944117537545853_f64]
-  particle_info_check(:,2) = [-1.5341205443525459_f64, 0.15731068461017067_f64]
-  particle_info_check(:,3) = [0.15731068461017067_f64, -1.5341205443525459_f64]
-  particle_info_check(:,4) = [6.8636759376074723_f64,  5.7026946767517002_f64]
+  particle_info_check(:,1) = [11.146655277439535_f64,  5.994411753754585_f64]
+  particle_info_check(:,2) = [-1.534120544352545_f64,  0.157310684610170_f64]
+  particle_info_check(:,3) = [ 0.157310684610170_f64, -1.534120544352545_f64]
+  particle_info_check(:,4) = [ 6.863675937607472_f64,  5.702694676751700_f64]
   ! Compare computed values to reference values
   do i_part=1,n_particles
     xi = particle_group%group(1)%get_x(i_part)
@@ -255,10 +258,10 @@ program test_time_propagator_pic_1d2v_vm_trafo
 
   ! Compare to reference
   ! Particle information after advect_vb application 
-  particle_info_check(:,1) = [11.300078267054246_f64,  5.9786813276896149_f64]
-  particle_info_check(:,2) = [-1.5211041682493989_f64, -0.20937811683683141_f64]
-  particle_info_check(:,3) = [0.25399725477133861_f64, -1.5278852379308252_f64]
-  particle_info_check(:,4) = [6.8636759376074723_f64,  5.7026946767517002_f64]
+  particle_info_check(:,1) = [11.300078267054246_f64,  5.97868132768961_f64]
+  particle_info_check(:,2) = [-1.521104168249398_f64, -0.20937811683683_f64]
+  particle_info_check(:,3) = [ 0.253997254771338_f64, -1.52788523793082_f64]
+  particle_info_check(:,4) = [ 6.863675937607472_f64,  5.7026946767517_f64]
   ! Compare computed values to reference values
   do i_part=1,n_particles
     xi = particle_group%group(1)%get_x(i_part)
@@ -299,16 +302,16 @@ program test_time_propagator_pic_1d2v_vm_trafo
   
   call propagator%advect_e( delta_t )
 
-  efield_ref = reshape([ 3.5269520324994938_f64,        -1.7744293184851003_f64, &
-       -24.958232301046834_f64,        5.1525515808905364_f64, &
-       12.052698421457679_f64,        -3.8802858118478318_f64, &
-       1.4177366428904643_f64,        -77.238282114144184_f64, &
-       40.686244225815770_f64,         54.416387368723171_f64, &
-       1.3662863904020170_f64,        0.18803745650115597_f64, &
-       2.6571533872084623_f64,         1.8067672397679591_f64, &
-       0.53024725036213016_f64,        1.1661495150263466_f64, &
-       1.0001635931591684_f64,        0.88474628086614449_f64, &
-       1.0573695334318294_f64,        0.84210912636799262_f64 ], [num_cells,2])
+  efield_ref = reshape([ 3.52695203249949_f64,        -1.7744293184851_f64, &
+     -24.95823230104683_f64,        5.152551580890536_f64, &
+      12.05269842145767_f64,       -3.880285811847831_f64, &
+       1.417736642890464_f64,      -77.23828211414418_f64, &
+      40.68624422581577_f64,        54.41638736872317_f64, &
+       1.366286390402017_f64,        0.188037456501155_f64, &
+       2.657153387208462_f64,        1.806767239767959_f64, &
+       0.530247250362130_f64,        1.166149515026346_f64, &
+       1.000163593159168_f64,        0.884746280866144_f64, &
+       1.057369533431829_f64,        0.842109126367992_f64 ], [num_cells,2])
   error = maxval(abs(efield-efield_ref))
   if (error> EQV_TOL) then
      passed = .FALSE.
@@ -317,10 +320,10 @@ program test_time_propagator_pic_1d2v_vm_trafo
   
   ! Compare to reference
   ! Particle information after advect_vb application 
-  particle_info_check(:,1) = [ 11.300078267054246_f64,    5.9786813276896149_f64]
-  particle_info_check(:,2) = [-1.4702215807810171_f64,   0.16323118115298291_f64]
-  particle_info_check(:,3) = [ 0.25520024798214108_f64,  -1.3741484253722172_f64]
-  particle_info_check(:,4) = [ 6.8636759376074723_f64,   5.7026946767517002_f64]
+  particle_info_check(:,1) = [11.300078267054246_f64,   5.978681327689614_f64]
+  particle_info_check(:,2) = [-1.470221580781017_f64,   0.163231181152982_f64]
+  particle_info_check(:,3) = [ 0.255200247982141_f64,  -1.374148425372217_f64]
+  particle_info_check(:,4) = [ 6.863675937607472_f64,   5.702694676751700_f64]
   ! Compare computed values to reference values
   do i_part=1,n_particles
     xi = particle_group%group(1)%get_x(i_part)
@@ -361,22 +364,22 @@ program test_time_propagator_pic_1d2v_vm_trafo
   
   call propagator%advect_eb( delta_t*5.0_f64 )
   
-  bfield_ref = [ 11.294340578821515_f64,        16.220037438938071_f64, &
-       5.6093043501383377_f64,        13.325413481963295_f64, &
-       14.558552743574444_f64,        13.150873436103453_f64, &
-       12.954732156194719_f64,        13.459071187150995_f64, &
-       11.936262269034817_f64,        13.155118501672078_f64 ]  
+  bfield_ref = [ 11.29434057882151_f64,        16.22003743893807_f64, &
+        5.60930435013833_f64,        13.32541348196329_f64, &
+       14.55855274357444_f64,        13.15087343610345_f64, &
+       12.95473215619471_f64,        13.45907118715099_f64, &
+       11.93626226903481_f64,        13.15511850167207_f64 ]  
   
-  efield_ref = reshape( [ 3.5269520324994938_f64,       -1.7744293184851003_f64, &
-       -24.958232301046834_f64,       5.1525515808905364_f64, &
-       12.052698421457679_f64,       -3.8802858118478318_f64, &
-       1.4177366428904643_f64,       -77.238282114144184_f64, &
-       40.686244225815770_f64,        54.416387368723171_f64, &
-       0.95697444467697945_f64,      0.67375664874628727_f64, &
-       0.98746722372732010_f64,       1.5342362241261738_f64, &
-       2.0138833618458940_f64,        1.1441799684839593_f64, &
-       1.1548212736169088_f64,       0.91315835679318624_f64, &
-       0.99257844235723891_f64,       0.97233969449592283_f64 ], [num_cells,2])
+  efield_ref = reshape( [ 3.52695203249949_f64,       -1.7744293184851_f64, &
+     -24.95823230104683_f64,        5.152551580890536_f64, &
+      12.05269842145767_f64,       -3.880285811847831_f64, &
+       1.41773664289046_f64,      -77.23828211414418_f64, &
+      40.68624422581577_f64,       54.41638736872317_f64, &
+       0.956974444676979_f64,       0.673756648746287_f64, &
+       0.987467223727320_f64,       1.534236224126173_f64, &
+       2.013883361845894_f64,       1.144179968483959_f64, &
+       1.154821273616908_f64,       0.913158356793186_f64, &
+       0.992578442357238_f64,       0.972339694495922_f64 ], [num_cells,2])
 
   error = maxval(abs(efield-efield_ref))
   if (error> EQV_TOL) then
