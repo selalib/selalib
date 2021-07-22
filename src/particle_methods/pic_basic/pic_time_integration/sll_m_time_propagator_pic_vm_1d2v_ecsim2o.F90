@@ -486,7 +486,7 @@ subroutine initialize_pic_vm_1d2v_ecsim2o(&
  self%x_min = x_min
  self%Lx = Lx
  self%domain=[x_min,x_min+Lx]
- self%delta_x = self%Lx/self%kernel_smoother_1%n_dofs
+ self%delta_x = self%Lx/real(self%kernel_smoother_1%n_dofs,f64)
  self%n_dofs=self%kernel_smoother_1%n_dofs
 
  self%cell_integrals_1 = [0.5_f64, 2.0_f64, 0.5_f64]

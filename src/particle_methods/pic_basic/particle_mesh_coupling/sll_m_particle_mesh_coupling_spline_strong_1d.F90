@@ -42,8 +42,6 @@ module sll_m_particle_mesh_coupling_spline_strong_1d
      sll_int32               :: index_shift !< index shift
      
      ! Information about the 1d mesh
-     sll_real64 :: delta_x  !< Value of grid spacing along both directions.
-     sll_real64 :: domain(1,2) !< Definition of the domain: domain(1,1) = x1_min  domain(1,2) = x1_max
      sll_int32  :: n_span !< Number of intervals where spline non zero (spline_degree + 1)
      type(sll_t_spline_pp_1d) :: spline_pp !< 1d pp-spline
 
@@ -89,7 +87,7 @@ contains
 
     sll_real64 :: xi(1)
 
-    xi(1) = (position(1) - self%domain(1,1))/self%delta_x
+    xi(1) = (position(1) - self%domain(1))/self%delta_x
     index = floor(xi(1))+1
     xi(1) = xi(1) - real(index-1, f64)
 
@@ -134,12 +132,10 @@ contains
     sll_real64,                               intent( inout ) :: rho_dofs(self%n_dofs) !< Coefficient vector of the charge distribution
 
     ! NOTE THAT THIS IS THE VARIANT FOR INT=TRUE ONLY
-
-    
     !local variables
     sll_int32 :: i1, i
     sll_int32 :: index1d, index
-    sll_real64 :: xi(1), axi(1)
+    sll_real64 :: axi(1)
 
     call helper_normalized_position( self, position, index, axi )
 
@@ -222,7 +218,7 @@ contains
    sll_real64,                             intent(inout) :: j_dofs(self%n_dofs)
    
    !Local variables
-   sll_int32  :: ind, i_grid, i_mod, n_cells, j, i
+   sll_int32  :: ind, i_grid, i_mod, n_cells, j
    sll_real64 :: c1, c2
    n_cells = self%n_cells
 
@@ -265,13 +261,9 @@ contains
     sll_real64, intent(in)    :: bfield_dofs(:) !< Coefficient of B-field expansion
     sll_real64, intent(inout) :: vi(:) !< Velocity of the particles
     sll_real64, intent(inout) :: j_dofs(:) !< Coefficients of current expansion
-
-
-    
-    
     !local variables
-    sll_int32 :: i, i0, in, i1, diff
-    sll_int32 :: index1d, index_new, index_old
+    sll_int32 :: i, i1, diff
+    sll_int32 :: index_new, index_old
     sll_real64 :: axi_new(1), axi_old(1)
 
     call helper_normalized_position( self, position_old, index_old, axi_old )
@@ -450,7 +442,7 @@ contains
    sll_real64,                             intent(inout) :: j_dofs(self%n_dofs)
    
    !Local variables
-   sll_int32  :: ind, i_grid, i_mod, n_cells, j, i
+   sll_int32  :: ind, i_grid, i_mod, n_cells, j
    sll_real64 :: c1, c2
    n_cells = self%n_cells
 
@@ -495,8 +487,8 @@ contains
     sll_real64,                               intent( inout ) :: j_dofs(self%n_dofs) !< Coefficient vector of the current density
     sll_real64,                               intent( out   ) :: field
  !local variables
-    sll_int32 :: i, i0, in, i1, diff
-    sll_int32 :: index1d, index_new, index_old
+    sll_int32 :: i, i1, diff
+    sll_int32 :: index_new, index_old
     sll_real64 :: axi_new(1), axi_old(1)
 
     call helper_normalized_position( self, position_old, index_old, axi_old )
@@ -582,10 +574,10 @@ contains
     self%dim = 1
 
     ! Store grid information
-    self%domain(1,:) = domain
+    self%domain = domain
     self%n_cells = n_cells
     self%n_dofs = n_cells
-    self%delta_x = (self%domain(1,2)-self%domain(1,1))/real(n_cells, f64)
+    self%delta_x = (self%domain(2)-self%domain(1))/real(n_cells, f64)
 
 
     ! Initialize information on the spline

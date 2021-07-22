@@ -25,7 +25,7 @@ module sll_m_particle_mesh_coupling_base_3d
   !> Basic type of a kernel smoother used for PIC simulations
   type, abstract :: sll_c_particle_mesh_coupling_3d
      sll_int32                :: dim = 3
-     sll_real64               :: delta_x(3)  !< Value of grid spacing along both directions.
+     sll_real64               :: delta_x(3)  !< Value of grid spacing along all directions.
      sll_real64               :: domain(3,2) !< Definition of the domain: domain(1,1) = x1_min  domain(1,2) = x1_max
      sll_int32                :: n_total  !< product of the cell points in all three directions
      sll_int32                :: spline_degree(3) !< Degree of smoothing kernel spline

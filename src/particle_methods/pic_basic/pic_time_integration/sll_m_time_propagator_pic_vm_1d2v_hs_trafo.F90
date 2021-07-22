@@ -165,9 +165,8 @@ contains
   subroutine operatorHp_pic_vm_1d2v(self, dt)
     class(sll_t_time_propagator_pic_vm_1d2v_hs_trafo), intent(inout) :: self !< time propagator object 
     sll_real64,                                     intent(in)    :: dt   !< time step
-
     !local variables
-    sll_int32 :: i_part, i_sp, i, j
+    sll_int32 :: i_part, i_sp, i
     sll_real64 :: x_new(3), v_new(3), vi(3), wi(1), xi(3), xbar(3), vbar(3)
     sll_int32  :: n_cells
     sll_real64 :: jmatrix(3,3)
@@ -225,7 +224,7 @@ contains
           ! Get charge for accumulation of j
           wi = self%particle_group%group(i_sp)%get_charge(i_part)
 
-          if ( abs(vbar(1))> 1E-16 ) then
+          if ( abs(vbar(1))> 1d-16 ) then
              call self%kernel_smoother_1%add_current( xi(1), x_new(1), wi(1), self%j_dofs_local(:,1) )
              call self%kernel_smoother_0%add_current( xi(1), x_new(1), wi(1)*vbar(2)/(jmatrix(1,1)*vbar(1)), self%j_dofs_local(:,2) )
           else
@@ -264,9 +263,8 @@ contains
   subroutine operatorHE_pic_vm_1d2v(self, dt)
     class(sll_t_time_propagator_pic_vm_1d2v_hs_trafo), intent(inout) :: self !< time propagator object 
     sll_real64,                                     intent(in)    :: dt   !< time step
-
     !local variables
-    sll_int32 :: i_part, i_sp, j
+    sll_int32 :: i_part, i_sp
     sll_real64 :: vi(3), xi(3)
     sll_real64 :: efield(2)
     sll_real64 :: qoverm, jmat(3,3)
@@ -367,7 +365,7 @@ contains
     self%spline_degree = self%kernel_smoother_0%spline_degree
     self%x_min = x_min
     self%Lx = Lx
-    self%delta_x = 1._f64/self%kernel_smoother_1%n_dofs
+    self%delta_x = 1._f64/real(self%kernel_smoother_1%n_dofs,f64)
     
   end subroutine initialize_pic_vm_1d2v
 
