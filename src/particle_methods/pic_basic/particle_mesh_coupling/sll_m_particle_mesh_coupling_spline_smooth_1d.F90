@@ -830,7 +830,8 @@ contains
        do column = 1, self%n_span+2
           particle_mass(ind, index1d) = particle_mass( ind, index1d) + &
                marker_charge * scratch(i1) * scratch(column)
-         ! Note: No scaling since Galerkin function
+          ! Note: No scaling since Galerkin function
+          ind = ind+1
        end do
     end do
     
