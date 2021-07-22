@@ -330,11 +330,13 @@ contains
     procedure(sll_i_function_3d_real64), optional  :: func2         !< Function second component
     procedure(sll_i_function_3d_real64), optional  :: func3         !< Function third component
     ! local variables
-    sll_int32 :: i1, i2, i3,j1, j2, j3, k1, k2, k3, k, counter
+    sll_int32 :: i1, i2, i3,j1, j2, j3, k1, k2, k3, q(3), counter
     sll_int32 :: degree(3)
+    sll_real64 :: c(3)
     sll_real64 :: coef
     sll_real64, allocatable :: xw_gauss_d1(:,:), xw_gauss_d2(:,:), xw_gauss_d3(:,:)
     sll_real64, allocatable :: bspl_d1(:,:), bspl_d2(:,:), bspl_d3(:,:)
+    sll_real64 :: scratch(maxval(self%s_deg_0+1))
 
     ! Define the spline degree in the 3 dimensions, depending on form and component of the form
     if ( form == 0 ) then
@@ -352,29 +354,33 @@ contains
     end if
 
     ! take enough Gauss points so that projection is exact for splines of degree deg
+    q = degree+1
     ! rescale on [0,1] for compatibility with B-splines
-    allocate(xw_gauss_d1(2,degree(1)+1))
-    allocate(bspl_d1(degree(1)+1, degree(1)+1))
-    xw_gauss_d1 = sll_f_gauss_legendre_points_and_weights(degree(1)+1, 0.0_f64, 1.0_f64)
+    allocate(xw_gauss_d1(2,q(1)))
+    allocate(bspl_d1(q(1), degree(1)+1))
+    xw_gauss_d1 = sll_f_gauss_legendre_points_and_weights(q(1), 0.0_f64, 1.0_f64)
     ! Compute bsplines at gauss_points
-    do k=1,degree(1)+1
-       call sll_s_uniform_bsplines_eval_basis(degree(1),xw_gauss_d1(1,k), bspl_d1(k,:))
+    do k1 = 1, q(1)
+       call sll_s_uniform_bsplines_eval_basis(degree(1),xw_gauss_d1(1,k1), scratch(1:degree(1)+1))
+       bspl_d1(k1,:) = scratch(1:degree(1)+1)
     end do
 
-    allocate(xw_gauss_d2(2,degree(2)+1))
-    allocate(bspl_d2(degree(2)+1, degree(2)+1))
-    xw_gauss_d2 = sll_f_gauss_legendre_points_and_weights(degree(2)+1, 0.0_f64, 1.0_f64)
+    allocate(xw_gauss_d2(2,q(2)))
+    allocate(bspl_d2(q(2), degree(2)+1))
+    xw_gauss_d2 = sll_f_gauss_legendre_points_and_weights(q(2), 0.0_f64, 1.0_f64)
     ! Compute bsplines at gauss_points
-    do k=1,degree(2)+1
-       call sll_s_uniform_bsplines_eval_basis(degree(2),xw_gauss_d2(1,k), bspl_d2(k,:))
+    do k2 = 1, q(2)
+       call sll_s_uniform_bsplines_eval_basis(degree(2),xw_gauss_d2(1,k2), scratch(1:degree(2)+1))
+       bspl_d2(k2,:) = scratch(1:degree(2)+1)
     end do
 
-    allocate(xw_gauss_d3(2,degree(3)+1))
-    allocate(bspl_d3(degree(3)+1, degree(3)+1))
-    xw_gauss_d3 = sll_f_gauss_legendre_points_and_weights(degree(3)+1, 0.0_f64, 1.0_f64)
+    allocate(xw_gauss_d3(2,q(3)))
+    allocate(bspl_d3(q(3), degree(3)+1))
+    xw_gauss_d3 = sll_f_gauss_legendre_points_and_weights(q(3), 0.0_f64, 1.0_f64)
     ! Compute bsplines at gauss_points
-    do k=1,degree(3)+1
-       call sll_s_uniform_bsplines_eval_basis(degree(3),xw_gauss_d3(1,k), bspl_d3(k,:))
+    do k3 = 1, q(3)
+       call sll_s_uniform_bsplines_eval_basis(degree(3),xw_gauss_d3(1,k3), scratch(1:degree(3)+1))
+       bspl_d3(k3,:) = scratch(1:degree(3)+1)
     end do
 
     counter = 1
@@ -384,16 +390,19 @@ contains
           do i1 = 1, self%n_dofs(1)
              coef=0.0_f64
              ! loop over support of B spline
-             do j1 = 1, degree(1)+1
+             do j3 = 1, degree(3)+1
                 do j2 = 1, degree(2)+1
-                   do j3 = 1, degree(3)+1
+                   do j1 = 1, degree(1)+1
                       ! loop over Gauss points
-                      do k1=1, degree(1)+1
-                         do k2=1, degree(2)+1
-                            do k3=1, degree(3)+1
+                      do k3 = 1, q(3)
+                         c(3) = self%delta_x(3)*(xw_gauss_d3(1,k3) + real(i3 + j3 - 2,f64))
+                         do k2 = 1, q(2)
+                            c(2) = self%delta_x(2)*(xw_gauss_d2(1,k2) + real(i2 + j2 - 2,f64))
+                            do k1 = 1, q(1)
+                               c(1) = self%delta_x(1)*(xw_gauss_d1(1,k1) + real(i1 + j1 - 2,f64))
                                coef = coef + xw_gauss_d1(2,k1)* xw_gauss_d2(2,k2)* &
                                     xw_gauss_d3(2,k3) *&
-                                    func1([self%delta_x(1)*(xw_gauss_d1(1,k1) + real(i1 + j1 - 2,f64)), self%delta_x(2)*(xw_gauss_d2(1,k2) + real(i2 + j2 - 2,f64)), self%delta_x(3)*(xw_gauss_d3(1,k3) + real(i3 + j3 - 2,f64))] ) * &
+                                    func1( c ) * &
                                     bspl_d1(k1,degree(1)+2-j1)*&
                                     bspl_d2(k2,degree(2)+2-j2)*&
                                     bspl_d3(k3,degree(3)+2-j3)

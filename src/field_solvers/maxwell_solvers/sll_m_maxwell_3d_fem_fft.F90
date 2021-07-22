@@ -20,19 +20,16 @@ module sll_m_maxwell_3d_fem_fft
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  
+
   use sll_m_gauss_legendre_integration, only: &
        sll_f_gauss_legendre_points_and_weights
 
   use sll_m_linear_operator_block, only : &
        sll_t_linear_operator_block
-  
+
   use sll_m_linear_operator_kron, only : &
        sll_t_linear_operator_kron
-
- ! use sll_m_linear_operator_schur_eb_3d, only : &
- !      sll_t_linear_operator_schur_eb_3d
-
+  
   use sll_m_linear_operator_maxwell_eb_schur, only : &
        sll_t_linear_operator_maxwell_eb_schur
 
@@ -60,7 +57,7 @@ module sll_m_maxwell_3d_fem_fft
 
   use sll_m_preconditioner_fft, only : &
        sll_t_preconditioner_fft
-  
+
   use sll_m_profile_functions, only: &
        sll_t_profile_functions
 
@@ -89,7 +86,7 @@ module sll_m_maxwell_3d_fem_fft
   private
 
   type, extends(sll_c_maxwell_3d_base) :: sll_t_maxwell_3d_fem_fft
-     
+
      sll_real64, allocatable :: work(:)  !< scratch data
      sll_real64, allocatable :: work2(:)  !< scratch data
      sll_real64, allocatable :: work3d(:,:,:)  !< scratch data
@@ -125,7 +122,7 @@ module sll_m_maxwell_3d_fem_fft
      type(sll_t_preconditioner_fft) :: preconditioner_fft !< preconditioner for mass matrices
      type( sll_t_linear_operator_maxwell_eb_schur ) :: linear_op_schur_eb !< Schur complement operator for advect_eb
      type( sll_t_linear_solver_mgmres )        :: linear_solver_schur_eb !< Schur complement solver for advect_eb
-     
+
    contains
      procedure :: &
           compute_E_from_B => sll_s_compute_e_from_b_3d_fem_fft !< Solve E and B part of Amperes law with B constant in time
@@ -213,7 +210,7 @@ contains
   end subroutine sll_s_compute_b_from_e_3d_fem_fft
 
 
-   subroutine sll_s_compute_curl_part_3d_fem_fft( self, delta_t, efield, bfield, betar )
+  subroutine sll_s_compute_curl_part_3d_fem_fft( self, delta_t, efield, bfield, betar )
     class(sll_t_maxwell_3d_fem_fft) :: self       !< Maxwell solver class
     sll_real64, intent( in    )     :: delta_t    !< Time step
     sll_real64, intent( inout )     :: efield(:)  !< E
@@ -221,13 +218,13 @@ contains
     sll_real64, optional            :: betar      !< 1/beta
     !local variables
     sll_real64 :: factor
-        
+
     if( present(betar) ) then
        factor = betar
     else
        factor = 1._f64
     end if
-    
+
     ! Compute C^T M2 b
     call self%mass2_operator%dot( bfield, self%work )
     call self%multiply_ct( self%work, self%work2 ) 
@@ -249,7 +246,7 @@ contains
     call self%compute_b_from_e( delta_t*0.5_f64, self%work2, bfield)
 
   end subroutine sll_s_compute_curl_part_3d_fem_fft
-  
+
 
   subroutine sll_s_compute_e_from_rho_3d_fem_fft(self, field_in, field_out )  
     class(sll_t_maxwell_3d_fem_fft) :: self         !< Maxwell solver class
@@ -291,16 +288,16 @@ contains
        call self%inverse_mass_1(3)%solve( current(2*self%n_total+1:3*self%n_total), self%work(2*self%n_total+1:3*self%n_total) )
        E = E - self%work
     end if
-       
+
   end subroutine sll_s_compute_E_from_j_3d_fem_fft
 
-    !> Compute phi from rho_i integrated over the time interval
+  !> Compute phi from rho_i integrated over the time interval
   subroutine sll_s_compute_phi_from_rho_3d_fem_fft( self, field_in, field_out, efield_dofs )  
     class(sll_t_maxwell_3d_fem_fft) :: self         !< Maxwell solver class
     sll_real64, intent( in    )           :: field_in(:)  !< rho
     sll_real64, intent( inout )           :: field_out(:) !< phi
     sll_real64, intent(   out )           :: efield_dofs(:) !< E
-    
+
     call self%mass0_solver%solve( field_in, field_out )
     call self%multiply_g( field_out, efield_dofs )
     efield_dofs = -efield_dofs
@@ -313,7 +310,7 @@ contains
     sll_real64, intent( in    )           :: field_in(:) !< Current integrated over time interval
     sll_real64, intent( inout )           :: field_out(:) !< phi
     sll_real64, intent(   out )           :: efield_dofs(:) !< E
-   
+
     call self%multiply_gt( field_in, self%work(1:self%n_total) ) 
     call self%mass0_solver%solve( self%work(1:self%n_total), self%work2(1:self%n_total) )
     field_out = field_out + self%work2(1:self%n_total)
@@ -335,11 +332,13 @@ contains
     procedure(sll_i_function_3d_real64), optional  :: func2         !< Function second component
     procedure(sll_i_function_3d_real64), optional  :: func3         !< Function third component
     ! local variables
-    sll_int32 :: i1, i2, i3,j1, j2, j3, k1, k2, k3, k, counter
+    sll_int32 :: i1, i2, i3,j1, j2, j3, k1, k2, k3, q(3), counter
     sll_int32 :: degree(3)
+    sll_real64 :: c(3)
     sll_real64 :: coef
     sll_real64, allocatable :: xw_gauss_d1(:,:), xw_gauss_d2(:,:), xw_gauss_d3(:,:)
     sll_real64, allocatable :: bspl_d1(:,:), bspl_d2(:,:), bspl_d3(:,:)
+    sll_real64 :: scratch(maxval(self%s_deg_0+1))
 
     ! Define the spline degree in the 3 dimensions, depending on form and component of the form
     if ( form == 0 ) then
@@ -357,29 +356,33 @@ contains
     end if
 
     ! take enough Gauss points so that projection is exact for splines of degree deg
+    q = degree+1
     ! rescale on [0,1] for compatibility with B-splines
-    allocate(xw_gauss_d1(2,degree(1)+1))
-    allocate(bspl_d1(degree(1)+1, degree(1)+1))
-    xw_gauss_d1 = sll_f_gauss_legendre_points_and_weights(degree(1)+1, 0.0_f64, 1.0_f64)
+    allocate(xw_gauss_d1(2,q(1)))
+    allocate(bspl_d1(q(1), degree(1)+1))
+    xw_gauss_d1 = sll_f_gauss_legendre_points_and_weights(q(1), 0.0_f64, 1.0_f64)
     ! Compute bsplines at gauss_points
-    do k=1,degree(1)+1
-       call sll_s_uniform_bsplines_eval_basis(degree(1),xw_gauss_d1(1,k), bspl_d1(k,:))
+    do k1 = 1, q(1)
+       call sll_s_uniform_bsplines_eval_basis(degree(1),xw_gauss_d1(1,k1), scratch(1:degree(1)+1))
+       bspl_d1(k1,:) = scratch(1:degree(1)+1)
     end do
 
-    allocate(xw_gauss_d2(2,degree(2)+1))
-    allocate(bspl_d2(degree(2)+1, degree(2)+1))
-    xw_gauss_d2 = sll_f_gauss_legendre_points_and_weights(degree(2)+1, 0.0_f64, 1.0_f64)
+    allocate(xw_gauss_d2(2,q(2)))
+    allocate(bspl_d2(q(2), degree(2)+1))
+    xw_gauss_d2 = sll_f_gauss_legendre_points_and_weights(q(2), 0.0_f64, 1.0_f64)
     ! Compute bsplines at gauss_points
-    do k=1,degree(2)+1
-       call sll_s_uniform_bsplines_eval_basis(degree(2),xw_gauss_d2(1,k), bspl_d2(k,:))
+    do k2 = 1, q(2)
+       call sll_s_uniform_bsplines_eval_basis(degree(2),xw_gauss_d2(1,k2), scratch(1:degree(2)+1))
+       bspl_d2(k2,:) = scratch(1:degree(2)+1)
     end do
 
-    allocate(xw_gauss_d3(2,degree(3)+1))
-    allocate(bspl_d3(degree(3)+1, degree(3)+1))
-    xw_gauss_d3 = sll_f_gauss_legendre_points_and_weights(degree(3)+1, 0.0_f64, 1.0_f64)
+    allocate(xw_gauss_d3(2,q(3)))
+    allocate(bspl_d3(q(3), degree(3)+1))
+    xw_gauss_d3 = sll_f_gauss_legendre_points_and_weights(q(3), 0.0_f64, 1.0_f64)
     ! Compute bsplines at gauss_points
-    do k=1,degree(3)+1
-       call sll_s_uniform_bsplines_eval_basis(degree(3),xw_gauss_d3(1,k), bspl_d3(k,:))
+    do k3 = 1, q(3)
+       call sll_s_uniform_bsplines_eval_basis(degree(3),xw_gauss_d3(1,k3), scratch(1:degree(3)+1))
+       bspl_d3(k3,:) = scratch(1:degree(3)+1)
     end do
 
     counter = 1
@@ -389,16 +392,19 @@ contains
           do i1 = 1, self%n_dofs(1)
              coef=0.0_f64
              ! loop over support of B spline
-             do j1 = 1, degree(1)+1
+             do j3 = 1, degree(3)+1
                 do j2 = 1, degree(2)+1
-                   do j3 = 1, degree(3)+1
+                   do j1 = 1, degree(1)+1
                       ! loop over Gauss points
-                      do k1=1, degree(1)+1
-                         do k2=1, degree(2)+1
-                            do k3=1, degree(3)+1
+                      do k3 = 1, q(3)
+                         c(3) = self%delta_x(3)*(xw_gauss_d3(1,k3) + real(i3 + j3 - 2,f64))
+                         do k2 = 1, q(2)
+                            c(2) = self%delta_x(2)*(xw_gauss_d2(1,k2) + real(i2 + j2 - 2,f64))
+                            do k1 = 1, q(1)
+                               c(1) = self%delta_x(1)*(xw_gauss_d1(1,k1) + real(i1 + j1 - 2,f64))
                                coef = coef + xw_gauss_d1(2,k1)* xw_gauss_d2(2,k2)* &
                                     xw_gauss_d3(2,k3) *&
-                                    func1([self%delta_x(1)*(xw_gauss_d1(1,k1) + real(i1 + j1 - 2,f64)), self%delta_x(2)*(xw_gauss_d2(1,k2) + real(i2 + j2 - 2,f64)), self%delta_x(3)*(xw_gauss_d3(1,k3) + real(i3 + j3 - 2,f64))] ) * &
+                                    func1( c ) * &
                                     bspl_d1(k1,degree(1)+2-j1)*&
                                     bspl_d2(k2,degree(2)+2-j2)*&
                                     bspl_d3(k3,degree(3)+2-j3)
@@ -575,7 +581,7 @@ contains
     if( present( profile ) ) then
        self%profile = profile
     end if
-    
+
     ! Allocate scratch data
     allocate( self%work3d(n_dofs(1), n_dofs(2), n_dofs(3)) )
     allocate( self%work(self%n_total*3) )
@@ -637,7 +643,7 @@ contains
     allocate( inv_eig_values_mass_1_1( n_dofs(1) ) )
     allocate( inv_eig_values_mass_1_2( n_dofs(2) ) )
     allocate( inv_eig_values_mass_1_3( n_dofs(3) ) )
-    
+
     call sll_s_spline_fem_compute_mass_eig( n_dofs(1), self%s_deg_0(1), self%mass_line0_1, &
          eig_values_mass_0_1 )
     call sll_s_spline_fem_compute_mass_eig( n_dofs(2), self%s_deg_0(2), self%mass_line0_2, &
@@ -690,7 +696,7 @@ contains
        inv_eig_values_mass_1_3(j) = 1._f64/eig_values_mass_1_3(j)
        inv_eig_values_mass_1_3(n_dofs(3)+2-j) = 1._f64/eig_values_mass_1_3(n_dofs(3)+2-j)
     end do
-    
+
 
     call self%inverse_mass_0%create( n_dofs, inv_eig_values_mass_0_1, inv_eig_values_mass_0_2, inv_eig_values_mass_0_3 )
 
@@ -710,11 +716,11 @@ contains
     call sll_s_spline_fem_mass1d( self%n_dofs(1), self%s_deg_0(1), self%mass_line0_1, self%mass1d(1,1) )
     call sll_s_spline_fem_mass1d( self%n_dofs(2), self%s_deg_0(2), self%mass_line0_2, self%mass1d(1,2) )
     call sll_s_spline_fem_mass1d( self%n_dofs(3), self%s_deg_0(3), self%mass_line0_3, self%mass1d(1,3) )
-    
+
     call sll_s_spline_fem_mass1d( self%n_dofs(1), self%s_deg_1(1), self%mass_line1_1, self%mass1d(2,1) )
     call sll_s_spline_fem_mass1d( self%n_dofs(2), self%s_deg_1(2), self%mass_line1_2, self%mass1d(2,2) )
     call sll_s_spline_fem_mass1d( self%n_dofs(3), self%s_deg_1(3), self%mass_line1_3, self%mass1d(2,3) )
-    
+
     ! Only for Schur complement eb solver
     call self%mass1(1)%create( linop_a=self%mass1d(1,3), &
          linop_b=self%mass1d(1,2), &
@@ -735,7 +741,7 @@ contains
     call self%mass2(3)%create( linop_a=self%mass1d(1,3), &
          linop_b=self%mass1d(2,2), &
          linop_c=self%mass1d(2,1))
-    
+
     call self%mass1_operator%create( 3, 3 )
     call self%mass2_operator%create( 3, 3 )
     do j= 1, 3
@@ -746,7 +752,7 @@ contains
 
 
     call self%linear_op_schur_eb%create( self )
-   ! call self%linear_op_schur_eb%create( self%mass1_operator, self%mass2_operator, self%n_total, self%n_dofs, self%delta_x   )
+    ! call self%linear_op_schur_eb%create( self%mass1_operator, self%mass2_operator, self%n_total, self%n_dofs, self%delta_x   )
     call self%linear_solver_schur_eb%create( self%linear_op_schur_eb, self%preconditioner_fft%inverse_mass1_3d )
     self%linear_solver_schur_eb%atol = self%solver_tolerance
     self%linear_solver_schur_eb%rtol = self%solver_tolerance
@@ -914,7 +920,7 @@ contains
 
   end subroutine multiply_mass_2form
 
-    !> Multiply by the mass matrix 
+  !> Multiply by the mass matrix 
   subroutine multiply_mass_3d_fem_fft( self, deg, coefs_in, coefs_out )
     class(sll_t_maxwell_3d_fem_fft) :: self         !< Maxwell solver class
     sll_int32,  intent( in    )   :: deg(:)       !< \a deg/form specifies if we multiply the mass to a  1- or 2-form or a mix of both
@@ -937,7 +943,7 @@ contains
     else if( size(deg) == 3 ) then
        call multiply_mass_all( self, deg, coefs_in, coefs_out )
     end if
-    
+
   end subroutine multiply_mass_3d_fem_fft
 
 
