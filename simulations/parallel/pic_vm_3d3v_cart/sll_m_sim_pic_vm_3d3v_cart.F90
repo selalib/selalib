@@ -2106,22 +2106,26 @@ contains
                       DF = map%jacobian_matrix( xi ) 
 
                       do i = 1, 3
-                         e_phys(i) = (N(i,1)* efield(1)+N(i,2)* efield(2)+N(i,3)* efield(3)) *&
-                              xw_gauss_d1(2,k1)* xw_gauss_d2(2,k2)* xw_gauss_d3(2,k3)
-                         b_phys(i) = (DF(i,1)* bfield(1)+DF(i,2)* bfield(2)+DF(i,3)* bfield(3)) *&
-                              xw_gauss_d1(2,k1)* xw_gauss_d2(2,k2)* xw_gauss_d3(2,k3)
+                         e_phys(i) = (N(i,1)* efield(1)+N(i,2)* efield(2)+N(i,3)* efield(3)) 
+                         b_phys(i) = (DF(i,1)* bfield(1)+DF(i,2)* bfield(2)+DF(i,3)* bfield(3)) 
                       end do
                       
-                      ecb(1) = ecb(1) + e_phys(2) * b_phys(3) - e_phys(3) * b_phys(2)
-                      ecb(2) = ecb(2) + e_phys(3) * b_phys(1) - e_phys(1) * b_phys(3)
-                      ecb(3) = ecb(3) + e_phys(1) * b_phys(2) - e_phys(2) * b_phys(1)
+                      ecb(1) = ecb(1) + ( e_phys(2) * b_phys(3) - e_phys(3) * b_phys(2) )*&
+                           xw_gauss_d1(2,k1)* xw_gauss_d2(2,k2)* xw_gauss_d3(2,k3) * &
+                           product(particle_mesh_coupling%delta_x)
+                      ecb(2) = ecb(2) + ( e_phys(3) * b_phys(1) - e_phys(1) * b_phys(3) )*&
+                              xw_gauss_d1(2,k1)* xw_gauss_d2(2,k2)* xw_gauss_d3(2,k3)* &
+                           product(particle_mesh_coupling%delta_x)
+                      ecb(3) = ecb(3) + ( e_phys(1) * b_phys(2) - e_phys(2) * b_phys(1) )*&
+                              xw_gauss_d1(2,k1)* xw_gauss_d2(2,k2)* xw_gauss_d3(2,k3)* &
+                           product(particle_mesh_coupling%delta_x)
                    end do
                 end do
              end do
           end do
        end do
     end do
-    ecb =  ecb * product(particle_mesh_coupling%delta_x)
+    ecb =  ecb 
     
   end subroutine compute_e_cross_b_curvilinear
 
