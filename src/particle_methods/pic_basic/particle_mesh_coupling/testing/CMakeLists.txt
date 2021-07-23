@@ -3,6 +3,11 @@ TARGET_LINK_LIBRARIES( test_particle_mesh_coupling_spline_1d sll_particle_mesh_c
 ADD_TEST( NAME particle_mesh_coupling_spline_1d COMMAND test_particle_mesh_coupling_spline_1d)
 SET_TESTS_PROPERTIES( particle_mesh_coupling_spline_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
+ADD_EXECUTABLE( test_particle_mesh_coupling_spline_cl_1d test_particle_mesh_coupling_spline_cl_1d.F90)
+TARGET_LINK_LIBRARIES( test_particle_mesh_coupling_spline_cl_1d sll_particle_mesh_coupling sll_particle_groups)
+ADD_TEST( NAME particle_mesh_coupling_spline_cl_1d COMMAND test_particle_mesh_coupling_spline_cl_1d)
+SET_TESTS_PROPERTIES( particle_mesh_coupling_spline_cl_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
 ADD_EXECUTABLE( test_particle_mesh_coupling_spline_strong_1d test_particle_mesh_coupling_spline_strong_1d.F90)
 TARGET_LINK_LIBRARIES( test_particle_mesh_coupling_spline_strong_1d sll_particle_mesh_coupling sll_particle_groups)
 ADD_TEST( NAME particle_mesh_coupling_spline_strong_1d COMMAND test_particle_mesh_coupling_spline_strong_1d)
@@ -21,6 +26,14 @@ ADD_EXECUTABLE( test_particle_mesh_coupling_spline_3d_feec test_particle_mesh_co
 TARGET_LINK_LIBRARIES( test_particle_mesh_coupling_spline_3d_feec sll_particle_mesh_coupling sll_particle_groups sll_maxwell_solvers sll_xdmf_io )
 ADD_TEST( NAME particle_mesh_coupling_spline_3d_feec COMMAND test_particle_mesh_coupling_spline_3d_feec ${REFERENCE_FILE_3D_1}  ${REFERENCE_FILE_3D_2}  ${REFERENCE_FILE_3D_3} )
 SET_TESTS_PROPERTIES( particle_mesh_coupling_spline_3d_feec PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+SET( REFERENCE_FILE_CL_3D_1 ${CMAKE_CURRENT_SOURCE_DIR}/ref_spline_cl_3d_add_charge.dat )
+SET( REFERENCE_FILE_CL_3D_2 ${CMAKE_CURRENT_SOURCE_DIR}/ref_spline_cl_3d_add_particle_mass.dat )
+SET( REFERENCE_FILE_CL_3D_3 ${CMAKE_CURRENT_SOURCE_DIR}/ref_spline_cl_3d_add_current.dat )
+ADD_EXECUTABLE( test_particle_mesh_coupling_spline_cl_3d_feec test_particle_mesh_coupling_spline_cl_3d_feec.F90)
+TARGET_LINK_LIBRARIES( test_particle_mesh_coupling_spline_cl_3d_feec sll_particle_mesh_coupling sll_particle_groups sll_maxwell_solvers sll_xdmf_io )
+ADD_TEST( NAME particle_mesh_coupling_spline_cl_3d_feec COMMAND test_particle_mesh_coupling_spline_cl_3d_feec ${REFERENCE_FILE_CL_3D_1}  ${REFERENCE_FILE_CL_3D_2}  ${REFERENCE_FILE_CL_3D_3} )
+SET_TESTS_PROPERTIES( particle_mesh_coupling_spline_cl_3d_feec PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 # 2d
 SET( REFERENCE_FILE_2D_1 ${CMAKE_CURRENT_SOURCE_DIR}/ref_spline_2d_add_charge.dat )
