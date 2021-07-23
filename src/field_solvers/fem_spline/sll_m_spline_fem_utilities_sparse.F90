@@ -805,36 +805,43 @@ contains
     sll_int32, intent ( in    ) :: row !< row of the sparse matrix
     sll_int32, intent(inout) :: ind !< index in the vector containing the entries of the sparse matrix
     !local variables
-    sll_int32 ::  column
+    sll_int32 ::  column, shift1
 
     !use boundary mass for first deg1 rows
     if(row<=deg1) then
+       shift1 = ((row-1)*(2*deg2+row))/2 
        do column = 1, deg2+row
-          matrix%arr_a(1,ind) = mass_line(column)
+          matrix%arr_a(1,ind) = mass_line(column+shift1)
           ind = ind+1
        end do
     else if(row > deg1 .and. row <= deg1+deg2) then
+       shift1 = (row-deg1-1)*(deg1+deg2+1)+(deg1*(2*deg2+deg1+1))/2 
        do column = 1, deg1+deg2+1
-          matrix%arr_a(1,ind) = mass_line(column)
+          matrix%arr_a(1,ind) = mass_line(column+shift1)
           ind = ind+1
        end do
 
        !use boundary mass for last deg1 rows
     else if(row >= n_cells-deg2+1 .and. row <= n_cells) then
+       shift1 = (n_cells-row)*(deg1+deg2+1)+(deg1*(2*deg2+deg1+1))/2 
        do column = deg1+deg2+1,1,-1
-          matrix%arr_a(1,ind)=mass_line(column)
+          matrix%arr_a(1,ind)=mass_line(column+shift1)
           ind = ind+1
        end do
     else if(row > n_cells .and. row <= n_cells+deg1) then
+       shift1 = ((n_cells+deg1-row)*(2*deg2+n_cells+deg1+1-row))/2 
        do column = deg2+1+n_cells+deg1-row,1,-1
-          matrix%arr_a(1,ind) = mass_line(column)
+          matrix%arr_a(1,ind) = mass_line(column+shift1)
           ind = ind+1
        end do
+    else
+       SLL_ERROR('assemble','error in row in assemble_mass')
     end if
 
   end subroutine assemble_mixedmass_clamped_boundary
 
 
+  !> Set up 1d mixed mass matrix for specific spline degrees and profile function
   subroutine sll_s_spline_fem_mixedmass1d_clamped_full( n_cells, deg1, deg2, matrix, profile, spline1, spline2 )
     sll_int32, intent( in ) :: n_cells !< no. of grid cells 
     sll_int32, intent( in ) :: deg1, deg2 !< spline degrees
