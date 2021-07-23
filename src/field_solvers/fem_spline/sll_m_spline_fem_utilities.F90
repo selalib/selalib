@@ -243,7 +243,7 @@ contains
     sll_real64, allocatable :: quad_xw(:,:),spline_val_b(:,:,:), spline_val(:,:)
     sll_real64 :: c
 
-    q = min(2*deg+1,10)
+    q = min(3*deg+1,10)
 
     if(deg==0)then
        print*, 'fem_utilities:degree 0 not implemented'
@@ -317,7 +317,7 @@ contains
     sll_real64, allocatable :: quad_xw(:,:), spline_val(:,:)
     sll_real64 :: c
 
-    q = min(2*deg+1,10)
+    q = min(3*deg+1,10)
 
     allocate(quad_xw(2, q))
     allocate(spline_val( deg+1, q ))
@@ -530,7 +530,7 @@ contains
     sll_int32 :: q, j, int, quad
     sll_real64, allocatable :: quad_xw(:,:), spline_val_0(:,:), spline_val_1(:,:)
 
-    q = min(2*deg+1,10)
+    q = min(3*deg+1,10)
 
     allocate(quad_xw(2, q))
     allocate(spline_val_0( deg+1, q ))
