@@ -1830,7 +1830,11 @@ contains
     if(sim%ct) then
        call compute_e_cross_b_curvilinear( sim%particle_mesh_coupling, sim%degree_smoother, sim%map, sim%efield_dofs, sim%bfield_dofs, sim%n_totaldofs0, sim%n_totaldofs1, diagnostics_local(4:6) )
     else
-       call compute_e_cross_b ( sim%maxwell_solver, scratch1, sim%efield_dofs, sim%bfield_dofs, diagnostics_local(4:6) )
+       if( sim%boundary ) then
+          call compute_e_cross_b_gauss( sim%particle_mesh_coupling, sim%degree_smoother, sim%efield_dofs, sim%bfield_dofs, sim%n_totaldofs0, sim%n_totaldofs1, diagnostics_local(4:6) )
+       else
+          call compute_e_cross_b ( sim%maxwell_solver, scratch1, sim%efield_dofs, sim%bfield_dofs, diagnostics_local(4:6) )
+       end if
     end if
     ! sum up the total momentum
     diagnostics(4:6) = diagnostics(4:6) + diagnostics_local(4:6)
@@ -1882,6 +1886,185 @@ contains
     end if
 
   end subroutine sll_s_time_history_diagnostics_pic_vm_3d3v
+
+
+  !> Compute ExB
+  subroutine compute_e_cross_b ( maxwell, scratch, efield, bfield, e_cross_b )
+    class(sll_c_maxwell_3d_base), intent(inout) :: maxwell !> Maxwell solver
+    sll_real64, intent( out ) :: scratch(:) !> scratch data
+    sll_real64, intent( in  ) :: efield(:) !> E
+    sll_real64, intent( in  ) :: bfield(:) !> B
+    sll_real64, intent( out ) :: e_cross_b(3)  !< E cross B
+
+    call  maxwell%multiply_mass( [3, 2, 1], bfield(maxwell%n_total0+maxwell%n_total1+1:maxwell%n_total0+maxwell%n_total1*2), scratch )
+    e_cross_b(1) = sum(efield(maxwell%n_total1+1:maxwell%n_total1+maxwell%n_total0)*scratch)
+    call  maxwell%multiply_mass([3, 1, 2], bfield(maxwell%n_total0+1:maxwell%n_total0+maxwell%n_total1), scratch )
+    e_cross_b(1) = e_cross_b(1) - sum(efield(maxwell%n_total1+maxwell%n_total0+1:maxwell%n_total1+maxwell%n_total0*2)*scratch)
+
+    call maxwell%multiply_mass( [1, 3, 2], bfield(1:maxwell%n_total0), scratch )
+    e_cross_b(2) = sum(efield(maxwell%n_total1+maxwell%n_total0+1:maxwell%n_total1+maxwell%n_total0*2)*scratch)
+    call maxwell%multiply_mass( [2, 3, 1], bfield(maxwell%n_total0+maxwell%n_total1+1:maxwell%n_total0+maxwell%n_total1*2), scratch(1:maxwell%n_total1) )
+    e_cross_b(2) = e_cross_b(2) - sum(efield(1:maxwell%n_total1)*scratch(1:maxwell%n_total1))
+
+
+    call  maxwell%multiply_mass( [2, 1, 3], bfield(maxwell%n_total0+1:maxwell%n_total0+maxwell%n_total1), scratch(1:maxwell%n_total1) )
+    e_cross_b(3) = sum(efield(1:maxwell%n_total1)*scratch(1:maxwell%n_total1))
+    call  maxwell%multiply_mass( [1, 2, 3], bfield(1:maxwell%n_total0), scratch )
+    e_cross_b(3) = e_cross_b(3) - sum(efield(maxwell%n_total1+1:maxwell%n_total1+maxwell%n_total0)*scratch)
+
+  end subroutine compute_e_cross_b
+
+
+  !> Compute ExB with Gauss quadrature
+  subroutine compute_e_cross_b_gauss( particle_mesh_coupling, deg, efield_dofs, bfield_dofs, n_total0, n_total1, ecb)
+    class(sll_c_particle_mesh_coupling_3d), intent(inout) :: particle_mesh_coupling !> Particle mesh coupling
+    sll_int32,  intent( in    )             :: deg(3)     !< maximal spline deg
+    sll_real64, intent( in    )             :: efield_dofs(:) !< DoFs describing the two components of the electric field
+    sll_real64, intent( in    )             :: bfield_dofs(:)   !< DoFs describing the magnetic field
+    sll_int32,  intent( in    )             :: n_total0, n_total1 !< total number of DoFs for 0- and 1-form
+    sll_real64, intent(   out )             :: ecb(3) !< E cross B 
+    !local variables
+    sll_int32  :: k3, k2, k1, j3, j2, j1, q(3)
+    sll_real64, allocatable :: xw_gauss_d1(:,:), xw_gauss_d2(:,:), xw_gauss_d3(:,:)
+    sll_real64 :: xi(3)
+    sll_real64 :: efield(3), bfield(3)
+
+    efield = 0.0_f64
+    bfield = 0.0_f64
+    ecb = 0.0_f64
+
+    q = 2*maxval(deg)+1 
+    allocate( xw_gauss_d1(1:2, 1:q(1)) )
+    allocate( xw_gauss_d2(1:2, 1:q(2)) )
+    allocate( xw_gauss_d3(1:2, 1:q(3)) )
+
+    xw_gauss_d1 = sll_f_gauss_legendre_points_and_weights( q(1), 0._f64, 1._f64 )
+    xw_gauss_d2 = sll_f_gauss_legendre_points_and_weights( q(2), 0._f64, 1._f64 )
+    xw_gauss_d3 = sll_f_gauss_legendre_points_and_weights( q(3), 0._f64, 1._f64 )
+
+    do j3 = 1, particle_mesh_coupling%n_cells(3) 
+       do j2 = 1, particle_mesh_coupling%n_cells(2)
+          do j1 = 1, particle_mesh_coupling%n_cells(1)
+             ! loop over Gauss points
+             do k3 = 1, q(3) 
+                xi(3) = particle_mesh_coupling%delta_x(3)*(xw_gauss_d3(1,k3) + real(j3 - 1,f64))
+                do k2 = 1, q(2)
+                   xi(2) = particle_mesh_coupling%delta_x(2)*(xw_gauss_d2(1,k2) + real(j2 - 1,f64))
+                   do k1 = 1, q(1)
+                      xi(1) = particle_mesh_coupling%delta_x(1)*(xw_gauss_d1(1,k1) + real(j1 - 1,f64))
+
+                      call particle_mesh_coupling%evaluate( xi, [deg(1)-1, deg(2), deg(3)], &
+                           efield_dofs(1:n_total1), efield(1))
+                      call particle_mesh_coupling%evaluate( xi, [deg(1), deg(2)-1, deg(3)], &
+                           efield_dofs(1+n_total1:n_total1+n_total0), efield(2))
+                      call particle_mesh_coupling%evaluate( xi, [deg(1), deg(2), deg(3)-1], &
+                           efield_dofs(1+n_total1+n_total0:n_total1+2*n_total0), efield(3))
+                      call particle_mesh_coupling%evaluate( xi, [deg(1), deg(2)-1, deg(3)-1], &
+                           bfield_dofs(1:n_total0), bfield(1))
+                      call particle_mesh_coupling%evaluate( xi, [deg(1)-1, deg(2), deg(3)-1], &
+                           bfield_dofs(1+n_total0:n_total0+n_total1), bfield(2))
+                      call particle_mesh_coupling%evaluate( xi, [deg(1)-1, deg(2)-1, deg(3)], &
+                           bfield_dofs(1+n_total0+n_total1:n_total0+2*n_total1), bfield(3))
+
+                      ecb(1) = ecb(1) + ( efield(2) * bfield(3) - efield(3) * bfield(2) )*&
+                           xw_gauss_d1(2,k1)* xw_gauss_d2(2,k2)* xw_gauss_d3(2,k3) * &
+                           product(particle_mesh_coupling%delta_x)
+                      ecb(2) = ecb(2) + ( efield(3) * bfield(1) - efield(1) * bfield(3) )*&
+                           xw_gauss_d1(2,k1)* xw_gauss_d2(2,k2)* xw_gauss_d3(2,k3)* &
+                           product(particle_mesh_coupling%delta_x)
+                      ecb(3) = ecb(3) + ( efield(1) * bfield(2) - efield(2) * bfield(1) )*&
+                           xw_gauss_d1(2,k1)* xw_gauss_d2(2,k2)* xw_gauss_d3(2,k3)* &
+                           product(particle_mesh_coupling%delta_x)
+                   end do
+                end do
+             end do
+          end do
+       end do
+    end do
+    ecb =  ecb 
+
+  end subroutine compute_e_cross_b_gauss
+
+
+  !> Compute ExB with coordinate transformation
+  subroutine compute_e_cross_b_curvilinear( particle_mesh_coupling, deg, map, efield_dofs, bfield_dofs, n_total0, n_total1, ecb)
+    class(sll_c_particle_mesh_coupling_3d), intent(inout) :: particle_mesh_coupling !> Particle mesh coupling
+    sll_int32,  intent( in    )             :: deg(3)     !< maximal spline deg
+    type(sll_t_mapping_3d), intent( inout    ) :: map        !< coordinate transformation
+    sll_real64, intent( in    )             :: efield_dofs(:) !< DoFs describing the two components of the electric field
+    sll_real64, intent( in    )             :: bfield_dofs(:)   !< DoFs describing the magnetic field
+    sll_int32,  intent( in    )             :: n_total0, n_total1 !< total number of DoFs for 0- and 1-form
+    sll_real64, intent(   out )             :: ecb(3) !< E cross B 
+    !local variables
+    sll_int32  :: i, k3, k2, k1, j3, j2, j1, q(3)
+    sll_real64, allocatable :: xw_gauss_d1(:,:), xw_gauss_d2(:,:), xw_gauss_d3(:,:)
+    sll_real64 :: xi(3), N(3,3), DF(3,3)
+    sll_real64 :: e_phys(3), b_phys(3), efield(3), bfield(3)
+
+    efield = 0.0_f64
+    bfield = 0.0_f64
+    e_phys = 0.0_f64
+    b_phys = 0.0_f64
+    ecb = 0.0_f64
+
+    q = 2*maxval(deg)+1 
+    allocate( xw_gauss_d1(1:2, 1:q(1)) )
+    allocate( xw_gauss_d2(1:2, 1:q(2)) )
+    allocate( xw_gauss_d3(1:2, 1:q(3)) )
+
+    xw_gauss_d1 = sll_f_gauss_legendre_points_and_weights( q(1), 0._f64, 1._f64 )
+    xw_gauss_d2 = sll_f_gauss_legendre_points_and_weights( q(2), 0._f64, 1._f64 )
+    xw_gauss_d3 = sll_f_gauss_legendre_points_and_weights( q(3), 0._f64, 1._f64 )
+
+    do j3 = 1, particle_mesh_coupling%n_cells(3) 
+       do j2 = 1, particle_mesh_coupling%n_cells(2)
+          do j1 = 1, particle_mesh_coupling%n_cells(1)
+             ! loop over Gauss points
+             do k3 = 1, q(3) 
+                xi(3) = particle_mesh_coupling%delta_x(3)*(xw_gauss_d3(1,k3) + real(j3 - 1,f64))
+                do k2 = 1, q(2)
+                   xi(2) = particle_mesh_coupling%delta_x(2)*(xw_gauss_d2(1,k2) + real(j2 - 1,f64))
+                   do k1 = 1, q(1)
+                      xi(1) = particle_mesh_coupling%delta_x(1)*(xw_gauss_d1(1,k1) + real(j1 - 1,f64))
+
+                      call particle_mesh_coupling%evaluate( xi, [deg(1)-1, deg(2), deg(3)], &
+                           efield_dofs(1:n_total1), efield(1))
+                      call particle_mesh_coupling%evaluate( xi, [deg(1), deg(2)-1, deg(3)], &
+                           efield_dofs(1+n_total1:n_total1+n_total0), efield(2))
+                      call particle_mesh_coupling%evaluate( xi, [deg(1), deg(2), deg(3)-1], &
+                           efield_dofs(1+n_total1+n_total0:n_total1+2*n_total0), efield(3))
+                      call particle_mesh_coupling%evaluate( xi, [deg(1), deg(2)-1, deg(3)-1], &
+                           bfield_dofs(1:n_total0), bfield(1))
+                      call particle_mesh_coupling%evaluate( xi, [deg(1)-1, deg(2), deg(3)-1], &
+                           bfield_dofs(1+n_total0:n_total0+n_total1), bfield(2))
+                      call particle_mesh_coupling%evaluate( xi, [deg(1)-1, deg(2)-1, deg(3)], &
+                           bfield_dofs(1+n_total0+n_total1:n_total0+2*n_total1), bfield(3))
+                      N = map%jacobian_matrix_inverse_transposed( xi )
+                      DF = map%jacobian_matrix( xi ) 
+
+                      do i = 1, 3
+                         e_phys(i) = (N(i,1)* efield(1)+N(i,2)* efield(2)+N(i,3)* efield(3)) 
+                         b_phys(i) = (DF(i,1)* bfield(1)+DF(i,2)* bfield(2)+DF(i,3)* bfield(3)) 
+                      end do
+
+                      ecb(1) = ecb(1) + ( e_phys(2) * b_phys(3) - e_phys(3) * b_phys(2) )*&
+                           xw_gauss_d1(2,k1)* xw_gauss_d2(2,k2)* xw_gauss_d3(2,k3) * &
+                           product(particle_mesh_coupling%delta_x)
+                      ecb(2) = ecb(2) + ( e_phys(3) * b_phys(1) - e_phys(1) * b_phys(3) )*&
+                           xw_gauss_d1(2,k1)* xw_gauss_d2(2,k2)* xw_gauss_d3(2,k3)* &
+                           product(particle_mesh_coupling%delta_x)
+                      ecb(3) = ecb(3) + ( e_phys(1) * b_phys(2) - e_phys(2) * b_phys(1) )*&
+                           xw_gauss_d1(2,k1)* xw_gauss_d2(2,k2)* xw_gauss_d3(2,k3)* &
+                           product(particle_mesh_coupling%delta_x)
+                   end do
+                end do
+             end do
+          end do
+       end do
+    end do
+    ecb =  ecb 
+
+  end subroutine compute_e_cross_b_curvilinear
 
 
   !> Accumulate rho and solve Poisson
@@ -2022,114 +2205,6 @@ contains
   end subroutine check_gauss_law
 
 
-  !> Compute ExB
-  subroutine compute_e_cross_b ( maxwell, scratch, efield, bfield, e_cross_b )
-    class(sll_c_maxwell_3d_base), intent(inout) :: maxwell !> Maxwell solver
-    sll_real64, intent( out ) :: scratch(:) !> scratch data
-    sll_real64, intent( in  ) :: efield(:) !> E
-    sll_real64, intent( in  ) :: bfield(:) !> B
-    sll_real64, intent( out ) :: e_cross_b(3)  !< E cross B
-
-    call  maxwell%multiply_mass( [3, 2, 1], bfield(maxwell%n_total0+maxwell%n_total1+1:maxwell%n_total0+maxwell%n_total1*2), scratch )
-    e_cross_b(1) = sum(efield(maxwell%n_total1+1:maxwell%n_total1+maxwell%n_total0)*scratch)
-    call  maxwell%multiply_mass([3, 1, 2], bfield(maxwell%n_total0+1:maxwell%n_total0+maxwell%n_total1), scratch )
-    e_cross_b(1) = e_cross_b(1) - sum(efield(maxwell%n_total1+maxwell%n_total0+1:maxwell%n_total1+maxwell%n_total0*2)*scratch)
-
-    call maxwell%multiply_mass( [1, 3, 2], bfield(1:maxwell%n_total0), scratch )
-    e_cross_b(2) = sum(efield(maxwell%n_total1+maxwell%n_total0+1:maxwell%n_total1+maxwell%n_total0*2)*scratch)
-    call maxwell%multiply_mass( [2, 3, 1], bfield(maxwell%n_total0+maxwell%n_total1+1:maxwell%n_total0+maxwell%n_total1*2), scratch(1:maxwell%n_total1) )
-    e_cross_b(2) = e_cross_b(2) - sum(efield(1:maxwell%n_total1)*scratch(1:maxwell%n_total1))
-
-
-    call  maxwell%multiply_mass( [2, 1, 3], bfield(maxwell%n_total0+1:maxwell%n_total0+maxwell%n_total1), scratch(1:maxwell%n_total1) )
-    e_cross_b(3) = sum(efield(1:maxwell%n_total1)*scratch(1:maxwell%n_total1))
-    call  maxwell%multiply_mass( [1, 2, 3], bfield(1:maxwell%n_total0), scratch )
-    e_cross_b(3) = e_cross_b(3) - sum(efield(maxwell%n_total1+1:maxwell%n_total1+maxwell%n_total0)*scratch)
-
-  end subroutine compute_e_cross_b
-  
-
-  !> Compute ExB with coordinate transformation
-  subroutine compute_e_cross_b_curvilinear( particle_mesh_coupling, deg, map, efield_dofs, bfield_dofs, n_total0, n_total1, ecb)
-    class(sll_c_particle_mesh_coupling_3d), intent(inout) :: particle_mesh_coupling !> Particle mesh coupling
-    sll_int32,  intent( in    )             :: deg(3)     !< maximal spline deg
-    type(sll_t_mapping_3d), intent( inout    ) :: map        !< coordinate transformation
-    sll_real64, intent( in    )             :: efield_dofs(:) !< DoFs describing the two components of the electric field
-    sll_real64, intent( in    )             :: bfield_dofs(:)   !< DoFs describing the magnetic field
-    sll_int32,  intent( in    )             :: n_total0, n_total1 !< total number of DoFs for 0- and 1-form
-    sll_real64, intent(   out )             :: ecb(3) !< E cross B 
-    !local variables
-    sll_int32  :: i, k3, k2, k1, j3, j2, j1, q(3)
-    sll_real64, allocatable :: xw_gauss_d1(:,:), xw_gauss_d2(:,:), xw_gauss_d3(:,:)
-    sll_real64 :: xi(3), N(3,3), DF(3,3)
-    sll_real64 :: e_phys(3), b_phys(3), efield(3), bfield(3)
-
-    efield = 0.0_f64
-    bfield = 0.0_f64
-    e_phys = 0.0_f64
-    b_phys = 0.0_f64
-    ecb = 0.0_f64
-
-    q = 2*maxval(deg)+1 
-    allocate( xw_gauss_d1(1:2, 1:q(1)) )
-    allocate( xw_gauss_d2(1:2, 1:q(2)) )
-    allocate( xw_gauss_d3(1:2, 1:q(3)) )
-
-    xw_gauss_d1 = sll_f_gauss_legendre_points_and_weights( q(1), 0._f64, 1._f64 )
-    xw_gauss_d2 = sll_f_gauss_legendre_points_and_weights( q(2), 0._f64, 1._f64 )
-    xw_gauss_d3 = sll_f_gauss_legendre_points_and_weights( q(3), 0._f64, 1._f64 )
-
-    do j3 = 1, particle_mesh_coupling%n_cells(3) 
-       do j2 = 1, particle_mesh_coupling%n_cells(2)
-          do j1 = 1, particle_mesh_coupling%n_cells(1)
-             ! loop over Gauss points
-             do k3 = 1, q(3) 
-                xi(3) = particle_mesh_coupling%delta_x(3)*(xw_gauss_d3(1,k3) + real(j3 - 1,f64))
-                do k2 = 1, q(2)
-                   xi(2) = particle_mesh_coupling%delta_x(2)*(xw_gauss_d2(1,k2) + real(j2 - 1,f64))
-                   do k1 = 1, q(1)
-                      xi(1) = particle_mesh_coupling%delta_x(1)*(xw_gauss_d1(1,k1) + real(j1 - 1,f64))
-
-                      call particle_mesh_coupling%evaluate( xi, [deg(1)-1, deg(2), deg(3)], &
-                           efield_dofs(1:n_total1), efield(1))
-                      call particle_mesh_coupling%evaluate( xi, [deg(1), deg(2)-1, deg(3)], &
-                           efield_dofs(1+n_total1:n_total1+n_total0), efield(2))
-                      call particle_mesh_coupling%evaluate( xi, [deg(1), deg(2), deg(3)-1], &
-                           efield_dofs(1+n_total1+n_total0:n_total1+2*n_total0), efield(3))
-                      call particle_mesh_coupling%evaluate( xi, [deg(1), deg(2)-1, deg(3)-1], &
-                           bfield_dofs(1:n_total0), bfield(1))
-                      call particle_mesh_coupling%evaluate( xi, [deg(1)-1, deg(2), deg(3)-1], &
-                           bfield_dofs(1+n_total0:n_total0+n_total1), bfield(2))
-                      call particle_mesh_coupling%evaluate( xi, [deg(1)-1, deg(2)-1, deg(3)], &
-                           bfield_dofs(1+n_total0+n_total1:n_total0+2*n_total1), bfield(3))
-                      N = map%jacobian_matrix_inverse_transposed( xi )
-                      DF = map%jacobian_matrix( xi ) 
-
-                      do i = 1, 3
-                         e_phys(i) = (N(i,1)* efield(1)+N(i,2)* efield(2)+N(i,3)* efield(3)) 
-                         b_phys(i) = (DF(i,1)* bfield(1)+DF(i,2)* bfield(2)+DF(i,3)* bfield(3)) 
-                      end do
-                      
-                      ecb(1) = ecb(1) + ( e_phys(2) * b_phys(3) - e_phys(3) * b_phys(2) )*&
-                           xw_gauss_d1(2,k1)* xw_gauss_d2(2,k2)* xw_gauss_d3(2,k3) * &
-                           product(particle_mesh_coupling%delta_x)
-                      ecb(2) = ecb(2) + ( e_phys(3) * b_phys(1) - e_phys(1) * b_phys(3) )*&
-                              xw_gauss_d1(2,k1)* xw_gauss_d2(2,k2)* xw_gauss_d3(2,k3)* &
-                           product(particle_mesh_coupling%delta_x)
-                      ecb(3) = ecb(3) + ( e_phys(1) * b_phys(2) - e_phys(2) * b_phys(1) )*&
-                              xw_gauss_d1(2,k1)* xw_gauss_d2(2,k2)* xw_gauss_d3(2,k3)* &
-                           product(particle_mesh_coupling%delta_x)
-                   end do
-                end do
-             end do
-          end do
-       end do
-    end do
-    ecb =  ecb 
-    
-  end subroutine compute_e_cross_b_curvilinear
-
-
   !> Check diagnostics
   subroutine sll_s_check_diagnostics(reffile, simfile, tol_error, passed)
     character(*), intent(in) :: reffile !< Name of reference file (stored in same folder as source file)
@@ -2167,7 +2242,7 @@ contains
     ! Compare
     data_sim = data_sim - data_ref
     error = maxval(abs(data_sim))
-    
+
     print*, 'Max error in time history diagnostics: ', error
     if (error < tol_error) then
        passed = .true.
