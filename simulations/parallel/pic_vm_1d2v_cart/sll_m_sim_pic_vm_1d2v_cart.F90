@@ -712,12 +712,12 @@ contains
                      sim%degree_fem, delta_t*0.5_f64, strong_ampere = strong_ampere, &
                      force_sign=sim%force_sign, adiabatic_electrons=sim%adiabatic_electrons) ! Note: The time is defined for the matrices of the curl-curl solver. This is used for a half time step at the time (hence, the delta_t*0.5).
              end select
-!!$          allocate( sll_t_maxwell_1d_fem_sm :: sim%maxwell_solver )
-!!$          select type ( q=>sim%maxwell_solver )
-!!$          type is ( sll_t_maxwell_1d_fem_sm )
-!!$             call q%init_from_file( sim%domain(1:2), sim%n_gcells, &
-!!$                  sim%degree_smoother, trim(filename) )
-!!$          end select
+!!$             allocate( sll_t_maxwell_1d_fem_sm :: sim%maxwell_solver )
+!!$             select type ( q=>sim%maxwell_solver )
+!!$             type is ( sll_t_maxwell_1d_fem_sm )
+!!$                call q%init_from_file( sim%domain(1:2), sim%n_gcells, &
+!!$                     sim%degree_smoother, trim(filename) )
+!!$             end select
           else
              allocate( sll_t_maxwell_1d_ps :: sim%maxwell_solver )
              select type ( q=>sim%maxwell_solver )
@@ -1454,7 +1454,7 @@ contains
     sll_real64 :: vi(3),  xi(3)
     sll_real64 :: wi(1)
     sll_real64 :: transfer(1), vvb(1), poynting
-    sll_real64 :: error, phi
+    sll_real64 :: error, phi, ecb(2)
 
     degree = sim%degree_fem
 
@@ -1480,20 +1480,30 @@ contains
     diagnostics = 0.0_f64
     call sll_s_collective_reduce_real64(sll_v_world_collective, diagnostics_local, 4,&
          MPI_SUM, 0, diagnostics)
-    ! Add ExB part
-    if ( sim%strong_ampere .eqv. .false. ) then
-       diagnostics(3) = diagnostics(3) + sim%maxwell_solver%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree, degree-1 )
 
-       diagnostics(4) = diagnostics(4) - sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_total1,1), sim%bfield_dofs, degree-1 )
-    else
-       if ( degree == -1) then             
-          diagnostics(3) = diagnostics(3) + sim%maxwell_solver%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree-1, degree )
-          diagnostics(4) = diagnostics(4) - sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_total1,1), sim%bfield_dofs, degree, degree )
+    ! Add ExB part
+    if( sim%boundary )then
+       if( sim%ct ) then
+          call compute_e_cross_b_curvilinear( sim%kernel_smoother_0, sim%kernel_smoother_1, degree, sim%map, sim%efield_dofs(1:sim%n_total1,1), sim%efield_dofs(:,2), sim%bfield_dofs, ecb)
        else
-          scratch(1:sim%n_gcells-1) = 0.5_f64 * (sim%efield_dofs(1:sim%n_gcells-1,2)+sim%efield_dofs(2:sim%n_gcells,2) )
-          scratch(sim%n_gcells) = 0.5_f64 * (sim%efield_dofs(1,2)+sim%efield_dofs(sim%n_gcells,2) )
-          diagnostics(3) = diagnostics(3) + sim%maxwell_solver%inner_product( sim%bfield_dofs, scratch,  degree )
-          diagnostics(4) = diagnostics(4) - sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_total1,1), sim%bfield_dofs, degree )
+          call compute_e_cross_b_gauss( sim%kernel_smoother_0, sim%kernel_smoother_1, degree, sim%efield_dofs(1:sim%n_total1,1), sim%efield_dofs(:,2), sim%bfield_dofs, ecb)
+       end if
+       diagnostics(3:4) = diagnostics(3:4) + ecb 
+    else
+       if ( sim%strong_ampere .eqv. .false. ) then
+          diagnostics(3) = diagnostics(3) + sim%maxwell_solver%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree, degree-1 )
+
+          diagnostics(4) = diagnostics(4) - sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_total1,1), sim%bfield_dofs, degree-1 )
+       else
+          if ( degree == -1) then             
+             diagnostics(3) = diagnostics(3) + sim%maxwell_solver%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree-1, degree )
+             diagnostics(4) = diagnostics(4) - sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_total1,1), sim%bfield_dofs, degree, degree )
+          else
+             scratch(1:sim%n_gcells-1) = 0.5_f64 * (sim%efield_dofs(1:sim%n_gcells-1,2)+sim%efield_dofs(2:sim%n_gcells,2) )
+             scratch(sim%n_gcells) = 0.5_f64 * (sim%efield_dofs(1,2)+sim%efield_dofs(sim%n_gcells,2) )
+             diagnostics(3) = diagnostics(3) + sim%maxwell_solver%inner_product( sim%bfield_dofs, scratch,  degree )
+             diagnostics(4) = diagnostics(4) - sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_total1,1), sim%bfield_dofs, degree )
+          end if
        end if
     end if
 
@@ -1537,6 +1547,88 @@ contains
     end if
 
   end subroutine sll_s_time_history_diagnostics_pic_vm_1d2v
+
+
+  !> Compute ExB with Gauss quadrature
+  subroutine compute_e_cross_b_gauss( kernel_smoother_0, kernel_smoother_1, degree, efield_dofs1, efield_dofs2, bfield_dofs, ecb)
+    class(sll_c_particle_mesh_coupling_1d) :: kernel_smoother_0  !< Kernel smoother (order p+1)
+    class(sll_c_particle_mesh_coupling_1d) :: kernel_smoother_1  !< Kernel smoother (order p)   
+    sll_int32,  intent( in    )            :: degree     !< maximal spline deg
+    sll_real64, intent( in    )            :: efield_dofs1(:) !< coefficients of efield
+    sll_real64, intent( in    )            :: efield_dofs2(:) !< coefficients of efield
+    sll_real64, intent( in    )            :: bfield_dofs(:)   !< DoFs describing the magnetic field
+    sll_real64, intent(   out )            :: ecb(2) !< E cross B 
+    !local variables
+    sll_int32  :: row, quad, q
+    sll_real64, allocatable :: xw_gauss(:,:)
+    sll_real64 :: xi(1)
+    sll_real64 :: efield(2), bfield
+
+    efield = 0.0_f64
+    bfield = 0.0_f64
+    ecb = 0.0_f64
+
+    q = 2*degree
+    allocate(xw_gauss(2, q))
+    xw_gauss = sll_f_gauss_legendre_points_and_weights( q , 0.0_f64, 1.0_f64 )
+    do row = 1, kernel_smoother_0%n_cells
+       do quad = 1, q
+          xi = kernel_smoother_0%delta_x*(xw_gauss(1,quad) + real(row - 1,f64))
+          call kernel_smoother_1%evaluate &
+               (xi(1), efield_dofs1, efield(1))
+          call kernel_smoother_0%evaluate &
+               (xi(1), efield_dofs2, efield(2))
+          call kernel_smoother_1%evaluate &
+               (xi(1), bfield_dofs, bfield)
+
+          ecb(1) = ecb(1) + bfield*efield(2) * xw_gauss(2,quad)*kernel_smoother_0%delta_x
+          ecb(2) = ecb(2) - bfield*efield(1) * xw_gauss(2,quad)*kernel_smoother_0%delta_x
+       end do
+    end do
+
+  end subroutine compute_e_cross_b_gauss
+
+
+  !> Compute ExB with coordinate transformation
+  subroutine compute_e_cross_b_curvilinear( kernel_smoother_0, kernel_smoother_1, degree, map, efield_dofs1, efield_dofs2, bfield_dofs, ecb)
+    class(sll_c_particle_mesh_coupling_1d)     :: kernel_smoother_0  !< Kernel smoother (order p+1)
+    class(sll_c_particle_mesh_coupling_1d)     :: kernel_smoother_1  !< Kernel smoother (order p)   
+    sll_int32,  intent( in    )                :: degree     !< maximal spline deg
+    type(sll_t_mapping_3d), intent( inout    ) :: map        !< coordinate transformation
+    sll_real64, intent( in    )                :: efield_dofs1(:) !< coefficients of efield
+    sll_real64, intent( in    )                :: efield_dofs2(:) !< coefficients of efield
+    sll_real64, intent( in    )                :: bfield_dofs(:)   !< DoFs describing the magnetic field
+    sll_real64, intent(   out )                :: ecb(2) !< E cross B 
+    !local variables
+    sll_int32  :: row, quad, q
+    sll_real64, allocatable :: xw_gauss(:,:)
+    sll_real64 :: xi(3)
+    sll_real64 :: efield(2), bfield
+
+    efield = 0.0_f64
+    bfield = 0.0_f64
+    ecb = 0.0_f64
+    xi = 0._f64
+
+    q = 2*degree
+    allocate(xw_gauss(2, q))
+    xw_gauss = sll_f_gauss_legendre_points_and_weights( q , 0.0_f64, 1.0_f64 )
+    do row = 1, kernel_smoother_0%n_cells
+       do quad = 1, q
+          xi(1) = kernel_smoother_0%delta_x*(xw_gauss(1,quad) + real(row - 1,f64))
+          call kernel_smoother_1%evaluate &
+               (xi(1), efield_dofs1, efield(1))
+          call kernel_smoother_0%evaluate &
+               (xi(1), efield_dofs2, efield(2))
+          call kernel_smoother_1%evaluate &
+               (xi(1), bfield_dofs, bfield)
+
+          ecb(1) = ecb(1) + bfield*efield(2) * xw_gauss(2,quad)*kernel_smoother_0%delta_x
+          ecb(2) = ecb(2) - bfield*efield(1) * xw_gauss(2,quad)*kernel_smoother_0%delta_x/map%jacobian(xi )
+       end do
+    end do
+
+  end subroutine compute_e_cross_b_curvilinear
 
 
   !> Accumulate rho and solve Poisson
