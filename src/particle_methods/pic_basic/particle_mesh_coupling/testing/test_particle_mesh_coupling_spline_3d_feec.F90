@@ -40,7 +40,7 @@ program test_particle_mesh_coupling_spline_3d_feec
   sll_real64 :: v_ref(3,n_particles)
 
   ! helper variables
-  sll_int32  :: i_part 
+  sll_int32  :: i_part, i, j, ind
   sll_real64 :: xi(3), wi(1), vi(3), x_new
   logical :: passed
   sll_real64 :: error
@@ -65,11 +65,15 @@ program test_particle_mesh_coupling_spline_3d_feec
   sll_real64 :: b_dofs(n_grid**3*3)
   sll_real64 :: e_dofs(n_grid**3)
   ! Particle mass
-  sll_real64 :: particle_mass((2*spline_degree+1)**2*(2*spline_degree-1),n_grid**3)
-  sll_real64 :: particle_mass_ref((2*spline_degree+1)**2*(2*spline_degree-1)*n_grid**3)
+  sll_real64, allocatable :: particle_mass(:,:)
+  sll_real64, allocatable :: particle_mass_ref(:)
 
 
   sll_int32  :: n_dofs
+
+  allocate( particle_mass((2*spline_degree+1)**2*(2*spline_degree-1),n_grid**3) ) 
+  allocate(  particle_mass_ref((2*spline_degree+1)**2*(2*spline_degree-1)*n_grid**3) )
+
 
   ! Read name of reference file from input argument
   !------------------------------------------------
@@ -193,7 +197,15 @@ program test_particle_mesh_coupling_spline_3d_feec
   end do
 
   call sll_s_read_data_real_array( reference_add_particle_mass, particle_mass_ref)
-  error = maxval(abs(rho_dofs-rho_dofs_ref))
+
+  error = 0.0_f64
+  ind=1
+  do i=1, n_grid**3
+     do j = 1, (2*spline_degree+1)**2*(2*spline_degree-1)
+        error = max( error,abs( particle_mass(j,i)-particle_mass_ref(ind) ))
+        ind = ind+1
+     end do
+  end do
 
   if (error > 1.d-14) then
      passed = .FALSE.
@@ -244,7 +256,6 @@ program test_particle_mesh_coupling_spline_3d_feec
   write(32,*) j_dofs
   call sll_s_read_data_real_array( reference_add_current, j_dofs_ref)
   error = maxval(abs(j_dofs-j_dofs_ref))
-  print*, error
 
   if (error > 1.d-14) then
      passed = .false.
