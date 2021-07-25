@@ -126,7 +126,7 @@ module sll_m_time_propagator_pic_vm_1d2v_subcyci
      sll_int32 :: file_id_rho
      sll_int32 :: file_id_iter_field
 
-     logical   :: step_one = .false.
+     logical   :: step_one = .true.
      logical   :: step_one_mod = .false.
 
      ! For the implicit field solve
@@ -643,9 +643,6 @@ contains
              v_new(1) = vi(1) + efield(1) + qoverm * dtau *  ( vi(2) * bfield_old(1) + efield_new(1) )
              v_new(2) = vi(2) + efield(2) + qoverm * dtau *  ( -vi(1) * bfield_old(1) + efield_new(2) )
 
-             print*, x_new(1)
-             print*, dtau
-             print*, v_new(1),' a'
              x_future(1) = x_new(1) + dtau * v_new(1)
 
              call self%kernel_smoother_1%evaluate_int_linear_quad( x_new(1), x_future(1),  &
