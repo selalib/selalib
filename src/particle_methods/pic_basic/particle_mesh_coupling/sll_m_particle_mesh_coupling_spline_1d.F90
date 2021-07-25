@@ -1176,6 +1176,10 @@ contains
     sll_int32 :: box_new, box_old, ind
     sll_real64 :: rinterval, lowert, uppert
 
+    print*, position_new(1)
+    print*, self%domain(1)
+    print*, self%delta_x
+    
     dx_new = (position_new(1)-self%domain(1))/self%delta_x
     box_new = floor(dx_new)+1
     dx_new = dx_new - real(box_new-1,f64)

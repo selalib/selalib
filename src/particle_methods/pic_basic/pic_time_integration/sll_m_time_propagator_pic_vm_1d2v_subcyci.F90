@@ -613,7 +613,7 @@ contains
              wi = self%particle_group%group(i_sp)%get_charge(i_part, self%i_weight)
 
              ! Then update particle position (first part):  X_new = X_old + dt * 0.5 * V
-             x_old = x_new - dtau * vi
+             x_old(1) = x_new(1) - dtau * vi(1)
 
 
              ! Now the first half of the velocity update
@@ -642,7 +642,11 @@ contains
 
              v_new(1) = vi(1) + efield(1) + qoverm * dtau *  ( vi(2) * bfield_old(1) + efield_new(1) )
              v_new(2) = vi(2) + efield(2) + qoverm * dtau *  ( -vi(1) * bfield_old(1) + efield_new(2) )
-             x_future = x_new + dtau * v_new
+
+             print*, x_new(1)
+             print*, dtau
+             print*, v_new(1),' a'
+             x_future(1) = x_new(1) + dtau * v_new(1)
 
              call self%kernel_smoother_1%evaluate_int_linear_quad( x_new(1), x_future(1),  &
                   0, self%n_sub_iter, self%bfield_dofs_old, self%bfield_dofs, bfield_new )
