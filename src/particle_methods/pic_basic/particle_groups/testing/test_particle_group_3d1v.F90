@@ -40,7 +40,7 @@ program test_particle_group_3d1v
   call particle_group%init(n_particles, n_total_particles, charge, mass, n_weights)
 
   do i_part = 1,n_particles
-     call particle_group%set_x(i_part,[real(i_part, f64),real(i_part, f64)**0.5,real(i_part, f64)**0.2])
+     call particle_group%set_x(i_part,[real(i_part, f64),real(i_part, f64)**0.5_f64,real(i_part, f64)**0.2_f64])
      call Particle_group%set_v(i_part,[real(i_part,f64)**2,0.0_f64,0.0_f64])
      call Particle_group%set_weights(i_part,[real(i_part/n_particles,f64)])
   end do
@@ -49,18 +49,18 @@ program test_particle_group_3d1v
   !do i_part = 1,n_particles,2
      
      x = particle_group%get_x(i_part)
-     if(abs(x(1)-real(i_part, f64))>1E-15) fail=.true.
-     if(abs(x(2)-real(i_part, f64)**0.5)>1E-15) fail=.true.
-     if(abs(x(3)-real(i_part, f64)**0.2)>1E-15) fail=.true.
+     if(abs(x(1)-real(i_part, f64))>1d-15) fail=.true.
+     if(abs(x(2)-real(i_part, f64)**0.5_f64)>1d-15) fail=.true.
+     if(abs(x(3)-real(i_part, f64)**0.2_f64)>1d-15) fail=.true.
      
      x = particle_group%get_v(i_part)
-     if(abs(x(1)-real(i_part,f64)**2)>1E-15) fail=.true.
+     if(abs(x(1)-real(i_part,f64)**2)>1d-15) fail=.true.
      
      x(1) = particle_group%get_mass(i_part)
-     if(abs(x(1)-mass*real(i_part/n_particles, f64))>1E-15) fail=.true.
+     if(abs(x(1)-mass*real(i_part/n_particles, f64))>1d-15) fail=.true.
      
      x(1) = particle_group%get_charge(i_part)
-     if(abs(x(1)-charge*real(i_part/n_particles, f64))>1E-15) fail=.true.
+     if(abs(x(1)-charge*real(i_part/n_particles, f64))>1d-15) fail=.true.
      
   !end do
 

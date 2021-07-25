@@ -49,19 +49,19 @@ program test_particle_group_1d1v
   fail = .false.
   i_part = 4
   x =  particle_group%get_x(i_part)
-  if ( abs(x(1)- real(i_part,f64))> 1E-15) then
+  if ( abs(x(1)- real(i_part,f64))> 1d-15) then
      fail = .true.
   end if
   x = particle_group%get_v(i_part)
-  if ( abs(x(1)- real(i_part,f64)**2)> 1E-15) then
+  if ( abs(x(1)- real(i_part,f64)**2)> 1d-15) then
      fail = .true.
   end if
   x(1) = particle_group%get_charge(i_part)
-  if ( abs(x(1)- charge*real(i_part/n_particles, f64))> 1E-15) then
+  if ( abs(x(1)- charge*real(i_part/n_particles, f64))> 1d-15) then
      fail = .true.
   end if
   x(1) = particle_group%get_mass(i_part)
-  if ( abs(x(1)- mass*real(i_part/n_particles, f64))> 1E-15) then
+  if ( abs(x(1)- mass*real(i_part/n_particles, f64))> 1d-15) then
      fail = .true.
   end if
 
