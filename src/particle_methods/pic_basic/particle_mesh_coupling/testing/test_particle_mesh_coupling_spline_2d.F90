@@ -105,12 +105,12 @@ program test_particle_mesh_coupling_spline_2d
   ! Reference values of the shape factors
   index_grid(1,:) = [-2, 1, 1, 5]
   index_grid(2,:) = [-3, -3, -3, -3]
-  values_grid(:,1,1) = [ 2.0833333333333332E-002_f64,  0.47916666666666663_f64,    &
-       0.47916666666666663_f64,        2.0833333333333332E-002_f64]
+  values_grid(:,1,1) = [ 2.08333333333333E-002_f64,  0.479166666666666_f64,    &
+       0.479166666666666_f64,        2.08333333333333E-002_f64]
   values_grid(:,1,3) = values_grid(:,1,1)   
   values_grid(:,1,4) = values_grid(:,1,1) 
-  values_grid(:,1,2) = [7.0312500000000000E-002_f64,  0.61197916666666663_f64, &
-       0.31510416666666663_f64,        2.6041666666666665E-003_f64 ]
+  values_grid(:,1,2) = [7.03125E-002_f64,  0.611979166666666_f64, &
+       0.315104166666666_f64,        2.60416666666666E-003_f64 ]
   values_grid(1,2,:) = 0.0_f64
   values_grid(2,2,:) = 1.0_f64/6.0_f64
   values_grid(3,2,:) = 2.0_f64/3.0_f64
@@ -144,12 +144,12 @@ program test_particle_mesh_coupling_spline_2d
   error = maxval(abs(rho_dofs-rho_dofs_ref))
   error1 = maxval(abs(rho_dofs1-rho_dofs_ref))
   
-  if (error > 1.e-14) then
+  if (error > 1.d-13) then
      passed = .FALSE.
-     print*, 'Error in procedure add_charge.'
-  elseif (error1 >1.e-14)then 
+     print*, 'Error in procedure add_charge: ', error
+  elseif (error1 >1.d-13)then 
      passed = .FALSE.
-     print*, 'Error in procedure add_charge_pp .'
+     print*, 'Error in procedure add_charge_pp: ', error1
   end if
 
 !!$  ! Test j accumulations
@@ -169,7 +169,7 @@ program test_particle_mesh_coupling_spline_2d
 !!$
 !!$  j_dofs_ref = j_dofs_ref * real(n_cells**2,f64)/volume/real(n_particles, f64)
 !!$  error = maxval(abs(j_dofs-j_dofs_ref))
-!!$  if (error > 1.e-14) then
+!!$  if (error > 1.d-14) then
 !!$     passed = .FALSE.
 !!$  end if
   
@@ -200,12 +200,12 @@ program test_particle_mesh_coupling_spline_2d
 
   error = maxval(abs(particle_values-particle_values_ref))
   error1 = maxval(abs(particle_values1-particle_values_ref))
-  if (error > 1.e-14) then
+  if (error > 1.d-13) then
      passed = .FALSE.
-     print*, 'Error in procedure evaluate_field_single.'
-  elseif(error1 > 1.e-14) then
+     print*, 'Error in procedure evaluate_field_single: ', error
+  elseif(error1 > 1.d-13) then
      passed = .FALSE.
-     print*, 'Error in procedure evaluate_field_single_pp.'
+     print*, 'Error in procedure evaluate_field_single_pp: ', error1
      
   end if
 

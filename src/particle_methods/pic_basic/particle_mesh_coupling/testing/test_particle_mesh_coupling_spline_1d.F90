@@ -98,12 +98,12 @@ program test_particle_mesh_coupling_spline_1d
      call particle_group%set_v(i_part, xi)
   end do
   
-  values_grid(:,1,1) = [ 2.0833333333333332E-002_f64,  0.47916666666666663_f64,    &
-       0.47916666666666663_f64,        2.0833333333333332E-002_f64]
+  values_grid(:,1,1) = [ 2.08333333333333E-002_f64,  0.479166666666666_f64,    &
+       0.479166666666666_f64,        2.08333333333333E-002_f64]
   values_grid(:,1,3) = values_grid(:,1,1)   
   values_grid(:,1,4) = values_grid(:,1,1) 
-  values_grid(:,1,2) = [7.0312500000000000E-002_f64,  0.61197916666666663_f64, &
-       0.31510416666666663_f64,        2.6041666666666665E-003_f64 ]
+  values_grid(:,1,2) = [7.03125E-002_f64,  0.611979166666666_f64, &
+       0.315104166666666_f64,        2.60416666666666E-003_f64 ]
 
   ! Initialize the kernel
   call kernel%init &
@@ -133,14 +133,14 @@ program test_particle_mesh_coupling_spline_1d
   error = maxval(abs(rho_dofs-rho_dofs_ref))
 
   
-  if (error > 1.e-14) then
+  if (error > 1.d-14) then
      passed = .FALSE.
      print*, 'Error in procedure add_charge .'
   end if
  
 !!$  call sll_s_spline_pp_pp_to_b_1d( kernel%spline_pp, n_cells, rho_dofs_pp, rho_dofs1 )
 !!$  error = maxval(abs(rho_dofs1-rho_dofs_ref))
-!!$  if (error > 1.e-14) then
+!!$  if (error > 1.d-14) then
 !!$     passed = .FALSE.
 !!$     print*, 'Error in procedure add_charge_pp .'
 !!$  end if
@@ -166,17 +166,17 @@ program test_particle_mesh_coupling_spline_1d
      call kernel%add_current_split( xi(1), x_new, 0, 1, wi(1)*vi(1)/10.0_f64, j_dofs3 )
      call kernel%add_charge_int( xi(1), x_new, wi(1)*vi(1)/10.0_f64, j_dofs4 )
   end do
-  j_dofs_ref = [ 2.4617513020833336D-002,   4.0690104166666692D-005, 0.0_f64, &
-       0.0_f64, 0.0_f64, 0.0_f64,  0.0_f64,  6.5104166666666674D-004, &
-       4.6834309895833329D-002,    0.11535644531249999_f64];
-  j_dofs_ref = j_dofs_ref + [ -0.16219075520833331_f64, -0.16219075520833331_f64, &
-       -2.52685546875D-002,  -4.0690104166666692D-005 , &
+  j_dofs_ref = [ 2.46175130208333D-002,   4.06901041666666D-005, 0.0_f64, &
+       0.0_f64, 0.0_f64, 0.0_f64,  0.0_f64,  6.51041666666666D-004, &
+       4.68343098958333D-002,    0.115356445312499_f64];
+  j_dofs_ref = j_dofs_ref + [ -0.162190755208333_f64, -0.162190755208333_f64, &
+       -2.52685546875D-002,  -4.06901041666666D-005 , &
        0.0_f64, 0.0_f64, 0.0_f64, 0.0_f64,  &
-       -4.0690104166666692D-005,  -2.52685546875D-002];
-  j_dofs_ref = j_dofs_ref + [ 6.5104166666666696D-004,  0.0_f64, 0.0_f64,  &
-       0.0_f64, 6.5104166666666674D-004, 5.0130208333333329D-002,  &
-       0.19986979166666666_f64, 0.24869791666666663_f64,  &
-       0.19986979166666666_f64, 5.0130208333333329D-002];
+       -4.06901041666666D-005,  -2.52685546875D-002];
+  j_dofs_ref = j_dofs_ref + [ 6.51041666666666D-004,  0.0_f64, 0.0_f64,  &
+       0.0_f64, 6.51041666666666D-004, 5.01302083333333D-002,  &
+       0.199869791666666_f64, 0.248697916666666_f64,  &
+       0.199869791666666_f64, 5.01302083333333D-002];
  
   error = maxval(abs(j_dofs-j_dofs_ref))
   !error1= maxval(abs(j_dofs1-j_dofs_ref))
@@ -184,20 +184,20 @@ program test_particle_mesh_coupling_spline_1d
   error3= maxval(abs(j_dofs3(:,1)+j_dofs3(:,2)-j_dofs_ref*dx))
   error4= maxval(abs(j_dofs4-j_dofs_ref*dx))
   
-  if (error > 1.e-14) then
+  if (error > 1.d-14) then
      passed = .FALSE.
      print*, 'Error in procedure add_current_update_v.'
      
-!!$  elseif (error1 > 1.e-14) then
+!!$  elseif (error1 > 1.d-14) then
 !!$     passed = .FALSE.
 !!$     print*, 'Error in procedure add_current_update_v_spline_pp.'
-  elseif (error2 > 1.e-14) then
+  elseif (error2 > 1.d-14) then
      passed = .FALSE.
      print*, 'Error in procedure add_current.'
-  elseif (error3 > 1.e-14) then
+  elseif (error3 > 1.d-14) then
      passed = .FALSE.
      print*, 'Error in procedure add_current_split.'
-  elseif (error4 > 1.e-14) then
+  elseif (error4 > 1.d-14) then
      passed = .FALSE.
      print*, 'Error in procedure add_charge_int.'
   end if
@@ -215,10 +215,10 @@ program test_particle_mesh_coupling_spline_1d
   error = maxval(abs(particle_values-particle_values_ref))
   error1 = maxval(abs(particle_values1-particle_values_ref))
   !print*,'fehler=', maxval(abs(particle_values1-particle_values))
-  if (error > 1.e-14) then
+  if (error > 1.d-14) then
      passed = .FALSE.
      print*, 'Error in procedure evaluate_field_single.'
-!!$  else  if (error1 > 1.e-14) then
+!!$  else  if (error1 > 1.d-14) then
 !!$     passed = .FALSE.
 !!$     print*, 'Error in procedure evaluate_field_single_spline_pp.'
   end if
