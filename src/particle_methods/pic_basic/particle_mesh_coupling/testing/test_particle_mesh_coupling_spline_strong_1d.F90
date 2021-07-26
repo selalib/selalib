@@ -97,8 +97,8 @@ program test_particle_mesh_coupling_spline_strong_1d
   
   values_grid(:,1,3) = values_grid(:,1,1)   
   values_grid(:,1,4) = values_grid(:,1,1) 
-  values_grid(:,1,2) = [7.0312500000000000d-002,  0.61197916666666663_f64, &
-       0.31510416666666663_f64,        2.6041666666666665d-003 ]
+  values_grid(:,1,2) = [7.03125E-002_f64,  0.611979166666666_f64, &
+       0.315104166666666_f64,        2.60416666666666E-003_f64 ]
 
   ! Initialize the kernel
   call kernel%init &
@@ -121,11 +121,11 @@ program test_particle_mesh_coupling_spline_strong_1d
      call kernel%add_charge(xi(1), wi(1), rho_dofs)
      call kernel_int%add_charge(xi(1), wi(1), rho_dofs_pp)
   end do
-  rho_dofs_ref = [ 1.7057291666666665_f64,       0.78776041666666652_f64, &
-       6.5104166666666661d-003,   0.0000000000000000_f64, &
-       0.0000000000000000_f64,        0.0000000000000000_f64, &
-       0.0000000000000000_f64,        6.5104166666666661d-003, &
-       0.78776041666666652_f64,        1.7057291666666665_f64   ] 
+  rho_dofs_ref = [ 1.70572916666666_f64,       0.787760416666666_f64, &
+       6.5104166666666d-003,   0.0_f64, &
+       0.0_f64,        0.00_f64, &
+       0.0_f64,        6.51041666666666d-003, &
+       0.787760416666666_f64,        1.70572916666666_f64   ] 
 
   
   error = maxval(abs(rho_dofs-rho_dofs_ref))
@@ -157,25 +157,25 @@ program test_particle_mesh_coupling_spline_strong_1d
      call kernel_mid%add_charge(xi(1), wi(1), rho_dofs)
      call kernel_mid_int%add_charge(xi(1), wi(1), rho_dofs_pp)
   end do
-  rho_dofs_ref = [  1.7057291666666665_f64,  0.78776041666666652_f64, &
-       6.5104166666666661d-003,   0.0000000000000000_f64, &
-       0.0000000000000000_f64,        0.0000000000000000_f64,        0.0000000000000000_f64, &
-       6.5104166666666661d-003,  0.78776041666666652_f64,        1.7057291666666665_f64 ] 
+  rho_dofs_ref = [  1.70572916666666_f64,  0.787760416666666_f64, &
+       6.51041666666666d-003,   0.0000000000000_f64, &
+       0.00000000000000_f64,        0.000000000_f64,        0.0_f64, &
+       6.51041666666666d-003,  0.787760416666666_f64,        1.70572916666666_f64 ] 
 
   
   error = maxval(abs(rho_dofs-rho_dofs_ref))
-  print*, rho_dofs
-  print*, rho_dofs_ref
+  !print*, rho_dofs
+  !print*, rho_dofs_ref
 
   if (error > 1.d-14) then
      passed = .FALSE.
      print*, 'Error in procedure add_charge (third order mid point).'
   end if
-  rho_dofs_ref = [1.6544596354166663_f64,        0.81258138020833315_f64,  &
-       3.2958984375000000d-002,    0.0000000000000000_f64, &
-       0.0000000000000000_f64,         0.0000000000000000_f64, &
-       0.0000000000000000_f64,         3.2958984375000000d-002, &
-       0.81258138020833315_f64,         1.6544596354166663_f64   ] 
+  rho_dofs_ref = [1.65445963541666_f64,        0.812581380208333_f64,  &
+       3.29589843750d-002,    0.000_f64, &
+       0.0000_f64,         0.000_f64, &
+       0.000_f64,         3.2958984375000d-002, &
+       0.812581380208333_f64,         1.65445963541666_f64   ] 
   
   error = maxval(abs(rho_dofs_pp-rho_dofs_ref))
 
@@ -215,7 +215,7 @@ program test_particle_mesh_coupling_spline_strong_1d
 !!$ print*, j_dofs_ref
 !!$
 !!$ error = maxval(abs(j_dofs-j_dofs_ref))
-!!$  if (error > 1.e-14) then
+!!$  if (error > 1.d-14) then
 !!$     passed = .FALSE.
 !!$     print*, 'Error in procedure add_current_update_v (third order).'
 !!$
@@ -233,7 +233,7 @@ program test_particle_mesh_coupling_spline_strong_1d
 !!$  error = maxval(abs(j_dofs1-j_dofs_ref))
 !!$
 !!$  
-!!$  if (error > 1.e-14) then
+!!$  if (error > 1.d-14) then
 !!$     passed = .FALSE.
 !!$     print*, 'Error in procedure add_current_update_v (second order).'
 !!$
@@ -255,7 +255,7 @@ program test_particle_mesh_coupling_spline_strong_1d
 !!$  error = maxval(abs(particle_values-particle_values_ref))
 !!$  !print*,'fehler=', maxval(abs(particle_values1-particle_values))
 !!$
-!!$  if (error > 1.e-14) then
+!!$  if (error > 1.d-14) then
 !!$     passed = .FALSE.
 !!$     print*, 'Error in procedure evaluate_field_single (third order).', error
 !!$  end if
@@ -263,7 +263,7 @@ program test_particle_mesh_coupling_spline_strong_1d
 !!$  particle_values_ref = [2.9947916666666661_f64,        6.1065673828124982_f64,        5.8919270833333321_f64,        2.9947916666666661_f64]
 !!$  error = maxval(abs(particle_values1-particle_values_ref))
 !!$  
-!!$  if (error > 1.e-14) then
+!!$  if (error > 1.d-14) then
 !!$     passed = .FALSE.
 !!$     print*, 'Error in procedure evaluate_field_single (second order).', error
 !!$  end if
@@ -292,7 +292,7 @@ program test_particle_mesh_coupling_spline_strong_1d
   call kernel_mid_int%init &
        (domain, n_cells, spline_degree, integ=.true., eval_grid_points=.false.)
   
-  print*, '#####################'
+  !print*, '#####################'
   ! Accumulate rho
   rho_dofs = 0.0_f64
   rho_dofs1 = 0.0_f64
@@ -352,11 +352,11 @@ program test_particle_mesh_coupling_spline_strong_1d
      passed = .FALSE.
      print*, 'Error in procedure add_charge (second order mid point).'
   end if
-  rho_dofs_ref = [1.7057291666666665_f64,       0.78776041666666652_f64, &
-       6.5104166666666661d-003,  0.0000000000000000_f64, &
-       0.0000000000000000_f64,        0.0000000000000000_f64, &
-       0.0000000000000000_f64,        6.5104166666666661d-003, &
-       0.78776041666666652_f64,        1.7057291666666665_f64   ] 
+  rho_dofs_ref = [1.70572916666666_f64,       0.787760416666666_f64, &
+       6.51041666666666d-003,  0.000_f64, &
+       0.0000_f64,        0.00000_f64, &
+       0.00_f64,        6.51041666666666d-003, &
+       0.787760416666666_f64,        1.70572916666666_f64   ] 
   
   error = maxval(abs(rho_dofs_pp-rho_dofs_ref))
 

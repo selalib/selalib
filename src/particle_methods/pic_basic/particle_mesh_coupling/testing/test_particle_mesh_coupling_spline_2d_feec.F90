@@ -130,8 +130,8 @@ program test_particle_mesh_coupling_spline_2d_feec
        0.47916666666666663_f64,        2.0833333333333332E-002_f64]
   values_grid(:,1,3) = values_grid(:,1,1)   
   values_grid(:,1,4) = values_grid(:,1,1) 
-  values_grid(:,1,2) = [7.0312500000000000E-002_f64,  0.61197916666666663_f64, &
-       0.31510416666666663_f64,        2.6041666666666665E-003_f64 ]
+  values_grid(:,1,2) = [7.03125E-002_f64,  0.611979166666666_f64, &
+       0.315104166666666_f64,        2.60416666666666E-003_f64 ]
 
   ! Initialize the particle mesh coupler
   call particle_mesh%init( n_cells, domain, n_particles, spline_degree )
@@ -141,7 +141,7 @@ program test_particle_mesh_coupling_spline_2d_feec
   
 
   ! Test evaluate
-  print*, 'Evaluate function'
+  !print*, 'Evaluate function'
   xi = [0.01_f64, 0.134_f64, 1.756_f64]
   call maxwell%L2projection( test_func, 1, 1, e_dofs )
   call particle_mesh%evaluate( xi, [spline_degree-1, spline_degree],  &
@@ -154,7 +154,7 @@ program test_particle_mesh_coupling_spline_2d_feec
   eval_ref = test_func( xi(1:2) )
 
   error = eval_ref - eval;
-  if (error > 2.1e-3) then
+  if (error > 2.1d-3) then
      print*, 'Error in procedure evaluate', error
      passed = .false.
   end if
@@ -178,21 +178,21 @@ program test_particle_mesh_coupling_spline_2d_feec
   end do
 
   !print*, rho_dofs
-  print*, 'read charge'
+  !print*, 'read charge'
   call sll_s_read_data_real_array( reference_add_charge, rho_dofs_ref)
-  write(33,*) rho_dofs
+  !write(33,*) rho_dofs
 
   
   error = maxval(abs(rho_dofs-rho_dofs_ref))
 
-  if (error > 1.e-14) then
+  if (error > 1.d-14) then
      passed = .FALSE.
      print*, 'Error in procedure add_charge.'
   end if
 
   !error = maxval(abs(rho_dofs_pp-_rho_dofs_ref))
 
-  !if (error > 1.e-14) then
+  !if (error > 1.d-14) then
   !   passed = .FALSE.
   !   print*, 'Error in procedure add_charge_pp.'
   !   print*, error
@@ -229,25 +229,25 @@ program test_particle_mesh_coupling_spline_2d_feec
      call particle_mesh%add_current_update_v_component2( xi, x_new , wi(1), -1.0_f64, b_dofs, vi, &
           j_dofs(1+n_dofs:2*n_dofs) )
      call particle_group%set_v( i_part, vi )
-     print*, vi
+     !print*, vi
   end do
 
 
-  write(32,*) j_dofs
-  print*, 'read current', reference_add_current
+  !write(32,*) j_dofs
+  !print*, 'read current', reference_add_current
   call sll_s_read_data_real_array( reference_add_current, j_dofs_ref)
   error = maxval(abs(j_dofs-j_dofs_ref))
   print*, error
 
-  if (error > 1.e-14) then
+  if (error > 1.d-14) then
      passed = .false.
      print*, 'Error in procedure add_current_update_v.'
   end if
 
-  v_ref(:,1) = [1.4998792101404703_f64,        1.2694135490275014E-002_f64,  -1.2573455555138866E-002_f64]
-  v_ref(:,2) = [-2.9977368921407832_f64,       0.50000000000000000_f64,       0.24773040617754807_f64]     
-  v_ref(:,3) = [0.0000000000000000_f64,       0.0000000000000000_f64,        0.0000000000000000_f64]     
-  v_ref(:,4) = [6.0000000000000000_f64,        4.1677425955085015E-002_f64,  -4.1677425955085015E-002_f64]
+  v_ref(:,1) = [1.49987921014047_f64,        1.2694135490275E-002_f64,  -1.25734555551388E-002_f64]
+  v_ref(:,2) = [-2.99773689214078_f64,       0.500_f64,       0.247730406177548_f64]     
+  v_ref(:,3) = [0.000_f64,       0.00000_f64,        0.0000_f64]     
+  v_ref(:,4) = [6.0000_f64,        4.1677425955085E-002_f64,  -4.1677425955085E-002_f64]
 
   do i_part = 1, n_particles
      vi = particle_group%get_v( i_part )

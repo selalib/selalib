@@ -143,8 +143,8 @@ contains
     sll_real64 :: xi(2)
     sll_int32  :: index2d(2)
     sll_int32  :: index1d
-    sll_int32  :: i,j, col1, col2, col3, ind
-    sll_real64 :: splineijk, splineijkcol3
+    sll_int32  :: i,j, col1, col2, ind
+    sll_real64 :: splineijk
 
     
     call convert_x_to_xbox( self, position, xi, box )
@@ -152,7 +152,7 @@ contains
 
     ! Old version based on arbitrary degree splines
     self%spline_0 = 0.0_f64
-    do j=1,3
+    do j=1,2
        call sll_s_uniform_bsplines_eval_basis( degree(j), xi(j), self%spline_0(:,j) )
     end do
        
@@ -214,7 +214,7 @@ contains
 !!$    self%spline_0 = 0.0_f64
 !!$    call sll_s_spline_pp_horner_m_3d (self%spline_pp_0, self%spline_0, degree, xi)
 !!$    ! USE THIS IF DEGREE IS NOT ALLWAYS SELF%SPLINE_DEGREE
-!!$    !do j=1,3
+!!$    !do j=1,2
 !!$    !   if (degree(j) == self%spline_degree) then
 !!$    !      call sll_s_spline_pp_horner_m_1d(self%spline_pp1d_0, self%spline_0(:,j), self%spline_degree, xi(j))
 !!$    !   else
