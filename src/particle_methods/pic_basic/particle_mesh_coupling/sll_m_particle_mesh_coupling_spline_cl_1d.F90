@@ -227,68 +227,103 @@ contains
     sll_real64,                               intent( in )    :: marker_charge !< Particle weights time charge
     sll_real64,                               intent( inout ) :: j_dofs(self%n_dofs) !< Coefficient vector of the current density
     !local variables
-    sll_real64 :: xold, xnew, xnewtilde, xbox
-    sll_int32 :: boxold, boxnew, sigma_counter, boxdiff, increment, box
-    sll_real64 :: sigma_r, sigma_l, sigma, sigma_next, weight
-    sll_int32 :: q, bl
-    sll_real64, allocatable :: vals(:) 
+    sll_int32  :: index_old, index_new, ind
+    sll_real64 :: r_old, r_new, vi(3), bfield_dofs(self%n_dofs), qoverm
+!!$    sll_real64 :: xold, xnew, xnewtilde, xbox
+!!$    sll_int32 :: boxold, boxnew, sigma_counter, boxdiff, increment, box
+!!$    sll_real64 :: sigma_r, sigma_l, sigma, sigma_next, weight
+!!$    sll_int32 :: q, bl
+!!$    sll_real64, allocatable :: vals(:) 
+!!$
+!!$    call convert_x_to_xbox( self, position_old, xold, boxold )
+!!$    call convert_x_to_xbox( self, position_new, xnew, boxnew )
 
-    call convert_x_to_xbox( self, position_old, xold, boxold )
-    call convert_x_to_xbox( self, position_new, xnew, boxnew )
+    call convert_x_to_xbox( self, position_old, r_old, index_old )
+    call convert_x_to_xbox( self, position_new, r_new, index_new )
 
-    ! Now we need to compute the normalized 1d line along which to integrate:
-    boxdiff = boxnew-boxold
-    xnewtilde = xnew + real(boxdiff,f64)
-    sigma_l = 0.0_f64
-    box = boxold ! We start in the old box
-    sigma_counter = 0
-
-    if (boxdiff > 0 ) then
-       allocate( vals(boxdiff+1) )
-       do bl = 1, boxdiff
-          vals(bl) = (real(bl,f64)  - xold)/(xnewtilde-xold)
+      if (index_old == index_new) then
+       if (r_old < r_new) then
+          call update_jv( self, r_old, r_new, index_old, marker_charge, &
+               qoverm, 1.0_f64, vi(2), j_dofs, bfield_dofs)
+       else
+          call update_jv( self, r_new, r_old, index_old, marker_charge, qoverm, &
+               -1.0_f64, vi(2), j_dofs, bfield_dofs)
+       end if
+    elseif (index_old < index_new) then
+       call update_jv ( self, r_old, 1.0_f64, index_old, marker_charge, &
+            qoverm, 1.0_f64, vi(2), j_dofs, bfield_dofs)
+       call update_jv ( self, 0.0_f64, r_new, index_new, marker_charge, &
+            qoverm, 1.0_f64, vi(2), j_dofs, bfield_dofs)
+       do ind = index_old+1, index_new-1
+          call update_jv ( self, 0.0_f64, 1.0_f64, ind, marker_charge, &
+               qoverm, 1.0_f64, vi(2), j_dofs, bfield_dofs)
        end do
-       vals(boxdiff+1) = 1.0_f64
-       sigma_next = vals(1)
-       increment = 1
-    elseif (boxdiff < 0 ) then
-       allocate ( vals(-boxdiff+1) )
-       do bl = boxdiff+1, 0
-          vals(-bl+1) = (real(bl,f64)  - xold)/(xnewtilde-xold)
-       end do
-       vals(-boxdiff+1) = 1.0_f64
-       sigma_next = vals(1)
-       increment = -1
     else
-       sigma_next = 1.0_f64
-       increment = 0
+       call update_jv ( self, r_new, 1.0_f64, index_new, marker_charge, qoverm, &
+            -1.0_f64, vi(2), j_dofs, bfield_dofs)
+       call update_jv ( self, 0.0_f64, r_old, index_old, marker_charge, qoverm, &
+            -1.0_f64, vi(2), j_dofs, bfield_dofs)
+       do ind = index_new+1, index_old-1
+          call update_jv ( self, 0.0_f64, 1.0_f64, ind, marker_charge, qoverm, &
+               -1.0_f64, vi(2), j_dofs, bfield_dofs)
+       end do
     end if
 
-
-    sigma_r = 0.0_f64
-    do while ( sigma_r < 1.0_f64 )
-       sigma_r = sigma_next
-
-       do q = 1, self%n_quad_points_line
-          sigma = sigma_l + (sigma_r-sigma_l) * self%quad_xw_line(1,q)
-          xbox = xold* (1.0_f64 - sigma) + xnewtilde * sigma  - real(sigma_counter*increment, f64)
-          if (xbox > 1.0_f64 ) then
-             xbox = min(xbox, 1._f64)
-          elseif (xbox < 0.0_f64 ) then
-             xbox = max(xbox, 0._f64)
-          end if
-
-          weight = self%quad_xw_line(2,q)*(sigma_r-sigma_l)
-          call integrate_spline_cl_1d(self, box, xbox, marker_charge*weight, j_dofs )
-       end do
-       if (sigma_r < 1.0_f64 ) then
-          ! Update the
-          sigma_counter = sigma_counter+1
-          sigma_next = vals(sigma_counter+1)
-          box = box + increment
-          sigma_l = sigma_r
-       end if
-    end do
+!!$    ! Now we need to compute the normalized 1d line along which to integrate:
+!!$    boxdiff = boxnew-boxold
+!!$    xnewtilde = xnew + real(boxdiff,f64)
+!!$    sigma_l = 0.0_f64
+!!$    box = boxold ! We start in the old box
+!!$    sigma_counter = 0
+!!$
+!!$    if (boxdiff > 0 ) then
+!!$       allocate( vals(boxdiff+1) )
+!!$       do bl = 1, boxdiff
+!!$          vals(bl) = (real(bl,f64)  - xold)/(xnewtilde-xold)
+!!$       end do
+!!$       vals(boxdiff+1) = 1.0_f64
+!!$       sigma_next = vals(1)
+!!$       increment = 1
+!!$    elseif (boxdiff < 0 ) then
+!!$       allocate ( vals(-boxdiff+1) )
+!!$       do bl = boxdiff+1, 0
+!!$          vals(-bl+1) = (real(bl,f64)  - xold)/(xnewtilde-xold)
+!!$       end do
+!!$       vals(-boxdiff+1) = 1.0_f64
+!!$       sigma_next = vals(1)
+!!$       increment = -1
+!!$    else
+!!$       sigma_next = 1.0_f64
+!!$       increment = 0
+!!$    end if
+!!$
+!!$
+!!$    sigma_r = 0.0_f64
+!!$    do while ( sigma_r < 1.0_f64 )
+!!$       sigma_r = sigma_next
+!!$
+!!$       do q = 1, self%n_quad_points_line
+!!$          sigma = sigma_l + (sigma_r-sigma_l) * self%quad_xw_line(1,q)
+!!$          xbox = xold* (1.0_f64 - sigma) + xnewtilde * sigma  - real(sigma_counter*increment, f64)
+!!$          if (xbox > 1.0_f64 ) then
+!!$             print*, 'box error1', xbox, sigma, sigma_counter, increment
+!!$             xbox = min(xbox, 1._f64)
+!!$          elseif (xbox < 0.0_f64 ) then
+!!$             print*, 'box error2', xbox, sigma, sigma_counter, increment
+!!$             xbox = max(xbox, 0._f64)
+!!$          end if
+!!$
+!!$          weight = self%quad_xw_line(2,q)*(sigma_r-sigma_l)
+!!$          call integrate_spline_cl_1d(self, box, xbox, marker_charge*weight, j_dofs )
+!!$       end do
+!!$       if (sigma_r < 1.0_f64 ) then
+!!$          ! Update the
+!!$          sigma_counter = sigma_counter+1
+!!$          sigma_next = vals(sigma_counter+1)
+!!$          box = box + increment
+!!$          sigma_l = sigma_r
+!!$       end if
+!!$    end do
 
   end subroutine add_current_spline_cl_1d
 
@@ -307,7 +342,7 @@ contains
 
     do i = 1, self%spline_degree+1
        j_dofs(box+i-1) = j_dofs(box+i-1) + &
-            weight * self%spline_val(i) 
+            weight * self%spline_val(i) * self%scaling
     end do
 
   end subroutine integrate_spline_cl_1d
@@ -502,9 +537,13 @@ contains
     SLL_ASSERT( ierr == 0 )
     ALLOCATE( self%quad_xw(2,self%n_quad_points), stat = ierr )
     SLL_ASSERT( ierr == 0 )
+    
+    ! normalized Gauss Legendre points and weights
+    self%quad_xw = sll_f_gauss_legendre_points_and_weights(self%n_quad_points)
 
     call sll_s_spline_pp_init_1d( self%spline_pp, spline_degree, n_cells, boundary)
 
+    ! for line integral
     self%n_quad_points_line = (self%spline_degree+2)/2
 
     allocate( self%quad_xw_line(2,self%n_quad_points_line) )
