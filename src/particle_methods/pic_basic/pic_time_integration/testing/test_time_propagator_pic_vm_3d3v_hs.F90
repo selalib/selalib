@@ -389,9 +389,7 @@ program test_time_propagator_pic_3d3v_vm_hs
         print*, 'error wi', abs(xi-particle_info_check(7,i_part))
      end if
   end do
-
   
-  write(15,*) bfield
   error = maxval(abs(bfield-bfield_ref))
   if (error> EQV_TOL) then
      passed = .FALSE.
