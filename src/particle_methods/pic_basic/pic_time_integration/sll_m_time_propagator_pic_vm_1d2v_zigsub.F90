@@ -89,6 +89,8 @@ module sll_m_time_propagator_pic_vm_1d2v_zigsub
      procedure :: init => initialize_pic_vm_1d2v !> Initialize the type
      procedure :: free => delete_pic_vm_1d2v !> Finalization
 
+     procedure :: operator_all
+
   end type sll_t_time_propagator_pic_vm_1d2v_zigsub
 
 contains
