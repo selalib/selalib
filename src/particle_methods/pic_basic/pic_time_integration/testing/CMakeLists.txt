@@ -20,6 +20,12 @@ ADD_MPI_TEST( time_propagator_pic_vm_1d2v_subcyci test_time_propagator_pic_vm_1d
 SET_TESTS_PROPERTIES(time_propagator_pic_vm_1d2v_subcyci PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 
+ADD_EXECUTABLE( test_time_propagator_pic_vm_1d2v_zigsub test_time_propagator_pic_vm_1d2v_zigsub.F90)
+TARGET_LINK_LIBRARIES(test_time_propagator_pic_vm_1d2v_zigsub sll_pic_time_integration)
+ADD_MPI_TEST( time_propagator_pic_vm_1d2v_zigsub test_time_propagator_pic_vm_1d2v_zigsub "1" "")
+SET_TESTS_PROPERTIES(time_propagator_pic_vm_1d2v_zigsub PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+
 ADD_EXECUTABLE( test_time_propagator_pic_vm_1d2v_boris test_time_propagator_pic_vm_1d2v_boris.F90)
 TARGET_LINK_LIBRARIES(test_time_propagator_pic_vm_1d2v_boris sll_pic_time_integration)
 
