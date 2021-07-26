@@ -4,14 +4,14 @@ module sll_m_fft_filter_3d
 
   use sll_m_filter_base_3d, only: &
        sll_c_filter_base_3d
-  
-   use sll_m_fft
+
+  use sll_m_fft
 
   implicit none
   private
 
   public :: sll_t_fft_filter_3d
-  
+
 
 
   type, extends(sll_c_filter_base_3d):: sll_t_fft_filter_3d
@@ -27,7 +27,7 @@ module sll_m_fft_filter_3d
      procedure :: init => init_fft_3d 
      procedure :: apply => apply_fft_3d
      procedure :: apply_inplace => apply_inplace_fft_3d
-     
+
   end type sll_t_fft_filter_3d
 
 contains
@@ -54,7 +54,7 @@ contains
          sll_p_fft_backward, normalized=.true.)
     call sll_s_fft_init_c2c_1d( self%ifft(3), n_dofs(3), array1d_z, array1d_z, &
          sll_p_fft_backward, normalized=.true.)
-    
+
   end subroutine init_fft_3d
 
   subroutine apply_fft_3d(self, field_in, field_out )
@@ -68,19 +68,19 @@ contains
     do i = 1, self%iterations
        call sll_s_fft_filter( field_in, field_out, self%n_dofs, self%fft, self%ifft, self%k_min, self%k_max ) 
     end do
-    
+
   end subroutine apply_fft_3d
 
-   subroutine apply_inplace_fft_3d(self, field )
+  subroutine apply_inplace_fft_3d(self, field )
     class( sll_t_fft_filter_3d), intent( inout ) :: self
     sll_real64,                  intent( inout ) :: field(:) !< array for the coefficients of the fields 
-     !local variables
+    !local variables
     sll_int32 :: i
 
     do i = 1, self%iterations
        call sll_s_fft_filter( field, field, self%n_dofs, self%fft, self%ifft, self%k_min, self%k_max )
     end do
-    
+
   end subroutine apply_inplace_fft_3d
 
 
@@ -211,8 +211,8 @@ contains
           scratch2(:,n_dofs(2)+1-j,n_dofs(3)+1-k) = scratch(:,n_dofs(2)+1-j,n_dofs(3)+1-k)
        end do
     end do
-    
-    
+
+
     ! Inverse Fourier transform
     do j=1,n_dofs(2)
        do i=1,n_dofs(1)
@@ -237,7 +237,7 @@ contains
           end do
        end do
     end do
-    
+
     ind=0
     do k=1,n_dofs(3)
        do j=1,n_dofs(2)
@@ -245,7 +245,7 @@ contains
              array1d_x(i) = scratch2(i,j,k)
           end do
           call sll_s_fft_exec_c2c_1d( ifft(1), array1d_x, array1d_x)
-          
+
           do i=1,n_dofs(1)
              ind = ind+1
              field_out(ind) = real( array1d_x(i), kind=f64 )
