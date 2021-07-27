@@ -228,125 +228,75 @@ contains
     sll_real64,                               intent( inout ) :: j_dofs(self%n_dofs) !< Coefficient vector of the current density
     !local variables
     sll_int32  :: index_old, index_new, ind
-    sll_real64 :: r_old, r_new, vi(3), bfield_dofs(self%n_dofs), qoverm
-!!$    sll_real64 :: xold, xnew, xnewtilde, xbox
-!!$    sll_int32 :: boxold, boxnew, sigma_counter, boxdiff, increment, box
-!!$    sll_real64 :: sigma_r, sigma_l, sigma, sigma_next, weight
-!!$    sll_int32 :: q, bl
-!!$    sll_real64, allocatable :: vals(:) 
-!!$
-!!$    call convert_x_to_xbox( self, position_old, xold, boxold )
-!!$    call convert_x_to_xbox( self, position_new, xnew, boxnew )
+    sll_real64 :: r_old, r_new
 
     call convert_x_to_xbox( self, position_old, r_old, index_old )
     call convert_x_to_xbox( self, position_new, r_new, index_new )
 
       if (index_old == index_new) then
        if (r_old < r_new) then
-          call update_jv( self, r_old, r_new, index_old, marker_charge, &
-               qoverm, 1.0_f64, vi(2), j_dofs, bfield_dofs)
+          call update_j( self, r_old, r_new, index_old, marker_charge, &
+               1.0_f64, j_dofs)
        else
-          call update_jv( self, r_new, r_old, index_old, marker_charge, qoverm, &
-               -1.0_f64, vi(2), j_dofs, bfield_dofs)
+          call update_j( self, r_new, r_old, index_old, marker_charge, &
+               -1.0_f64, j_dofs)
        end if
     elseif (index_old < index_new) then
-       call update_jv ( self, r_old, 1.0_f64, index_old, marker_charge, &
-            qoverm, 1.0_f64, vi(2), j_dofs, bfield_dofs)
-       call update_jv ( self, 0.0_f64, r_new, index_new, marker_charge, &
-            qoverm, 1.0_f64, vi(2), j_dofs, bfield_dofs)
+       call update_j ( self, r_old, 1.0_f64, index_old, marker_charge, &
+            1.0_f64, j_dofs)
+       call update_j ( self, 0.0_f64, r_new, index_new, marker_charge, &
+            1.0_f64, j_dofs)
        do ind = index_old+1, index_new-1
-          call update_jv ( self, 0.0_f64, 1.0_f64, ind, marker_charge, &
-               qoverm, 1.0_f64, vi(2), j_dofs, bfield_dofs)
+          call update_j ( self, 0.0_f64, 1.0_f64, ind, marker_charge, &
+               1.0_f64, j_dofs)
        end do
     else
-       call update_jv ( self, r_new, 1.0_f64, index_new, marker_charge, qoverm, &
-            -1.0_f64, vi(2), j_dofs, bfield_dofs)
-       call update_jv ( self, 0.0_f64, r_old, index_old, marker_charge, qoverm, &
-            -1.0_f64, vi(2), j_dofs, bfield_dofs)
+       call update_j ( self, r_new, 1.0_f64, index_new, marker_charge, &
+            -1.0_f64, j_dofs)
+       call update_j ( self, 0.0_f64, r_old, index_old, marker_charge, &
+            -1.0_f64, j_dofs)
        do ind = index_new+1, index_old-1
-          call update_jv ( self, 0.0_f64, 1.0_f64, ind, marker_charge, qoverm, &
-               -1.0_f64, vi(2), j_dofs, bfield_dofs)
+          call update_j ( self, 0.0_f64, 1.0_f64, ind, marker_charge, &
+               -1.0_f64, j_dofs)
        end do
     end if
 
-!!$    ! Now we need to compute the normalized 1d line along which to integrate:
-!!$    boxdiff = boxnew-boxold
-!!$    xnewtilde = xnew + real(boxdiff,f64)
-!!$    sigma_l = 0.0_f64
-!!$    box = boxold ! We start in the old box
-!!$    sigma_counter = 0
-!!$
-!!$    if (boxdiff > 0 ) then
-!!$       allocate( vals(boxdiff+1) )
-!!$       do bl = 1, boxdiff
-!!$          vals(bl) = (real(bl,f64)  - xold)/(xnewtilde-xold)
-!!$       end do
-!!$       vals(boxdiff+1) = 1.0_f64
-!!$       sigma_next = vals(1)
-!!$       increment = 1
-!!$    elseif (boxdiff < 0 ) then
-!!$       allocate ( vals(-boxdiff+1) )
-!!$       do bl = boxdiff+1, 0
-!!$          vals(-bl+1) = (real(bl,f64)  - xold)/(xnewtilde-xold)
-!!$       end do
-!!$       vals(-boxdiff+1) = 1.0_f64
-!!$       sigma_next = vals(1)
-!!$       increment = -1
-!!$    else
-!!$       sigma_next = 1.0_f64
-!!$       increment = 0
-!!$    end if
-!!$
-!!$
-!!$    sigma_r = 0.0_f64
-!!$    do while ( sigma_r < 1.0_f64 )
-!!$       sigma_r = sigma_next
-!!$
-!!$       do q = 1, self%n_quad_points_line
-!!$          sigma = sigma_l + (sigma_r-sigma_l) * self%quad_xw_line(1,q)
-!!$          xbox = xold* (1.0_f64 - sigma) + xnewtilde * sigma  - real(sigma_counter*increment, f64)
-!!$          if (xbox > 1.0_f64 ) then
-!!$             print*, 'box error1', xbox, sigma, sigma_counter, increment
-!!$             xbox = min(xbox, 1._f64)
-!!$          elseif (xbox < 0.0_f64 ) then
-!!$             print*, 'box error2', xbox, sigma, sigma_counter, increment
-!!$             xbox = max(xbox, 0._f64)
-!!$          end if
-!!$
-!!$          weight = self%quad_xw_line(2,q)*(sigma_r-sigma_l)
-!!$          call integrate_spline_cl_1d(self, box, xbox, marker_charge*weight, j_dofs )
-!!$       end do
-!!$       if (sigma_r < 1.0_f64 ) then
-!!$          ! Update the
-!!$          sigma_counter = sigma_counter+1
-!!$          sigma_next = vals(sigma_counter+1)
-!!$          box = box + increment
-!!$          sigma_l = sigma_r
-!!$       end if
-!!$    end do
-
   end subroutine add_current_spline_cl_1d
 
-
+  
   !> Helper function for \a add_current
-  subroutine integrate_spline_cl_1d( self, box, xbox, weight, j_dofs )
-    class( sll_t_particle_mesh_coupling_spline_cl_1d ), intent(inout)   :: self !< kernel smoother object
-    sll_int32,  intent( in    ) :: box
-    sll_real64, intent( in    ) :: xbox
-    sll_real64, intent( in    ) :: weight
-    sll_real64, intent( inout ) :: j_dofs(:)
-    !local variables
-    sll_int32 :: i
+  subroutine update_j(self, lower, upper, index, marker_charge,sign, j_dofs)
+    class(sll_t_particle_mesh_coupling_spline_cl_1d), intent(inout) :: self !< time splitting object 
+    sll_real64,                             intent(in)    :: lower
+    sll_real64,                             intent(in)    :: upper
+    sll_int32,                              intent(in)    :: index
+    sll_real64,                             intent(in)    :: marker_charge
+    sll_real64,                             intent(in)    :: sign
+    sll_real64,                             intent(inout) :: j_dofs(:)
+    !Local variables
+    sll_int32  :: ind, i_grid, j
+    sll_real64 :: c1, c2
 
-    call sll_s_uniform_bsplines_eval_basis_clamped( self%spline_pp, self%n_cells, self%spline_degree, xbox, box, self%spline_val  )
+    c1 =  0.5_f64*(upper-lower)
+    c2 =  0.5_f64*(upper+lower)
 
-    do i = 1, self%spline_degree+1
-       j_dofs(box+i-1) = j_dofs(box+i-1) + &
-            weight * self%spline_val(i) * self%scaling
+    call sll_s_uniform_bsplines_eval_basis_clamped( self%spline_pp, self%n_cells, self%spline_degree, c1*self%quad_xw(1,1)+c2, index, self%spline_val )
+    self%spline_val = self%spline_val * (self%quad_xw(2,1)*c1)
+    do j=2,self%n_quad_points
+       call sll_s_uniform_bsplines_eval_basis_clamped( self%spline_pp, self%n_cells, self%spline_degree, c1*self%quad_xw(1,j)+c2, index, self%spline_val_more )
+       self%spline_val = self%spline_val + self%spline_val_more * (self%quad_xw(2,j)*c1)
+    end do
+    self%spline_val = self%spline_val * (sign*self%delta_x)
+
+    ind = 1
+    do i_grid = index, index + self%spline_degree
+       j_dofs(i_grid) = j_dofs(i_grid) + &
+            (marker_charge*self%spline_val(ind)* self%scaling)
+       ind = ind + 1
     end do
 
-  end subroutine integrate_spline_cl_1d
-
+  end subroutine update_j
+ 
 
   !---------------------------------------------------------------------------!
   !> Add current for one particle and update v (according to H_p1 part in Hamiltonian splitting)
