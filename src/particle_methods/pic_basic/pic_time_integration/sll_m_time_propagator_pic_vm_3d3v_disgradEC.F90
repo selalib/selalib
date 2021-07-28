@@ -146,10 +146,12 @@ contains
        x_min, &
        Lx, &
        filter, &
+       boundary_particles, &
        solver_tolerance, &
        betar, &
        force_sign, &
        electrostatic, &
+       rhob, &
        control_variate, &
        jmean) 
     class(sll_t_time_propagator_pic_vm_3d3v_disgradEC), intent( out ) :: self !< time propagator object 
@@ -162,16 +164,25 @@ contains
     sll_real64,                                    intent( in ) :: x_min(3) !< Lower bound of x domain
     sll_real64,                                    intent( in ) :: Lx(3) !< Length of the domain in x direction.
     class(sll_c_filter_base_3d), target :: filter !< filter
+    sll_int32, optional,                           intent( in ) :: boundary_particles !< particle boundary conditions
     sll_real64, optional,                          intent( in ) :: solver_tolerance !< solver tolerance
     sll_real64, optional, intent(in) :: betar(2) !< reciprocal plasma beta
     sll_real64, optional, intent(in) :: force_sign !< sign of particle force
     logical, optional, intent(in)    :: electrostatic !< true for electrostatic simulation
+    sll_real64, optional, target,                  intent( in ) :: rhob(:) !< charge at the boundary
     class(sll_t_control_variates), optional, target, intent(in) :: control_variate !< Control variate (if delta f)
     logical, optional, intent(in)    :: jmean !< logical for mean value of current
     !local variables
     sll_real64 :: solver_tolerance_set
     sll_real64 :: betar_set(2), force_sign_set
+    sll_int32 :: boundary_particles_set
     logical :: jmean_set
+
+    if( present(boundary_particles) )then
+       boundary_particles_set = boundary_particles
+    else
+       boundary_particles_set = 100
+    end if
 
     if (present(solver_tolerance) )  then
        solver_tolerance_set = solver_tolerance
@@ -211,6 +222,7 @@ contains
             x_min, &
             Lx, &
             filter, &
+            boundary_particles=boundary_particles_set, &
             solver_tolerance=solver_tolerance_set, &
             betar=betar_set, &
             force_sign=force_sign_set, &
@@ -226,6 +238,7 @@ contains
             x_min, &
             Lx, &
             filter, &
+            boundary_particles=boundary_particles_set, &
             solver_tolerance=solver_tolerance_set, &
             betar=betar_set, &
             force_sign=force_sign_set, &
@@ -248,9 +261,11 @@ contains
        Lx, &
        filter, &
        filename, &
+       boundary_particles, &
        betar, &
        force_sign, &
        electrostatic, &
+       rhob, &
        control_variate, &
        jmean) 
     class(sll_t_time_propagator_pic_vm_3d3v_disgradEC), intent( out ) :: self !< time propagator object 
@@ -264,14 +279,23 @@ contains
     sll_real64,                                    intent( in ) :: Lx(3) !< Length of the domain in x direction.
     class(sll_c_filter_base_3d), target :: filter !< filter
     character(len=*),                              intent( in ) :: filename !< filename
+    sll_int32, optional,                           intent( in ) :: boundary_particles !< particle boundary conditions
     sll_real64, optional,                          intent( in ) :: betar(2) !< reciprocal plasma beta
     sll_real64, optional, intent(in) :: force_sign !< sign of particle force
     logical, optional    :: electrostatic !< true for electrostatic simulation
+    sll_real64, optional, target,                  intent( in ) :: rhob(:) !< charge at the boundary
     class(sll_t_control_variates), optional, target, intent(in) :: control_variate !< Control variate (if delta f)
     logical, optional, intent(in)    :: jmean !< logical for mean value of current
     !local variables
     sll_real64 :: betar_set(2), force_sign_set
+    sll_int32 :: boundary_particles_set
     logical :: jmean_set
+
+    if( present(boundary_particles) )then
+       boundary_particles_set = boundary_particles
+    else
+       boundary_particles_set = 100
+    end if
 
     if( present(force_sign) )then
        force_sign_set = force_sign
@@ -306,8 +330,10 @@ contains
             Lx, &
             filename, &
             filter, &
+            boundary_particles = boundary_particles_set, &
             betar=betar_set, &
             force_sign=force_sign_set, &
+            rhob = rhob, &
             control_variate = control_variate, &
             jmean=jmean_set)
     else
@@ -321,8 +347,10 @@ contains
             Lx, &
             filename, &
             filter, &
+            boundary_particles = boundary_particles_set, &
             betar=betar_set, &
             force_sign=force_sign_set, &
+            rhob = rhob, &
             jmean=jmean_set)
     end if
 

@@ -522,15 +522,14 @@ contains
   subroutine advect_ex( self, dt )
     class(sll_t_time_propagator_pic_vm_3d3v_helper), intent(inout) :: self !< time propagator object 
     sll_real64,                                     intent(in)    :: dt   !< time step
-
     ! local variables
     sll_int32 :: i_part, i_sp
-    sll_real64 :: vi(3), xi(3), wi(1), vnew(3), xnew(3), vbar(3)
+    sll_real64 :: vi(3), xi(3), wi(1), vnew(3), xnew(3), vbar(3),  xmid(3), xbar, dx
     sll_real64 :: qoverm, wall(3) 
     sll_real64 :: efield(3)
     sll_int32 :: niter
     sll_real64 :: residual(1), residual_local(1)
-
+    sll_real64 :: tolerance = 1.0d-10
 
     ! Starting point from average vector field method
     self%efield_dofs_new = self%efield_dofs
@@ -564,12 +563,52 @@ contains
              vbar = 0.5_f64*(vi+vnew)
 
              xnew = xi + dt * vbar
+             if(xnew(1) < -self%x_max(1) .or.  xnew(1) > 2._f64*self%x_max(1) ) then
+                print*, xnew
+                SLL_ERROR("particle boundary", "particle out of bound")
+             else if(xnew(1) < self%x_min(1) .or. xnew(1) > self%x_max(1) )then
+                if(xnew(1) < self%x_min(1)  )then
+                   xbar = self%x_min(1)
+                else if(xnew(1) > self%x_max(1))then
+                   xbar = self%x_max(1)
+                end if
+                dx = (xbar- xi(1))/(xnew(1)-xi(1))
+                xmid = xi + dx * (xnew-xi)
+                xmid(1) = xbar
 
-             vbar = vbar * wi(1) * dt
+                vbar = (xmid - xi)*wi(1)
+                call self%particle_mesh_coupling%add_current_evaluate( xi, xmid, vbar, self%efield_dofs_work, &
+                     self%j_dofs_local, efield )
+                vnew = vi + qoverm * dt* dx* efield
+                select case(self%boundary_particles)
+                case(sll_p_boundary_particles_reflection)
+                   xnew(1) = 2._f64*xbar-xnew(1)
+                   vnew(1) = - vnew(1)
+                case(sll_p_boundary_particles_absorption)
+                   call self%particle_mesh_coupling%add_charge(xmid, wi(1), self%spline_degree, self%rhob)
+                case( sll_p_boundary_particles_periodic)
+                   xnew(1) = self%x_min(1) + modulo(xnew(1)-self%x_min(1), self%Lx(1))
+                   xmid(1) = self%x_max(1)+self%x_min(1)-xbar
+                case default
+                   xnew(1) = self%x_min(1) + modulo(xnew(1)-self%x_min(1), self%Lx(1))
+                   xmid(1) = self%x_max(1)+self%x_min(1)-xbar
+                end select
+                if( abs(xnew(1)-xmid(1)) > tolerance ) then
+                   vbar = (xnew - xmid)*wi(1)
+                   call self%particle_mesh_coupling%add_current_evaluate( xmid, xnew, vbar, self%efield_dofs_work, &
+                        self%j_dofs_local, efield )
+                   vnew = vnew + qoverm * (1._f64-dx)*dt * efield
+                else
+                   xnew(1) = xmid(1) 
+                end if
+             else
+                vbar = (xnew - xi)*wi(1)
 
-             call self%particle_mesh_coupling%add_current_evaluate( xi, xnew, vbar, self%efield_dofs_work, &
-                  self%j_dofs_local, efield )
-             vnew = vi + qoverm * dt * efield
+                call self%particle_mesh_coupling%add_current_evaluate( xi, xnew, vbar, self%efield_dofs_work, &
+                     self%j_dofs_local, efield )
+                vnew = vi + qoverm * dt * efield
+             end if
+
 
              self%xnew(i_sp, :, i_part) = xnew
              self%vnew(i_sp, :, i_part) = vnew
@@ -602,7 +641,6 @@ contains
        end if
        self%phi_dofs_new = self%phi_dofs_work
        self%efield_dofs_new = self%efield_dofs_work
-
     end do
 
     if ( residual(1) > self%iter_tolerance ) then
@@ -615,7 +653,8 @@ contains
     do i_sp = 1, self%particle_group%n_species
        do i_part = 1, self%particle_group%group(i_sp)%n_particles
           vnew = self%vnew(i_sp,:,i_part)
-          xnew = self%x_min + modulo(self%xnew(i_sp,:,i_part)-self%x_min, self%Lx)
+          xnew = self%xnew(i_sp,:,i_part)
+          xnew(2:3) = self%x_min(2:3) + modulo(xnew(2:3)-self%x_min(2:3), self%Lx(2:3))
           call self%particle_group%group(i_sp)%set_v( i_part, vnew )
           call self%particle_group%group(i_sp)%set_x( i_part, xnew )
           ! Update particle weights
@@ -718,7 +757,7 @@ contains
     ! Solve Schur complement
     ! Solve efield components together
     call self%maxwell_solver%multiply_mass_inverse( 1, self%j_dofs_local, self%efield_dofs )
-    
+
     ! Second particle loop (second half step of particle propagation)
     do i_sp = 1, self%particle_group%n_species
        do i_part = 1, self%particle_group%group(i_sp)%n_particles
@@ -1347,4 +1386,4 @@ contains
   end subroutine delete_pic_vm_3d3v
 
 
-end module
+end module sll_m_time_propagator_pic_vm_3d3v_helper

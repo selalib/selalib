@@ -363,6 +363,7 @@ contains
             boundary_particles = boundary_particles_set, &
             betar=betar_set, &
             force_sign=force_sign_set, &
+            rhob = rhob, &
             control_variate = control_variate, &
             jmean=jmean_set, &
             lindf = lindf_set)
@@ -380,6 +381,7 @@ contains
             boundary_particles = boundary_particles_set, &
             betar=betar_set, &
             force_sign=force_sign_set, &
+            rhob = rhob, &
             jmean=jmean_set)
     end if
 

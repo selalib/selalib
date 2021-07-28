@@ -779,27 +779,27 @@ contains
           end if
        end select
     elseif (sim%splitting_case == sll_p_splitting_disgradEC) then
-       if(sim%boundary ) then
-          print*, 'Error: not implemented'
-       else
-          allocate( sll_t_time_propagator_pic_vm_3d3v_disgradEC :: sim%propagator )
-          select type( qpdg=>sim%propagator )
-          type is ( sll_t_time_propagator_pic_vm_3d3v_disgradEC )
-             if (sim%no_weights == 1) then
-                call qpdg%init_from_file(sim%maxwell_solver, &
-                     sim%particle_mesh_coupling, sim%particle_group, &
-                     sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
-                     sim%domain(:,1), sim%domain(:,3), sim%filter, &
-                     trim(filename), betar=sim%plasma_betar(1:2), force_sign=sim%force_sign, electrostatic=electrostatic, jmean = jmean)
-             else
-                call qpdg%init_from_file(sim%maxwell_solver, &
-                     sim%particle_mesh_coupling, sim%particle_group, &
-                     sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
-                     sim%domain(:,1), sim%domain(:,3), sim%filter, &
-                     trim(filename), betar=sim%plasma_betar(1:2), force_sign=sim%force_sign, electrostatic=electrostatic, jmean = jmean)
-             end if
-          end select
-       end if
+       allocate( sll_t_time_propagator_pic_vm_3d3v_disgradEC :: sim%propagator )
+       select type( qpdg=>sim%propagator )
+       type is ( sll_t_time_propagator_pic_vm_3d3v_disgradEC )
+          if (sim%no_weights == 1) then
+             call qpdg%init_from_file(sim%maxwell_solver, &
+                  sim%particle_mesh_coupling, sim%particle_group, &
+                  sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
+                  sim%domain(:,1), sim%domain(:,3), sim%filter, &
+                  trim(filename), sim%boundary_particles, betar=sim%plasma_betar(1:2), &
+                  force_sign=sim%force_sign, electrostatic=electrostatic, &
+                  rhob = sim%rhob, jmean = jmean)
+          else
+             call qpdg%init_from_file(sim%maxwell_solver, &
+                  sim%particle_mesh_coupling, sim%particle_group, &
+                  sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
+                  sim%domain(:,1), sim%domain(:,3), sim%filter, &
+                  trim(filename), sim%boundary_particles, betar=sim%plasma_betar(1:2), &
+                  force_sign=sim%force_sign, electrostatic=electrostatic, &
+                  rhob = sim%rhob, jmean = jmean)
+          end if
+       end select
     elseif (sim%splitting_case == sll_p_splitting_disgradE_trafo) then
        allocate( sll_t_time_propagator_pic_vm_3d3v_disgradE_trafo :: sim%propagator )
        select type( qdisgradEtrafo=>sim%propagator )
@@ -860,19 +860,16 @@ contains
           end if
        end select
     elseif (sim%splitting_case == sll_p_splitting_disgradEC_trafo) then
-       if(sim%boundary ) then
-          print*, 'Error: not implemented'
-       else
-          allocate( sll_t_time_propagator_pic_vm_3d3v_disgradEC_trafo :: sim%propagator )
-          select type( qdisgtrafo=>sim%propagator )
-          type is ( sll_t_time_propagator_pic_vm_3d3v_disgradEC_trafo )
-             call qdisgtrafo%init_from_file(sim%maxwell_solver, &
-                  sim%particle_mesh_coupling, sim%particle_group, &
-                  sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
-                  sim%domain(:,1), sim%domain(:,3), sim%map, &
-                  trim(filename), betar=sim%plasma_betar(1:2), electrostatic=electrostatic )
-          end select
-       end if
+       allocate( sll_t_time_propagator_pic_vm_3d3v_disgradEC_trafo :: sim%propagator )
+       select type( qdisgtrafo=>sim%propagator )
+       type is ( sll_t_time_propagator_pic_vm_3d3v_disgradEC_trafo )
+          call qdisgtrafo%init_from_file(sim%maxwell_solver, &
+               sim%particle_mesh_coupling, sim%particle_group, &
+               sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
+               sim%domain(:,1), sim%domain(:,3), sim%map, &
+               trim(filename), boundary_particles=sim%boundary_particles, &
+               betar=sim%plasma_betar(1:2), electrostatic=electrostatic, rhob = sim%rhob )
+       end select
     elseif (sim%splitting_case == sll_p_splitting_cef) then
        allocate( sll_t_time_propagator_pic_vm_3d3v_cef :: sim%propagator )
        select type( qpcef=>sim%propagator )
