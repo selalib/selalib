@@ -146,10 +146,12 @@ contains
        x_min, &
        Lx, &
        map, &
+       boundary_particles, &
        solver_tolerance, &
        iter_tolerance, max_iter, &
        betar, &
-       electrostatic) 
+       electrostatic, &
+       rhob) 
     class(sll_t_time_propagator_pic_vm_3d3v_disgradEC_trafo), intent( out ) :: self !< time propagator object 
     class(sll_c_maxwell_3d_base), target,          intent( in ) :: maxwell_solver !< Maxwell solver
     class(sll_c_particle_mesh_coupling_3d), target, intent(in) :: particle_mesh_coupling !< Kernel smoother
@@ -160,15 +162,24 @@ contains
     sll_real64,                                    intent( in ) :: x_min(3) !< Lower bound of x domain
     sll_real64,                                    intent( in ) :: Lx(3) !< Length of the domain in x direction.
     type(sll_t_mapping_3d), target,                intent( inout ) :: map !< Coordinate transformation
+    sll_int32, optional,                           intent( in ) :: boundary_particles !< particle boundary conditions
     sll_real64, optional,                          intent( in ) :: solver_tolerance !< Solver tolerance
     sll_real64, optional,                          intent( in ) :: iter_tolerance !< iteration tolerance
     sll_int32,  optional,                          intent( in ) :: max_iter !< maximal number of iterations
     sll_real64, optional,                          intent( in ) :: betar(2) !< reciprocal plasma beta
     logical, optional    :: electrostatic !< true for electrostatic simulation
+    sll_real64, optional, target,                  intent( in ) :: rhob(:) !< charge at the boundary
     !local variables
     sll_int32 :: max_iter_set
     sll_real64 :: iter_tolerance_set
     sll_real64 :: betar_set(2)
+    sll_int32 :: boundary_particles_set
+
+    if( present(boundary_particles) )then
+       boundary_particles_set = boundary_particles
+    else
+       boundary_particles_set = 100
+    end if
 
     if (present(iter_tolerance) )  then
        iter_tolerance_set = iter_tolerance
@@ -200,9 +211,11 @@ contains
          x_min, &
          Lx, &
          map,  &
+         boundary_particles = boundary_particles_set, &
          iter_tolerance=iter_tolerance_set, &
          max_iter=max_iter_set, &
-         betar=betar_set)
+         betar=betar_set, &
+         rhob = rhob)
 
   end subroutine initialize_pic_vm_3d3v
 
@@ -220,8 +233,10 @@ contains
        Lx, &
        map, &
        filename, &
+       boundary_particles, &
        betar, &
-       electrostatic) 
+       electrostatic, &
+       rhob) 
     class(sll_t_time_propagator_pic_vm_3d3v_disgradEC_trafo), intent( out ) :: self !< time propagator object 
     class(sll_c_maxwell_3d_base), target,          intent( in ) :: maxwell_solver !< Maxwell solver
     class(sll_c_particle_mesh_coupling_3d), target, intent(in) :: particle_mesh_coupling !< Kernel smoother
@@ -232,11 +247,20 @@ contains
     sll_real64,                                    intent( in ) :: x_min(3) !< Lower bound of x domain
     sll_real64,                                    intent( in ) :: Lx(3) !< Length of the domain in x direction.
     type(sll_t_mapping_3d), target,                intent( inout ) :: map !< Coordinate transformation
-    character(len=*),                              intent( in ) :: filename !< filename 
+    character(len=*),                              intent( in ) :: filename !< filename
+    sll_int32, optional,                           intent( in ) :: boundary_particles !< particle boundary conditions
     sll_real64, optional,                          intent( in ) :: betar(2) !< reciprocal plasma beta
     logical, optional    :: electrostatic !< true for electrostatic simulation
+    sll_real64, optional, target,                  intent( in ) :: rhob(:) !< charge at the boundary
     !local variables
     sll_real64 :: betar_set(2)
+    sll_int32 :: boundary_particles_set
+
+    if( present(boundary_particles) )then
+       boundary_particles_set = boundary_particles
+    else
+       boundary_particles_set = 100
+    end if
 
     if( present(electrostatic) )then
        self%electrostatic = electrostatic
@@ -258,7 +282,9 @@ contains
          Lx, &
          map, &
          filename, &
-         betar=betar_set)
+         boundary_particles = boundary_particles_set, &
+         betar=betar_set, &
+         rhob = rhob)
 
   end subroutine initialize_file_pic_vm_3d3v
 
