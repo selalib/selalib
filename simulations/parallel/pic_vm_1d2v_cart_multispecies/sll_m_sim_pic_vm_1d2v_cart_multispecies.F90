@@ -151,8 +151,11 @@ module sll_m_sim_pic_vm_1d2v_cart_multispecies
   use sll_m_time_propagator_pic_vm_1d2v_hs_trafo, only: &
        sll_t_time_propagator_pic_vm_1d2v_hs_trafo
 
-  use sll_m_time_propagator_pic_vm_1d2v_trafo, only: &
-       sll_t_time_propagator_pic_vm_1d2v_trafo
+  use sll_m_time_propagator_pic_vm_1d2v_disgradE_trafo, only: &
+       sll_t_time_propagator_pic_vm_1d2v_disgradE_trafo
+
+  use sll_m_time_propagator_pic_vm_1d2v_disgradEC_trafo, only: &
+       sll_t_time_propagator_pic_vm_1d2v_disgradEC_trafo
 
   use sll_m_time_propagator_pic_vm_3d3v_cl_helper, only: &
        sll_p_boundary_particles_periodic, &
@@ -195,7 +198,8 @@ module sll_m_sim_pic_vm_1d2v_cart_multispecies
   sll_int32, parameter :: sll_p_splitting_disgradEC = 10
   sll_int32, parameter :: sll_p_splitting_disgradEC_sub = 13
   sll_int32, parameter :: sll_p_splitting_hs_trafo = 14
-  sll_int32, parameter :: sll_p_splitting_trafo = 15
+  sll_int32, parameter :: sll_p_splitting_disgradE_trafo = 15
+  sll_int32, parameter :: sll_p_splitting_disgradEC_trafo = 16
   sll_int32, parameter :: sll_p_splitting_momentum = 20
 
   sll_int32, parameter :: sll_p_onegaussian = 0
@@ -233,7 +237,6 @@ module sll_m_sim_pic_vm_1d2v_cart_multispecies
      ! Maxwell solver 
      ! Abstract 
      class(sll_c_maxwell_1d_base), allocatable :: maxwell_solver !< Maxwell solver
-     type(sll_t_maxwell_1d_fem_sm) :: maxwell_norm ! Sparse matrix based Maxwell solver to compute the norm
 
      ! Abstract kernel smoothers
      class(sll_c_particle_mesh_coupling_1d), allocatable :: kernel_smoother_0 !< Particle mesh coupling
@@ -558,8 +561,14 @@ contains
        sim%domain = [0._f64, 1._f64, x1_max - x1_min ]
        sim%delta_x = 1._f64/real(ng_x, f64)
        call sim%map%init_from_file(filename)
-    case("splitting_trafo")
-       sim%splitting_case = sll_p_splitting_trafo
+    case("splitting_disgradE_trafo")
+       sim%splitting_case = sll_p_splitting_disgradE_trafo
+       sim%ct=.true.
+       sim%domain = [0._f64, 1._f64, x1_max - x1_min ]
+       sim%delta_x = 1._f64/real(ng_x, f64)
+       call sim%map%init_from_file(filename)
+    case("splitting_disgradEC_trafo")
+       sim%splitting_case = sll_p_splitting_disgradEC_trafo
        sim%ct=.true.
        sim%domain = [0._f64, 1._f64, x1_max - x1_min ]
        sim%delta_x = 1._f64/real(ng_x, f64)
@@ -667,7 +676,7 @@ contains
                   sim%degree_smoother, sim%boundary_fields , trim(filename) )
           end select
        end if
-       call sim%maxwell_norm%init_from_file( sim%domain(1:2), sim%n_gcells, sim%degree_smoother, trim(filename) )
+   
        ! Initialize kernel smoother
        call sll_s_new_particle_mesh_coupling_spline_cl_1d(sim%kernel_smoother_1, &
             sim%domain(1:2), sim%n_gcells, &
@@ -705,9 +714,7 @@ contains
              end select
           end if
        end if
-       if ( sim%degree_fem > -1) then
-          call sim%maxwell_norm%init_from_file( sim%domain(1:2), sim%n_gcells, sim%degree_fem, trim(filename) )
-       end if
+
        ! Initialize kernel smoother
        if ( smoothing .eqv. .false. ) then
           if ( strong_ampere .eqv. .false. ) then
@@ -849,15 +856,25 @@ contains
                sim%domain(1), sim%domain(3), sim%map, electrostatic=electrostatic )!,betar=sim%plasma_betar(1:2))
           sim%efield_dofs_n => qphstrafo%efield_dofs
        end select
-    elseif( sim%splitting_case == sll_p_splitting_trafo) then
-       allocate( sll_t_time_propagator_pic_vm_1d2v_trafo :: sim%propagator )
+    elseif( sim%splitting_case == sll_p_splitting_disgradE_trafo) then
+       allocate( sll_t_time_propagator_pic_vm_1d2v_disgradE_trafo :: sim%propagator )
        select type( qptrafo=>sim%propagator )
-       type is ( sll_t_time_propagator_pic_vm_1d2v_trafo )
+       type is ( sll_t_time_propagator_pic_vm_1d2v_disgradE_trafo )
           call qptrafo%init_from_file( sim%maxwell_solver, &
                sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
                sim%efield_dofs, sim%bfield_dofs, &
                sim%domain(1), sim%domain(3), sim%map, trim(filename), sim%boundary_particles, force_sign=sim%force_sign, electrostatic=electrostatic, jmean=jmean  )!,betar=sim%plasma_betar(1:2))
-          sim%efield_dofs_n => qptrafo%efield_dofs
+          sim%efield_dofs_n => qptrafo%helper%efield_dofs
+       end select
+    elseif( sim%splitting_case == sll_p_splitting_disgradEC_trafo) then
+       allocate( sll_t_time_propagator_pic_vm_1d2v_disgradEC_trafo :: sim%propagator )
+       select type( qptrafo=>sim%propagator )
+       type is ( sll_t_time_propagator_pic_vm_1d2v_disgradEC_trafo )
+          call qptrafo%init_from_file( sim%maxwell_solver, &
+               sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
+               sim%efield_dofs, sim%bfield_dofs, &
+               sim%domain(1), sim%domain(3), sim%map, trim(filename), sim%boundary_particles, force_sign=sim%force_sign, electrostatic=electrostatic, jmean=jmean  )!,betar=sim%plasma_betar(1:2))
+          sim%efield_dofs_n => qptrafo%helper%efield_dofs
        end select
     end if
 
@@ -1293,7 +1310,7 @@ contains
          MPI_SUM, 0, diagnostics)
     ! Add ExB part
     if ( sim%strong_ampere .eqv. .false. ) then
-       diagnostics(5) = diagnostics(5) + sim%maxwell_norm%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree, degree-1 )
+       diagnostics(5) = diagnostics(5) + sim%maxwell_solver%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree, degree-1 )
        diagnostics(6) = diagnostics(6) - sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_total1,1), sim%bfield_dofs, degree-1 )
     else
        if ( degree == -1) then

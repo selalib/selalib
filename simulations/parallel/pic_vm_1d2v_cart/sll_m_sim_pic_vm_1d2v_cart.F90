@@ -151,8 +151,11 @@ module sll_m_sim_pic_vm_1d2v_cart
   use sll_m_time_propagator_pic_vm_1d2v_hs_trafo, only: &
        sll_t_time_propagator_pic_vm_1d2v_hs_trafo
 
-  use sll_m_time_propagator_pic_vm_1d2v_trafo, only: &
-       sll_t_time_propagator_pic_vm_1d2v_trafo
+  use sll_m_time_propagator_pic_vm_1d2v_disgradE_trafo, only: &
+       sll_t_time_propagator_pic_vm_1d2v_disgradE_trafo
+
+  use sll_m_time_propagator_pic_vm_1d2v_disgradEC_trafo, only: &
+       sll_t_time_propagator_pic_vm_1d2v_disgradEC_trafo
 
   use sll_m_time_propagator_pic_vm_3d3v_cl_helper, only: &
        sll_p_boundary_particles_periodic, &
@@ -204,7 +207,8 @@ module sll_m_sim_pic_vm_1d2v_cart
   sll_int32, parameter :: sll_p_splitting_disgradEC = 10
   sll_int32, parameter :: sll_p_splitting_disgradEC_sub = 13
   sll_int32, parameter :: sll_p_splitting_hs_trafo = 14
-  sll_int32, parameter :: sll_p_splitting_trafo = 15
+  sll_int32, parameter :: sll_p_splitting_disgradE_trafo = 15
+  sll_int32, parameter :: sll_p_splitting_disgradEC_trafo = 16
   sll_int32, parameter :: sll_p_splitting_subcyc = 17
   sll_int32, parameter :: sll_p_splitting_subcyci = 18 !< implicit subcycling scheme
   sll_int32, parameter :: sll_p_splitting_zigsub = 19 !< subcycling with zig zagging
@@ -279,8 +283,8 @@ module sll_m_sim_pic_vm_1d2v_cart
      sll_int32  :: degree_smoother !< spline degree
      sll_int32  :: degree_fem !< spline degree
      sll_int32  :: n_gcells !< numer of gridcells
-     sll_int32  :: n_total0 !< number of Dofs for 0-form
-     sll_int32  :: n_total1 !< number of Dofs for 1-form
+     sll_int32  :: n_dofs0 !< number of Dofs for 0-form
+     sll_int32  :: n_dofs1 !< number of Dofs for 1-form
      logical    :: boundary = .false. !< true for non periodic field boundary
      sll_int32  :: boundary_fields = 100 !< field boundary conditions
      sll_int32  :: boundary_particles = 100 !< particle boundary conditions
@@ -495,25 +499,25 @@ contains
        else
           sim%boundary_fields=sll_p_boundary_clamped
        end if
-       sim%n_total0= ng_x+spline_degree
-       sim%n_total1= ng_x+spline_degree-1
+       sim%n_dofs0= ng_x+spline_degree
+       sim%n_dofs1= ng_x+spline_degree-1
        call sll_s_spline_pp_init_1d( sim%spline0_pp, spline_degree, ng_x, sim%boundary_fields)
     case("clampeddiri")
        sim%boundary = .true.
        sim%boundary_fields=sll_p_boundary_clampeddiri
-       sim%n_total0= ng_x+spline_degree
-       sim%n_total1= ng_x+spline_degree-1
+       sim%n_dofs0= ng_x+spline_degree
+       sim%n_dofs1= ng_x+spline_degree-1
        call sll_s_spline_pp_init_1d( sim%spline0_pp, spline_degree, ng_x, sim%boundary_fields)
     case("periodic")
        sim%boundary = .true.
        sim%boundary_fields=sll_p_boundary_periodic
-       sim%n_total0= ng_x+spline_degree
-       sim%n_total1= ng_x+spline_degree-1
+       sim%n_dofs0= ng_x+spline_degree
+       sim%n_dofs1= ng_x+spline_degree-1
        call sll_s_spline_pp_init_1d( sim%spline0_pp, spline_degree, ng_x, sim%boundary_fields)
     case default
        sim%boundary = .false.
-       sim%n_total0= ng_x
-       sim%n_total1= ng_x
+       sim%n_dofs0= ng_x
+       sim%n_dofs1= ng_x
     end select
 
     select case(boundary_particles)
@@ -556,8 +560,14 @@ contains
        sim%domain = [0._f64, 1._f64, x1_max - x1_min ]
        sim%delta_x = 1._f64/real(ng_x, f64)
        call sim%map%init_from_file(filename)
-    case("splitting_trafo")
-       sim%splitting_case = sll_p_splitting_trafo
+    case("splitting_disgradE_trafo")
+       sim%splitting_case = sll_p_splitting_disgradE_trafo
+       sim%ct=.true.
+       sim%domain = [0._f64, 1._f64, x1_max - x1_min ]
+       sim%delta_x = 1._f64/real(ng_x, f64)
+       call sim%map%init_from_file(filename)
+    case("splitting_disgradEC_trafo")
+       sim%splitting_case = sll_p_splitting_disgradEC_trafo
        sim%ct=.true.
        sim%domain = [0._f64, 1._f64, x1_max - x1_min ]
        sim%delta_x = 1._f64/real(ng_x, f64)
@@ -635,10 +645,14 @@ contains
        sim%make_ctest = .true.
        sim%ctest_ref_file_rho = "ctests/reffile_disgradEC_sub_smooth_pic_vm_1d2v_cart_rho.dat"
        sim%ctest_ref_file_thdiag = "ctests/reffile_disgradEC_sub_smooth_pic_vm_1d2v_cart_thdiag.dat"
-    case("trafo")
+    case("disgradE_trafo")
        sim%make_ctest = .true.
-       sim%ctest_ref_file_rho = "ctests/reffile_trafo_pic_vm_1d2v_cart_rho.dat"
-       sim%ctest_ref_file_thdiag = "ctests/reffile_trafo_pic_vm_1d2v_cart_thdiag.dat"
+       sim%ctest_ref_file_rho = "ctests/reffile_disgradE_trafo_pic_vm_1d2v_cart_rho.dat"
+       sim%ctest_ref_file_thdiag = "ctests/reffile_disgradE_trafo_pic_vm_1d2v_cart_thdiag.dat"
+    case("disgradEC_trafo")
+       sim%make_ctest = .true.
+       sim%ctest_ref_file_rho = "ctests/reffile_disgradEC_trafo_pic_vm_1d2v_cart_rho.dat"
+       sim%ctest_ref_file_thdiag = "ctests/reffile_disgradEC_trafo_pic_vm_1d2v_cart_thdiag.dat"
     end select
 
 
@@ -760,15 +774,15 @@ contains
     end if
 
     ! Initialize the arrays for the spline coefficients of the fields
-    SLL_ALLOCATE(sim%phi_dofs(sim%n_total0), ierr)
-    SLL_ALLOCATE(sim%efield_dofs(sim%n_total0,2), ierr)
-    SLL_ALLOCATE(sim%bfield_dofs(sim%n_total1), ierr)
+    SLL_ALLOCATE(sim%phi_dofs(sim%n_dofs0), ierr)
+    SLL_ALLOCATE(sim%efield_dofs(sim%n_dofs0,2), ierr)
+    SLL_ALLOCATE(sim%bfield_dofs(sim%n_dofs1), ierr)
     sim%phi_dofs = 0._f64
     sim%efield_dofs = 0._f64
     sim%bfield_dofs = 0._f64
 
-    SLL_ALLOCATE(sim%rhob(1:sim%n_total0), ierr)
-    SLL_ALLOCATE(sim%background_charge(1:sim%n_total0), ierr)
+    SLL_ALLOCATE(sim%rhob(1:sim%n_dofs0), ierr)
+    SLL_ALLOCATE(sim%background_charge(1:sim%n_dofs0), ierr)
     sim%rhob = 0._f64
     sim%background_charge = 0.0_f64
 
@@ -895,15 +909,25 @@ contains
                sim%domain(1), sim%domain(3), sim%map, electrostatic=electrostatic )!,betar=sim%plasma_betar(1:2))
           sim%efield_dofs_n => qphstrafo%efield_dofs
        end select
-    elseif( sim%splitting_case == sll_p_splitting_trafo) then
-       allocate( sll_t_time_propagator_pic_vm_1d2v_trafo :: sim%propagator )
+    elseif( sim%splitting_case == sll_p_splitting_disgradE_trafo) then
+       allocate( sll_t_time_propagator_pic_vm_1d2v_disgradE_trafo :: sim%propagator )
        select type( qptrafo=>sim%propagator )
-       type is ( sll_t_time_propagator_pic_vm_1d2v_trafo )
+       type is ( sll_t_time_propagator_pic_vm_1d2v_disgradE_trafo )
           call qptrafo%init_from_file( sim%maxwell_solver, &
                sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
                sim%efield_dofs, sim%bfield_dofs, &
                sim%domain(1), sim%domain(3), sim%map, trim(filename), sim%boundary_particles, force_sign=sim%force_sign, electrostatic=electrostatic, jmean=jmean  )!,betar=sim%plasma_betar(1:2))
-          sim%efield_dofs_n => qptrafo%efield_dofs
+          sim%efield_dofs_n => qptrafo%helper%efield_dofs
+       end select
+    elseif( sim%splitting_case == sll_p_splitting_disgradEC_trafo) then
+       allocate( sll_t_time_propagator_pic_vm_1d2v_disgradEC_trafo :: sim%propagator )
+       select type( qptrafo=>sim%propagator )
+       type is ( sll_t_time_propagator_pic_vm_1d2v_disgradEC_trafo )
+          call qptrafo%init_from_file( sim%maxwell_solver, &
+               sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
+               sim%efield_dofs, sim%bfield_dofs, &
+               sim%domain(1), sim%domain(3), sim%map, trim(filename), sim%boundary_particles, force_sign=sim%force_sign, electrostatic=electrostatic, jmean=jmean  )!,betar=sim%plasma_betar(1:2))
+          sim%efield_dofs_n => qptrafo%helper%efield_dofs
        end select
     elseif  (sim%splitting_case == sll_p_splitting_subcyci) then
        ! Read parameters from file
@@ -950,16 +974,6 @@ contains
             sim%efield_dofs, sim%bfield_dofs, &
             sim%domain(1), sim%domain(3), sim%bfilter, jmean, sim%control_variate, sim%no_weights)
        sim%efield_dofs_n => sim%efield_dofs
-    elseif( sim%splitting_case == sll_p_splitting_trafo) then
-       allocate( sll_t_time_propagator_pic_vm_1d2v_trafo :: sim%propagator )
-       select type( qptrafo=>sim%propagator )
-       type is ( sll_t_time_propagator_pic_vm_1d2v_trafo )
-          call qptrafo%init_from_file( sim%maxwell_solver, &
-               sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
-               sim%efield_dofs, sim%bfield_dofs, &
-               sim%domain(1), sim%domain(3), sim%map, trim(filename), force_sign=sim%force_sign, electrostatic=electrostatic )!,betar=sim%plasma_betar(1:2))
-          sim%efield_dofs_n => qptrafo%efield_dofs
-       end select
     end if
 
     call sll_s_set_time_mark( end_init )
@@ -1034,9 +1048,9 @@ contains
     end if
 
     ! Set the initial fields
-    SLL_ALLOCATE(rho_local(sim%n_total0), ierr)
-    SLL_ALLOCATE(rho(sim%n_total0), ierr)
-    SLL_ALLOCATE(scratch(sim%n_total0), ierr)
+    SLL_ALLOCATE(rho_local(sim%n_dofs0), ierr)
+    SLL_ALLOCATE(rho(sim%n_dofs0), ierr)
+    SLL_ALLOCATE(scratch(sim%n_dofs0), ierr)
     scratch = 0._f64
     ! Efield 1 by Poisson
     call solve_poisson( sim, rho_local, rho )
@@ -1199,7 +1213,7 @@ contains
        rho = 0.0_f64
        call sll_o_collective_allreduce( sll_v_world_collective, &
             rho_local, &
-            sim%n_total0, MPI_SUM, rho)
+            sim%n_dofs0, MPI_SUM, rho)
        if (sim%rank == 0) then
 
           call ctest( rho, rho_local, trim(sim%ctest_ref_file_rho), sim%ctest_passed )
@@ -1484,30 +1498,30 @@ contains
     ! Add ExB part
     if( sim%boundary )then
        if( sim%ct ) then
-          call compute_e_cross_b_curvilinear( sim%kernel_smoother_0, sim%kernel_smoother_1, degree, sim%map, sim%efield_dofs(1:sim%n_total1,1), sim%efield_dofs(:,2), sim%bfield_dofs, ecb)
+          call compute_e_cross_b_curvilinear( sim%kernel_smoother_0, sim%kernel_smoother_1, degree, sim%map, sim%efield_dofs(1:sim%n_dofs1,1), sim%efield_dofs(:,2), sim%bfield_dofs, ecb)
        else
-          call compute_e_cross_b_gauss( sim%kernel_smoother_0, sim%kernel_smoother_1, degree, sim%efield_dofs(1:sim%n_total1,1), sim%efield_dofs(:,2), sim%bfield_dofs, ecb)
+          call compute_e_cross_b_gauss( sim%kernel_smoother_0, sim%kernel_smoother_1, degree, sim%efield_dofs(1:sim%n_dofs1,1), sim%efield_dofs(:,2), sim%bfield_dofs, ecb)
        end if
        diagnostics(3:4) = diagnostics(3:4) + ecb 
     else
        if ( sim%strong_ampere .eqv. .false. ) then
           diagnostics(3) = diagnostics(3) + sim%maxwell_solver%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree, degree-1 )
 
-          diagnostics(4) = diagnostics(4) - sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_total1,1), sim%bfield_dofs, degree-1 )
+          diagnostics(4) = diagnostics(4) - sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_dofs1,1), sim%bfield_dofs, degree-1 )
        else
           if ( degree == -1) then             
              diagnostics(3) = diagnostics(3) + sim%maxwell_solver%inner_product( sim%efield_dofs(:,2), sim%bfield_dofs, degree-1, degree )
-             diagnostics(4) = diagnostics(4) - sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_total1,1), sim%bfield_dofs, degree, degree )
+             diagnostics(4) = diagnostics(4) - sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_dofs1,1), sim%bfield_dofs, degree, degree )
           else
              scratch(1:sim%n_gcells-1) = 0.5_f64 * (sim%efield_dofs(1:sim%n_gcells-1,2)+sim%efield_dofs(2:sim%n_gcells,2) )
              scratch(sim%n_gcells) = 0.5_f64 * (sim%efield_dofs(1,2)+sim%efield_dofs(sim%n_gcells,2) )
              diagnostics(3) = diagnostics(3) + sim%maxwell_solver%inner_product( sim%bfield_dofs, scratch,  degree )
-             diagnostics(4) = diagnostics(4) - sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_total1,1), sim%bfield_dofs, degree )
+             diagnostics(4) = diagnostics(4) - sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_dofs1,1), sim%bfield_dofs, degree )
           end if
        end if
     end if
 
-    call sll_s_pic_diagnostics_transfer( sim%particle_group%group(1), sim%kernel_smoother_0, sim%kernel_smoother_1, sim%efield_dofs(1:sim%n_total1,1), sim%efield_dofs(:,2), transfer )
+    call sll_s_pic_diagnostics_transfer( sim%particle_group%group(1), sim%kernel_smoother_0, sim%kernel_smoother_1, sim%efield_dofs(1:sim%n_dofs1,1), sim%efield_dofs(:,2), transfer )
 
     call sll_s_pic_diagnostics_vvb( sim%particle_group%group(1), sim%kernel_smoother_1, &
          sim%bfield_dofs, vvb )
@@ -1520,11 +1534,11 @@ contains
 
     if (sim%rank == 0) then
        if (sim%strong_ampere .eqv. .false. ) then
-          potential_energy(1) = sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_total1,1),  sim%efield_dofs_n(1:sim%n_total1,1), degree-1 )/sim%plasma_betar(2)
+          potential_energy(1) = sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_dofs1,1),  sim%efield_dofs_n(1:sim%n_dofs1,1), degree-1 )/sim%plasma_betar(2)
           potential_energy(2) = sim%maxwell_solver%inner_product( sim%efield_dofs(:,2),  sim%efield_dofs_n(:,2), degree )/sim%plasma_betar(2)
        else
           potential_energy(1) = sim%maxwell_solver%inner_product( sim%efield_dofs(:,1),  sim%efield_dofs_n(:,1), degree )/sim%plasma_betar(2)
-          potential_energy(2) = sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_total1,2),  sim%efield_dofs_n(1:sim%n_total1,2), degree-1 )/sim%plasma_betar(2)
+          potential_energy(2) = sim%maxwell_solver%inner_product( sim%efield_dofs(1:sim%n_dofs1,2),  sim%efield_dofs_n(1:sim%n_dofs1,2), degree-1 )/sim%plasma_betar(2)
        end if
        if ( sim%strong_ampere .eqv. .false. ) then
           potential_energy(3) = sim%maxwell_solver%L2norm_squared( sim%bfield_dofs, degree-1 )*sim%plasma_betar(3)
@@ -1639,7 +1653,7 @@ contains
     !local variables
     sll_int32 :: i_part
     sll_real64 :: xi(3), wi(1)
-    sll_real64 :: rho_cv(sim%n_total0)
+    sll_real64 :: rho_cv(sim%n_dofs0)
 
     rho_local = 0.0_f64
     do i_part = 1, sim%particle_group%group(1)%n_particles
@@ -1651,7 +1665,7 @@ contains
     ! MPI to sum up contributions from each processor
     rho = 0.0_f64
     call sll_o_collective_allreduce( sll_v_world_collective, rho_local, &
-         sim%n_total0, MPI_SUM, rho)
+         sim%n_dofs0, MPI_SUM, rho)
 
     call sim%filter%apply_inplace( rho )
 
@@ -1664,7 +1678,7 @@ contains
     if ( sim%strong_ampere) then
        rho = rho - sim%charge
        ! Add this if there should not be an offset in rho
-       rho = rho - sum(rho)/ real(sim%n_total0, f64)
+       rho = rho - sum(rho)/ real(sim%n_dofs0, f64)
     else
        ! Add neutralizing background distribution
        rho = sim%force_sign*(rho - sim%charge * sim%background_charge)
@@ -1672,10 +1686,10 @@ contains
 
     ! Solve Poisson problem
     if( sim%adiabatic_electrons) then
-       call sim%maxwell_solver%compute_phi_from_rho ( rho, sim%phi_dofs, sim%efield_dofs(1:sim%n_total1,1) )
+       call sim%maxwell_solver%compute_phi_from_rho ( rho, sim%phi_dofs, sim%efield_dofs(1:sim%n_dofs1,1) )
     else
        rho = rho * sim%plasma_betar(2)
-       call sim%maxwell_solver%compute_E_from_rho( rho, sim%efield_dofs(1:sim%n_total1,1) )
+       call sim%maxwell_solver%compute_E_from_rho( rho, sim%efield_dofs(1:sim%n_dofs1,1) )
     end if
 
   contains
@@ -1717,7 +1731,7 @@ contains
     !local variables
     sll_int32 :: i_part
     sll_real64 :: xi(3), wi(1)
-    sll_real64 :: rho_cv(sim%n_total0)
+    sll_real64 :: rho_cv(sim%n_dofs0)
 
     rho_gauss = 0.0_f64
     do i_part = 1, sim%particle_group%group(1)%n_particles
@@ -1730,10 +1744,10 @@ contains
     ! MPI to sum up contributions from each processor
     rho = 0.0_f64
     call sll_o_collective_allreduce( sll_v_world_collective, &
-         rho_gauss, sim%n_total0, MPI_SUM, rho)
+         rho_gauss, sim%n_dofs0, MPI_SUM, rho)
     rho_gauss = 0.0_f64
     call sll_o_collective_allreduce( sll_v_world_collective, &
-         sim%rhob, sim%n_total0, MPI_SUM, rho_gauss)
+         sim%rhob, sim%n_dofs0, MPI_SUM, rho_gauss)
     rho = rho + rho_gauss
 
     call sim%filter%apply_inplace( rho )
@@ -1757,10 +1771,10 @@ contains
        if( .not. sim%boundary ) then
           ! subtract the constant error in rho
           error = 0._f64
-          do i_part = 1, sim%n_total0
+          do i_part = 1, sim%n_dofs0
              error = error + rho(i_part)
           end do
-          error = error/real(sim%n_total0, f64)
+          error = error/real(sim%n_dofs0, f64)
           rho = rho -error
        end if
        call sim%maxwell_solver%compute_rho_from_e( sim%efield_dofs_n(:,1), rho_gauss )

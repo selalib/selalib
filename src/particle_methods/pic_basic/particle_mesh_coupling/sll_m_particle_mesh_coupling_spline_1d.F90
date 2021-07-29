@@ -341,6 +341,7 @@ contains
     
   end subroutine add_current_spline_1d
 
+  
   !> Combines add_current and evaluate_int
   subroutine add_current_evaluate_spline_1d(self, position_old, position_new, marker_charge, vbar, field_dofs, j_dofs, field)
     class( sll_t_particle_mesh_coupling_spline_1d ), intent(inout)   :: self !< kernel smoother object
@@ -348,8 +349,8 @@ contains
     sll_real64,                               intent( in )    :: position_new(self%dim) !< Position of the particle
     sll_real64,                               intent( in )    :: marker_charge !< Particle weights time charge
     sll_real64,                               intent( in )    :: vbar !< Particle weights time charge
-    sll_real64,                               intent( in    ) :: field_dofs(self%n_cells) !< Coefficient vector of the current density
-    sll_real64,                               intent( inout ) :: j_dofs(self%n_cells) !< Coefficient vector of the current density
+    sll_real64,                               intent( in    ) :: field_dofs(self%n_dofs) !< Coefficient vector of the current density
+    sll_real64,                               intent( inout ) :: j_dofs(self%n_dofs) !< Coefficient vector of the current density
     sll_real64,                               intent( out   ) :: field !< Efield
 
     sll_real64 :: dx_new, dx_old

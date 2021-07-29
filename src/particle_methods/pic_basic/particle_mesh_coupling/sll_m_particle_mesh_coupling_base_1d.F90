@@ -39,6 +39,7 @@ module sll_m_particle_mesh_coupling_base_1d
      procedure(eval_multiple), deferred     :: evaluate_multiple  !> Evaluate multiple spline function with given coefficients
      procedure(add_update) , deferred       :: add_current_update_v !> Add contribution of one particle to the current density and update velocity
      procedure(add_current), deferred       :: add_current !> Add contribution of one particle to the current density (integrated over x)
+     procedure(add_current_evaluate), deferred :: add_current_evaluate !> Add contribution of one particle to the current density (integrated over x)
      procedure(empty), deferred             :: free !< Destructor
 
 
@@ -107,6 +108,23 @@ module sll_m_particle_mesh_coupling_base_1d
        sll_real64,                    intent( inout ) :: j_dofs(self%n_dofs) !< Coefficient vector of the charge distribution
 
      end subroutine add_current
+  end interface
+
+   !---------------------------------------------------------------------------!
+  abstract interface
+     subroutine add_current_evaluate(self, position_old, position_new, marker_charge, vbar, field_dofs, j_dofs, field)
+       use sll_m_working_precision
+       import sll_c_particle_mesh_coupling_1d
+       class (sll_c_particle_mesh_coupling_1d), intent( inout ) :: self !< Kernel smoother object
+       sll_real64,                    intent( in )    :: position_old(self%dim) !< Position of the particle
+       sll_real64,                    intent( in )    :: position_new(self%dim) !< Position of the particle
+       sll_real64,                    intent( in )    :: marker_charge !< Particle weight times charge
+       sll_real64,                               intent( in )    :: vbar !< Particle weights time charge
+       sll_real64,                               intent( in    ) :: field_dofs(self%n_dofs) !< Coefficient vector of the current density
+       sll_real64,                    intent( inout ) :: j_dofs(self%n_dofs) !< Coefficient vector of the charge distribution
+       sll_real64,                               intent( out   ) :: field !< Efield
+       
+     end subroutine add_current_evaluate
   end interface
 
   !---------------------------------------------------------------------------!

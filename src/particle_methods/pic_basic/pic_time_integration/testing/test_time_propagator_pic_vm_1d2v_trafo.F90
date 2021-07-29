@@ -18,8 +18,8 @@ program test_time_propagator_pic_1d2v_vm_trafo
   use sll_m_constants, only: &
     sll_p_pi, sll_p_twopi
 
-  use sll_m_time_propagator_pic_vm_1d2v_trafo, only: &
-    sll_t_time_propagator_pic_vm_1d2v_trafo
+  use sll_m_time_propagator_pic_vm_1d2v_trafo_helper, only: &
+    sll_t_time_propagator_pic_vm_1d2v_trafo_helper
 
   use sll_m_particle_mesh_coupling_base_1d, only: &
     sll_p_galerkin, &
@@ -71,7 +71,7 @@ program test_time_propagator_pic_1d2v_vm_trafo
   class(sll_c_maxwell_1d_base), pointer :: maxwell_solver
   
   ! Specific Hamiltonian splitting
-  type(sll_t_time_propagator_pic_vm_1d2v_trafo) :: propagator
+  type(sll_t_time_propagator_pic_vm_1d2v_trafo_helper) :: propagator
 
   type(sll_t_mapping_3d), pointer :: map  
   
@@ -208,7 +208,7 @@ program test_time_propagator_pic_1d2v_vm_trafo
   call propagator%init( maxwell_solver, &
        kernel_smoother_0, kernel_smoother_1, particle_group, &
        efield, bfield, &
-       eta_min, eta_max-eta_min, map, solver_tolerance = 1d-14)
+       eta_min, eta_max-eta_min, map, solver_tolerance = 1d-14, iter_tolerance = 1d-10, max_iter = 1)
 
   call propagator%advect_x( delta_t )
 

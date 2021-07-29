@@ -529,9 +529,7 @@ contains
     sll_real64 :: efield(3)
     sll_int32 :: niter
     sll_real64 :: residual(1), residual_local(1)
-    sll_real64 :: tolerance = 1.0d-10
-
-    ! Starting point from average vector field method
+   
     self%efield_dofs_new = self%efield_dofs
     self%phi_dofs_new = self%phi_dofs
     do i_sp=1,self%particle_group%n_species
@@ -586,6 +584,7 @@ contains
                    vnew(1) = - vnew(1)
                 case(sll_p_boundary_particles_absorption)
                    call self%particle_mesh_coupling%add_charge(xmid, wi(1), self%spline_degree, self%rhob)
+                   xnew(1) = xmid(1) + ((xbar-self%x_min(1))/self%Lx(1)-0.5_f64) * 1.9_f64*self%iter_tolerance 
                 case( sll_p_boundary_particles_periodic)
                    xnew(1) = self%x_min(1) + modulo(xnew(1)-self%x_min(1), self%Lx(1))
                    xmid(1) = self%x_max(1)+self%x_min(1)-xbar
@@ -593,11 +592,14 @@ contains
                    xnew(1) = self%x_min(1) + modulo(xnew(1)-self%x_min(1), self%Lx(1))
                    xmid(1) = self%x_max(1)+self%x_min(1)-xbar
                 end select
-                if( abs(xnew(1)-xmid(1)) > tolerance ) then
+                if( abs(xnew(1)-xmid(1)) > self%iter_tolerance ) then
                    vbar = (xnew - xmid)*wi(1)
                    call self%particle_mesh_coupling%add_current_evaluate( xmid, xnew, vbar, self%efield_dofs_work, &
                         self%j_dofs_local, efield )
                    vnew = vnew + qoverm * (1._f64-dx)*dt * efield
+                   if(self%boundary_particles == sll_p_boundary_particles_reflection) then
+                      vnew(1) = - vnew(1)
+                   end if
                 else
                    xnew(1) = xmid(1) 
                 end if
@@ -608,7 +610,6 @@ contains
                      self%j_dofs_local, efield )
                 vnew = vi + qoverm * dt * efield
              end if
-
 
              self%xnew(i_sp, :, i_part) = xnew
              self%vnew(i_sp, :, i_part) = vnew
@@ -647,13 +648,71 @@ contains
        print*, 'Warning: Iteration no.', self%iter_counter+1 ,'did not converge.', residual, niter
        self%n_failed = self%n_failed+1
     end if
+    
+    
+    self%efield_dofs_work = 0.5_f64*( self%efield_dofs + self%efield_dofs_new )
+    self%j_dofs_local = 0.0_f64
 
-    self%phi_dofs = self%phi_dofs_new
-    self%efield_dofs = self%efield_dofs_new
-    do i_sp = 1, self%particle_group%n_species
-       do i_part = 1, self%particle_group%group(i_sp)%n_particles
-          vnew = self%vnew(i_sp,:,i_part)
-          xnew = self%xnew(i_sp,:,i_part)
+    ! Particle loop
+    do i_sp=1,self%particle_group%n_species
+       qoverm = self%particle_group%group(i_sp)%species%q_over_m();
+       do i_part = 1,self%particle_group%group(i_sp)%n_particles
+          vi = self%particle_group%group(i_sp)%get_v(i_part)
+          xi = self%particle_group%group(i_sp)%get_x(i_part)
+
+          ! Get charge for accumulation of j
+          wi = self%particle_group%group(i_sp)%get_charge(i_part, self%i_weight)
+
+          vnew = self%vnew(i_sp,:, i_part)
+          vbar = 0.5_f64*(vi+vnew)
+
+          xnew = xi + dt * vbar
+          if(xnew(1) < -self%x_max(1) .or.  xnew(1) > 2._f64*self%x_max(1) ) then
+             print*, xnew
+             SLL_ERROR("particle boundary", "particle out of bound")
+          else if(xnew(1) < self%x_min(1) .or. xnew(1) > self%x_max(1) )then
+             if(xnew(1) < self%x_min(1)  )then
+                xbar = self%x_min(1)
+             else if(xnew(1) > self%x_max(1))then
+                xbar = self%x_max(1)
+             end if
+             dx = (xbar- xi(1))/(xnew(1)-xi(1))
+             xmid = xi + dx * (xnew-xi)
+             xmid(1) = xbar
+
+             vbar = (xmid - xi)*wi(1)
+             call self%particle_mesh_coupling%add_current_evaluate( xi, xmid, vbar, self%efield_dofs_work, &
+                  self%j_dofs_local, efield )
+             vnew = vi + qoverm * dt* dx* efield
+             select case(self%boundary_particles)
+             case(sll_p_boundary_particles_reflection)
+                xnew(1) = 2._f64*xbar-xnew(1)
+                vnew(1) = - vnew(1)
+             case(sll_p_boundary_particles_absorption)
+                call self%particle_mesh_coupling%add_charge(xmid, wi(1), self%spline_degree, self%rhob)
+             case( sll_p_boundary_particles_periodic)
+                xnew(1) = self%x_min(1) + modulo(xnew(1)-self%x_min(1), self%Lx(1))
+                xmid(1) = self%x_max(1)+self%x_min(1)-xbar
+             case default
+                xnew(1) = self%x_min(1) + modulo(xnew(1)-self%x_min(1), self%Lx(1))
+                xmid(1) = self%x_max(1)+self%x_min(1)-xbar
+             end select
+             if( abs(xnew(1)-xmid(1)) > self%iter_tolerance ) then
+                vbar = (xnew - xmid)*wi(1)
+                call self%particle_mesh_coupling%add_current_evaluate( xmid, xnew, vbar, self%efield_dofs_work, &
+                     self%j_dofs_local, efield )
+                vnew = vnew + qoverm * (1._f64-dx)*dt * efield
+             else
+                xnew(1) = xmid(1) 
+             end if
+          else
+             vbar = (xnew - xi)*wi(1)
+
+             call self%particle_mesh_coupling%add_current_evaluate( xi, xnew, vbar, self%efield_dofs_work, &
+                  self%j_dofs_local, efield )
+             vnew = vi + qoverm * dt * efield
+          end if
+
           xnew(2:3) = self%x_min(2:3) + modulo(xnew(2:3)-self%x_min(2:3), self%Lx(2:3))
           call self%particle_group%group(i_sp)%set_v( i_part, vnew )
           call self%particle_group%group(i_sp)%set_x( i_part, xnew )
@@ -666,6 +725,19 @@ contains
        end do
     end do
 
+    self%j_dofs = 0.0_f64
+    ! MPI to sum up contributions from each processor
+    call sll_o_collective_allreduce( sll_v_world_collective, self%j_dofs_local, &
+         self%n_total1+self%n_total0*2, MPI_SUM, self%j_dofs )
+
+    if( self%adiabatic_electrons) then
+       call self%maxwell_solver%compute_phi_from_j( self%j_dofs, self%phi_dofs, self%efield_dofs )
+    else
+       self%j_dofs=self%j_dofs*self%betar(2)
+       call self%maxwell_solver%compute_E_from_j( self%j_dofs, self%efield_dofs )
+
+    end if
+    
     self%iter_counter = self%iter_counter + 1
     self%niter(self%iter_counter) = niter
 

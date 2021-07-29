@@ -263,7 +263,7 @@ contains
   subroutine advect_x_pic_vm_1d2v_disgradE ( self, dt )
     class(sll_t_time_propagator_pic_vm_1d2v_disgradE), intent(inout) :: self !< time propagator object 
     sll_real64,                                     intent(in)    :: dt   !< time step
-
+    !local variables
     sll_int32 :: i_part, i_sp
     sll_real64 :: xi(3), xnew(3), vi(3), wp(3)
 
@@ -276,7 +276,6 @@ contains
           xnew(1) = xi(1) + dt * vi(1)
 
           call compute_particle_boundary( self, xi(1), xnew(1), vi(1) )
-          !xi(1) = modulo(xi(1), self%Lx)
           call self%particle_group%group(i_sp)%set_x ( i_part, xnew )
           call self%particle_group%group(i_sp)%set_v ( i_part, vi )
           if (self%particle_group%group(i_sp)%n_weights == 3) then

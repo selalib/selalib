@@ -63,6 +63,7 @@ module sll_m_particle_mesh_coupling_spline_2d
      procedure :: add_current_update_v => add_current_update_v_spline_2d
      procedure :: add_current_update_v_pp => add_current_update_v_spline_pp_2d
      procedure :: add_current => add_current_spline_2d
+     procedure :: add_current_evaluate => add_current_evaluate_spline_2d
      procedure :: init => init_spline_2d
      procedure :: free => free_spline_2d
 
@@ -169,7 +170,22 @@ contains
     SLL_ERROR('add_particles_mass_spline_2d','add_current not implemented')
     
   end subroutine add_current_spline_2d
-  
+
+
+   !> Add current with integration over x
+  subroutine add_current_evaluate_spline_2d(self, position_old, position_new, marker_charge, vbar, field_dofs, j_dofs, field)
+    class( sll_t_particle_mesh_coupling_spline_2d ), intent(inout)   :: self !< kernel smoother object
+    sll_real64,                    intent( in )    :: position_old(self%dim) !< Position of the particle
+    sll_real64,                    intent( in )    :: position_new(self%dim) !< Position of the particle
+    sll_real64,                    intent( in )    :: marker_charge !< Particle weight times charge
+    sll_real64,                               intent( in )    :: vbar !< Particle weights time charge
+    sll_real64,                               intent( in    ) :: field_dofs(self%n_dofs) !< Coefficient vector of the current density
+    sll_real64,                    intent( inout ) :: j_dofs(self%n_dofs) !< Coefficient vector of the charge distribution
+    sll_real64,                               intent( out   ) :: field !< Efield
+    
+    SLL_ERROR('add_particles_mass_spline_2d','add_current not implemented')
+    
+  end subroutine add_current_evaluate_spline_2d
 
  !---------------------------------------------------------------------------!
   !> Add current and update v for single particle
