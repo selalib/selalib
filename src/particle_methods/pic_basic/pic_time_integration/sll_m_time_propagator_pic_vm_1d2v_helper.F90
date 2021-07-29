@@ -8,6 +8,9 @@ module sll_m_time_propagator_pic_vm_1d2v_helper
        sll_o_collective_allreduce, &
        sll_v_world_collective
 
+  use sll_m_control_variate, only: &
+       sll_t_control_variates
+
   use sll_m_fft, only: &
        sll_t_fft, &
        sll_s_fft_init_r2r_1d, &
@@ -30,9 +33,6 @@ module sll_m_time_propagator_pic_vm_1d2v_helper
 
   use sll_m_maxwell_1d_base, only: &
        sll_c_maxwell_1d_base
-
-  use sll_m_maxwell_1d_fem, only: &
-       sll_t_maxwell_1d_fem
 
   use sll_mpi, only: &
        mpi_sum, &
@@ -60,7 +60,13 @@ module sll_m_time_propagator_pic_vm_1d2v_helper
        sll_s_spline_fem_sparsity_mass
 
   use sll_m_time_propagator_base, only: &
-    sll_c_time_propagator_base
+       sll_c_time_propagator_base
+
+  use sll_m_time_propagator_pic_vm_3d3v_cl_helper, only: &
+       sll_p_boundary_particles_periodic, &
+       sll_p_boundary_particles_singular, &
+       sll_p_boundary_particles_reflection, &
+       sll_p_boundary_particles_absorption
 
   
   implicit none
@@ -81,7 +87,16 @@ module sll_m_time_propagator_pic_vm_1d2v_helper
      sll_int32 :: spline_degree !< Degree of the spline for j,B. Here 3.
      sll_real64 :: Lx !< Size of the domain
      sll_real64 :: x_min !< Lower bound for x domain
+     sll_real64 :: x_max !< Upper bound for x domain
      sll_real64 :: delta_x !< Grid spacing
+     sll_int32  :: n_cells !< number of grid cells
+     sll_int32  :: n_total0  !< number of Dofs for 0form
+     sll_int32  :: n_total1 !< number of Dofs for 1form
+
+     sll_int32 :: boundary_particles = 0 !< particle boundary conditions
+     sll_int32 :: counter_left = 0 !< boundary counter
+     sll_int32 :: counter_right = 0 !< boundary counter
+     logical :: boundary = .false. !< true for non periodic boundary conditions
 
      sll_real64 :: cell_integrals_0(4) !< Integral over the spline function on each interval (order p+1)
      sll_real64 :: cell_integrals_1(3) !< Integral over the spline function on each interval (order p)
@@ -153,6 +168,9 @@ module sll_m_time_propagator_pic_vm_1d2v_helper
 
      class(sll_c_filter_base_1d), pointer :: filter !< filter
 
+     ! For version with control variate
+     class(sll_t_control_variates), pointer :: control_variate => null() !< control variate
+     sll_int32 :: i_weight !< number of weights
      
    contains
      procedure :: advect_x => advect_x_pic_vm_1d2v_helper
@@ -177,9 +195,9 @@ contains
   subroutine advect_x_pic_vm_1d2v_helper ( self, dt )
     class(sll_t_time_propagator_pic_vm_1d2v_helper), intent(inout) :: self !< time splitting object 
     sll_real64,                                     intent(in)    :: dt   !< time step
-
+    !local variables
     sll_int32 :: i_part, i_sp
-    sll_real64 :: xi(3), vi(3)
+    sll_real64 :: xi(3), xnew(3), vi(3), wp(3)
 
     do i_sp = 1, self%particle_group%n_species
        do i_part=1,self%particle_group%group(i_sp)%n_particles  
@@ -187,24 +205,68 @@ contains
           xi = self%particle_group%group(i_sp)%get_x(i_part)
           vi = self%particle_group%group(i_sp)%get_v(i_part)
           
-          xi(1) = xi(1) + dt * vi(1)
-          xi(1) = modulo(xi(1), self%Lx)
-          call self%particle_group%group(i_sp)%set_x ( i_part, xi )
+          xnew(1) = xi(1) + dt * vi(1)
+          
+          call compute_particle_boundary( self, xi(1), xnew(1), vi(1) )
+          call self%particle_group%group(i_sp)%set_x ( i_part, xnew )
+          call self%particle_group%group(i_sp)%set_v ( i_part, vi )
+          if (self%particle_group%group(i_sp)%n_weights == 3) then
+             ! Update weights if control variate
+             wp = self%particle_group%group(i_sp)%get_weights(i_part)          
+             wp(3) = self%control_variate%cv(i_sp)%update_df_weight( xnew(1:1), vi(1:2), 0.0_f64, wp(1), wp(2))
+             call self%particle_group%group(i_sp)%set_weights(i_part, wp)
+          end if
        end do
     end do
     
   end subroutine advect_x_pic_vm_1d2v_helper
+
+  
+  !> Helper function for advect_x
+  subroutine compute_particle_boundary( self, xold, xnew, vi  )
+    class(sll_t_time_propagator_pic_vm_1d2v_helper), intent( inout ) :: self !< time propagator object 
+    sll_real64,                                           intent( inout ) :: xold
+    sll_real64,                                           intent( inout ) :: xnew
+    sll_real64,                                           intent( inout ) :: vi
+    !local variables
+    sll_real64 :: xmid, xbar, dx
+
+    if(xnew < self%x_min .or. xnew > self%x_max )then
+       if(xnew < self%x_min  )then
+          xbar = self%x_min
+          self%counter_left = self%counter_left+1
+       else if(xnew > self%x_max)then
+          xbar = self%x_max
+          self%counter_right = self%counter_right+1
+       end if
+       dx = (xbar- xold)/(xnew-xold)
+       xmid = xold + dx * (xnew-xold)
+       xmid = xbar
+
+       select case(self%boundary_particles)
+       case(sll_p_boundary_particles_reflection)
+          vi = -vi
+          xnew = 2._f64*xbar-xnew
+       case(sll_p_boundary_particles_absorption)
+       case( sll_p_boundary_particles_periodic)
+          xnew = self%x_min + modulo(xnew-self%x_min, self%Lx)
+       case default
+          xnew = self%x_min + modulo(xnew-self%x_min, self%Lx)
+       end select
+    end if
+
+  end subroutine compute_particle_boundary
+  
 
   !---------------------------------------------------------------------------!
   !> vxB part (exact solution)
   subroutine advect_vb_pic_vm_1d2v_helper ( self, dt )
     class(sll_t_time_propagator_pic_vm_1d2v_helper), intent(inout) :: self !< time splitting object 
     sll_real64,                                     intent(in)    :: dt   !< time step
-
     !local variables
     sll_int32  :: i_part, i_sp
     sll_real64 :: qmdt
-    sll_real64 :: vi(3), v_new(3), xi(3)
+    sll_real64 :: vi(3), v_new(3), xi(3), wp(3)
     sll_real64 :: bfield, cs, sn
 
     
@@ -228,6 +290,12 @@ contains
           v_new(2) = -sn* vi(1) + cs * vi(2)
           
           call self%particle_group%group(i_sp)%set_v( i_part, v_new )
+          if (self%particle_group%group(i_sp)%n_weights == 3) then
+             ! Update weights if control variate
+             wp = self%particle_group%group(i_sp)%get_weights(i_part)          
+             wp(3) = self%control_variate%cv(i_sp)%update_df_weight( xi(1:1), vi(1:2), 0.0_f64, wp(1), wp(2))
+             call self%particle_group%group(i_sp)%set_weights(i_part, wp)
+          end if
        end do
     end do
 
@@ -518,7 +586,9 @@ contains
        Lx, &
        filter, &
        filename, &
-       build_particle_mass) 
+       build_particle_mass, &
+       control_variate, &
+       i_weight) 
     class(sll_t_time_propagator_pic_vm_1d2v_helper), intent(out) :: self !< time splitting object 
     class(sll_c_maxwell_1d_base), target,          intent(in)  :: maxwell_solver      !< Maxwell solver
     class(sll_c_particle_mesh_coupling_1d), target,          intent(in)  :: kernel_smoother_0  !< Kernel smoother
@@ -531,6 +601,8 @@ contains
     class( sll_c_filter_base_1d ), intent( in ), target :: filter
     character(len=*), intent(in) :: filename
     logical, optional, intent(in) :: build_particle_mass
+    class(sll_t_control_variates), optional, target, intent(in) :: control_variate !< Control variate (if delta f)
+    sll_int32, optional,                            intent(in) :: i_weight !< Index of weight to be used by propagator
 
     
     !local variables
@@ -652,6 +724,17 @@ contains
      SLL_ALLOCATE(self%bfield_filter(self%kernel_smoother_0%n_dofs), ierr)
      SLL_ALLOCATE(self%efield_to_val(self%kernel_smoother_0%n_dofs,2), ierr)
      SLL_ALLOCATE(self%bfield_to_val(self%kernel_smoother_0%n_dofs), ierr)
+
+     self%i_weight = 1
+     if (present(i_weight)) self%i_weight = i_weight
+     if(present(control_variate)) then
+        allocate(self%control_variate )
+        allocate(self%control_variate%cv(self%particle_group%n_species) )
+       self%control_variate => control_variate
+       !do j=1,self%n_species
+       !   self%control_variate%cv(j) => control_variate%cv(j)
+       !end do
+    end if
      
   end subroutine initialize_pic_vm_1d2v_helper
 
@@ -916,38 +999,14 @@ end subroutine assemble_schur_smooth
           
              vbar = 0.5_f64*(vi(1)+vnew(1))
              if ( abs(vbar) > 1.0D-16 ) then
-                
-                select type ( q=> self%kernel_smoother_1 )
-                type is (sll_t_particle_mesh_coupling_spline_1d )
-                   call q%add_current_evaluate &
-                        ( xi(1), xnew(1), wi(1), vbar, self%efield_to_val(:,1), self%j_dofs_local(:,1), &
-                        efield(1) )
-                type is (sll_t_particle_mesh_coupling_spline_smooth_1d )
-                   call q%add_current_evaluate &
-                        ( xi(1), xnew(1), wi(1), vbar, self%efield_to_val(:,1), self%j_dofs_local(:,1), &
-                        efield(1) )
-                type is (sll_t_particle_mesh_coupling_spline_strong_1d )
-                   call q%add_current_evaluate &
-                        ( xi(1), xnew(1), wi(1), vbar, self%efield_to_val(:,1), self%j_dofs_local(:,1), &
-                        efield(1) )
-                end select
-                select type ( q0=> self%kernel_smoother_0 )
-                type is (sll_t_particle_mesh_coupling_spline_1d )
-                   call q0%add_current_evaluate &
-                        ( xi(1), xnew(1), wi(1)*(vi(2)+vnew(2))/(vi(1)+vnew(1)), vbar, &
-                        self%efield_to_val(:,2), self%j_dofs_local(:,2), &
-                        efield(2) )
-                type is (sll_t_particle_mesh_coupling_spline_smooth_1d )
-                   call q0%add_current_evaluate &
-                        ( xi(1), xnew(1), wi(1)*(vi(2)+vnew(2))/(vi(1)+vnew(1)), vbar, &
-                        self%efield_to_val(:,2), self%j_dofs_local(:,2), &
-                        efield(2) )
-                type is (sll_t_particle_mesh_coupling_spline_strong_1d )
-                   call q0%add_current_evaluate &
-                        ( xi(1), xnew(1), wi(1)*(vi(2)+vnew(2))/(vi(1)+vnew(1)), vbar, &
-                        self%efield_to_val(:,2), self%j_dofs_local(:,2), &
-                        efield(2) )
-                end select
+                call self%kernel_smoother_1%add_current_evaluate &
+                     ( xi(1), xnew(1), wi(1), vbar, self%efield_to_val(:,1), self%j_dofs_local(:,1), &
+                     efield(1) )
+
+                call self%kernel_smoother_0%add_current_evaluate &
+                     ( xi(1), xnew(1), wi(1)*(vi(2)+vnew(2))/(vi(1)+vnew(1)), vbar, &
+                     self%efield_to_val(:,2), self%j_dofs_local(:,2), &
+                     efield(2) )
              else
                 call self%kernel_smoother_1%evaluate &
                      (xi(1), self%efield_to_val(:,1), efield(1) )

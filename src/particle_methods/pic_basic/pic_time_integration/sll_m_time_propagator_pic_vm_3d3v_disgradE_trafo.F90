@@ -206,12 +206,12 @@ contains
     else
        solver_tolerance_set = 1d-12
     end if
-    if (present(solver_tolerance) )  then
+    if (present(iter_tolerance) )  then
        iter_tolerance_set = iter_tolerance
     else
        iter_tolerance_set = 1d-12
     end if
-    if (present(solver_tolerance) )  then
+    if (present(max_iter) )  then
        max_iter_set = max_iter
     else
        max_iter_set = 10

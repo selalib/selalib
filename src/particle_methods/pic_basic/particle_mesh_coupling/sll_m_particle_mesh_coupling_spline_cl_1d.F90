@@ -64,6 +64,7 @@ module sll_m_particle_mesh_coupling_spline_cl_1d
      procedure :: evaluate_multiple => evaluate_multiple_spline_cl_1d !> Evaluate multiple spline functions with given coefficients
      procedure :: add_current_update_v => add_current_update_v_spline_cl_1d !> Add contribution of pne particle to the current density and update velocity
      procedure :: add_current => add_current_spline_cl_1d !> Add contribution of one particle to the current density (integrated over x)
+     procedure :: add_current_evaluate => add_current_evaluate_spline_cl_1d !> Add contribution of one particle to the current density (integrated over x)
 
      procedure :: init => init_spline_cl_1d !> Constructor
      procedure :: free => free_spline_cl_1d !> Destructor
@@ -263,7 +264,7 @@ contains
 
   end subroutine add_current_spline_cl_1d
 
-  
+    
   !> Helper function for \a add_current
   subroutine update_j(self, lower, upper, index, marker_charge,sign, j_dofs)
     class(sll_t_particle_mesh_coupling_spline_cl_1d), intent(inout) :: self !< time splitting object 
@@ -296,8 +297,96 @@ contains
     end do
 
   end subroutine update_j
- 
+  
+  
+  !> Combines add_current and evaluate_int
+  subroutine add_current_evaluate_spline_cl_1d(self, position_old, position_new, marker_charge, vbar, field_dofs, j_dofs, field)
+    class( sll_t_particle_mesh_coupling_spline_cl_1d ), intent(inout)   :: self !< kernel smoother object
+    sll_real64,                               intent( in )    :: position_old(self%dim) !< Position of the particle
+    sll_real64,                               intent( in )    :: position_new(self%dim) !< Position of the particle
+    sll_real64,                               intent( in )    :: marker_charge !< Particle weights time charge
+    sll_real64,                               intent( in )    :: vbar !< Particle weights time charge
+    sll_real64,                               intent( in    ) :: field_dofs(self%n_dofs) !< Coefficient vector of the current density
+    sll_real64,                               intent( inout ) :: j_dofs(self%n_dofs) !< Coefficient vector of the current density
+    sll_real64,                               intent( out   ) :: field !< Efield
+    !local variables
+    sll_int32  :: index_old, index_new, ind
+    sll_real64 :: r_old, r_new
 
+    call convert_x_to_xbox( self, position_old, r_old, index_old )
+    call convert_x_to_xbox( self, position_new, r_new, index_new )
+
+    field = 0.0_f64
+    
+    if (index_old == index_new) then
+       if (r_old < r_new) then
+          call update_je( self, r_old, r_new, index_old, marker_charge, &
+               1.0_f64, j_dofs, field_dofs, field)
+       else
+          call update_je( self, r_new, r_old, index_old, marker_charge, &
+               -1.0_f64, j_dofs, field_dofs, field)
+       end if
+    elseif (index_old < index_new) then
+       call update_je( self, r_old, 1.0_f64, index_old, marker_charge, &
+            1.0_f64, j_dofs, field_dofs, field)
+       call update_je( self, 0.0_f64, r_new, index_new, marker_charge, &
+            1.0_f64, j_dofs, field_dofs, field)
+       do ind = index_old+1, index_new-1
+          call update_je( self, 0.0_f64, 1.0_f64, ind, marker_charge, &
+               1.0_f64, j_dofs, field_dofs, field)
+       end do
+    else
+       call update_je( self, r_new, 1.0_f64, index_new, marker_charge, &
+            -1.0_f64, j_dofs, field_dofs, field)
+       call update_je( self, 0.0_f64, r_old, index_old, marker_charge, &
+            -1.0_f64, j_dofs, field_dofs, field)
+       do ind = index_new+1, index_old-1
+          call update_je( self, 0.0_f64, 1.0_f64, ind, marker_charge, &
+               -1.0_f64, j_dofs, field_dofs, field)
+       end do
+    end if
+    field = field/vbar
+
+  end subroutine add_current_evaluate_spline_cl_1d
+
+  
+  !> Helper function for \a add_current_evaluate
+  subroutine update_je(self, lower, upper, index, marker_charge, sign, j_dofs, field_dofs, field)
+    class(sll_t_particle_mesh_coupling_spline_cl_1d), intent(inout) :: self !< time splitting object 
+    sll_real64,                             intent(in)    :: lower
+    sll_real64,                             intent(in)    :: upper
+    sll_int32,                              intent(in)    :: index
+    sll_real64,                             intent(in)    :: marker_charge
+    sll_real64,                             intent(in)    :: sign
+    sll_real64,                             intent(inout) :: j_dofs(:)
+    sll_real64,                             intent(in)    :: field_dofs(:)
+    sll_real64,                             intent(inout)    :: field
+    !Local variables
+    sll_int32  :: ind, i_grid, j
+    sll_real64 :: c1, c2
+
+    c1 =  0.5_f64*(upper-lower)
+    c2 =  0.5_f64*(upper+lower)
+
+    call sll_s_uniform_bsplines_eval_basis_clamped( self%spline_pp, self%n_cells, self%spline_degree, c1*self%quad_xw(1,1)+c2, index, self%spline_val )
+    self%spline_val = self%spline_val * (self%quad_xw(2,1)*c1)
+    do j=2,self%n_quad_points
+       call sll_s_uniform_bsplines_eval_basis_clamped( self%spline_pp, self%n_cells, self%spline_degree, c1*self%quad_xw(1,j)+c2, index, self%spline_val_more )
+       self%spline_val = self%spline_val + self%spline_val_more * (self%quad_xw(2,j)*c1)
+    end do
+    self%spline_val = self%spline_val * self%delta_x * sign
+
+    ind = 1
+    do i_grid = index, index + self%spline_degree
+       j_dofs(i_grid) = j_dofs(i_grid) + &
+            (marker_charge*self%spline_val(ind)* self%scaling)
+       field = field + self%spline_val(ind)*field_dofs(i_grid)
+       ind = ind + 1
+    end do
+
+  end subroutine update_je
+
+  
   !---------------------------------------------------------------------------!
   !> Add current for one particle and update v (according to H_p1 part in Hamiltonian splitting)
   subroutine add_current_update_v_spline_cl_1d (self, position_old, position_new, marker_charge, qoverm, bfield_dofs, vi, j_dofs)
@@ -346,6 +435,7 @@ contains
 
   end subroutine add_current_update_v_spline_cl_1d
 
+  
   !> Helper function for \a add_current_update_v.
   subroutine update_jv(self, lower, upper, index, marker_charge, qoverm, sign, vi, j_dofs, bfield_dofs)
     class(sll_t_particle_mesh_coupling_spline_cl_1d), intent(inout) :: self !< time splitting object 

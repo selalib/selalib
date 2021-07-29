@@ -28,7 +28,7 @@
 &pic_params
 	n_particles = 100000
        	sampling_case = "particle_sampling_sobol"
-      	splitting_case = "splitting_trafo"
+      	splitting_case = "splitting_disgradE_trafo"
         spline_degree = 3
 	splitting_type = "strang"
 
@@ -38,12 +38,10 @@
 	nparams = 6
 	params = 5.026548245743669 1.0 1.0 0.1 0.0 0.0 
 	mapping_case = "orthogonal"
-	n_cells = 32 2 2
-	deg = 3 1 1
 /
 
 &ctest
-	ctest_case = "trafo"
+	ctest_case = "disgradE_trafo"
 /
 
 &maxwell_solver
@@ -54,3 +52,9 @@
 &time_solver
         maxwell_tolerance = 1E-12
 /
+&time_iterate
+	iter_tolerance = 1E-10
+	max_iter = 1
+
+/
+

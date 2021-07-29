@@ -1310,6 +1310,7 @@ contains
     print*, 'delta_perturb, ', self%eps, self%a, 'shifted particles:', counter
   end subroutine delta_function_perturbation
 
+  
   !> Helper function for antithetic sampling in 1d2v
   subroutine sample_particle_sampling_sym_1d2v_trafo( self, particle_group, params, Lx, map )
     type(sll_t_particle_sampling), intent( inout )            :: self !< particle sampling object
@@ -1402,7 +1403,6 @@ contains
        ! Set weights.
        call particle_group%set_weights(i_part, &
             wi)
-
     end do
 
   end subroutine sample_particle_sampling_sym_1d2v_trafo

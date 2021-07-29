@@ -58,5 +58,11 @@
 &time_solver
         maxwell_tolerance = 1E-12
 /
+&time_iterate
+	iter_tolerance = 1E-10
+	max_iter = 10
+
+/
+
 
 
