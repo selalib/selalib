@@ -33,8 +33,6 @@
         spline_degree = 3
 	splitting_type = "strang"
         smoothing = .false.
-	boundary_fields = "clamped"
-	boundary_particles = "reflection"
 /
 &trafo
 	nparams = 6

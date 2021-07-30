@@ -5,6 +5,7 @@
 module sll_m_time_propagator_pic_vm_1d2v_trafo_helper
   !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_errors.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
@@ -100,13 +101,13 @@ module sll_m_time_propagator_pic_vm_1d2v_trafo_helper
      sll_real64, allocatable :: j_dofs_local(:,:)!< MPI-processor local part of one component of \a j_dofs
      sll_real64, allocatable :: particle_mass_0_local(:,:) !< Array to hold the 2*spline_degree+1 diagonals of the matrix A_0 M_p A_0^T
      sll_real64, allocatable :: particle_mass_1_local(:,:) !< Array to hold the 2*(spline_degree-1)+1 diagonals of the matrix A_1 M_p A_1^T
-     
+
      sll_int32 :: n_particles_max !< maximal number of particles
      sll_real64, allocatable :: xnew(:,:) !< extra data for particle position
      sll_real64, allocatable :: vnew(:,:,:) !< extra data for particle velocity
      sll_real64, allocatable :: efield_dofs_new(:,:) !< extra data for efield DoFs
      sll_real64, allocatable :: efield_dofs_work(:,:) !< extra data for efield DoFs
-     
+
      sll_int32  :: boundary_particles = 100 !< particle boundary conditions
      sll_int32 :: counter_left = 0 !< boundary counter
      sll_int32 :: counter_right = 0 !< boundary counter
@@ -131,7 +132,7 @@ module sll_m_time_propagator_pic_vm_1d2v_trafo_helper
      procedure :: advect_eb => advect_eb_pic_vm_1d2v_trafo !> Solve Faraday and B-part of Ampere
      procedure :: advect_e => advect_e_pic_vm_1d2v_trafo !> Advect ev-part 
      procedure :: advect_ex => advect_ex_pic_vm_1d2v_trafo !> Advect ev-part together with x-part in nonlinear iteration
-     
+
      procedure :: init => initialize_pic_vm_1d2v_trafo !> Initialize the type
      procedure :: init_from_file => initialize_file_pic_vm_1d2v_trafo !> Initialize from nml file
      procedure :: free => delete_pic_vm_1d2v_trafo !> Finalization
@@ -139,7 +140,7 @@ module sll_m_time_propagator_pic_vm_1d2v_trafo_helper
   end type sll_t_time_propagator_pic_vm_1d2v_trafo_helper
 
 contains
-  
+
 
   !---------------------------------------------------------------------------!
   !> advect_x: Equations to be solved
@@ -417,9 +418,10 @@ contains
     sll_int32 :: i_part, i_sp, j
     sll_real64 :: vi(3), vh, xi(3), wi(1), xnew(3), vbar(2)
     sll_real64 :: qoverm
-    sll_real64 :: efield(3), jmat(3,3), jmatrix(3,3)
+    sll_real64 :: jmat(3,3), jmatrix(3,3), efield(2)
     sll_int32 :: niter
     sll_real64 :: residual(1), residual_local(1)
+    sll_real64 :: xmid(1), xbar
 
     self%efield_dofs_new = self%efield_dofs
     do i_sp=1,self%particle_group%n_species
@@ -433,7 +435,6 @@ contains
 
     niter = 0
     residual = self%iter_tolerance + 1.0_f64
-
     do while ( (residual(1) > self%iter_tolerance) .and. niter < self%max_iter )
        niter = niter+1
 
@@ -449,6 +450,7 @@ contains
 
              ! Get charge for accumulation of j
              wi = self%particle_group%group(i_sp)%get_charge(i_part)
+
              vbar = 0.5_f64 * (self%vnew(i_sp,:, i_part)+vi(1:2))
              xnew(1) = self%xnew(i_sp, i_part)
 
@@ -456,9 +458,90 @@ contains
              jmatrix=self%map%jacobian_matrix_inverse_transposed( [xnew(1), 0._f64, 0._f64] )
              vh = 0.5_f64 * (jmatrix(1,1)+jmat(1,1))*vbar(1) 
              xnew(1) = xi(1) + dt * vh
-   
-             call compute_particle_boundary_current_evaluate( self, xi, xnew, vi, vbar, wi, qoverm, dt )
-             
+
+             if(xnew(1) < -1._f64 .or. xnew(1) > 2._f64)then
+                print*, xnew
+                SLL_ERROR("particle boundary", "particle out of bound")
+             else if(xnew(1) < 0._f64 .or. xnew(1) > 1._f64 )then
+                if(xnew(1) < 0._f64  )then
+                   xbar = 0._f64
+                else if(xnew(1) > 1._f64)then
+                   xbar = 1._f64
+                end if
+
+                xmid = xbar
+                call self%kernel_smoother_1%add_current_evaluate &
+                     ( xi(1), xmid(1), wi(1), vbar(1), self%efield_dofs_work(1:self%n_dofs1,1), self%j_dofs_local(1:self%n_dofs1,1), &
+                     efield(1) )
+                call self%kernel_smoother_0%add_current_evaluate &
+                     ( xi(1), xmid(1), wi(1)*vbar(2)/vbar(1), vbar(1), &
+                     self%efield_dofs_work(:,2), self%j_dofs_local(:,2), &
+                     efield(2) )
+
+                jmatrix = self%map%jacobian_matrix_inverse_transposed( [xmid(1), 0._f64, 0._f64] )
+                do j = 1, 2
+                   vi(j) = vi(j) + qoverm *0.5_f64*((jmatrix(j,1)+jmat(j,1))*efield(1) + (jmatrix(j,2)+jmat(j,2))*efield(2))
+                end do
+
+                select case(self%boundary_particles)
+                case(sll_p_boundary_particles_reflection) 
+                   xnew = 2._f64*xbar-xnew
+                   vi(1) = -vi(1)
+                   vbar(1) = - vbar(1)
+                case(sll_p_boundary_particles_absorption)
+                   call self%kernel_smoother_0%add_charge(xmid, wi(1), self%rhob)
+                case( sll_p_boundary_particles_periodic)
+                   call self%kernel_smoother_0%add_charge(xmid, wi(1), self%rhob)
+                   xnew = modulo(xnew, 1._f64)
+                   xmid = 1._f64-xbar
+                   call self%kernel_smoother_0%add_charge(xmid, -wi(1), self%rhob)
+                case default
+                   xnew = modulo(xnew, 1._f64)
+                   xmid = 1._f64-xbar
+                end select
+                if( abs(xnew(1)-xmid(1)) > self%iter_tolerance ) then
+                   call self%kernel_smoother_1%add_current_evaluate &
+                        ( xmid(1), xnew(1), wi(1), vbar(1), self%efield_dofs_work(1:self%n_dofs1,1), self%j_dofs_local(1:self%n_dofs1,1), &
+                        efield(1) )
+                   call self%kernel_smoother_0%add_current_evaluate &
+                        ( xmid(1), xnew(1), wi(1)*vbar(2)/vbar(1), vbar(1), &
+                        self%efield_dofs_work(:,2), self%j_dofs_local(:,2), &
+                        efield(2) )
+                   jmatrix = self%map%jacobian_matrix_inverse_transposed( [xnew(1), 0._f64, 0._f64] )
+                   do j = 1, 2
+                      vi(j) = vi(j) + qoverm *0.5_f64*((jmatrix(j,1)+jmat(j,1))*efield(1) + (jmatrix(j,2)+jmat(j,2))*efield(2))
+                   end do
+                   if(self%boundary_particles == sll_p_boundary_particles_reflection) then
+                      vi(1) = - vi(1)
+                   end if
+                else
+                   xnew(1) = xmid(1)   
+                end if
+             else
+                if ( abs(vbar(1)) > 1.0D-16 ) then
+                   call self%kernel_smoother_1%add_current_evaluate &
+                        ( xi(1), xnew(1), wi(1), vbar(1), self%efield_dofs_work(1:self%n_dofs1,1), self%j_dofs_local(1:self%n_dofs1,1), &
+                        efield(1) )
+                   call self%kernel_smoother_0%add_current_evaluate &
+                        ( xi(1), xnew(1), wi(1)*vbar(2)/vbar(1), vbar(1), &
+                        self%efield_dofs_work(:,2), self%j_dofs_local(:,2), &
+                        efield(2) )
+                else
+                   call self%kernel_smoother_1%evaluate &
+                        (xi(1), self%efield_dofs_work(1:self%n_dofs1,1), efield(1) )
+                   efield(1) = efield(1)*dt
+                   call self%kernel_smoother_0%add_charge( xi(1), &
+                        wi(1)* vbar(2)*dt, self%j_dofs_local(:,2) )
+                   call self%kernel_smoother_0%evaluate &
+                        (xi(1), self%efield_dofs_work(:,2), efield(2) )
+                   efield(2) = efield(2)*dt
+                end if
+                jmatrix = self%map%jacobian_matrix_inverse_transposed( [xnew(1), 0._f64, 0._f64] )
+                do j = 1, 2
+                   vi(j) = vi(j) + qoverm *0.5_f64*((jmatrix(j,1)+jmat(j,1))*efield(1) + (jmatrix(j,2)+jmat(j,2))*efield(2))
+                end do
+             end if
+
              self%xnew(i_sp,i_part) = xnew(1)
              self%vnew(i_sp,:,i_part) = vi(1:2)
           end do
@@ -487,22 +570,49 @@ contains
        self%n_failed = self%n_failed+1
     end if
 
-      self%efield_dofs = self%efield_dofs_new
-      do i_sp = 1, self%particle_group%n_species
-       do i_part = 1, self%particle_group%group(i_sp)%n_particles
-          vi(1:2) = self%vnew(i_sp,:,i_part)
-          xnew(1) = self%xnew(i_sp,i_part)
-          call self%particle_group%group(i_sp)%set_v( i_part, vi )
+    self%efield_dofs_work = 0.5_f64*( self%efield_dofs + self%efield_dofs_new )
+    self%j_dofs_local = 0.0_f64
+
+    ! Particle loop
+    do i_sp=1,self%particle_group%n_species
+       qoverm = self%particle_group%group(i_sp)%species%q_over_m();
+       do i_part = 1,self%particle_group%group(i_sp)%n_particles
+          vi = self%particle_group%group(i_sp)%get_v(i_part)
+          xi = self%particle_group%group(i_sp)%get_x(i_part)
+
+          ! Get charge for accumulation of j
+          wi = self%particle_group%group(i_sp)%get_charge(i_part)
+          
+          vbar = 0.5_f64 * (self%vnew(i_sp,:, i_part)+vi(1:2))
+          xnew(1) = self%xnew(i_sp, i_part)
+
+          jmat = self%map%jacobian_matrix_inverse_transposed( [xi(1), 0._f64, 0._f64] )
+          jmatrix=self%map%jacobian_matrix_inverse_transposed( [xnew(1), 0._f64, 0._f64] )
+          vh = 0.5_f64 * (jmatrix(1,1)+jmat(1,1))*vbar(1) 
+          xnew(1) = xi(1) + dt * vh
+          call compute_particle_boundary_current_evaluate( self, xi, xnew, vi, vbar, wi, qoverm, dt )
+
           call self%particle_group%group(i_sp)%set_x( i_part, xnew )
+          call self%particle_group%group(i_sp)%set_v( i_part, vi )
        end do
     end do
 
+    self%j_dofs = 0.0_f64
+    ! MPI to sum up contributions from each processor
+    call sll_o_collective_allreduce( sll_v_world_collective, self%j_dofs_local(:,1), &
+         self%n_dofs1, MPI_SUM, self%j_dofs(1:self%n_dofs1,1) )
+    call sll_o_collective_allreduce( sll_v_world_collective, self%j_dofs_local(:,2), &
+         self%n_dofs0, MPI_SUM, self%j_dofs(:,2) )
+
+    call self%maxwell_solver%compute_E_from_j(self%j_dofs(1:self%n_dofs1,1), 1, self%efield_dofs(1:self%n_dofs1,1) )
+    call self%maxwell_solver%compute_E_from_j(self%j_dofs(:,2), 2, self%efield_dofs(:,2) )
+
     self%iter_counter = self%iter_counter + 1
     self%niter(self%iter_counter) = niter
-    
+
   end subroutine advect_ex_pic_vm_1d2v_trafo
-  
-  
+
+
   !> Helper function for \a advect_ex
   subroutine compute_particle_boundary_current_evaluate( self, xi, xnew, vi, vbar, wi, qoverm, dt )
     class(sll_t_time_propagator_pic_vm_1d2v_trafo_helper), intent( inout ) :: self !< time splitting object 
@@ -521,7 +631,10 @@ contains
 
     jmat = self%map%jacobian_matrix_inverse_transposed( [xi(1), 0._f64, 0._f64] )
 
-    if(xnew(1) < 0._f64 .or. xnew(1) > 1._f64 )then
+    if(xnew(1) < -1._f64 .or. xnew(1) > 2._f64)then
+       print*, xnew
+       SLL_ERROR("particle boundary", "particle out of bound")
+    else if(xnew(1) < 0._f64 .or. xnew(1) > 1._f64 )then
        if(xnew(1) < 0._f64  )then
           xbar = 0._f64
           self%counter_left = self%counter_left+1
@@ -535,7 +648,6 @@ contains
        call self%kernel_smoother_1%add_current_evaluate &
             ( xi(1), xmid(1), wi(1), vbar(1), self%efield_dofs_work(1:self%n_dofs1,1), self%j_dofs_local(1:self%n_dofs1,1), &
             efield(1) )
-
        call self%kernel_smoother_0%add_current_evaluate &
             ( xi(1), xmid(1), wi(1)*vbar(2)/vbar(1), vbar(1), &
             self%efield_dofs_work(:,2), self%j_dofs_local(:,2), &
@@ -550,7 +662,7 @@ contains
        case(sll_p_boundary_particles_reflection) 
           xnew = 2._f64*xbar-xnew
           vi(1) = -vi(1)
-          vbar(1) = -vbar(1) !?
+          vbar(1) = -vbar(1)
        case(sll_p_boundary_particles_absorption)
           call self%kernel_smoother_0%add_charge(xmid, wi(1), self%rhob)
        case( sll_p_boundary_particles_periodic)
@@ -559,27 +671,29 @@ contains
           xmid = 1._f64-xbar
           call self%kernel_smoother_0%add_charge(xmid, -wi(1), self%rhob)
        case default
-          !call self%kernel_smoother_0%add_charge(xmid, wi(1), self%rhob)
           xnew = modulo(xnew, 1._f64)
           xmid = 1._f64-xbar
-          call self%kernel_smoother_0%add_charge(xmid, -wi(1), self%rhob)
        end select
-
-       call self%kernel_smoother_1%add_current_evaluate &
-            ( xmid(1), xnew(1), wi(1), vbar(1), self%efield_dofs_work(1:self%n_dofs1,1), self%j_dofs_local(1:self%n_dofs1,1), &
-            efield(1) )
-
-       call self%kernel_smoother_0%add_current_evaluate &
-            ( xmid(1), xnew(1), wi(1)*vbar(2)/vbar(1), vbar(1), &
-            self%efield_dofs_work(:,2), self%j_dofs_local(:,2), &
-            efield(2) )
-
+       if( abs(xnew(1)-xmid(1)) > self%iter_tolerance ) then
+          call self%kernel_smoother_1%add_current_evaluate &
+               ( xmid(1), xnew(1), wi(1), vbar(1), self%efield_dofs_work(1:self%n_dofs1,1), self%j_dofs_local(1:self%n_dofs1,1), &
+               efield(1) )
+          call self%kernel_smoother_0%add_current_evaluate &
+               ( xmid(1), xnew(1), wi(1)*vbar(2)/vbar(1), vbar(1), &
+               self%efield_dofs_work(:,2), self%j_dofs_local(:,2), &
+               efield(2) )
+          jmatrix = self%map%jacobian_matrix_inverse_transposed( [xnew(1), 0._f64, 0._f64] )
+          do j = 1, 2
+             vi(j) = vi(j) + qoverm *0.5_f64*((jmatrix(j,1)+jmat(j,1))*efield(1) + (jmatrix(j,2)+jmat(j,2))*efield(2))
+          end do
+       else
+          xnew(1) = xmid(1)   
+       end if
     else
        if ( abs(vbar(1)) > 1.0D-16 ) then
           call self%kernel_smoother_1%add_current_evaluate &
                ( xi(1), xnew(1), wi(1), vbar(1), self%efield_dofs_work(1:self%n_dofs1,1), self%j_dofs_local(1:self%n_dofs1,1), &
                efield(1) )
-
           call self%kernel_smoother_0%add_current_evaluate &
                ( xi(1), xnew(1), wi(1)*vbar(2)/vbar(1), vbar(1), &
                self%efield_dofs_work(:,2), self%j_dofs_local(:,2), &
@@ -594,14 +708,15 @@ contains
                (xi(1), self%efield_dofs_work(:,2), efield(2) )
           efield(2) = efield(2)*dt
        end if
+        jmatrix = self%map%jacobian_matrix_inverse_transposed( [xnew(1), 0._f64, 0._f64] )
+        do j = 1, 2
+           vi(j) = vi(j) + qoverm *0.5_f64*((jmatrix(j,1)+jmat(j,1))*efield(1) + (jmatrix(j,2)+jmat(j,2))*efield(2))
+        end do
     end if
-    jmatrix = self%map%jacobian_matrix_inverse_transposed( [xnew(1), 0._f64, 0._f64] )
-    do j = 1, 2
-       vi(j) = vi(j) + qoverm *0.5_f64*((jmatrix(j,1)+jmat(j,1))*efield(1) + (jmatrix(j,2)+jmat(j,2))*efield(2))
-    end do
-
-  end subroutine compute_particle_boundary_current_evaluate
     
+  end subroutine compute_particle_boundary_current_evaluate
+
+  
   !---------------------------------------------------------------------------!
   !> Constructor.
   subroutine initialize_pic_vm_1d2v_trafo(&
@@ -681,7 +796,7 @@ contains
     self%n_dofs0 = self%maxwell_solver%n_dofs0
     self%n_dofs1 = self%maxwell_solver%n_dofs1
     self%spline_degree = self%kernel_smoother_0%spline_degree
- 
+
     SLL_ALLOCATE( self%j_dofs(self%n_dofs0,2), ierr )
     SLL_ALLOCATE( self%j_dofs_local(self%n_dofs0,2), ierr )
     SLL_ALLOCATE( self%particle_mass_1_local(2*self%spline_degree-1, self%n_dofs1), ierr )
@@ -733,7 +848,7 @@ contains
     do j = 2,self%particle_group%n_species       
        self%n_particles_max = max(self%n_particles_max, self%particle_group%group(j)%n_particles )
     end do
-    
+
     SLL_ALLOCATE( self%xnew(self%particle_group%n_species,self%n_particles_max), ierr )
     SLL_ALLOCATE( self%vnew(self%particle_group%n_species,2,self%n_particles_max), ierr )
     SLL_ALLOCATE( self%efield_dofs_new(self%n_dofs0,2), ierr )
@@ -742,7 +857,7 @@ contains
     if( present(rhob) )then
        self%rhob => rhob
     end if
-    
+
   end subroutine initialize_pic_vm_1d2v_trafo
 
 
@@ -893,7 +1008,7 @@ contains
              write(file_id, *) 'force_sign:', force_sign_set
              close(file_id) 
           end if
-           call self%init( maxwell_solver, &
+          call self%init( maxwell_solver, &
                kernel_smoother_0, &
                kernel_smoother_1, &
                particle_group, &
