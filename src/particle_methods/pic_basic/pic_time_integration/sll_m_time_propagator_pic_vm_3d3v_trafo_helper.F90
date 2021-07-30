@@ -713,10 +713,8 @@ contains
              else if(xnew(1) < 0._f64 .or. xnew(1) > 1._f64 )then
                 if(xnew(1) < 0._f64  )then
                    xbar = 0._f64
-                   self%counter_left = self%counter_left+1
                 else if(xnew(1) > 1._f64)then
                    xbar = 1._f64
-                   self%counter_right = self%counter_right+1
                 end if
                 dx = (xbar- xi(1))/(xnew(1)-xi(1))
                 xmid = xi + dx * (xnew-xi)
