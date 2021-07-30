@@ -524,7 +524,7 @@ contains
     sll_real64,                                     intent(in)    :: dt   !< time step
     ! local variables
     sll_int32 :: i_part, i_sp
-    sll_real64 :: vi(3), xi(3), wi(1), vnew(3), xnew(3), vbar(3),  xmid(3), xbar, dx
+    sll_real64 :: vi(3), xi(3), wi(1), xnew(3), vbar(3),  xmid(3), xbar, dx
     sll_real64 :: qoverm, wall(3) 
     sll_real64 :: efield(3)
     sll_int32 :: niter
@@ -557,8 +557,7 @@ contains
              ! Get charge for accumulation of j
              wi = self%particle_group%group(i_sp)%get_charge(i_part, self%i_weight)
 
-             vnew = self%vnew(i_sp,:, i_part)
-             vbar = 0.5_f64*(vi+vnew)
+             vbar = 0.5_f64*(vi+self%vnew(i_sp,:, i_part))
 
              xnew = xi + dt * vbar
              if(xnew(1) < -self%x_max(1) .or.  xnew(1) > 2._f64*self%x_max(1) ) then
@@ -577,11 +576,12 @@ contains
                 vbar = (xmid - xi)*wi(1)
                 call self%particle_mesh_coupling%add_current_evaluate( xi, xmid, vbar, self%efield_dofs_work, &
                      self%j_dofs_local, efield )
-                vnew = vi + qoverm * dt* dx* efield
+                vi = vi + qoverm * dt* dx* efield
+                
                 select case(self%boundary_particles)
                 case(sll_p_boundary_particles_reflection)
                    xnew(1) = 2._f64*xbar-xnew(1)
-                   vnew(1) = - vnew(1)
+                   vi(1) = - vi(1)
                 case(sll_p_boundary_particles_absorption)
                    call self%particle_mesh_coupling%add_charge(xmid, wi(1), self%spline_degree, self%rhob)
                    xnew(1) = xmid(1) + ((xbar-self%x_min(1))/self%Lx(1)-0.5_f64) * 1.9_f64*self%iter_tolerance 
@@ -596,24 +596,22 @@ contains
                    vbar = (xnew - xmid)*wi(1)
                    call self%particle_mesh_coupling%add_current_evaluate( xmid, xnew, vbar, self%efield_dofs_work, &
                         self%j_dofs_local, efield )
-                   vnew = vnew + qoverm * (1._f64-dx)*dt * efield
+                   vi = vi + qoverm * (1._f64-dx)*dt * efield
                    if(self%boundary_particles == sll_p_boundary_particles_reflection) then
-                      vnew(1) = - vnew(1)
+                      vi(1) = - vi(1)
                    end if
                 else
                    xnew(1) = xmid(1) 
                 end if
              else
                 vbar = (xnew - xi)*wi(1)
-
                 call self%particle_mesh_coupling%add_current_evaluate( xi, xnew, vbar, self%efield_dofs_work, &
                      self%j_dofs_local, efield )
-                vnew = vi + qoverm * dt * efield
+                vi = vi + qoverm * dt * efield
              end if
 
              self%xnew(i_sp, :, i_part) = xnew
-             self%vnew(i_sp, :, i_part) = vnew
-
+             self%vnew(i_sp, :, i_part) = vi
           end do
        end do
 
@@ -648,8 +646,7 @@ contains
        print*, 'Warning: Iteration no.', self%iter_counter+1 ,'did not converge.', residual, niter
        self%n_failed = self%n_failed+1
     end if
-    
-    
+        
     self%efield_dofs_work = 0.5_f64*( self%efield_dofs + self%efield_dofs_new )
     self%j_dofs_local = 0.0_f64
 
@@ -663,8 +660,7 @@ contains
           ! Get charge for accumulation of j
           wi = self%particle_group%group(i_sp)%get_charge(i_part, self%i_weight)
 
-          vnew = self%vnew(i_sp,:, i_part)
-          vbar = 0.5_f64*(vi+vnew)
+          vbar = 0.5_f64*(vi+self%vnew(i_sp,:, i_part))
 
           xnew = xi + dt * vbar
           if(xnew(1) < -self%x_max(1) .or.  xnew(1) > 2._f64*self%x_max(1) ) then
@@ -673,8 +669,10 @@ contains
           else if(xnew(1) < self%x_min(1) .or. xnew(1) > self%x_max(1) )then
              if(xnew(1) < self%x_min(1)  )then
                 xbar = self%x_min(1)
+                self%counter_left = self%counter_left+1
              else if(xnew(1) > self%x_max(1))then
                 xbar = self%x_max(1)
+                self%counter_right = self%counter_right+1
              end if
              dx = (xbar- xi(1))/(xnew(1)-xi(1))
              xmid = xi + dx * (xnew-xi)
@@ -683,11 +681,11 @@ contains
              vbar = (xmid - xi)*wi(1)
              call self%particle_mesh_coupling%add_current_evaluate( xi, xmid, vbar, self%efield_dofs_work, &
                   self%j_dofs_local, efield )
-             vnew = vi + qoverm * dt* dx* efield
+             vi = vi + qoverm * dt* dx* efield
              select case(self%boundary_particles)
              case(sll_p_boundary_particles_reflection)
                 xnew(1) = 2._f64*xbar-xnew(1)
-                vnew(1) = - vnew(1)
+                vi(1) = - vi(1)
              case(sll_p_boundary_particles_absorption)
                 call self%particle_mesh_coupling%add_charge(xmid, wi(1), self%spline_degree, self%rhob)
              case( sll_p_boundary_particles_periodic)
@@ -701,7 +699,7 @@ contains
                 vbar = (xnew - xmid)*wi(1)
                 call self%particle_mesh_coupling%add_current_evaluate( xmid, xnew, vbar, self%efield_dofs_work, &
                      self%j_dofs_local, efield )
-                vnew = vnew + qoverm * (1._f64-dx)*dt * efield
+                vi = vi + qoverm * (1._f64-dx)*dt * efield
              else
                 xnew(1) = xmid(1) 
              end if
@@ -710,16 +708,16 @@ contains
 
              call self%particle_mesh_coupling%add_current_evaluate( xi, xnew, vbar, self%efield_dofs_work, &
                   self%j_dofs_local, efield )
-             vnew = vi + qoverm * dt * efield
+             vi = vi + qoverm * dt * efield
           end if
 
           xnew(2:3) = self%x_min(2:3) + modulo(xnew(2:3)-self%x_min(2:3), self%Lx(2:3))
-          call self%particle_group%group(i_sp)%set_v( i_part, vnew )
+          call self%particle_group%group(i_sp)%set_v( i_part, vi )
           call self%particle_group%group(i_sp)%set_x( i_part, xnew )
           ! Update particle weights
           if (self%particle_group%group(i_sp)%n_weights == 3 ) then
              wall = self%particle_group%group(i_sp)%get_weights(i_part)
-             wall(3) = self%control_variate%cv(i_sp)%update_df_weight( xnew, vnew, 0.0_f64, wall(1), wall(2) )
+             wall(3) = self%control_variate%cv(i_sp)%update_df_weight( xnew, vi, 0.0_f64, wall(1), wall(2) )
              call self%particle_group%group(i_sp)%set_weights( i_part, wall )
           end if
        end do
@@ -1411,6 +1409,10 @@ contains
     !local variables
     sll_int32 :: file_id, j
 
+    if( self%boundary ) then
+       print*, 'left boundary', self%counter_left
+       print*, 'right boundary', self%counter_right
+    end if
 
     if(self%adiabatic_electrons) then
        call self%linear_solver_schur_phiv%free()

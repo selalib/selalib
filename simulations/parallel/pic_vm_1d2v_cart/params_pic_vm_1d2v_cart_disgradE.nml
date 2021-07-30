@@ -29,14 +29,9 @@
 &pic_params
         n_particles = 100000
         sampling_case = "particle_sampling_sobol_symmetric"
-        splitting_case = "splitting_disgradE_trafo"     
+        splitting_case = "splitting_disgradE"     
         spline_degree = 3
 	splitting_type = "strang"
-/
-&trafo
-	nparams = 6
-	params = 5.02654824574 1.0 1.0 0.0 0.0 0.0 
-	mapping_case = "scaling"
 /
 
 &ctest

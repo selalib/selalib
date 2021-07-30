@@ -768,12 +768,12 @@ contains
                    end do
                    if(self%boundary_particles == sll_p_boundary_particles_reflection) then
                       do j = 1, 3
-                         vh(j) = jmat(j,1) *vi(j)
+                         vh(j) = jmat(1,j)*vi(1) + jmat(2,j)*vi(2) + jmat(3,j)*vi(3)
                       end do
                       vh(1) = - vh(1)
                       jmat = self%map%jacobian_matrix(xnew)
                       do j = 1, 3
-                         vi(j) = jmat(1,j) *vh(j)
+                         vi(j) = jmat(j,1)*vh(1) + jmat(j,2)*vh(2) + jmat(j,3)*vh(3)
                       end do
                    end if
                 else
@@ -811,7 +811,6 @@ contains
        else
           self%efield_dofs_work = self%efield_dofs
           call self%maxwell_solver%compute_E_from_j( self%betar(2)*self%j_dofs, self%efield_dofs_work )
-
 
           ! Compute residual based on e
           residual_local = (sum((self%efield_dofs_work-self%efield_dofs_new)**2))*product(self%particle_mesh_coupling%delta_x)
@@ -855,9 +854,7 @@ contains
              end do
              xnew = xi + dt * vh
           end if
-
           call compute_particle_boundary_current_evaluate( self, xi, xnew, vi, wi, dt*qoverm )
-
 
           call self%particle_group%group(i_sp)%set_v( i_part, vi )
           call self%particle_group%group(i_sp)%set_x( i_part, xnew )
