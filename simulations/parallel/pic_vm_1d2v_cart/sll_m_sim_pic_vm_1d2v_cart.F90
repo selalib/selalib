@@ -1215,7 +1215,7 @@ contains
             rho_local, &
             sim%n_dofs0, MPI_SUM, rho)
        if (sim%rank == 0) then
-
+          !print*, rho
           call ctest( rho, rho_local, trim(sim%ctest_ref_file_rho), sim%ctest_passed )
           call sll_s_check_diagnostics(trim(sim%ctest_ref_file_thdiag),'ctest_thdiag.dat', 3E-13_f64, sim%ctest_passed)
        end if
