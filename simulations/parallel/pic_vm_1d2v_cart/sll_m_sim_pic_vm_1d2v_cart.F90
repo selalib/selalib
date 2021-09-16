@@ -175,9 +175,6 @@ module sll_m_sim_pic_vm_1d2v_cart
   use sll_m_time_propagator_pic_vm_1d2v_subcyc, only: &
        sll_t_time_propagator_pic_vm_1d2v_subcyc
 
-  use sll_m_time_propagator_pic_vm_1d2v_subcyci, only: &
-       sll_t_time_propagator_pic_vm_1d2v_subcyci
-
   use sll_m_time_propagator_pic_vm_1d2v_zigsub, only: &
        sll_t_time_propagator_pic_vm_1d2v_zigsub
 
@@ -210,8 +207,7 @@ module sll_m_sim_pic_vm_1d2v_cart
   sll_int32, parameter :: sll_p_splitting_disgradE_trafo = 15
   sll_int32, parameter :: sll_p_splitting_disgradEC_trafo = 16
   sll_int32, parameter :: sll_p_splitting_subcyc = 17
-  sll_int32, parameter :: sll_p_splitting_subcyci = 18 !< implicit subcycling scheme
-  sll_int32, parameter :: sll_p_splitting_zigsub = 19 !< subcycling with zig zagging
+sll_int32, parameter :: sll_p_splitting_zigsub = 19 !< subcycling with zig zagging
   sll_int32, parameter :: sll_p_splitting_momentum = 20
 
 
@@ -550,8 +546,6 @@ contains
        sim%splitting_case = sll_p_splitting_disgradEC_sub
     case("splitting_subcyc")
        sim%splitting_case = sll_p_splitting_subcyc
-    case("splitting_subcyci")
-       sim%splitting_case = sll_p_splitting_subcyci
     case("splitting_zigsub")
        sim%splitting_case = sll_p_splitting_zigsub
     case("splitting_hs_trafo")
@@ -929,25 +923,6 @@ contains
                sim%domain(1), sim%domain(3), sim%map, trim(filename), sim%boundary_particles, force_sign=sim%force_sign, electrostatic=electrostatic, jmean=jmean  )!,betar=sim%plasma_betar(1:2))
           sim%efield_dofs_n => qptrafo%helper%efield_dofs
        end select
-    elseif  (sim%splitting_case == sll_p_splitting_subcyci) then
-       ! Read parameters from file
-       open(newunit = input_file, file=trim(filename), status='old', IOStat=io_stat)
-       if (io_stat /= 0) then
-          print*, 'init_pic_1d2v() failed to open file ', filename
-          STOP
-       end if
-       read(input_file, time_iterate)
-       close(input_file)
-       allocate( sll_t_time_propagator_pic_vm_1d2v_subcyci :: sim%propagator )
-       select type( qpsci=>sim%propagator )
-       type is ( sll_t_time_propagator_pic_vm_1d2v_subcyci )
-          call qpsci%init(  sim%maxwell_solver, &
-               sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
-               sim%efield_dofs, sim%bfield_dofs, &
-               sim%domain(1), sim%domain(3), n_sub_iter, sim%file_prefix, &
-               sim%bfilter, jmean, sim%control_variate, sim%no_weights)
-          sim%efield_dofs_n => qpsci%efield_dofs
-       end select
     elseif  (sim%splitting_case == sll_p_splitting_zigsub) then
        ! Read parameters from file
        open(newunit = input_file, file=trim(filename), status='old', IOStat=io_stat)
@@ -1080,13 +1055,6 @@ contains
     end select
     ! End field initialization
     call sim%propagator%reinit_fields()
-
-    ! For the implicit subcyling scheme, we need to propagate the first step
-    select type( qpsci=>sim%propagator )
-    type is ( sll_t_time_propagator_pic_vm_1d2v_subcyci )
-       call qpsci%first_step_modified2( sim%delta_t )
-       print*, 'Warning: You need to adjust the time in the diagnostic file by dt - dtau'
-    end select
 
 
     ! In case we use the Boris propagator, we need to initialize the staggering used in the scheme.

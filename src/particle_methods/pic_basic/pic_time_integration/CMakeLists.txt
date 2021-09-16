@@ -7,7 +7,6 @@ SET( PIC_TIME_SRCS
   sll_m_time_propagator_pic_vm_1d2v_cef.F90
   sll_m_time_propagator_pic_vm_1d2v_boris.F90
   sll_m_time_propagator_pic_vm_1d2v_subcyc.F90
-  sll_m_time_propagator_pic_vm_1d2v_subcyci.F90
   sll_m_time_propagator_pic_vm_1d2v_helper.F90
   sll_m_time_propagator_pic_vm_1d2v_disgradE.F90
   sll_m_time_propagator_pic_vm_1d2v_disgradEC.F90
