@@ -492,23 +492,23 @@ contains
          if (j > degree2) then
             do l = 0, degree2
                spline1%scratch_b = b_coeffs(i - degree1 + (j - degp2 + l)*n_cells(1):i + (j - degp2 + l)*n_cells(1))
-      call sll_s_spline_pp_b_to_pp_1d_cell(spline1, spline1%scratch_b, pp_coeffs(1 + l*degp1:degp1*(l + 1), i + n_cells(1)*(j - 1)))
+               call sll_s_spline_pp_b_to_pp_1d_cell(spline1, spline1%scratch_b, pp_coeffs(1 + l*degp1:degp1*(l + 1), i + n_cells(1)*(j - 1)))
             end do
          else
             !> use of modulo for boundary cells in second dimension
             do l = 0, degree2
-             spline1%scratch_b=b_coeffs(i-degree1+modulo(j-degp2+l,n_cells(2))*n_cells(1):i+modulo(j-degp2+l,n_cells(2))*n_cells(1))
-      call sll_s_spline_pp_b_to_pp_1d_cell(spline1, spline1%scratch_b, pp_coeffs(1 + l*degp1:degp1*(l + 1), i + n_cells(1)*(j - 1)))
+               spline1%scratch_b = b_coeffs(i - degree1 + modulo(j - degp2 + l, n_cells(2))*n_cells(1):i + modulo(j - degp2 + l, n_cells(2))*n_cells(1))
+               call sll_s_spline_pp_b_to_pp_1d_cell(spline1, spline1%scratch_b, pp_coeffs(1 + l*degp1:degp1*(l + 1), i + n_cells(1)*(j - 1)))
             end do
          end if
       else
          !> use of modulo for boundary cells in both dimensions
          do l = 0, degree2
             do k = 0, degree1
-           spline1%scratch_b(k + 1) = b_coeffs(modulo(i - degp1 + k, n_cells(1)) + 1 + modulo(j - degp2 + l, n_cells(2))*n_cells(1))
+               spline1%scratch_b(k + 1) = b_coeffs(modulo(i - degp1 + k, n_cells(1)) + 1 + modulo(j - degp2 + l, n_cells(2))*n_cells(1))
             end do
 
-      call sll_s_spline_pp_b_to_pp_1d_cell(spline1, spline1%scratch_b, pp_coeffs(1 + l*degp1:degp1*(l + 1), i + n_cells(1)*(j - 1)))
+            call sll_s_spline_pp_b_to_pp_1d_cell(spline1, spline1%scratch_b, pp_coeffs(1 + l*degp1:degp1*(l + 1), i + n_cells(1)*(j - 1)))
          end do
       end if
 
@@ -529,7 +529,7 @@ contains
       type(sll_t_spline_pp_3d), intent(inout)::  self !< arbitrary degree 2d spline
       sll_int32, intent(in) ::  n_cells(3) !< number of gridcells
       sll_real64, intent(in) :: b_coeffs(n_cells(1)*n_cells(2), n_cells(2))   !< coefficients of spline in B-form
-    sll_real64, intent(out):: pp_coeffs((self%spline1%degree+1)*(self%spline2%degree+1)*(self%spline3%degree+1),n_cells(1)*n_cells(2)*n_cells(3))  !< coefficients of spline in pp-form
+      sll_real64, intent(out):: pp_coeffs((self%spline1%degree + 1)*(self%spline2%degree + 1)*(self%spline3%degree + 1), n_cells(1)*n_cells(2)*n_cells(3))  !< coefficients of spline in pp-form
       sll_int32 :: i, j, k
 
       do k = 1, n_cells(3)
@@ -547,7 +547,7 @@ contains
       type(sll_t_spline_pp_3d), intent(inout)::  self !< arbitrary degree 3d spline
       sll_int32, intent(in)    :: n_cells(3) !< number of gridcells
       sll_real64, intent(in)    :: b_coeffs(n_cells(1)*n_cells(2)*n_cells(3))   !< coefficients of spline in B-form
-    sll_real64,intent(inout) :: pp_coeffs((self%spline1%degree+1)*(self%spline2%degree+1)*(self%spline3%degree+1),n_cells(1)*n_cells(2)*n_cells(3))  !< coefficients of spline in pp-form
+      sll_real64, intent(inout) :: pp_coeffs((self%spline1%degree + 1)*(self%spline2%degree + 1)*(self%spline3%degree + 1), n_cells(1)*n_cells(2)*n_cells(3))  !< coefficients of spline in pp-form
       sll_int32, intent(in)    :: i, j, k !< indices
       !local variables
       sll_int32 :: l, m, n
@@ -564,16 +564,16 @@ contains
             if (k > degree3) then
                do m = 0, degree2
                   do n = 0, degree3
-                   self%spline1%scratch_b=b_coeffs(i-degree1+(j-degp2+m)*n_cells(1)+(k-degp3+n)*n_cells(1)*n_cells(2):i+(j-degp2+m)*n_cells(1)+(k-degp3+n)*n_cells(1)*n_cells(2))
-                   call sll_s_spline_pp_b_to_pp_1d_cell(self%spline1, self%spline1%scratch_b, self%scratch_pp(1+m*degp1+n*degp1*degp2:degp1*(1+m+n*degp2))) 
+                     self%spline1%scratch_b = b_coeffs(i - degree1 + (j - degp2 + m)*n_cells(1) + (k - degp3 + n)*n_cells(1)*n_cells(2):i + (j - degp2 + m)*n_cells(1) + (k - degp3 + n)*n_cells(1)*n_cells(2))
+                     call sll_s_spline_pp_b_to_pp_1d_cell(self%spline1, self%spline1%scratch_b, self%scratch_pp(1 + m*degp1 + n*degp1*degp2:degp1*(1 + m + n*degp2)))
                   end do
                end do
             else
                !> use of modulo for boundary cells in third dimension
                do m = 0, degree2
                   do n = 0, degree3
-                   self%spline1%scratch_b=b_coeffs(i-degree1+(j-degp2+m)*n_cells(1)+modulo(k-degp3+n,n_cells(3))*n_cells(1)*n_cells(2):i+(j-degp2+m)*n_cells(1)+modulo(k-degp3+n,n_cells(3))*n_cells(1)*n_cells(2))
-                   call sll_s_spline_pp_b_to_pp_1d_cell(self%spline1, self%spline1%scratch_b, self%scratch_pp(1+m*degp1+n*degp1*degp2:degp1*(1+m+n*degp2)))
+                     self%spline1%scratch_b = b_coeffs(i - degree1 + (j - degp2 + m)*n_cells(1) + modulo(k - degp3 + n, n_cells(3))*n_cells(1)*n_cells(2):i + (j - degp2 + m)*n_cells(1) + modulo(k - degp3 + n, n_cells(3))*n_cells(1)*n_cells(2))
+                     call sll_s_spline_pp_b_to_pp_1d_cell(self%spline1, self%spline1%scratch_b, self%scratch_pp(1 + m*degp1 + n*degp1*degp2:degp1*(1 + m + n*degp2)))
                   end do
                end do
             end if
@@ -581,8 +581,8 @@ contains
             !> use of modulo for boundary cells in second and third dimension
             do m = 0, degree2
                do n = 0, degree3
-                self%spline1%scratch_b=b_coeffs(i-degree1+modulo(j-degp2+m,n_cells(2))*n_cells(1)+modulo(k-degp3+n,n_cells(3))*n_cells(1)*n_cells(2):i+modulo(j-degp2+m,n_cells(2))*n_cells(1)+modulo(k-degp3+n,n_cells(3))*n_cells(1)*n_cells(2))
-                call sll_s_spline_pp_b_to_pp_1d_cell(self%spline1, self%spline1%scratch_b, self%scratch_pp(1+m*degp1+n*degp1*degp2:degp1*(1+m+n*degp2)))
+                  self%spline1%scratch_b = b_coeffs(i - degree1 + modulo(j - degp2 + m, n_cells(2))*n_cells(1) + modulo(k - degp3 + n, n_cells(3))*n_cells(1)*n_cells(2):i + modulo(j - degp2 + m, n_cells(2))*n_cells(1) + modulo(k - degp3 + n, n_cells(3))*n_cells(1)*n_cells(2))
+                  call sll_s_spline_pp_b_to_pp_1d_cell(self%spline1, self%spline1%scratch_b, self%scratch_pp(1 + m*degp1 + n*degp1*degp2:degp1*(1 + m + n*degp2)))
                end do
             end do
          end if
@@ -591,9 +591,9 @@ contains
          do m = 0, degree2
             do n = 0, degree3
                do l = 0, degree1
-                self%spline1%scratch_b(l+1)=b_coeffs(modulo(i-degp1+l,n_cells(1))+1+modulo(j-degp2+m,n_cells(2))*n_cells(1)+modulo(k-degp3+n,n_cells(3))*n_cells(1)*n_cells(2))
+                  self%spline1%scratch_b(l + 1) = b_coeffs(modulo(i - degp1 + l, n_cells(1)) + 1 + modulo(j - degp2 + m, n_cells(2))*n_cells(1) + modulo(k - degp3 + n, n_cells(3))*n_cells(1)*n_cells(2))
                end do
-             call sll_s_spline_pp_b_to_pp_1d_cell(self%spline1, self%spline1%scratch_b, self%scratch_pp(1+m*degp1+n*degp1*degp2:degp1*(1+m+n*degp2)))
+               call sll_s_spline_pp_b_to_pp_1d_cell(self%spline1, self%spline1%scratch_b, self%scratch_pp(1 + m*degp1 + n*degp1*degp2:degp1*(1 + m + n*degp2)))
             end do
          end do
       end if
@@ -619,7 +619,7 @@ contains
             end do
             call sll_s_spline_pp_b_to_pp_1d_cell(self%spline3, self%spline3%scratch_b, self%spline3%scratch_p)
             do n = 1, degp3
-               pp_coeffs(l+degp1*(m-1)+degp1*degp2*(n-1),i+n_cells(1)*(j-1)+n_cells(1)*n_cells(2)*(k-1))=self%spline3%scratch_p(n)
+               pp_coeffs(l + degp1*(m - 1) + degp1*degp2*(n - 1), i + n_cells(1)*(j - 1) + n_cells(1)*n_cells(2)*(k - 1)) = self%spline3%scratch_p(n)
             end do
          end do
       end do
@@ -631,7 +631,7 @@ contains
       type(sll_t_spline_pp_3d), intent(inout)::  self !< arbitrary degree 3d spline
       sll_int32, intent(in)    :: n_cells(3) !< number of gridcells
       sll_real64, intent(in)    :: b_coeffs((n_cells(1) + self%spline1%degree)*n_cells(2)*n_cells(3)) !< coefficients of spline in B-form
-    sll_real64,intent(inout) :: pp_coeffs((self%spline1%degree+1)*(self%spline2%degree+1)*(self%spline3%degree+1),n_cells(1)*n_cells(2)*n_cells(3))  !< coefficients of spline in pp-form
+      sll_real64, intent(inout) :: pp_coeffs((self%spline1%degree + 1)*(self%spline2%degree + 1)*(self%spline3%degree + 1), n_cells(1)*n_cells(2)*n_cells(3))  !< coefficients of spline in pp-form
       sll_int32, intent(in)    :: i, j, k !< indices
       !local variables
       sll_int32 :: l, m, n
@@ -649,16 +649,16 @@ contains
             if (k > degree3) then
                do m = 0, degree2
                   do n = 0, degree3
-                   self%spline1%scratch_b=b_coeffs(i+(j-degp2+m)*n_dofs+(k-degp3+n)*n_dofs*n_cells(2):i+degree1+(j-degp2+m)*n_dofs+(k-degp3+n)*n_dofs*n_cells(2))
-                   call sll_s_spline_pp_b_to_pp_1d_cell(self%spline1, self%spline1%scratch_b, self%scratch_pp(1+m*degp1+n*degp1*degp2:degp1*(1+m+n*degp2))) 
+                     self%spline1%scratch_b = b_coeffs(i + (j - degp2 + m)*n_dofs + (k - degp3 + n)*n_dofs*n_cells(2):i + degree1 + (j - degp2 + m)*n_dofs + (k - degp3 + n)*n_dofs*n_cells(2))
+                     call sll_s_spline_pp_b_to_pp_1d_cell(self%spline1, self%spline1%scratch_b, self%scratch_pp(1 + m*degp1 + n*degp1*degp2:degp1*(1 + m + n*degp2)))
                   end do
                end do
             else
                !> use of modulo for boundary cells in third dimension
                do m = 0, degree2
                   do n = 0, degree3
-                   self%spline1%scratch_b=b_coeffs(i+(j-degp2+m)*n_dofs+modulo(k-degp3+n,n_cells(3))*n_dofs*n_cells(2):i+degree1+(j-degp2+m)*n_dofs+modulo(k-degp3+n,n_cells(3))*n_dofs*n_cells(2))
-                   call sll_s_spline_pp_b_to_pp_1d_cell(self%spline1, self%spline1%scratch_b, self%scratch_pp(1+m*degp1+n*degp1*degp2:degp1*(1+m+n*degp2)))
+                     self%spline1%scratch_b = b_coeffs(i + (j - degp2 + m)*n_dofs + modulo(k - degp3 + n, n_cells(3))*n_dofs*n_cells(2):i + degree1 + (j - degp2 + m)*n_dofs + modulo(k - degp3 + n, n_cells(3))*n_dofs*n_cells(2))
+                     call sll_s_spline_pp_b_to_pp_1d_cell(self%spline1, self%spline1%scratch_b, self%scratch_pp(1 + m*degp1 + n*degp1*degp2:degp1*(1 + m + n*degp2)))
                   end do
                end do
             end if
@@ -666,8 +666,8 @@ contains
             !> use of modulo for boundary cells in second and third dimension
             do m = 0, degree2
                do n = 0, degree3
-                self%spline1%scratch_b=b_coeffs(i+modulo(j-degp2+m,n_cells(2))*n_dofs+modulo(k-degp3+n,n_cells(3))*n_dofs*n_cells(2):i+degree1+modulo(j-degp2+m,n_cells(2))*n_dofs+modulo(k-degp3+n,n_cells(3))*n_dofs*n_cells(2))
-                call sll_s_spline_pp_b_to_pp_1d_cell(self%spline1, self%spline1%scratch_b, self%scratch_pp(1+m*degp1+n*degp1*degp2:degp1*(1+m+n*degp2)))
+                  self%spline1%scratch_b = b_coeffs(i + modulo(j - degp2 + m, n_cells(2))*n_dofs + modulo(k - degp3 + n, n_cells(3))*n_dofs*n_cells(2):i + degree1 + modulo(j - degp2 + m, n_cells(2))*n_dofs + modulo(k - degp3 + n, n_cells(3))*n_dofs*n_cells(2))
+                  call sll_s_spline_pp_b_to_pp_1d_cell(self%spline1, self%spline1%scratch_b, self%scratch_pp(1 + m*degp1 + n*degp1*degp2:degp1*(1 + m + n*degp2)))
                end do
             end do
          end if
@@ -676,9 +676,9 @@ contains
          do m = 0, degree2
             do n = 0, degree3
                do l = 0, degree1
-        self%spline1%scratch_b(l+1)=b_coeffs(i+l+modulo(j-degp2+m,n_cells(2))*n_dofs+modulo(k-degp3+n,n_cells(3))*n_dofs*n_cells(2))
+                  self%spline1%scratch_b(l + 1) = b_coeffs(i + l + modulo(j - degp2 + m, n_cells(2))*n_dofs + modulo(k - degp3 + n, n_cells(3))*n_dofs*n_cells(2))
                end do
-             call sll_s_spline_pp_b_to_pp_1d_cella(degree1, self%spline1%poly_coeffs_boundary_left(:,:,i),self%spline1%scratch_b, self%scratch_pp(1+m*degp1+n*degp1*degp2:degp1*(1+m+n*degp2)))
+               call sll_s_spline_pp_b_to_pp_1d_cella(degree1, self%spline1%poly_coeffs_boundary_left(:, :, i), self%spline1%scratch_b, self%scratch_pp(1 + m*degp1 + n*degp1*degp2:degp1*(1 + m + n*degp2)))
             end do
          end do
       else if (i >= n_cells(1) - degree1 + 2) then
@@ -686,9 +686,9 @@ contains
          do m = 0, degree2
             do n = 0, degree3
                do l = 0, degree1
-        self%spline1%scratch_b(l+1)=b_coeffs(i+l+modulo(j-degp2+m,n_cells(2))*n_dofs+modulo(k-degp3+n,n_cells(3))*n_dofs*n_cells(2))
+                  self%spline1%scratch_b(l + 1) = b_coeffs(i + l + modulo(j - degp2 + m, n_cells(2))*n_dofs + modulo(k - degp3 + n, n_cells(3))*n_dofs*n_cells(2))
                end do
-             call sll_s_spline_pp_b_to_pp_1d_cella(degree1, self%spline1%poly_coeffs_boundary_right(:,:,i-(n_cells(1) - degree1 +1)),self%spline1%scratch_b, self%scratch_pp(1+m*degp1+n*degp1*degp2:degp1*(1+m+n*degp2)))
+               call sll_s_spline_pp_b_to_pp_1d_cella(degree1, self%spline1%poly_coeffs_boundary_right(:, :, i - (n_cells(1) - degree1 + 1)), self%spline1%scratch_b, self%scratch_pp(1 + m*degp1 + n*degp1*degp2:degp1*(1 + m + n*degp2)))
             end do
          end do
       end if
@@ -714,7 +714,7 @@ contains
             end do
             call sll_s_spline_pp_b_to_pp_1d_cell(self%spline3, self%spline3%scratch_b, self%spline3%scratch_p)
             do n = 1, degp3
-               pp_coeffs(l+degp1*(m-1)+degp1*degp2*(n-1),i+n_cells(1)*(j-1)+n_cells(1)*n_cells(2)*(k-1))=self%spline3%scratch_p(n)
+               pp_coeffs(l + degp1*(m - 1) + degp1*degp2*(n - 1), i + n_cells(1)*(j - 1) + n_cells(1)*n_cells(2)*(k - 1)) = self%spline3%scratch_p(n)
             end do
          end do
       end do
@@ -725,7 +725,7 @@ contains
       type(sll_t_spline_pp_3d), intent(inout)::  self !< arbitrary degree 3d spline
       sll_int32, intent(in)    :: n_cells(3) !< number of gridcells
       sll_real64, intent(in)    :: b_coeffs((n_cells(1) + self%spline1%degree)*n_cells(2)*(n_cells(3) + self%spline3%degree)) !< coefficients of spline in B-form
-    sll_real64,intent(inout) :: pp_coeffs((self%spline1%degree+1)*(self%spline2%degree+1)*(self%spline3%degree+1),n_cells(1)*n_cells(2)*n_cells(3))  !< coefficients of spline in pp-form
+      sll_real64, intent(inout) :: pp_coeffs((self%spline1%degree + 1)*(self%spline2%degree + 1)*(self%spline3%degree + 1), n_cells(1)*n_cells(2)*n_cells(3))  !< coefficients of spline in pp-form
       sll_int32, intent(in)    :: i, j, k !< indices
       !local variables
       sll_int32 :: l, m, n
@@ -742,16 +742,16 @@ contains
          if (j > deg(2)) then
             do n = 0, deg(3)
                do m = 0, deg(2)
-                self%spline1%scratch_b=b_coeffs(i+(j-degp(2)+m)*n_dofs(1)+(k-1+n)*n_dofs(1)*n_dofs(2):i+deg(1)+(j-degp(2)+m)*n_dofs(1)+(k-1+n)*n_dofs(1)*n_dofs(2))
-                call sll_s_spline_pp_b_to_pp_1d_cell(self%spline1, self%spline1%scratch_b, self%scratch_pp(1+m*degp(1)+n*degp(1)*degp(2):degp(1)*(1+m+n*degp(2)))) 
+                  self%spline1%scratch_b = b_coeffs(i + (j - degp(2) + m)*n_dofs(1) + (k - 1 + n)*n_dofs(1)*n_dofs(2):i + deg(1) + (j - degp(2) + m)*n_dofs(1) + (k - 1 + n)*n_dofs(1)*n_dofs(2))
+                  call sll_s_spline_pp_b_to_pp_1d_cell(self%spline1, self%spline1%scratch_b, self%scratch_pp(1 + m*degp(1) + n*degp(1)*degp(2):degp(1)*(1 + m + n*degp(2))))
                end do
             end do
          else
             !> use of modulo for boundary cells in second dimension
             do n = 0, deg(3)
                do m = 0, deg(2)
-                self%spline1%scratch_b=b_coeffs(i+modulo(j-degp(2)+m,n_cells(2))*n_dofs(1)+(k-1+n)*n_dofs(1)*n_dofs(2):i+deg(1)+modulo(j-degp(2)+m,n_cells(2))*n_dofs(1)+(k-1+n)*n_dofs(1)*n_dofs(2))
-                call sll_s_spline_pp_b_to_pp_1d_cell(self%spline1, self%spline1%scratch_b, self%scratch_pp(1+m*degp(1)+n*degp(1)*degp(2):degp(1)*(1+m+n*degp(2)))) 
+                  self%spline1%scratch_b = b_coeffs(i + modulo(j - degp(2) + m, n_cells(2))*n_dofs(1) + (k - 1 + n)*n_dofs(1)*n_dofs(2):i + deg(1) + modulo(j - degp(2) + m, n_cells(2))*n_dofs(1) + (k - 1 + n)*n_dofs(1)*n_dofs(2))
+                  call sll_s_spline_pp_b_to_pp_1d_cell(self%spline1, self%spline1%scratch_b, self%scratch_pp(1 + m*degp(1) + n*degp(1)*degp(2):degp(1)*(1 + m + n*degp(2))))
                end do
             end do
          end if
@@ -759,18 +759,18 @@ contains
          do n = 0, deg(3)
             do m = 0, deg(2)
                do l = 0, deg(1)
-   self%spline1%scratch_b(l + 1) = b_coeffs(i + l + modulo(j - degp(2) + m, n_cells(2))*n_dofs(1) + (k + n - 1)*n_dofs(1)*n_dofs(2))
+                  self%spline1%scratch_b(l + 1) = b_coeffs(i + l + modulo(j - degp(2) + m, n_cells(2))*n_dofs(1) + (k + n - 1)*n_dofs(1)*n_dofs(2))
                end do
-             call sll_s_spline_pp_b_to_pp_1d_cella(deg(1), self%spline1%poly_coeffs_boundary_left(:,:,i),self%spline1%scratch_b, self%scratch_pp(1+m*degp(1)+n*degp(1)*degp(2):degp(1)*(1+m+n*degp(2))))
+               call sll_s_spline_pp_b_to_pp_1d_cella(deg(1), self%spline1%poly_coeffs_boundary_left(:, :, i), self%spline1%scratch_b, self%scratch_pp(1 + m*degp(1) + n*degp(1)*degp(2):degp(1)*(1 + m + n*degp(2))))
             end do
          end do
       else if (i > upper(1)) then
          do n = 0, deg(3)
             do m = 0, deg(2)
                do l = 0, deg(1)
-   self%spline1%scratch_b(l + 1) = b_coeffs(i + l + modulo(j - degp(2) + m, n_cells(2))*n_dofs(1) + (k + n - 1)*n_dofs(1)*n_dofs(2))
+                  self%spline1%scratch_b(l + 1) = b_coeffs(i + l + modulo(j - degp(2) + m, n_cells(2))*n_dofs(1) + (k + n - 1)*n_dofs(1)*n_dofs(2))
                end do
-             call sll_s_spline_pp_b_to_pp_1d_cella(deg(1), self%spline1%poly_coeffs_boundary_right(:,:,i-upper(1)),self%spline1%scratch_b, self%scratch_pp(1+m*degp(1)+n*degp(1)*degp(2):degp(1)*(1+m+n*degp(2))))
+               call sll_s_spline_pp_b_to_pp_1d_cella(deg(1), self%spline1%poly_coeffs_boundary_right(:, :, i - upper(1)), self%spline1%scratch_b, self%scratch_pp(1 + m*degp(1) + n*degp(1)*degp(2):degp(1)*(1 + m + n*degp(2))))
             end do
          end do
       end if
@@ -797,7 +797,7 @@ contains
                end do
                call sll_s_spline_pp_b_to_pp_1d_cell(self%spline3, self%spline3%scratch_b, self%spline3%scratch_p)
                do n = 0, deg(3)
-         pp_coeffs(1+l + m*degp(1)+ n*degp(1)*degp(2), i+(j-1)*n_cells(1)+(k-1)*n_cells(1)*n_cells(2)) = self%spline3%scratch_p(n+1)
+                  pp_coeffs(1 + l + m*degp(1) + n*degp(1)*degp(2), i + (j - 1)*n_cells(1) + (k - 1)*n_cells(1)*n_cells(2)) = self%spline3%scratch_p(n + 1)
                end do
             end do
          end do
@@ -807,9 +807,9 @@ contains
                do n = 0, deg(3)
                   self%spline3%scratch_b(n + 1) = self%scratch_pp(1 + l + degp(1)*m + degp(1)*degp(2)*n)
                end do
-             call sll_s_spline_pp_b_to_pp_1d_cella(deg(3), self%spline3%poly_coeffs_boundary_left(:,:,k),self%spline3%scratch_b, self%spline3%scratch_p)
+               call sll_s_spline_pp_b_to_pp_1d_cella(deg(3), self%spline3%poly_coeffs_boundary_left(:, :, k), self%spline3%scratch_b, self%spline3%scratch_p)
                do n = 0, deg(3)
-         pp_coeffs(1+l + m*degp(1)+ n*degp(1)*degp(2), i+(j-1)*n_cells(1)+(k-1)*n_cells(1)*n_cells(2)) = self%spline3%scratch_p(n+1)
+                  pp_coeffs(1 + l + m*degp(1) + n*degp(1)*degp(2), i + (j - 1)*n_cells(1) + (k - 1)*n_cells(1)*n_cells(2)) = self%spline3%scratch_p(n + 1)
                end do
             end do
          end do
@@ -819,9 +819,9 @@ contains
                do n = 0, deg(3)
                   self%spline3%scratch_b(n + 1) = self%scratch_pp(1 + l + degp(1)*m + degp(1)*degp(2)*n)
                end do
-             call sll_s_spline_pp_b_to_pp_1d_cella(deg(3), self%spline3%poly_coeffs_boundary_right(:,:,k-upper(3)),self%spline3%scratch_b, self%spline3%scratch_p)
+               call sll_s_spline_pp_b_to_pp_1d_cella(deg(3), self%spline3%poly_coeffs_boundary_right(:, :, k - upper(3)), self%spline3%scratch_b, self%spline3%scratch_p)
                do n = 0, deg(3)
-         pp_coeffs(1+l + m*degp(1)+ n*degp(1)*degp(2), i+(j-1)*n_cells(1)+(k-1)*n_cells(1)*n_cells(2)) = self%spline3%scratch_p(n+1)
+                  pp_coeffs(1 + l + m*degp(1) + n*degp(1)*degp(2), i + (j - 1)*n_cells(1) + (k - 1)*n_cells(1)*n_cells(2)) = self%spline3%scratch_p(n + 1)
                end do
             end do
          end do
@@ -833,8 +833,8 @@ contains
    subroutine sll_s_spline_pp_b_to_pp_3d_cellaf(self, n_cells, b_coeffs, pp_coeffs, i, j, k)
       type(sll_t_spline_pp_3d), intent(inout)::  self !< arbitrary degree 3d spline
       sll_int32, intent(in)    :: n_cells(3) !< number of gridcells
-    sll_real64,intent(in)    :: b_coeffs((n_cells(1)+self%spline1%degree)*(n_cells(2)+self%spline2%degree)*(n_cells(3)+self%spline3%degree)) !< coefficients of spline in B-form
-    sll_real64,intent(inout) :: pp_coeffs((self%spline1%degree+1)*(self%spline2%degree+1)*(self%spline3%degree+1),n_cells(1)*n_cells(2)*n_cells(3))  !< coefficients of spline in pp-form
+      sll_real64, intent(in)    :: b_coeffs((n_cells(1) + self%spline1%degree)*(n_cells(2) + self%spline2%degree)*(n_cells(3) + self%spline3%degree)) !< coefficients of spline in B-form
+      sll_real64, intent(inout) :: pp_coeffs((self%spline1%degree + 1)*(self%spline2%degree + 1)*(self%spline3%degree + 1), n_cells(1)*n_cells(2)*n_cells(3))  !< coefficients of spline in pp-form
       sll_int32, intent(in)    :: i, j, k !< indices
       !local variables
       sll_int32 :: l, m, n
@@ -849,8 +849,8 @@ contains
       if (i >= deg(1) .and. i <= upper(1)) then
          do n = 0, deg(3)
             do m = 0, deg(2)
-             self%spline1%scratch_b=b_coeffs(i+(j-1+m)*n_dofs(1)+(k-1+n)*n_dofs(1)*n_dofs(2):i+deg(1)+(j-1+m)*n_dofs(1)+(k-1+n)*n_dofs(1)*n_dofs(2))
-             call sll_s_spline_pp_b_to_pp_1d_cell(self%spline1, self%spline1%scratch_b, self%scratch_pp(1+m*degp(1)+n*degp(1)*degp(2):degp(1)*(1+m+n*degp(2)))) 
+               self%spline1%scratch_b = b_coeffs(i + (j - 1 + m)*n_dofs(1) + (k - 1 + n)*n_dofs(1)*n_dofs(2):i + deg(1) + (j - 1 + m)*n_dofs(1) + (k - 1 + n)*n_dofs(1)*n_dofs(2))
+               call sll_s_spline_pp_b_to_pp_1d_cell(self%spline1, self%spline1%scratch_b, self%scratch_pp(1 + m*degp(1) + n*degp(1)*degp(2):degp(1)*(1 + m + n*degp(2))))
             end do
          end do
       else if (i < deg(1)) then
@@ -859,7 +859,7 @@ contains
                do l = 0, deg(1)
                   self%spline1%scratch_b(l + 1) = b_coeffs(i + l + (j + m - 1)*n_dofs(1) + (k + n - 1)*n_dofs(1)*n_dofs(2))
                end do
-             call sll_s_spline_pp_b_to_pp_1d_cella(deg(1), self%spline1%poly_coeffs_boundary_left(:,:,i),self%spline1%scratch_b, self%scratch_pp(1+m*degp(1)+n*degp(1)*degp(2):degp(1)*(1+m+n*degp(2))))
+               call sll_s_spline_pp_b_to_pp_1d_cella(deg(1), self%spline1%poly_coeffs_boundary_left(:, :, i), self%spline1%scratch_b, self%scratch_pp(1 + m*degp(1) + n*degp(1)*degp(2):degp(1)*(1 + m + n*degp(2))))
             end do
          end do
       else if (i > upper(1)) then
@@ -868,7 +868,7 @@ contains
                do l = 0, deg(1)
                   self%spline1%scratch_b(l + 1) = b_coeffs(i + l + (j + m - 1)*n_dofs(1) + (k + n - 1)*n_dofs(1)*n_dofs(2))
                end do
-             call sll_s_spline_pp_b_to_pp_1d_cella(deg(1), self%spline1%poly_coeffs_boundary_right(:,:,i-upper(1)),self%spline1%scratch_b, self%scratch_pp(1+m*degp(1)+n*degp(1)*degp(2):degp(1)*(1+m+n*degp(2))))
+               call sll_s_spline_pp_b_to_pp_1d_cella(deg(1), self%spline1%poly_coeffs_boundary_right(:, :, i - upper(1)), self%spline1%scratch_b, self%scratch_pp(1 + m*degp(1) + n*degp(1)*degp(2):degp(1)*(1 + m + n*degp(2))))
             end do
          end do
       end if
@@ -892,7 +892,7 @@ contains
                do m = 0, deg(2)
                   self%spline2%scratch_b(m + 1) = self%scratch_pp(1 + l + degp(1)*m + degp(1)*degp(2)*n)
                end do
-             call sll_s_spline_pp_b_to_pp_1d_cella(deg(2), self%spline2%poly_coeffs_boundary_left(:,:,j),self%spline2%scratch_b, self%spline2%scratch_p)
+               call sll_s_spline_pp_b_to_pp_1d_cella(deg(2), self%spline2%poly_coeffs_boundary_left(:, :, j), self%spline2%scratch_b, self%spline2%scratch_p)
                do m = 0, deg(2)
                   self%scratch_pp(1 + l + m*degp(1) + n*degp(1)*degp(2)) = self%spline2%scratch_p(m + 1)
                end do
@@ -904,7 +904,7 @@ contains
                do m = 0, deg(2)
                   self%spline2%scratch_b(m + 1) = self%scratch_pp(1 + l + degp(1)*m + degp(1)*degp(2)*n)
                end do
-             call sll_s_spline_pp_b_to_pp_1d_cella(deg(2), self%spline2%poly_coeffs_boundary_right(:,:,j-upper(2)),self%spline2%scratch_b, self%spline2%scratch_p)
+               call sll_s_spline_pp_b_to_pp_1d_cella(deg(2), self%spline2%poly_coeffs_boundary_right(:, :, j - upper(2)), self%spline2%scratch_b, self%spline2%scratch_p)
                do m = 0, deg(2)
                   self%scratch_pp(1 + l + m*degp(1) + n*degp(1)*degp(2)) = self%spline2%scratch_p(m + 1)
                end do
@@ -921,7 +921,7 @@ contains
                end do
                call sll_s_spline_pp_b_to_pp_1d_cell(self%spline3, self%spline3%scratch_b, self%spline3%scratch_p)
                do n = 0, deg(3)
-         pp_coeffs(1+l + m*degp(1)+ n*degp(1)*degp(2), i+(j-1)*n_cells(1)+(k-1)*n_cells(1)*n_cells(2)) = self%spline3%scratch_p(n+1)
+                  pp_coeffs(1 + l + m*degp(1) + n*degp(1)*degp(2), i + (j - 1)*n_cells(1) + (k - 1)*n_cells(1)*n_cells(2)) = self%spline3%scratch_p(n + 1)
                end do
             end do
          end do
@@ -931,9 +931,9 @@ contains
                do n = 0, deg(3)
                   self%spline3%scratch_b(n + 1) = self%scratch_pp(1 + l + degp(1)*m + degp(1)*degp(2)*n)
                end do
-             call sll_s_spline_pp_b_to_pp_1d_cella(deg(3), self%spline3%poly_coeffs_boundary_left(:,:,k),self%spline3%scratch_b, self%spline3%scratch_p)
+               call sll_s_spline_pp_b_to_pp_1d_cella(deg(3), self%spline3%poly_coeffs_boundary_left(:, :, k), self%spline3%scratch_b, self%spline3%scratch_p)
                do n = 0, deg(3)
-         pp_coeffs(1+l + m*degp(1)+ n*degp(1)*degp(2), i+(j-1)*n_cells(1)+(k-1)*n_cells(1)*n_cells(2)) = self%spline3%scratch_p(n+1)
+                  pp_coeffs(1 + l + m*degp(1) + n*degp(1)*degp(2), i + (j - 1)*n_cells(1) + (k - 1)*n_cells(1)*n_cells(2)) = self%spline3%scratch_p(n + 1)
                end do
             end do
          end do
@@ -943,9 +943,9 @@ contains
                do n = 0, deg(3)
                   self%spline3%scratch_b(n + 1) = self%scratch_pp(1 + l + degp(1)*m + degp(1)*degp(2)*n)
                end do
-             call sll_s_spline_pp_b_to_pp_1d_cella(deg(3), self%spline3%poly_coeffs_boundary_right(:,:,k-upper(3)),self%spline3%scratch_b, self%spline3%scratch_p)
+               call sll_s_spline_pp_b_to_pp_1d_cella(deg(3), self%spline3%poly_coeffs_boundary_right(:, :, k - upper(3)), self%spline3%scratch_b, self%spline3%scratch_p)
                do n = 0, deg(3)
-         pp_coeffs(1+l + m*degp(1)+ n*degp(1)*degp(2), i+(j-1)*n_cells(1)+(k-1)*n_cells(1)*n_cells(2)) = self%spline3%scratch_p(n+1)
+                  pp_coeffs(1 + l + m*degp(1) + n*degp(1)*degp(2), i + (j - 1)*n_cells(1) + (k - 1)*n_cells(1)*n_cells(2)) = self%spline3%scratch_p(n + 1)
                end do
             end do
          end do
@@ -958,7 +958,7 @@ contains
       type(sll_t_spline_pp_3d), intent(inout)::  self !< arbitrary degree 1d spline
       sll_int32, intent(in) :: n_cells(3) !< number of gridcells
       sll_real64, intent(in) :: b_coeffs((n_cells(1) + self%spline1%degree)*n_cells(2)*n_cells(3))   !< coefficients of spline in B-form
-    sll_real64,intent(out):: pp_coeffs((self%spline1%degree+1)*(self%spline2%degree+1)*(self%spline3%degree+1),n_cells(1)*n_cells(2)*n_cells(3))  !< coefficients of spline in pp-form
+      sll_real64, intent(out):: pp_coeffs((self%spline1%degree + 1)*(self%spline2%degree + 1)*(self%spline3%degree + 1), n_cells(1)*n_cells(2)*n_cells(3))  !< coefficients of spline in pp-form
       sll_int32 :: i, j, k
 
       do k = 1, n_cells(3)
@@ -975,7 +975,7 @@ contains
       type(sll_t_spline_pp_3d), intent(inout)::  self !< arbitrary degree 1d spline
       sll_int32, intent(in) :: n_cells(3) !< number of gridcells
       sll_real64, intent(in) :: b_coeffs((n_cells(1) + self%spline1%degree)*n_cells(2)*(n_cells(3) + self%spline3%degree))   !< coefficients of spline in B-form
-    sll_real64,intent(out):: pp_coeffs((self%spline1%degree+1)*(self%spline2%degree+1)*(self%spline3%degree+1),n_cells(1)*n_cells(2)*n_cells(3))  !< coefficients of spline in pp-form
+      sll_real64, intent(out):: pp_coeffs((self%spline1%degree + 1)*(self%spline2%degree + 1)*(self%spline3%degree + 1), n_cells(1)*n_cells(2)*n_cells(3))  !< coefficients of spline in pp-form
       sll_int32 :: i, j, k
 
       do k = 1, n_cells(3)
@@ -992,8 +992,8 @@ contains
    subroutine sll_s_spline_pp_b_to_pp_3d_clamped_full(self, n_cells, b_coeffs, pp_coeffs)
       type(sll_t_spline_pp_3d), intent(inout)::  self !< arbitrary degree 1d spline
       sll_int32, intent(in) :: n_cells(3) !< number of gridcells
-    sll_real64,intent(in) :: b_coeffs((n_cells(1)+self%spline1%degree)*(n_cells(2)+self%spline2%degree)*(n_cells(3)+self%spline3%degree))   !< coefficients of spline in B-form
-    sll_real64,intent(out):: pp_coeffs((self%spline1%degree+1)*(self%spline2%degree+1)*(self%spline3%degree+1),n_cells(1)*n_cells(2)*n_cells(3))  !< coefficients of spline in pp-form
+      sll_real64, intent(in) :: b_coeffs((n_cells(1) + self%spline1%degree)*(n_cells(2) + self%spline2%degree)*(n_cells(3) + self%spline3%degree))   !< coefficients of spline in B-form
+      sll_real64, intent(out):: pp_coeffs((self%spline1%degree + 1)*(self%spline2%degree + 1)*(self%spline3%degree + 1), n_cells(1)*n_cells(2)*n_cells(3))  !< coefficients of spline in pp-form
       sll_int32 :: i, j, k
 
       do k = 1, n_cells(3)
@@ -1077,7 +1077,7 @@ contains
    subroutine sll_s_spline_evaluate_basis_pp_form_3d(self, n_cells, pp_coeffs, val)
       type(sll_t_spline_pp_3d), intent(in)::  self !< arbitrary degree 1d spline
       sll_int32, intent(in) ::  n_cells(3) !< number of gridcells
-    sll_real64,intent(in) :: pp_coeffs((self%spline1%degree+1)*(self%spline2%degree+1)*(self%spline3%degree+1),n_cells(1)*n_cells(2)*n_cells(3)) !< coefficients of sp
+      sll_real64, intent(in) :: pp_coeffs((self%spline1%degree + 1)*(self%spline2%degree + 1)*(self%spline3%degree + 1), n_cells(1)*n_cells(2)*n_cells(3)) !< coefficients of sp
       sll_real64, intent(out):: val(:) !< array of values
       !local variables
       sll_int32 :: i, j, k
@@ -1086,25 +1086,25 @@ contains
          do j = 1, n_cells(2)
             do i = 1, n_cells(1)
                !val(i+(j-1)*n_cells(1)+(k-1)*n_cells(1)*n_cells(2)) = pp_coeffs(self%spline1%degree+1,i+(j-1)*n_cells(1)+(k-1)*n_cells(1)*n_cells(2))
-             val(i+(j-1)*(n_cells(1)+1)+(k-1)*(n_cells(1)+1)*(n_cells(2)+1)) = sll_f_spline_pp_horner_3d([self%spline1%degree, self%spline2%degree, self%spline3%degree], pp_coeffs, [0._f64,0._f64,0._f64], [i,j,k], n_cells)
+               val(i + (j - 1)*(n_cells(1) + 1) + (k - 1)*(n_cells(1) + 1)*(n_cells(2) + 1)) = sll_f_spline_pp_horner_3d([self%spline1%degree, self%spline2%degree, self%spline3%degree], pp_coeffs, [0._f64, 0._f64, 0._f64], [i, j, k], n_cells)
             end do
-          val(n_cells(1)+1+(j-1)*(n_cells(1)+1)+(k-1)*(n_cells(1)+1)*(n_cells(2)+1)) = sll_f_spline_pp_horner_3d([self%spline1%degree, self%spline2%degree, self%spline3%degree], pp_coeffs, [1._f64,0._f64,0._f64], [n_cells(1),j,k], n_cells)
+            val(n_cells(1) + 1 + (j - 1)*(n_cells(1) + 1) + (k - 1)*(n_cells(1) + 1)*(n_cells(2) + 1)) = sll_f_spline_pp_horner_3d([self%spline1%degree, self%spline2%degree, self%spline3%degree], pp_coeffs, [1._f64, 0._f64, 0._f64], [n_cells(1), j, k], n_cells)
          end do
-       val(n_cells(1)+1+n_cells(2)*(n_cells(1)+1)+(k-1)*(n_cells(1)+1)*(n_cells(2)+1)) = sll_f_spline_pp_horner_3d([self%spline1%degree, self%spline2%degree, self%spline3%degree], pp_coeffs, [1._f64,1._f64,0._f64], [n_cells(1),n_cells(2),k], n_cells)
+         val(n_cells(1) + 1 + n_cells(2)*(n_cells(1) + 1) + (k - 1)*(n_cells(1) + 1)*(n_cells(2) + 1)) = sll_f_spline_pp_horner_3d([self%spline1%degree, self%spline2%degree, self%spline3%degree], pp_coeffs, [1._f64, 1._f64, 0._f64], [n_cells(1), n_cells(2), k], n_cells)
       end do
-    val(n_cells(1)+1+n_cells(2)*(n_cells(1)+1)+n_cells(3)*(n_cells(1)+1)*(n_cells(2)+1)) = sll_f_spline_pp_horner_3d([self%spline1%degree, self%spline2%degree, self%spline3%degree], pp_coeffs, [1._f64,1._f64,1._f64], [n_cells(1),n_cells(2),n_cells(3)], n_cells)
+      val(n_cells(1) + 1 + n_cells(2)*(n_cells(1) + 1) + n_cells(3)*(n_cells(1) + 1)*(n_cells(2) + 1)) = sll_f_spline_pp_horner_3d([self%spline1%degree, self%spline2%degree, self%spline3%degree], pp_coeffs, [1._f64, 1._f64, 1._f64], [n_cells(1), n_cells(2), n_cells(3)], n_cells)
 
       do i = 1, n_cells(1)
          do k = 1, n_cells(3)
-          val(i+n_cells(2)*(n_cells(1)+1)+(k-1)*(n_cells(1)+1)*(n_cells(2)+1)) = sll_f_spline_pp_horner_3d([self%spline1%degree, self%spline2%degree, self%spline3%degree], pp_coeffs, [0._f64,1._f64,0._f64], [i,n_cells(2),k], n_cells)
+            val(i + n_cells(2)*(n_cells(1) + 1) + (k - 1)*(n_cells(1) + 1)*(n_cells(2) + 1)) = sll_f_spline_pp_horner_3d([self%spline1%degree, self%spline2%degree, self%spline3%degree], pp_coeffs, [0._f64, 1._f64, 0._f64], [i, n_cells(2), k], n_cells)
          end do
-       val(i+n_cells(2)*(n_cells(1)+1)+n_cells(3)*(n_cells(1)+1)*(n_cells(2)+1)) = sll_f_spline_pp_horner_3d([self%spline1%degree, self%spline2%degree, self%spline3%degree], pp_coeffs, [0._f64,1._f64,1._f64], [i,n_cells(2),n_cells(3)], n_cells)
+         val(i + n_cells(2)*(n_cells(1) + 1) + n_cells(3)*(n_cells(1) + 1)*(n_cells(2) + 1)) = sll_f_spline_pp_horner_3d([self%spline1%degree, self%spline2%degree, self%spline3%degree], pp_coeffs, [0._f64, 1._f64, 1._f64], [i, n_cells(2), n_cells(3)], n_cells)
       end do
       do j = 1, n_cells(2)
          do i = 1, n_cells(1)
-          val(i+(j-1)*(n_cells(1)+1)+n_cells(3)*(n_cells(1)+1)*(n_cells(2)+1)) = sll_f_spline_pp_horner_3d([self%spline1%degree, self%spline2%degree, self%spline3%degree], pp_coeffs, [0._f64,0._f64,1._f64], [i,j,n_cells(3)], n_cells)
+            val(i + (j - 1)*(n_cells(1) + 1) + n_cells(3)*(n_cells(1) + 1)*(n_cells(2) + 1)) = sll_f_spline_pp_horner_3d([self%spline1%degree, self%spline2%degree, self%spline3%degree], pp_coeffs, [0._f64, 0._f64, 1._f64], [i, j, n_cells(3)], n_cells)
          end do
-       val(n_cells(1)+1+(j-1)*(n_cells(1)+1)+n_cells(3)*(n_cells(1)+1)*(n_cells(2)+1)) = sll_f_spline_pp_horner_3d([self%spline1%degree, self%spline2%degree, self%spline3%degree], pp_coeffs, [1._f64,0._f64,1._f64], [n_cells(1),j,n_cells(3)], n_cells)
+         val(n_cells(1) + 1 + (j - 1)*(n_cells(1) + 1) + n_cells(3)*(n_cells(1) + 1)*(n_cells(2) + 1)) = sll_f_spline_pp_horner_3d([self%spline1%degree, self%spline2%degree, self%spline3%degree], pp_coeffs, [1._f64, 0._f64, 1._f64], [n_cells(1), j, n_cells(3)], n_cells)
       end do
 
    end subroutine sll_s_spline_evaluate_basis_pp_form_3d
@@ -1216,7 +1216,7 @@ contains
       sll_int32  :: i
       !> Perform a 1d hornerschema in the first dimension
       do i = 0, degree(2)
-       pp_coeffs_1d(i+1,1)=sll_f_spline_pp_horner_1d(degree(1), pp_coeffs(1+i*(degree(1)+1):(degree(1)+1)*(i+1),1+(indices(2)-1)*n_cells(1):n_cells(1)*indices(2)), x(1),indices(1))
+         pp_coeffs_1d(i + 1, 1) = sll_f_spline_pp_horner_1d(degree(1), pp_coeffs(1 + i*(degree(1) + 1):(degree(1) + 1)*(i + 1), 1 + (indices(2) - 1)*n_cells(1):n_cells(1)*indices(2)), x(1), indices(1))
       end do
       !> Perform a 1d hornerschema in the second dimension
       res = sll_f_spline_pp_horner_1d(degree(2), pp_coeffs_1d, x(2), 1)
@@ -1238,7 +1238,7 @@ contains
       !> Perform a 1d hornerschema in the first dimension
       do j = 0, degree(3)
          do i = 0, degree(2)
-          pp_coeffs_2d(1+i+j*degp2,1)= sll_f_spline_pp_horner_1d(degree(1),pp_coeffs(1+i*degp1+j*degp1*degp2:degp1+i*degp1+j*degp1*degp2,1+n_cells(1)*(indices(2)-1+(indices(3)-1)*n_cells(2)):n_cells(1)*(indices(2)+(indices(3)-1)*n_cells(2))),x(1),indices(1))
+            pp_coeffs_2d(1 + i + j*degp2, 1) = sll_f_spline_pp_horner_1d(degree(1), pp_coeffs(1 + i*degp1 + j*degp1*degp2:degp1 + i*degp1 + j*degp1*degp2, 1 + n_cells(1)*(indices(2) - 1 + (indices(3) - 1)*n_cells(2)):n_cells(1)*(indices(2) + (indices(3) - 1)*n_cells(2))), x(1), indices(1))
          end do
       end do
       !> Perform a 2d hornerschema in the second and third dimension
@@ -1263,7 +1263,7 @@ contains
       !> Perform a 1d hornerschema in the first dimension
       do j = 0, degree(3)
          do i = 0, degree(2)
-          pp_coeffs_2d(1+i+j*degp2,1)= sll_f_spline_pp_horner_derivative_1d(degree(1),pp_coeffs(1+i*degp1+j*degp1*degp2:degp1+i*degp1+j*degp1*degp2,indices(1)+n_cells(1)*(indices(2)-1+(indices(3)-1)*n_cells(2)):indices(1)+n_cells(1)*(indices(2)-1+(indices(3)-1)*n_cells(2))), x(1), 1)
+            pp_coeffs_2d(1 + i + j*degp2, 1) = sll_f_spline_pp_horner_derivative_1d(degree(1), pp_coeffs(1 + i*degp1 + j*degp1*degp2:degp1 + i*degp1 + j*degp1*degp2, indices(1) + n_cells(1)*(indices(2) - 1 + (indices(3) - 1)*n_cells(2)):indices(1) + n_cells(1)*(indices(2) - 1 + (indices(3) - 1)*n_cells(2))), x(1), 1)
          end do
       end do
       !> Perform a 2d hornerschema in the second and third dimension
@@ -1271,7 +1271,7 @@ contains
 
       !> Perform a 1d hornerschema in the first dimension
       do i = 0, degree(3)
-         pp_coeffs_1d(i+1,1)=sll_f_spline_pp_horner_1d(degree(2), pp_coeffs_2d(1+i*(degree(2)+1):(degree(2)+1)*(i+1),:), x(2), 1)
+         pp_coeffs_1d(i + 1, 1) = sll_f_spline_pp_horner_1d(degree(2), pp_coeffs_2d(1 + i*(degree(2) + 1):(degree(2) + 1)*(i + 1), :), x(2), 1)
       end do
       !> Perform a 1d hornerschema in the second dimension
       res = sll_f_spline_pp_horner_1d(degree(3), pp_coeffs_1d, x(3), 1)*n_cells(1)
@@ -1295,7 +1295,7 @@ contains
       !> Perform a 1d hornerschema in the first dimension
       do j = 0, degree(3)
          do i = 0, degree(2)
-          pp_coeffs_2d(1+i+j*degp2,1)= sll_f_spline_pp_horner_1d(degree(1),pp_coeffs(1+i*degp1+j*degp1*degp2:degp1+i*degp1+j*degp1*degp2,indices(1)+n_cells(1)*(indices(2)-1+(indices(3)-1)*n_cells(2)):indices(1)+n_cells(1)*(indices(2)-1+(indices(3)-1)*n_cells(2))), x(1), 1)
+            pp_coeffs_2d(1 + i + j*degp2, 1) = sll_f_spline_pp_horner_1d(degree(1), pp_coeffs(1 + i*degp1 + j*degp1*degp2:degp1 + i*degp1 + j*degp1*degp2, indices(1) + n_cells(1)*(indices(2) - 1 + (indices(3) - 1)*n_cells(2)):indices(1) + n_cells(1)*(indices(2) - 1 + (indices(3) - 1)*n_cells(2))), x(1), 1)
          end do
       end do
       !> Perform a 2d hornerschema in the second and third dimension
@@ -1303,7 +1303,7 @@ contains
 
       !> Perform a 1d hornerschema in the first dimension
       do i = 0, degree(3)
- pp_coeffs_1d(i+1,1)=sll_f_spline_pp_horner_derivative_1d(degree(2), pp_coeffs_2d(1+i*(degree(2)+1):(degree(2)+1)*(i+1),:), x(2), 1)
+         pp_coeffs_1d(i + 1, 1) = sll_f_spline_pp_horner_derivative_1d(degree(2), pp_coeffs_2d(1 + i*(degree(2) + 1):(degree(2) + 1)*(i + 1), :), x(2), 1)
       end do
       !> Perform a 1d hornerschema in the second dimension
       res = sll_f_spline_pp_horner_1d(degree(3), pp_coeffs_1d, x(3), 1)*n_cells(2)
@@ -1327,7 +1327,7 @@ contains
       !> Perform a 1d hornerschema in the first dimension
       do j = 0, degree(3)
          do i = 0, degree(2)
-          pp_coeffs_2d(1+i+j*degp2,1)= sll_f_spline_pp_horner_1d(degree(1),pp_coeffs(1+i*degp1+j*degp1*degp2:degp1+i*degp1+j*degp1*degp2,indices(1)+n_cells(1)*(indices(2)-1+(indices(3)-1)*n_cells(2)):indices(1)+n_cells(1)*(indices(2)-1+(indices(3)-1)*n_cells(2))), x(1), 1)
+            pp_coeffs_2d(1 + i + j*degp2, 1) = sll_f_spline_pp_horner_1d(degree(1), pp_coeffs(1 + i*degp1 + j*degp1*degp2:degp1 + i*degp1 + j*degp1*degp2, indices(1) + n_cells(1)*(indices(2) - 1 + (indices(3) - 1)*n_cells(2)):indices(1) + n_cells(1)*(indices(2) - 1 + (indices(3) - 1)*n_cells(2))), x(1), 1)
          end do
       end do
       !> Perform a 2d hornerschema in the second and third dimension
@@ -1335,7 +1335,7 @@ contains
 
       !> Perform a 1d hornerschema in the first dimension
       do i = 0, degree(3)
-         pp_coeffs_1d(i+1,1)=sll_f_spline_pp_horner_1d(degree(2), pp_coeffs_2d(1+i*(degree(2)+1):(degree(2)+1)*(i+1), :), x(2), 1)
+         pp_coeffs_1d(i + 1, 1) = sll_f_spline_pp_horner_1d(degree(2), pp_coeffs_2d(1 + i*(degree(2) + 1):(degree(2) + 1)*(i + 1), :), x(2), 1)
       end do
       !> Perform a 1d hornerschema in the second dimension
       res = sll_f_spline_pp_horner_derivative_1d(degree(3), pp_coeffs_1d, x(3), 1)*n_cells(3)
@@ -1371,7 +1371,7 @@ contains
       do j = 0, deg(3)
          do i = 0, deg(2)
             do h = 0, deg(1)
-             coeffs(h+1, 1) = pp_coeffs(1+h+i*degp1+j*degp1*degp2, indices(1) + (indices(2)-1)*n_cells(1)+ (indices(3)-1)*n_cells(1)*n_cells(2))*exponents(j+1,3)*exponents(i+1,2)*exponents(h+1,1)
+               coeffs(h + 1, 1) = pp_coeffs(1 + h + i*degp1 + j*degp1*degp2, indices(1) + (indices(2) - 1)*n_cells(1) + (indices(3) - 1)*n_cells(1)*n_cells(2))*exponents(j + 1, 3)*exponents(i + 1, 2)*exponents(h + 1, 1)
             end do
             pp_coeffs_2d(1 + i + j*(deg(2) + 1), 1) = sll_f_spline_pp_horner_1d(deg(1), coeffs, x(1), 1)
          end do
@@ -1619,11 +1619,11 @@ contains
                                          , inv_5040, 0._f64, 0._f64, 0._f64, 0._f64, 0._f64, 0.0_f64/), (/7, 7/))
 
          self%poly_coeffs_fpa = reshape((/inv_5040, -inv_720, inv_240, -inv_144, inv_144, -inv_240, inv_720, 5039._f64*inv_5040 &
-                     , -6._f64*inv_5040, inv_144, -inv_80, -inv_144, inv_16, -75._f64*inv_720, 57._f64*inv_720, 4919._f64*inv_5040 &
-                      , 15._f64*inv_5040, -inv_72, inv_120, inv_18, -50._f64*inv_720, -inv_6, 302._f64*inv_720, 3728._f64*inv_5040 &
-                      , -20._f64*inv_5040, inv_72, inv_120, -inv_18, -50._f64*inv_720, inv_6, 302._f64*inv_720, 1312._f64*inv_5040 &
-                       , 15._f64*inv_5040, -inv_144, -inv_80, inv_144, inv_16, 75._f64*inv_720, 57._f64*inv_720, 121._f64*inv_5040 &
-                                        , -6.0_f64*inv_5040, inv_720, inv_240, inv_144, inv_144, inv_240, inv_720, 1._f64*inv_5040 &
+                                          , -6._f64*inv_5040, inv_144, -inv_80, -inv_144, inv_16, -75._f64*inv_720, 57._f64*inv_720, 4919._f64*inv_5040 &
+                                          , 15._f64*inv_5040, -inv_72, inv_120, inv_18, -50._f64*inv_720, -inv_6, 302._f64*inv_720, 3728._f64*inv_5040 &
+                                          , -20._f64*inv_5040, inv_72, inv_120, -inv_18, -50._f64*inv_720, inv_6, 302._f64*inv_720, 1312._f64*inv_5040 &
+                                          , 15._f64*inv_5040, -inv_144, -inv_80, inv_144, inv_16, 75._f64*inv_720, 57._f64*inv_720, 121._f64*inv_5040 &
+                                          , -6.0_f64*inv_5040, inv_720, inv_240, inv_144, inv_144, inv_240, inv_720, 1._f64*inv_5040 &
                                           , inv_5040, 0._f64, 0._f64, 0._f64, 0._f64, 0._f64, 0.0_f64, 0._f64/), (/8, 7/))
       case default
          SLL_ERROR('sll_s_spline_pp_init', 'Not implemented')
