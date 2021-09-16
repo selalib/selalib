@@ -6,7 +6,7 @@ ADD_LIBRARY(sll_filter STATIC
   sll_m_fft_filter_3d.F90
   )
 
-TARGET_LINK_LIBRARIES( sll_fft
+TARGET_LINK_LIBRARIES( sll_filter sll_fft
 	)
 
 
