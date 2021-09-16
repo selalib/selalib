@@ -524,12 +524,12 @@ contains
     sll_real64,                                     intent(in)    :: dt   !< time step
     ! local variables
     sll_int32 :: i_part, i_sp
-    sll_real64 :: vi(3), xi(3), wi(1), xnew(3), vbar(3),  xmid(3), xbar, dx
-    sll_real64 :: qoverm, wall(3) 
+    sll_real64 :: vi(3), xi(3), wi(1), xnew(3), vbar(3), vh(3), xmid(3), xbar, dx
+    sll_real64 :: sign, wall(3) 
     sll_real64 :: efield(3)
     sll_int32 :: niter
     sll_real64 :: residual(1), residual_local(1)
-   
+
     self%efield_dofs_new = self%efield_dofs
     self%phi_dofs_new = self%phi_dofs
     do i_sp=1,self%particle_group%n_species
@@ -549,7 +549,7 @@ contains
 
        ! Particle loop
        do i_sp=1,self%particle_group%n_species
-          qoverm = self%particle_group%group(i_sp)%species%q_over_m();
+          sign = dt*self%particle_group%group(i_sp)%species%q_over_m();
           do i_part = 1,self%particle_group%group(i_sp)%n_particles
              vi = self%particle_group%group(i_sp)%get_v(i_part)
              xi = self%particle_group%group(i_sp)%get_x(i_part)
@@ -573,11 +573,11 @@ contains
                 xmid = xi + dx * (xnew-xi)
                 xmid(1) = xbar
 
-                vbar = (xmid - xi)*wi(1)
-                call self%particle_mesh_coupling%add_current_evaluate( xi, xmid, vbar, self%efield_dofs_work, &
+                vh = (xmid - xi)*wi(1)
+                call self%particle_mesh_coupling%add_current_evaluate( xi, xmid, vh, self%efield_dofs_work, &
                      self%j_dofs_local, efield )
-                vi = vi + qoverm * dt* dx* efield
-                
+                vi = vi + dx* sign*  efield
+
                 select case(self%boundary_particles)
                 case(sll_p_boundary_particles_reflection)
                    xnew(1) = 2._f64*xbar-xnew(1)
@@ -592,22 +592,18 @@ contains
                    xnew(1) = self%x_min(1) + modulo(xnew(1)-self%x_min(1), self%Lx(1))
                    xmid(1) = self%x_max(1)+self%x_min(1)-xbar
                 end select
-                if( abs(xnew(1)-xmid(1)) > self%iter_tolerance ) then
-                   vbar = (xnew - xmid)*wi(1)
-                   call self%particle_mesh_coupling%add_current_evaluate( xmid, xnew, vbar, self%efield_dofs_work, &
-                        self%j_dofs_local, efield )
-                   vi = vi + qoverm * (1._f64-dx)*dt * efield
-                   if(self%boundary_particles == sll_p_boundary_particles_reflection) then
-                      vi(1) = - vi(1)
-                   end if
-                else
-                   xnew(1) = xmid(1) 
+                vh = (xnew - xmid)*wi(1)
+                call self%particle_mesh_coupling%add_current_evaluate( xmid, xnew, vh, self%efield_dofs_work, &
+                     self%j_dofs_local, efield )
+                vi = vi + (1._f64-dx) * sign *  efield
+                if(self%boundary_particles == sll_p_boundary_particles_reflection) then
+                   vi(1) = - vi(1)
                 end if
              else
-                vbar = (xnew - xi)*wi(1)
-                call self%particle_mesh_coupling%add_current_evaluate( xi, xnew, vbar, self%efield_dofs_work, &
+                vh = (xnew - xi)*wi(1)
+                call self%particle_mesh_coupling%add_current_evaluate( xi, xnew, vh, self%efield_dofs_work, &
                      self%j_dofs_local, efield )
-                vi = vi + qoverm * dt * efield
+                vi = vi + sign * efield
              end if
 
              self%xnew(i_sp, :, i_part) = xnew
@@ -646,72 +642,24 @@ contains
        print*, 'Warning: Iteration no.', self%iter_counter+1 ,'did not converge.', residual, niter
        self%n_failed = self%n_failed+1
     end if
-        
+
     self%efield_dofs_work = 0.5_f64*( self%efield_dofs + self%efield_dofs_new )
     self%j_dofs_local = 0.0_f64
 
     ! Particle loop
     do i_sp=1,self%particle_group%n_species
-       qoverm = self%particle_group%group(i_sp)%species%q_over_m();
+       sign = dt*self%particle_group%group(i_sp)%species%q_over_m();
        do i_part = 1,self%particle_group%group(i_sp)%n_particles
           vi = self%particle_group%group(i_sp)%get_v(i_part)
           xi = self%particle_group%group(i_sp)%get_x(i_part)
 
           ! Get charge for accumulation of j
           wi = self%particle_group%group(i_sp)%get_charge(i_part, self%i_weight)
-
           vbar = 0.5_f64*(vi+self%vnew(i_sp,:, i_part))
 
           xnew = xi + dt * vbar
-          if(xnew(1) < -self%x_max(1) .or.  xnew(1) > 2._f64*self%x_max(1) ) then
-             print*, xnew
-             SLL_ERROR("particle boundary", "particle out of bound")
-          else if(xnew(1) < self%x_min(1) .or. xnew(1) > self%x_max(1) )then
-             if(xnew(1) < self%x_min(1)  )then
-                xbar = self%x_min(1)
-                self%counter_left = self%counter_left+1
-             else if(xnew(1) > self%x_max(1))then
-                xbar = self%x_max(1)
-                self%counter_right = self%counter_right+1
-             end if
-             dx = (xbar- xi(1))/(xnew(1)-xi(1))
-             xmid = xi + dx * (xnew-xi)
-             xmid(1) = xbar
 
-             vbar = (xmid - xi)*wi(1)
-             call self%particle_mesh_coupling%add_current_evaluate( xi, xmid, vbar, self%efield_dofs_work, &
-                  self%j_dofs_local, efield )
-             vi = vi + qoverm * dt* dx* efield
-             select case(self%boundary_particles)
-             case(sll_p_boundary_particles_reflection)
-                xnew(1) = 2._f64*xbar-xnew(1)
-                vi(1) = - vi(1)
-             case(sll_p_boundary_particles_absorption)
-                call self%particle_mesh_coupling%add_charge(xmid, wi(1), self%spline_degree, self%rhob)
-             case( sll_p_boundary_particles_periodic)
-                xnew(1) = self%x_min(1) + modulo(xnew(1)-self%x_min(1), self%Lx(1))
-                xmid(1) = self%x_max(1)+self%x_min(1)-xbar
-             case default
-                xnew(1) = self%x_min(1) + modulo(xnew(1)-self%x_min(1), self%Lx(1))
-                xmid(1) = self%x_max(1)+self%x_min(1)-xbar
-             end select
-             if( abs(xnew(1)-xmid(1)) > self%iter_tolerance ) then
-                vbar = (xnew - xmid)*wi(1)
-                call self%particle_mesh_coupling%add_current_evaluate( xmid, xnew, vbar, self%efield_dofs_work, &
-                     self%j_dofs_local, efield )
-                vi = vi + qoverm * (1._f64-dx)*dt * efield
-             else
-                xnew(1) = xmid(1) 
-             end if
-          else
-             vbar = (xnew - xi)*wi(1)
-
-             call self%particle_mesh_coupling%add_current_evaluate( xi, xnew, vbar, self%efield_dofs_work, &
-                  self%j_dofs_local, efield )
-             vi = vi + qoverm * dt * efield
-          end if
-
-          xnew(2:3) = self%x_min(2:3) + modulo(xnew(2:3)-self%x_min(2:3), self%Lx(2:3))
+          call compute_particle_boundary_current_evaluate( self, xi, xnew, vi, wi, sign )
           call self%particle_group%group(i_sp)%set_v( i_part, vi )
           call self%particle_group%group(i_sp)%set_x( i_part, xnew )
           ! Update particle weights
@@ -735,11 +683,70 @@ contains
        call self%maxwell_solver%compute_E_from_j( self%j_dofs, self%efield_dofs )
 
     end if
-    
+
     self%iter_counter = self%iter_counter + 1
     self%niter(self%iter_counter) = niter
 
   end subroutine advect_ex
+
+
+  !> Helper function for \a advect_ex
+  subroutine compute_particle_boundary_current_evaluate( self, xi, xnew, vi, wi, sign )
+    class(sll_t_time_propagator_pic_vm_3d3v_helper), intent( inout ) :: self !< time splitting object 
+    sll_real64,                                           intent( in    ) :: xi(3)
+    sll_real64,                                           intent( inout ) :: xnew(3)
+    sll_real64,                                           intent( inout ) :: vi(3)
+    sll_real64,                                           intent( in    ) :: wi(1)
+    sll_real64,                                           intent( in    ) :: sign
+    !local variables
+    sll_real64 :: xmid(3), vh(3), xbar, dx, efield(3)
+
+
+    if(xnew(1) < -self%x_max(1) .or.  xnew(1) > 2._f64*self%x_max(1) ) then
+       print*, xnew
+       SLL_ERROR("particle boundary", "particle out of bound")
+    else if(xnew(1) < self%x_min(1) .or. xnew(1) > self%x_max(1) )then
+       if(xnew(1) < self%x_min(1)  )then
+          xbar = self%x_min(1)
+          self%counter_left = self%counter_left+1
+       else if(xnew(1) > self%x_max(1))then
+          xbar = self%x_max(1)
+          self%counter_right = self%counter_right+1
+       end if
+       dx = (xbar- xi(1))/(xnew(1)-xi(1))
+       xmid = xi + dx * (xnew-xi)
+       xmid(1) = xbar
+
+       vh = (xmid - xi)*wi(1)
+       call self%particle_mesh_coupling%add_current_evaluate( xi, xmid, vh, self%efield_dofs_work, &
+            self%j_dofs_local, efield )
+       vi = vi + sign* dx* efield
+       select case(self%boundary_particles)
+       case(sll_p_boundary_particles_reflection)
+          xnew(1) = 2._f64*xbar-xnew(1)
+          vi(1) = - vi(1)
+       case(sll_p_boundary_particles_absorption)
+          call self%particle_mesh_coupling%add_charge(xmid, wi(1), self%spline_degree, self%rhob)
+       case( sll_p_boundary_particles_periodic)
+          xnew(1) = self%x_min(1) + modulo(xnew(1)-self%x_min(1), self%Lx(1))
+          xmid(1) = self%x_max(1)+self%x_min(1)-xbar
+       case default
+          xnew(1) = self%x_min(1) + modulo(xnew(1)-self%x_min(1), self%Lx(1))
+          xmid(1) = self%x_max(1)+self%x_min(1)-xbar
+       end select
+       vh = (xnew - xmid)*wi(1)
+       call self%particle_mesh_coupling%add_current_evaluate( xmid, xnew, vh, self%efield_dofs_work, &
+            self%j_dofs_local, efield )
+       vi = vi + sign * (1._f64-dx)* efield
+    else
+       vh = (xnew - xi)*wi(1)
+       call self%particle_mesh_coupling%add_current_evaluate( xi, xnew, vh, self%efield_dofs_work, &
+            self%j_dofs_local, efield )
+       vi = vi + sign * efield
+    end if
+    xnew(2:3) = self%x_min(2:3) + modulo(xnew(2:3)-self%x_min(2:3), self%Lx(2:3))
+
+  end subroutine compute_particle_boundary_current_evaluate
 
 
   !---------------------------------------------------------------------------!
