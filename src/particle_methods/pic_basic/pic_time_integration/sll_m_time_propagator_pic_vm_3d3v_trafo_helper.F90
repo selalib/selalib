@@ -657,7 +657,7 @@ contains
     ! local variables
     sll_int32 :: i_part, i_sp, j
     sll_real64 :: vi(3), vh(3), xi(3), xs(3), wi(1), xnew(3), vbar(3)
-    sll_real64 :: qoverm, wall(3)
+    sll_real64 :: sign, wall(3)
     sll_real64 :: jmat(3,3), jmatrix(3,3)
     sll_int32 :: niter
     sll_real64 :: residual(1), residual_local(1)
@@ -678,13 +678,12 @@ contains
 
     do while ( (residual(1) > self%iter_tolerance) .and. niter < self%max_iter )
        niter = niter+1
-
        self%efield_dofs_work = 0.5_f64*( self%efield_dofs + self%efield_dofs_new )
        self%j_dofs_local = 0.0_f64
 
        ! Particle loop
-       do i_sp=1,self%particle_group%n_species
-          qoverm = self%particle_group%group(i_sp)%species%q_over_m();
+       do i_sp = 1, self%particle_group%n_species
+          sign = dt*self%particle_group%group(i_sp)%species%q_over_m();
           do i_part = 1,self%particle_group%group(i_sp)%n_particles
              vi = self%particle_group%group(i_sp)%get_v(i_part)
              xi = self%particle_group%group(i_sp)%get_x(i_part)
@@ -706,7 +705,7 @@ contains
                 end do
                 xnew = xi + dt * vh
              end if
-             
+
              if(xnew(1) < -1._f64 .or. xnew(1) > 2._f64)then
                 print*, xnew
                 SLL_ERROR("particle boundary", "particle out of bound")
@@ -728,7 +727,7 @@ contains
                 xt(2:3) = modulo(xt(2:3), 1._f64)
                 jmatrix = self%map%jacobian_matrix_inverse_transposed(xt)
                 do j = 1, 3
-                   vi(j) = vi(j) + dx*dt*qoverm*0.5_f64*((jmatrix(j,1)+jmat(j,1))*efield(1) + (jmatrix(j,2)+jmat(j,2))*efield(2) + (jmatrix(j,3)+ jmat(j,3))*efield(3))
+                   vi(j) = vi(j) + dx*sign*0.5_f64*((jmatrix(j,1)+jmat(j,1))*efield(1) + (jmatrix(j,2)+jmat(j,2))*efield(2) + (jmatrix(j,3)+ jmat(j,3))*efield(3))
                 end do
                 select case(self%boundary_particles)
                 case(sll_p_boundary_particles_singular)
@@ -747,7 +746,6 @@ contains
                    vi = vi-2._f64*(vi(1)*jmatrix(1,1)+vi(2)*jmatrix(2,1)+vi(3)*jmatrix(3,1))*jmatrix(:,1)/sum(jmatrix(:,1)**2)
                 case(sll_p_boundary_particles_absorption)
                    call self%particle_mesh_coupling%add_charge(xmid, wi(1), self%spline_degree, self%rhob)
-                   xnew(1) = xmid(1) + (xbar-0.5_f64) * 1.9_f64* self%iter_tolerance 
                 case( sll_p_boundary_particles_periodic)
                    xnew(1) = modulo(xnew(1), 1._f64)
                    xmid(1) = 1._f64-xbar
@@ -755,27 +753,23 @@ contains
                    xnew(1) = modulo(xnew(1), 1._f64)
                    xmid(1) = 1._f64-xbar
                 end select
-                if( abs(xnew(1)-xmid(1)) > self%iter_tolerance ) then
-                   vh = (xnew - xmid)*wi(1)
-                   call self%particle_mesh_coupling%add_current_evaluate( xmid, xnew, vh, self%efield_dofs_work, &
-                        self%j_dofs_local, efield )
-                   xnew(2:3) = modulo(xnew(2:3), 1._f64)
-                   jmat = self%map%jacobian_matrix_inverse_transposed(xnew)
-                   do j = 1, 3
-                      vi(j) = vi(j) + (1._f64-dx)*dt*qoverm*0.5_f64*((jmatrix(j,1)+jmat(j,1))*efield(1) + (jmatrix(j,2)+jmat(j,2))*efield(2) + (jmatrix(j,3)+ jmat(j,3))*efield(3))
+                vh = (xnew - xmid)*wi(1)
+                call self%particle_mesh_coupling%add_current_evaluate( xmid, xnew, vh, self%efield_dofs_work, &
+                     self%j_dofs_local, efield )
+                xnew(2:3) = modulo(xnew(2:3), 1._f64)
+                jmat = self%map%jacobian_matrix_inverse_transposed(xnew)
+                do j = 1, 3
+                   vi(j) = vi(j) + (1._f64-dx) * sign *0.5_f64*((jmatrix(j,1)+jmat(j,1))*efield(1) + (jmatrix(j,2)+jmat(j,2))*efield(2) + (jmatrix(j,3)+ jmat(j,3))*efield(3))
+                end do
+                if(self%boundary_particles == sll_p_boundary_particles_reflection) then
+                   do j = 1, 3 !calculation of velocity in logical coordinates
+                      vh(j) = jmat(1,j)*vi(1) + jmat(2,j)*vi(2) + jmat(3,j)*vi(3)
                    end do
-                   if(self%boundary_particles == sll_p_boundary_particles_reflection) then
-                      do j = 1, 3
-                         vh(j) = jmat(1,j)*vi(1) + jmat(2,j)*vi(2) + jmat(3,j)*vi(3)
-                      end do
-                      vh(1) = - vh(1)
-                      jmat = self%map%jacobian_matrix(xnew)
-                      do j = 1, 3
-                         vi(j) = jmat(j,1)*vh(1) + jmat(j,2)*vh(2) + jmat(j,3)*vh(3)
-                      end do
-                   end if
-                else
-                   xnew(1) = xmid(1)   
+                   vh(1) = - vh(1)
+                   jmat = self%map%jacobian_matrix(xnew)
+                   do j = 1, 3 !calculation of velocity in physical coordinates
+                      vi(j) = jmat(j,1)*vh(1) + jmat(j,2)*vh(2) + jmat(j,3)*vh(3)
+                   end do
                 end if
              else   
                 vh = (xnew-xi) * wi(1) 
@@ -784,10 +778,10 @@ contains
                 xnew(2:3) =  modulo(xnew(2:3), 1._f64)
                 jmatrix = self%map%jacobian_matrix_inverse_transposed(xnew)
                 do j = 1, 3
-                   vi(j) = vi(j) + dt*qoverm *0.5_f64*((jmatrix(j,1)+jmat(j,1))*efield(1) + (jmatrix(j,2)+jmat(j,2))*efield(2) + (jmatrix(j,3)+ jmat(j,3))*efield(3))
+                   vi(j) = vi(j) + sign *0.5_f64*((jmatrix(j,1)+jmat(j,1))*efield(1) + (jmatrix(j,2)+jmat(j,2))*efield(2) + (jmatrix(j,3)+ jmat(j,3))*efield(3))
                 end do
              end if
-             
+
              self%xnew(i_sp, :, i_part) = xnew
              self%vnew(i_sp, :, i_part) = vi
           end do
@@ -824,13 +818,13 @@ contains
        self%n_failed = self%n_failed+1
     end if
 
-    
+
     self%efield_dofs_work = 0.5_f64*( self%efield_dofs + self%efield_dofs_new )
     self%j_dofs_local = 0.0_f64
 
     ! Particle loop
     do i_sp=1,self%particle_group%n_species
-       qoverm = self%particle_group%group(i_sp)%species%q_over_m();
+       sign = dt*self%particle_group%group(i_sp)%species%q_over_m();
        do i_part = 1,self%particle_group%group(i_sp)%n_particles
           vi = self%particle_group%group(i_sp)%get_v(i_part)
           xi = self%particle_group%group(i_sp)%get_x(i_part)
@@ -852,7 +846,7 @@ contains
              end do
              xnew = xi + dt * vh
           end if
-          call compute_particle_boundary_current_evaluate( self, xi, xnew, vi, wi, dt*qoverm )
+          call compute_particle_boundary_current_evaluate( self, xi, xnew, vi, wi, sign )
 
           call self%particle_group%group(i_sp)%set_v( i_part, vi )
           call self%particle_group%group(i_sp)%set_x( i_part, xnew )
@@ -935,8 +929,8 @@ contains
              vi = vi-2._f64*(vi(1)*jmatrix(1,1)+vi(2)*jmatrix(2,1)+vi(3)*jmatrix(3,1))*jmatrix(:,1)/sum(jmatrix(:,1)**2)
           end if
        case(sll_p_boundary_particles_reflection)
-          vi = vi-2._f64*(vi(1)*jmatrix(1,1)+vi(2)*jmatrix(2,1)+vi(3)*jmatrix(3,1))*jmatrix(:,1)/sum(jmatrix(:,1)**2)
           xnew(1) = 2._f64*xbar-xnew(1)
+          vi = vi-2._f64*(vi(1)*jmatrix(1,1)+vi(2)*jmatrix(2,1)+vi(3)*jmatrix(3,1))*jmatrix(:,1)/sum(jmatrix(:,1)**2)
        case(sll_p_boundary_particles_absorption)
           call self%particle_mesh_coupling%add_charge(xmid, wi(1), self%spline_degree, self%rhob)
        case( sll_p_boundary_particles_periodic)
@@ -946,18 +940,14 @@ contains
           xnew(1) = modulo(xnew(1), 1._f64)
           xmid(1) = 1._f64-xbar
        end select
-       if( abs(xnew(1)-xmid(1)) > self%iter_tolerance ) then
-          vh = (xnew - xmid)*wi(1)
-          call self%particle_mesh_coupling%add_current_evaluate( xmid, xnew, vh, self%efield_dofs_work, &
-               self%j_dofs_local, efield )
-          xnew(2:3) = modulo(xnew(2:3), 1._f64)
-          jmat = self%map%jacobian_matrix_inverse_transposed(xnew)
-          do j = 1, 3
-             vi(j) = vi(j) + (1._f64-dx)*sign *0.5_f64*((jmatrix(j,1)+jmat(j,1))*efield(1) + (jmatrix(j,2)+jmat(j,2))*efield(2) + (jmatrix(j,3)+ jmat(j,3))*efield(3))
-          end do
-       else
-          xnew(1) = xmid(1)   
-       end if
+       vh = (xnew - xmid)*wi(1)
+       call self%particle_mesh_coupling%add_current_evaluate( xmid, xnew, vh, self%efield_dofs_work, &
+            self%j_dofs_local, efield )
+       xnew(2:3) = modulo(xnew(2:3), 1._f64)
+       jmat = self%map%jacobian_matrix_inverse_transposed(xnew)
+       do j = 1, 3
+          vi(j) = vi(j) + (1._f64-dx)*sign *0.5_f64*((jmatrix(j,1)+jmat(j,1))*efield(1) + (jmatrix(j,2)+jmat(j,2))*efield(2) + (jmatrix(j,3)+ jmat(j,3))*efield(3))
+       end do
     else   
        vh = (xnew-xi) * wi(1) 
        call self%particle_mesh_coupling%add_current_evaluate( xi, xnew, vh, self%efield_dofs_work, &
