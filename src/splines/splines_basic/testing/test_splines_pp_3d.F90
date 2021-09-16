@@ -120,7 +120,7 @@ contains
       do i = 1, degree(1) + 1
          do j = 1, degree(2) + 1
             do k = 1, degree(3) + 1
-             res2=res2+pp_coeffs(i+(j-1)*(degree(1)+1)+(k-1)*(degree(1)+1)*(degree(2)+1),1)*xp(1)**((degree(1)+1)-i)*xp(2)**((degree(2)+1)-j)*xp(3)**((degree(3)+1)-k)
+               res2 = res2 + pp_coeffs(i + (j - 1)*(degree(1) + 1) + (k - 1)*(degree(1) + 1)*(degree(2) + 1), 1)*xp(1)**((degree(1) + 1) - i)*xp(2)**((degree(2) + 1) - j)*xp(3)**((degree(3) + 1) - k)
             end do
          end do
       end do
