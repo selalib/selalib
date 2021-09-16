@@ -61,6 +61,18 @@ contains
       sll_int32 :: indices(3)
       sll_real64 :: xi(3)
       sll_int32 :: i, j, k
+      
+      integer, dimension(33) :: seed = [-1265139360, 1818735519, -1278717687, &
+                                        -28571184, -2049390160, 2074167660, &
+                                        -1778129250, -1663924455, -300142776, &
+                                        1497205713, 1463052918, -1650171289, &
+                                        1313784976, -1898838479, 2125570893, &
+                                        -162457092, 1760636990, 524383974, &
+                                        296008199, -171091367, 399322358, &
+                                        967084750, 1776047718, -895222581, &
+                                        -2070137937, -1280788435, 2086980348, &
+                                        1463273178, 465948978, -701015021, &
+                                        1313707185, 1192973109, 0]
 
       fail = .false.
 
@@ -71,13 +83,13 @@ contains
       domain(2, :) = sll_p_twopi
       delta_x = (domain(2, :) - domain(1, :))/real(n_cells, f64)
 
-      call random_seed()
+      call random_seed(put=seed)
       call random_number(b_coeffs)
 
       call sll_s_spline_pp_init_3d(spline_pp, degree, n_cells)
       call sll_s_spline_pp_b_to_pp_3d(spline_pp, n_cells, b_coeffs, pp_coeffs)
 
-      call random_seed()
+      call random_seed(put=seed)
       call random_number(xp)
       !xp=[0._f64,1._f64,1._f64]
 
@@ -113,7 +125,7 @@ contains
       end if
 
       !test horner for arbitrary polynomials
-      call random_seed()
+      call random_seed(put=seed)
       call random_number(xp)
       res = sll_f_spline_pp_horner_3d(degree, pp_coeffs, xp, [1, 1, 1], [1, 1, 1])
       res2 = 0._f64
