@@ -41,16 +41,16 @@ program working_precision_tester
 
    test_int1 = 0
    test_int2 = 0
-   i = transfer(int(z'7fffffff'), i)  !2147483647, largest 32-bit int
+   i = huge(i) !transfer(int(z'7fffffff'), i)  !2147483647, largest 32-bit int
    counter = 1
    exponent = -127
    test_float = 0.0
    ref_float = 0.0
-   f = transfer(int(z'7f7fffff'), f)
-   small = transfer(int(z'7f000001'), small) ! smallest num with same binary exp as f
+   f = huge(f) ! transfer(int(z'7f7fffff'), f)
+   small = tiny(small) !transfer(int(z'7f000001'), small) ! smallest num with same binary exp as f
    neglected = transfer(int(z'72ffffff'), neglected) ! 25-power of 2 orders less
-   f2 = transfer(int(z'7fefffffffffffff', kind=16), f2) ! largest IEEE-754 double float
-   small2 = transfer(int(z'7feffffffffffff1', kind=16), small2)
+   f2 = huge(f2) !transfer(int(z'7fefffffffffffff', kind=16), f2) ! largest IEEE-754 double float
+   small2 = tiny(small2) !transfer(int(z'7feffffffffffff1', kind=16), small2)
 
    print *, '*************************************'
    print *, 'Tester for the working precision module'
