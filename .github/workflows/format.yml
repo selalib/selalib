@@ -1,7 +1,7 @@
 name: format-pr
 on:
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '0 0 1 * *'
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -10,7 +10,7 @@ jobs:
       - name: Install fprettify and cmake-format
         run: |
           pip install cmake-format fprettify
-          find . \( -name '*.F90' \)  -exec /home/runner/.local/bin/fprettify {} \;
+          find . \( -name '*.F90' \)  -exec /home/runner/.local/bin/fprettify -l 1024 {} \;
           find . \( -name 'CMakeLists.txt' \)  -exec /home/runner/.local/bin/cmake-format -i {} \;
       - name: Create Pull Request
         id: cpr
