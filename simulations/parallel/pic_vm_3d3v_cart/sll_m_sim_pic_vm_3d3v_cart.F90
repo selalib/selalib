@@ -297,45 +297,45 @@ contains
     sll_int32   :: input_file, file_id
     sll_int32   :: ierr
     type(sll_t_time_mark) :: start_init, end_init
-    sll_real64         :: delta_t
-    sll_int32          :: n_time_steps
-    character(len=256) :: initial_distrib
-    character(len=256) :: initial_bfield
+    sll_real64         :: delta_t = 0._f64
+    sll_int32          :: n_time_steps = 0
+    character(len=256) :: initial_distrib = "none"
+    character(len=256) :: initial_bfield = "none"
     sll_real64         :: charge = -1._f64
     sll_real64         :: mass = 1._f64
     sll_real64         :: plasma_beta(3) = 1._f64
-    character(len=256) :: particle_force
+    character(len=256) :: particle_force = "none"
     logical            :: electrostatic = .false.
     logical            :: restart = .false.
-    character(len=256) :: restart_file
+    character(len=256) :: restart_file = "none"
     sll_int32          :: restart_steps = 0
     sll_real64         :: bkx(3) = 0._f64
     sll_real64         :: balpha(3) = 0._f64
     sll_real64         :: bphase_shift(3) = 0._f64
     sll_real64         :: bconstant(3) = 0._f64
-    character(len=256) :: file_prefix
+    character(len=256) :: file_prefix = "none"
     logical            :: output_fields = .false.
     logical            :: output_particles = .false.
-    sll_int32          :: ng_x(3)
-    sll_real64         :: x_min(3), x_max(3)
+    sll_int32          :: ng_x(3) = 0
+    sll_real64         :: x_min(3) = 0._f64, x_max(3) = 0._f64
     logical            :: jmean = .false.
-    sll_int32          :: n_particles
-    character(len=256) :: sampling_case
+    sll_int32          :: n_particles = 0
+    character(len=256) :: sampling_case = "none"
     logical            :: delta_perturb = .false.
-    sll_real64         :: delta_eps(6) 
-    character(len=256) :: splitting_case
-    sll_int32          :: spline_degree(3)
-    character(len=256) :: splitting_type
+    sll_real64         :: delta_eps(6) = 0._f64
+    character(len=256) :: splitting_case = "none"
+    sll_int32          :: spline_degree(3) = 0
+    character(len=256) :: splitting_type = "none"
     character(len=256) :: boundary_fields = "none"
     character(len=256) :: boundary_particles = "none"
     logical            :: with_control_variate = .false.
     logical            :: lindf = .false.
-    character(len=256) :: filtering
+    character(len=256) :: filtering = "none"
     sll_int32          :: filter_iter = 0
     sll_int32          :: mode(3) = 0
     logical            :: fft_diag = .false.
     character(len=256) :: ctest_case ="No"
-    sll_int32          :: n_sub_iter
+    sll_int32          :: n_sub_iter = 0
 
 
     namelist /sim_params/         delta_t, n_time_steps, initial_distrib, initial_bfield, charge, mass, plasma_beta, particle_force, electrostatic, restart, restart_file, restart_steps
