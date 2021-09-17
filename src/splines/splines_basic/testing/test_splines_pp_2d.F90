@@ -38,11 +38,23 @@ program test_splines_pp_2d_boundary
    sll_int32 :: boundary(2)
    sll_real64 :: xnorm(2)
    logical   :: fail
+      
+   integer, dimension(33) :: seed = [-1265139360, 1818735519, -1278717687, &
+        -28571184, -2049390160, 2074167660, &
+        -1778129250, -1663924455, -300142776, &
+        1497205713, 1463052918, -1650171289, &
+        1313784976, -1898838479, 2125570893, &
+        -162457092, 1760636990, 524383974, &
+        296008199, -171091367, 399322358, &
+        967084750, 1776047718, -895222581, &
+        -2070137937, -1280788435, 2086980348, &
+        1463273178, 465948978, -701015021, &
+        1313707185, 1192973109, 0]
 
    fail = .false.
 
    n_cells = [50, 50]
-   call random_seed()
+   call random_seed(put=seed)
    call random_number(xnorm)
    print *, 'Order 3'
    degree = [3, 3]
@@ -134,7 +146,7 @@ contains
       sll_int32, intent(in) :: n_cells(2) !grid cells
       sll_int32, intent(in) :: boundary(2) ! boundaries
       sll_real64, intent(in) :: xnorm(2)
-      logical, intent(out)    :: fail
+      logical, intent(inout)    :: fail
 
       sll_real64 :: b_coeffs((n_cells(1) + degree(1))*(n_cells(2) + degree(2)))
       sll_real64 :: b_coeffs2d((n_cells(1) + degree(1)), (n_cells(2) + degree(2)))
@@ -157,6 +169,18 @@ contains
       sll_real64, allocatable :: breaks1(:)
       sll_real64, allocatable :: breaks2(:)
 
+      integer, dimension(33) :: seed = [-1265139360, 1818735519, -1278717687, &
+                                        -28571184, -2049390160, 2074167660, &
+                                        -1778129250, -1663924455, -300142776, &
+                                        1497205713, 1463052918, -1650171289, &
+                                        1313784976, -1898838479, 2125570893, &
+                                        -162457092, 1760636990, 524383974, &
+                                        296008199, -171091367, 399322358, &
+                                        967084750, 1776047718, -895222581, &
+                                        -2070137937, -1280788435, 2086980348, &
+                                        1463273178, 465948978, -701015021, &
+                                        1313707185, 1192973109, 0]
+
       !fail=.false.
       allocate (val1(degree(1) + 1))
       allocate (val2(degree(2) + 1))
@@ -175,7 +199,7 @@ contains
          breaks2(i + 1) = breaks2(i) + delta_x(2)
       end do
 
-      call random_seed()
+      call random_seed(put=seed)
       call random_number(b_coeffs)
 
       call sll_s_spline_pp_init_2d(spline_pp, degree, n_cells, boundary)
@@ -327,7 +351,7 @@ contains
       end if
 
       !test horner for arbitrary polynomials
-      call random_seed()
+      call random_seed(put=seed)
       call random_number(xp)
       res = sll_f_spline_pp_horner_2d(degree, pp_coeffs, xp, [1, 1], [1, 1])
       res2 = 0._f64

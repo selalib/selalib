@@ -96,9 +96,9 @@ program test_poisson_3d_periodic_par
    colsz = int(sll_f_get_collective_size(sll_v_world_collective), i64)
    myrank = sll_f_get_collective_rank(sll_v_world_collective)
 
-   dx = Lx/nx
-   dy = Ly/ny
-   dz = Lz/nz
+   dx = Lx/real(nx,f64)
+   dy = Ly/real(ny,f64)
+   dz = Lz/real(nz,f64)
 
    e = int(log(real(colsz))/log(2.))
 
@@ -134,9 +134,9 @@ program test_poisson_3d_periodic_par
             gi = global(1)
             gj = global(2)
             gk = global(3)
-            x(i, j, k) = (gi - 1)*dx
-            y(i, j, k) = (gj - 1)*dy
-            z(i, j, k) = (gk - 1)*dz
+            x(i, j, k) = (real(gi,f64) - 1)*dx
+            y(i, j, k) = (real(gj,f64) - 1)*dy
+            z(i, j, k) = (real(gk,f64) - 1)*dz
          end do
       end do
    end do
@@ -150,13 +150,13 @@ program test_poisson_3d_periodic_par
          ez_an = cos(x)*sin(y)*sin(z)
       else if (i_test == 2) then
          phi_an = (4.0_f64/(sll_p_pi*sqrt(sll_p_pi)*Lx*Ly*Lz)) &
-                  *exp(-.5*(x - Lx/2)**2) &
-                  *exp(-.5*(y - Ly/2)**2)*sin(z)
+                  *exp(-.5_f64*(x - Lx/2)**2) &
+                  *exp(-.5_f64*(y - Ly/2)**2)*sin(z)
          ex_an = phi_an*(x - Lx/2)
          ey_an = phi_an*(y - Ly/2)
          ez_an = -(4.0_f64/(sll_p_pi*sqrt(sll_p_pi)*Lx*Ly*Lz)) &
-                 *exp(-.5*(x - Lx/2)**2) &
-                 *exp(-.5*(y - Ly/2)**2)*cos(z)
+                 *exp(-.5_f64*(x - Lx/2)**2) &
+                 *exp(-.5_f64*(y - Ly/2)**2)*cos(z)
       end if
 
       do k = 1, nz_loc
@@ -166,7 +166,7 @@ program test_poisson_3d_periodic_par
                   rho(i, j, k) = 3*phi_an(i, j, k)
                else if (i_test == 2) then
                   rho(i, j, k) = phi_an(i, j, k) &
-                                 *(3 - ((x(i, j, k) - Lx/2)**2 &
+                                 *(3._f64 - ((x(i, j, k) - Lx/2)**2 &
                                         + (y(i, j, k) - Ly/2)**2))
                end if
             end do
@@ -187,7 +187,7 @@ program test_poisson_3d_periodic_par
          end do
       end do
 
-      average_err = average_err/(nx_loc*ny_loc*nz_loc)
+      average_err = average_err/real(nx_loc*ny_loc*nz_loc,f64)
 
       flush (output_unit); print *, ' ------------------'
       flush (output_unit); print *, ' myrank ', myrank
@@ -216,7 +216,7 @@ program test_poisson_3d_periodic_par
          end do
       end do
 
-      average_err = average_err/(nx_loc*ny_loc*nz_loc)
+      average_err = average_err/real(nx_loc*ny_loc*nz_loc,f64)
 
       flush (output_unit); print *, ' ------------------'
       flush (output_unit); print *, ' myrank ', myrank
@@ -239,7 +239,7 @@ program test_poisson_3d_periodic_par
          end do
       end do
 
-      average_err = average_err/(nx_loc*ny_loc*nz_loc)
+      average_err = average_err/real(nx_loc*ny_loc*nz_loc,f64)
 
       flush (output_unit); print *, ' ------------------'
       flush (output_unit); print *, ' myrank ', myrank
@@ -262,7 +262,7 @@ program test_poisson_3d_periodic_par
          end do
       end do
 
-      average_err = average_err/(nx_loc*ny_loc*nz_loc)
+      average_err = average_err/real(nx_loc*ny_loc*nz_loc,f64)
 
       flush (output_unit); print *, ' ------------------'
       flush (output_unit); print *, ' myrank ', myrank

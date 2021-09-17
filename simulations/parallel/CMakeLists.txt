@@ -52,6 +52,7 @@ if(HDF5_ENABLED
 
   # Vlasov-Maxwell 1Dx2D
   add_subdirectory(pic_vm_1d2v_cart)
+  add_subdirectory( pic_vm_1d2v_cart_multispecies )
 
   # Vlasov-Poisson 2Dx2D
   add_subdirectory(pic_vp_2d2v_cart)
@@ -66,5 +67,14 @@ if(HDF5_ENABLED
 
   # Guiding-Center 2D
   add_subdirectory(pic_gc_2d0v_cart_optim)
+  
+  ## Vlasov-Maxwell 2Dx3D
+  add_subdirectory( pic_vm_2d3v_cart )
+  
+  ## Vlasov-Maxwell 3Dx3D
+  add_subdirectory( pic_vm_3d3v_cart )
+  add_subdirectory( pic_vm_3d3v_cart_multispecies )
+    
+
 
 endif()

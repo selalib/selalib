@@ -1,0 +1,57 @@
+&sim_params
+        delta_t = 0.05
+        n_time_steps = 3
+        initial_distrib = "cossum_onegaussian"
+        initial_bfield = "cossum"
+        plasma_beta = 1.0 1.0 1.0
+
+/
+&cos_onegaussian
+	kx = 0.0 0.0 0.0
+        modnum = 0.0 0.0 0.0
+        alpha = 0.0
+	phase_shift= 0.0
+        v_thermal = 0.048989794855663557 0.048989794855663557 0.014142135623730949
+        v_mean = 0.0 0.0 0.0
+	
+/   
+&bfield
+	bkx = 1.25 0.0 0.0	
+	balpha = 0.0 0.0 0.1
+	bphase_shift= 0.0 0.0 0.0
+	bconstant = 0.0 0.0 0.0
+/ 
+&output
+        file_prefix = "weibel_cef_trafo"
+/
+
+&grid_dims
+        ng_x = 8 4 4
+        x_min = 0.0 0.0 0.0
+        x_max = 5.026548245743669 5.026548245743669 5.026548245743669
+/
+
+&pic_params
+        n_particles = 100000
+        sampling_case = "particle_sampling_sobol"
+        splitting_case = "splitting_cef_trafo"     
+	spline_degree = 3 2 2
+	splitting_type = "strang"
+	boundary_fields = "clamped"
+	boundary_particles = "reflection"
+        with_control_variate = .false.
+		
+/
+&trafo
+	nparams = 6
+	params = 5.026548245743669 5.026548245743669 5.026548245743669 0.0 0.0 0.0 
+	mapping_case = "scaling"
+/
+&ctest
+	
+/
+
+
+
+
+

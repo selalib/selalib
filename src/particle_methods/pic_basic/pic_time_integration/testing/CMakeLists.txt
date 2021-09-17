@@ -1,29 +1,96 @@
-add_executable(test_operator_splitting_pic_vp_2d2v
-               test_operator_splitting_pic_vp_2d2v.F90)
-target_link_libraries(test_operator_splitting_pic_vp_2d2v
-                      sll_pic_time_integration)
 
-add_executable(test_hamiltonian_splitting_pic_vm_1d2v
-               test_hamiltonian_splitting_pic_vm_1d2v.F90)
-target_link_libraries(test_hamiltonian_splitting_pic_vm_1d2v
-                      sll_pic_time_integration)
+ADD_EXECUTABLE( test_operator_splitting_pic_vp_2d2v test_operator_splitting_pic_vp_2d2v.F90)
+TARGET_LINK_LIBRARIES(test_operator_splitting_pic_vp_2d2v sll_pic_time_integration)
 
-add_executable(test_hamiltonian_splitting_pic_vm_1d2v_boris
-               test_hamiltonian_splitting_pic_vm_1d2v_boris.F90)
-target_link_libraries(test_hamiltonian_splitting_pic_vm_1d2v_boris
-                      sll_pic_time_integration)
+#1d2v
+ADD_EXECUTABLE( test_time_propagator_pic_vm_1d2v_hs test_time_propagator_pic_vm_1d2v_hs.F90)
+TARGET_LINK_LIBRARIES(test_time_propagator_pic_vm_1d2v_hs sll_pic_time_integration)
 
-if(FFT_LIB STREQUAL "FFTW")
-  add_mpi_test(hamiltonian_splitting_pic_vm_1d2v
-               test_hamiltonian_splitting_pic_vm_1d2v "1" "")
-  set_tests_properties(hamiltonian_splitting_pic_vm_1d2v
-                       PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-  add_mpi_test(hamiltonian_splitting_pic_vm_1d2v_boris
-               test_hamiltonian_splitting_pic_vm_1d2v_boris "1" "")
-  set_tests_properties(hamiltonian_splitting_pic_vm_1d2v_boris
-                       PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-  add_mpi_test(operator_splitting_pic_vp_2d2v
-               test_operator_splitting_pic_vp_2d2v "1" "")
-  set_tests_properties(operator_splitting_pic_vp_2d2v
-                       PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+ADD_EXECUTABLE( test_time_propagator_pic_vm_1d2v_cef test_time_propagator_pic_vm_1d2v_cef.F90)
+TARGET_LINK_LIBRARIES(test_time_propagator_pic_vm_1d2v_cef sll_pic_time_integration)
+ADD_MPI_TEST( time_propagator_pic_vm_1d2v_cef test_time_propagator_pic_vm_1d2v_cef "1" "")
+SET_TESTS_PROPERTIES(time_propagator_pic_vm_1d2v_cef PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+ADD_EXECUTABLE( test_time_propagator_pic_vm_1d2v_subcyc test_time_propagator_pic_vm_1d2v_subcyc.F90)
+TARGET_LINK_LIBRARIES(test_time_propagator_pic_vm_1d2v_subcyc sll_pic_time_integration)
+
+ADD_EXECUTABLE( test_time_propagator_pic_vm_1d2v_zigsub test_time_propagator_pic_vm_1d2v_zigsub.F90)
+TARGET_LINK_LIBRARIES(test_time_propagator_pic_vm_1d2v_zigsub sll_pic_time_integration)
+ADD_MPI_TEST( time_propagator_pic_vm_1d2v_zigsub test_time_propagator_pic_vm_1d2v_zigsub "1" "")
+SET_TESTS_PROPERTIES(time_propagator_pic_vm_1d2v_zigsub PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+
+ADD_EXECUTABLE( test_time_propagator_pic_vm_1d2v_boris test_time_propagator_pic_vm_1d2v_boris.F90)
+TARGET_LINK_LIBRARIES(test_time_propagator_pic_vm_1d2v_boris sll_pic_time_integration)
+
+ADD_EXECUTABLE( test_time_propagator_pic_vm_1d2v_disgradE test_time_propagator_pic_vm_1d2v_disgradE.F90)
+TARGET_LINK_LIBRARIES(test_time_propagator_pic_vm_1d2v_disgradE sll_pic_time_integration)
+ADD_MPI_TEST( time_propagator_pic_vm_1d2v_disgradE test_time_propagator_pic_vm_1d2v_disgradE "1" "")
+SET_TESTS_PROPERTIES(time_propagator_pic_vm_1d2v_disgradE PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+ADD_EXECUTABLE( test_time_propagator_pic_vm_1d2v_trafo test_time_propagator_pic_vm_1d2v_trafo.F90)
+TARGET_LINK_LIBRARIES(test_time_propagator_pic_vm_1d2v_trafo sll_pic_time_integration)
+ADD_MPI_TEST( time_propagator_pic_vm_1d2v_trafo test_time_propagator_pic_vm_1d2v_trafo "1" "")
+SET_TESTS_PROPERTIES(time_propagator_pic_vm_1d2v_trafo PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+
+ADD_EXECUTABLE( test_time_propagator_pic_vm_1d2v_ecsim test_time_propagator_pic_vm_1d2v_ecsim.F90)
+TARGET_LINK_LIBRARIES(test_time_propagator_pic_vm_1d2v_ecsim sll_pic_time_integration)
+ADD_MPI_TEST( time_propagator_pic_vm_1d2v_ecsim test_time_propagator_pic_vm_1d2v_ecsim "1" "")
+SET_TESTS_PROPERTIES(time_propagator_pic_vm_1d2v_ecsim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+
+ADD_EXECUTABLE( test_time_propagator_pic_vm_1d2v_ecsim2o test_time_propagator_pic_vm_1d2v_ecsim2o.F90)
+TARGET_LINK_LIBRARIES(test_time_propagator_pic_vm_1d2v_ecsim2o sll_pic_time_integration)
+ADD_MPI_TEST( time_propagator_pic_vm_1d2v_ecsim2o test_time_propagator_pic_vm_1d2v_ecsim2o "1" "")
+SET_TESTS_PROPERTIES(time_propagator_pic_vm_1d2v_ecsim2o PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+
+if (FFT_LIB STREQUAL "FFTW") 
+  ADD_MPI_TEST( time_propagator_pic_vm_1d2v_hs test_time_propagator_pic_vm_1d2v_hs "1" "")
+  SET_TESTS_PROPERTIES(time_propagator_pic_vm_1d2v_hs PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+  ADD_MPI_TEST( time_propagator_pic_vm_1d2v_subcyc test_time_propagator_pic_vm_1d2v_subcyc "1" "")
+  SET_TESTS_PROPERTIES(time_propagator_pic_vm_1d2v_subcyc PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+  ADD_MPI_TEST( time_propagator_pic_vm_1d2v_boris test_time_propagator_pic_vm_1d2v_boris "1" "")
+  SET_TESTS_PROPERTIES(time_propagator_pic_vm_1d2v_boris PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+  ADD_MPI_TEST( operator_splitting_pic_vp_2d2v test_operator_splitting_pic_vp_2d2v "1" "") 
+  SET_TESTS_PROPERTIES(operator_splitting_pic_vp_2d2v PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 endif()
+
+#3d3v
+ADD_EXECUTABLE( test_time_propagator_pic_vm_3d3v_disgradE test_time_propagator_pic_vm_3d3v_disgradE.F90)
+TARGET_LINK_LIBRARIES(test_time_propagator_pic_vm_3d3v_disgradE sll_pic_time_integration)
+ADD_MPI_TEST( time_propagator_pic_vm_3d3v_disgradE test_time_propagator_pic_vm_3d3v_disgradE "1" "")
+SET_TESTS_PROPERTIES(time_propagator_pic_vm_3d3v_disgradE PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+ADD_EXECUTABLE( test_time_propagator_pic_vm_3d3v_hs test_time_propagator_pic_vm_3d3v_hs.F90)
+TARGET_LINK_LIBRARIES(test_time_propagator_pic_vm_3d3v_hs sll_pic_time_integration sll_xdmf_io )
+ADD_MPI_TEST( time_propagator_pic_vm_3d3v_hs test_time_propagator_pic_vm_3d3v_hs  "1" "")
+SET_TESTS_PROPERTIES(time_propagator_pic_vm_3d3v_hs PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+ADD_EXECUTABLE( test_time_propagator_pic_vm_3d3v_cef test_time_propagator_pic_vm_3d3v_cef.F90)
+TARGET_LINK_LIBRARIES(test_time_propagator_pic_vm_3d3v_cef sll_pic_time_integration sll_xdmf_io )
+ADD_MPI_TEST( time_propagator_pic_vm_3d3v_cef test_time_propagator_pic_vm_3d3v_cef "1" "" )
+SET_TESTS_PROPERTIES(time_propagator_pic_vm_3d3v_cef PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+ADD_EXECUTABLE( test_time_propagator_pic_vm_3d3v_trafo test_time_propagator_pic_vm_3d3v_trafo.F90)
+TARGET_LINK_LIBRARIES(test_time_propagator_pic_vm_3d3v_trafo sll_pic_time_integration)
+ADD_MPI_TEST( time_propagator_pic_vm_3d3v_trafo test_time_propagator_pic_vm_3d3v_trafo "1" "")
+SET_TESTS_PROPERTIES(time_propagator_pic_vm_3d3v_trafo PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+ADD_EXECUTABLE( test_time_propagator_pic_vm_3d3v_hs_trafo test_time_propagator_pic_vm_3d3v_hs_trafo.F90)
+TARGET_LINK_LIBRARIES(test_time_propagator_pic_vm_3d3v_hs_trafo sll_pic_time_integration)
+ADD_MPI_TEST( time_propagator_pic_vm_3d3v_hs_trafo test_time_propagator_pic_vm_3d3v_hs_trafo "1" "")
+SET_TESTS_PROPERTIES(time_propagator_pic_vm_3d3v_hs_trafo PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+ADD_EXECUTABLE( test_time_propagator_pic_vm_3d3v_cef_trafo test_time_propagator_pic_vm_3d3v_cef_trafo.F90)
+TARGET_LINK_LIBRARIES(test_time_propagator_pic_vm_3d3v_cef_trafo sll_pic_time_integration)
+ADD_MPI_TEST( time_propagator_pic_vm_3d3v_cef_trafo test_time_propagator_pic_vm_3d3v_cef_trafo "1" "")
+SET_TESTS_PROPERTIES(time_propagator_pic_vm_3d3v_cef_trafo PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+ADD_EXECUTABLE( test_time_propagator_pic_vm_3d3v_clamped_trafo test_time_propagator_pic_vm_3d3v_clamped_trafo.F90)
+TARGET_LINK_LIBRARIES(test_time_propagator_pic_vm_3d3v_clamped_trafo sll_pic_time_integration)
+ADD_MPI_TEST( time_propagator_pic_vm_3d3v_clamped_trafo test_time_propagator_pic_vm_3d3v_clamped_trafo "1" "")
+SET_TESTS_PROPERTIES(time_propagator_pic_vm_3d3v_clamped_trafo PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+

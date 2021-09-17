@@ -106,6 +106,11 @@ endif(BUILD_MUDPACK)
 add_executable(test_poisson_2d_fem_sps_dense test_poisson_2d_fem_sps_dense.F90)
 target_link_libraries(test_poisson_2d_fem_sps_dense sll_poisson_solvers)
 
+add_executable( test_poisson_3d_fem_fft test_poisson_3d_fem_fft.F90 )
+target_link_libraries( test_poisson_3d_fem_fft sll_poisson_solvers )
+add_test( NAME poisson_3d_fem_fft COMMAND test_poisson_3d_fem_fft )
+set_tests_properties( poisson_3d_fem_fft PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+
 # -------------------------------------------------------------------------------
 # Test FEM Poisson solver based on smooth polar splines (stencil version)
 # -------------------------------------------------------------------------------

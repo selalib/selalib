@@ -1,5 +1,5 @@
-!> @defgroup maxwell_solvers sll_maxwell_solvers
-!> @brief
+   !> @defgroup maxwell_solvers sll_maxwell_solvers
+!> @brief 
 !> Maxwell solvers in 2D and 3D
 !> @details
 !>

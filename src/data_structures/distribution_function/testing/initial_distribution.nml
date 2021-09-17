@@ -1,6 +1,8 @@
 &cos_twogaussian
-        kx = 0.5 0.5
+	kx = 0.5 0.5	
+        modnum = 0.0 0.0
         alpha = 0.01
+	phase_shift = 0.0
         v_thermal_1 = 1.0 2.0
         v_mean_1 = 1.0  -1.0
         v_thermal_2 = 0.2 0.3

@@ -33,7 +33,8 @@ module sll_m_ascii_io
       sll_s_ascii_file_create, &
       sll_o_ascii_write_array, &
       sll_s_ascii_write_array_1d, &
-      sll_s_ascii_write_array_2d
+      sll_s_ascii_write_array_2d, &
+      sll_s_ascii_write_array_1d_as_row
 
    private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -161,7 +162,22 @@ contains
             sll_int32, intent(out) :: error
             sll_real64, intent(in)  :: array(:, :, :)
             write (file_id, *, IOSTAT=error) array
-         end subroutine
+          end subroutine sll_ascii_write_array_3d
+
+          
+          !> Write a 1d array ASCII format
+          subroutine sll_s_ascii_write_array_1d_as_row(file_id,array,num_points)
+            sll_int32 , intent(in)  :: file_id
+            sll_real64, intent(in)  :: array(:)
+            sll_int32, intent(in)   :: num_points
+            sll_int32 :: i
+            
+            do i=1,num_points-1
+               write(file_id, '(2g24.16)', advance='no') array(i)
+            end do
+            write(file_id, '(2g24.16)') array(num_points)
+            
+          end subroutine sll_s_ascii_write_array_1d_as_row
 
          end module sll_m_ascii_io
 
