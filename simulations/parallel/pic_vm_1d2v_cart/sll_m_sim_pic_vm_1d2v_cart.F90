@@ -339,39 +339,39 @@ contains
     sll_int32   :: input_file, file_id 
     sll_int32   :: ierr
     type(sll_t_time_mark) :: start_init, end_init
-    sll_real64         :: delta_t
-    sll_int32          :: n_time_steps
-    sll_real64         :: beta
-    character(len=256) :: initial_distrib
-    character(len=256) :: initial_bfield
+    sll_real64         :: delta_t = 0._f64
+    sll_int32          :: n_time_steps = 0
+    sll_real64         :: beta = 0.0_f64
+    character(len=256) :: initial_distrib = "none"
+    character(len=256) :: initial_bfield = "none"
     sll_real64         :: charge = -1._f64
     sll_real64         :: mass = 1._f64
     sll_real64         :: plasma_beta(3)  = 1._f64
     character(len=256) :: particle_force = "repulsion"
     logical            :: electrostatic = .false.
-    character(len=256) :: file_prefix
+    character(len=256) :: file_prefix = "none"
     logical            :: output_fields = .false.
     logical            :: output_particles = .false.
-    sll_int32          :: ng_x
-    sll_real64         :: x1_min, x1_max
+    sll_int32          :: ng_x = 0
+    sll_real64         :: x1_min = 0._f64, x1_max = 0._f64
     logical            :: jmean = .false.
     sll_int32          :: degree_fem = -2
-    sll_int32          :: n_particles
-    character(len=256) :: sampling_case
-    character(len=256) :: splitting_case
-    sll_int32          :: spline_degree 
-    character(len=256) :: splitting_type
+    sll_int32          :: n_particles = 0
+    character(len=256) :: sampling_case = "none"
+    character(len=256) :: splitting_case = "none"
+    sll_int32          :: spline_degree = 0
+    character(len=256) :: splitting_type = "none"
     logical            :: strong_ampere = .false.
     logical            :: eval_grid_points
     character(len=256) :: boundary_fields = "none"
     character(len=256) :: boundary_particles = "none"
     logical            :: smoothing = .false.
     character(len=256) :: ctest_case = "none"
-    character(len=256) :: filtering
+    character(len=256) :: filtering = "none"
     sll_int32          :: filter_iter = 0
     sll_int32          :: mode = 2
     logical            :: with_control_variate = .false.
-    sll_int32          :: n_sub_iter
+    sll_int32          :: n_sub_iter = 0
 
 
     namelist /sim_params/         delta_t, n_time_steps, beta, initial_distrib, initial_bfield, charge, mass, plasma_beta, particle_force, electrostatic
