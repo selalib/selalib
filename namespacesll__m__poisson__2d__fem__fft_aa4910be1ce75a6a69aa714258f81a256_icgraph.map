@@ -1,0 +1,4 @@
+<map id="fft2d" name="fft2d">
+<area shape="rect" id="node2" href="$namespacesll__m__poisson__2d__fem__fft.html#a5840cdf1605c61b15dd5f2de41ef7483" title="compute_e_from_rho_fft" alt="" coords="111,5,293,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__poisson__2d__fem__fft.html#a4fe951dec8d79c67b42f49ee21a67e5b" title="compute_phi_from_rho_fft" alt="" coords="105,56,299,83"/>
+</map>

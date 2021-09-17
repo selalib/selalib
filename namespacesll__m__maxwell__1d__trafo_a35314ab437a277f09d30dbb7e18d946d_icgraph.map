@@ -1,0 +1,5 @@
+<map id="multiply_g" name="multiply_g">
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__1d__trafo.html#af0d7e9e7368dc793f03f5eda006230a4" title="compute e from rho using weak Poisson&#39;s equation ( rho = G^T M_1 G , e = &#45;G &#160;) " alt="" coords="146,5,314,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__1d__trafo.html#a9aa0fdb2f9fd1e8f30ef5650767b4471" title="For model with adiabatic electrons. " alt="" coords="144,71,316,112"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__1d__trafo.html#a903528819de647900ba7230c356a2181" title="For model with adiabatic electrons. " alt="" coords="153,136,307,177"/>
+</map>

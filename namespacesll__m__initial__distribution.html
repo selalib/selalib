@@ -98,25 +98,51 @@ Derived types and interfaces</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">type &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__initial__distribution_1_1sll__t__params__cos__gaussian.html">sll_t_params_cos_gaussian</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Data type for distribution function with (multiple) Gaussians in v and one plus cosine perturbations in x.  <a href="structsll__m__initial__distribution_1_1sll__t__params__cos__gaussian.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">type &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__initial__distribution_1_1sll__t__params__cos__gaussian__screwpinch.html">sll_t_params_cos_gaussian_screwpinch</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">type &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__initial__distribution_1_1sll__t__params__noise__gaussian.html">sll_t_params_noise_gaussian</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:aa1a1422f7ab3ebd5844f5f5e6148efda"><td class="memItemLeft" align="right" valign="top">real(kind=f64) function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__initial__distribution.html#aa1a1422f7ab3ebd5844f5f5e6148efda">sll_f_cos_gaussian</a> (self, x, v)</td></tr>
-<tr class="separator:aa1a1422f7ab3ebd5844f5f5e6148efda"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6a0df39fd5eae7a8edae17faee839e88"><td class="memItemLeft" align="right" valign="top">real(kind=f64) function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__initial__distribution.html#a6a0df39fd5eae7a8edae17faee839e88">sll_f_cos</a> (self, x)</td></tr>
-<tr class="separator:a6a0df39fd5eae7a8edae17faee839e88"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4b27441d1b2135291e74be6fa64b534b"><td class="memItemLeft" align="right" valign="top">real(kind=f64) function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__initial__distribution.html#a4b27441d1b2135291e74be6fa64b534b">sll_f_gaussian</a> (self, v)</td></tr>
-<tr class="separator:a4b27441d1b2135291e74be6fa64b534b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afa8940f172a16133176cefd150a60e95"><td class="memItemLeft" align="right" valign="top">real(kind=f64) function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__initial__distribution.html#afa8940f172a16133176cefd150a60e95">sll_f_cos_gaussian</a> (self, x, v, m)</td></tr>
+<tr class="separator:afa8940f172a16133176cefd150a60e95"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a43156cb25d1897302abda9aa935c6a6a"><td class="memItemLeft" align="right" valign="top">real(kind=f64) function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__initial__distribution.html#a43156cb25d1897302abda9aa935c6a6a">sll_f_cos</a> (self, x, v)</td></tr>
+<tr class="separator:a43156cb25d1897302abda9aa935c6a6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5bf6f96c59da327bfe53cb5fa79ba0b3"><td class="memItemLeft" align="right" valign="top">real(kind=f64) function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__initial__distribution.html#a5bf6f96c59da327bfe53cb5fa79ba0b3">sll_f_gaussian</a> (self, v, x, m)</td></tr>
+<tr class="separator:a5bf6f96c59da327bfe53cb5fa79ba0b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa41162cd180199eb162960700b5cacc7"><td class="memItemLeft" align="right" valign="top">real(kind=f64) function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__initial__distribution.html#aa41162cd180199eb162960700b5cacc7">sll_f_gaussian_pnoise</a> (self, v, x, m)</td></tr>
+<tr class="separator:aa41162cd180199eb162960700b5cacc7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaf910636651ec93f454c363a85033e2d"><td class="memItemLeft" align="right" valign="top">real(kind=f64) function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__initial__distribution.html#aaf910636651ec93f454c363a85033e2d">sll_f_noise</a> (self, x, v)</td></tr>
+<tr class="separator:aaf910636651ec93f454c363a85033e2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0360b78425014609d9e6efb8b1075d2d"><td class="memItemLeft" align="right" valign="top">real(kind=f64) function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__initial__distribution.html#a0360b78425014609d9e6efb8b1075d2d">sll_f_noise_gaussian</a> (self, x, v, m)</td></tr>
+<tr class="separator:a0360b78425014609d9e6efb8b1075d2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5a5edcfa962bdb40990dd1d63df2fa99"><td class="memItemLeft" align="right" valign="top">real(kind=f64) function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__initial__distribution.html#a5a5edcfa962bdb40990dd1d63df2fa99">sll_f_cos_gaussian_screwpinch</a> (self, x, v, m)</td></tr>
+<tr class="separator:a5a5edcfa962bdb40990dd1d63df2fa99"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa9442fbcda66075977f04500a2be1031"><td class="memItemLeft" align="right" valign="top">real(kind=f64) function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__initial__distribution.html#aa9442fbcda66075977f04500a2be1031">sll_f_cos_screwpinch</a> (self, x, v)</td></tr>
+<tr class="separator:aa9442fbcda66075977f04500a2be1031"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4c7908e158764556d9723e1d7f44d5e2"><td class="memItemLeft" align="right" valign="top">real(kind=f64) function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__initial__distribution.html#a4c7908e158764556d9723e1d7f44d5e2">sll_f_gaussian_screwpinch</a> (self, v, x, m)</td></tr>
+<tr class="separator:a4c7908e158764556d9723e1d7f44d5e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9e5ea8797737f49df1a5e863c2a85771"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__initial__distribution.html#a9e5ea8797737f49df1a5e863c2a85771">free_cos_gaussian</a> (self)</td></tr>
 <tr class="separator:a9e5ea8797737f49df1a5e863c2a85771"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9545dc422a41dd4f82c9b3c7770511ea"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__initial__distribution.html#a9545dc422a41dd4f82c9b3c7770511ea">cos_gaussian_init</a> (self, descriptor, dims, file_id)</td></tr>
-<tr class="separator:a9545dc422a41dd4f82c9b3c7770511ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab9597c84945d3b79561a51150ca40077"><td class="memItemLeft" align="right" valign="top">subroutine, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__initial__distribution.html#ab9597c84945d3b79561a51150ca40077">sll_s_initial_distribution_new</a> (distribution, dims, file_id, params)</td></tr>
-<tr class="memdesc:ab9597c84945d3b79561a51150ca40077"><td class="mdescLeft">&#160;</td><td class="mdescRight">Factory function for <a class="el" href="structsll__m__initial__distribution_1_1sll__c__distribution__params.html" title="Abstract data type for parameters of initial distribution. ">sll_c_distribution_params</a>, parameters read form input file.  <a href="#ab9597c84945d3b79561a51150ca40077">More...</a><br /></td></tr>
-<tr class="separator:ab9597c84945d3b79561a51150ca40077"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab8b3be6e5b760fac1834713720939889"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__initial__distribution.html#ab8b3be6e5b760fac1834713720939889">free_noise_gaussian</a> (self)</td></tr>
+<tr class="separator:ab8b3be6e5b760fac1834713720939889"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a491600bbbe93ac2e23967281da8c3d9b"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__initial__distribution.html#a491600bbbe93ac2e23967281da8c3d9b">noise_gaussian_init</a> (self, n_gaussians, dims, file_id)</td></tr>
+<tr class="separator:a491600bbbe93ac2e23967281da8c3d9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a44bd5a887b0131d5a163a76b3e32ba7a"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__initial__distribution.html#a44bd5a887b0131d5a163a76b3e32ba7a">cos_gaussian_init</a> (self, descriptor, dims, file_id, profile)</td></tr>
+<tr class="separator:a44bd5a887b0131d5a163a76b3e32ba7a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a845dbfaf9d99e11b5a49e9340ffa4824"><td class="memItemLeft" align="right" valign="top">subroutine, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__initial__distribution.html#a845dbfaf9d99e11b5a49e9340ffa4824">sll_s_initial_distribution_new</a> (distribution, dims, file_id, params, profile)</td></tr>
+<tr class="memdesc:a845dbfaf9d99e11b5a49e9340ffa4824"><td class="mdescLeft">&#160;</td><td class="mdescRight">Factory function for <a class="el" href="structsll__m__initial__distribution_1_1sll__c__distribution__params.html" title="Abstract data type for parameters of initial distribution. ">sll_c_distribution_params</a>, parameters read form input file.  <a href="#a845dbfaf9d99e11b5a49e9340ffa4824">More...</a><br /></td></tr>
+<tr class="separator:a845dbfaf9d99e11b5a49e9340ffa4824"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acfea77eb5b9e8fba6026d0dc13e98df8"><td class="memItemLeft" align="right" valign="top">subroutine, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__initial__distribution.html#acfea77eb5b9e8fba6026d0dc13e98df8">sll_s_initial_distribution_file_new</a> (dims, nml_file, params, profile)</td></tr>
+<tr class="memdesc:acfea77eb5b9e8fba6026d0dc13e98df8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Factory function for <a class="el" href="structsll__m__initial__distribution_1_1sll__c__distribution__params.html" title="Abstract data type for parameters of initial distribution. ">sll_c_distribution_params</a>, parameters read form input file.  <a href="#acfea77eb5b9e8fba6026d0dc13e98df8">More...</a><br /></td></tr>
+<tr class="separator:acfea77eb5b9e8fba6026d0dc13e98df8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a01aef8a2a85863f98c904319ea986a5c"><td class="memItemLeft" align="right" valign="top">subroutine, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__initial__distribution.html#a01aef8a2a85863f98c904319ea986a5c">sll_s_initial_distribution_new_descriptor</a> (distribution, dims, file_id, params)</td></tr>
 <tr class="memdesc:a01aef8a2a85863f98c904319ea986a5c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Factory function for <a class="el" href="structsll__m__initial__distribution_1_1sll__c__distribution__params.html" title="Abstract data type for parameters of initial distribution. ">sll_c_distribution_params</a>, parameters read form input file. Version build upon descriptors.  <a href="#a01aef8a2a85863f98c904319ea986a5c">More...</a><br /></td></tr>
 <tr class="separator:a01aef8a2a85863f98c904319ea986a5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0154368cd76f9136ee6886719def68d5"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__initial__distribution.html#a0154368cd76f9136ee6886719def68d5">cossum_multigaussian_init_1d2v</a> (file_id, params, n_gaussians)</td></tr>
+<tr class="memdesc:a0154368cd76f9136ee6886719def68d5"><td class="mdescLeft">&#160;</td><td class="mdescRight">1d2v subroutine for initialization of sum of arbitrary number of Gaussians. Note that v_thermal_1/2 refers her to the velocity dimension instead of the number of the Gaussian in the sum as for the twogaussian case.  <a href="#a0154368cd76f9136ee6886719def68d5">More...</a><br /></td></tr>
+<tr class="separator:a0154368cd76f9136ee6886719def68d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
 Variables</h2></td></tr>
@@ -132,10 +158,20 @@ Variables</h2></td></tr>
 <tr class="memitem:aa4b70a980063ef6f44ca1bfd9973b571"><td class="memItemLeft" align="right" valign="top">integer(kind=i32), parameter, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__initial__distribution.html#aa4b70a980063ef6f44ca1bfd9973b571">sll_p_cossum_twogaussian</a> = 3</td></tr>
 <tr class="memdesc:aa4b70a980063ef6f44ca1bfd9973b571"><td class="mdescLeft">&#160;</td><td class="mdescRight">as sll_p_sumcos_onegaussian but with sum of two Gaussians  <a href="#aa4b70a980063ef6f44ca1bfd9973b571">More...</a><br /></td></tr>
 <tr class="separator:aa4b70a980063ef6f44ca1bfd9973b571"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6294d754ffa90177b7298a2a0aa5c199"><td class="memItemLeft" align="right" valign="top">integer(kind=i32), parameter, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__initial__distribution.html#a6294d754ffa90177b7298a2a0aa5c199">sll_p_cossum_multigaussian1</a> = 4</td></tr>
+<tr class="separator:a6294d754ffa90177b7298a2a0aa5c199"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5f4dc3f75a8cf588061ee1574d3f883a"><td class="memItemLeft" align="right" valign="top">integer(kind=i32), parameter&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__initial__distribution.html#a5f4dc3f75a8cf588061ee1574d3f883a">sll_p_cossum_multigaussian2</a> = 5</td></tr>
+<tr class="separator:a5f4dc3f75a8cf588061ee1574d3f883a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad1f27bbeddc826298159f5307a8ae5ff"><td class="memItemLeft" align="right" valign="top">integer(kind=i32), parameter&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__initial__distribution.html#ad1f27bbeddc826298159f5307a8ae5ff">sll_p_cossum_multigaussian11</a> = 14</td></tr>
+<tr class="separator:ad1f27bbeddc826298159f5307a8ae5ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2fe6e2f4f7fcb1c06b9d1df0bddde3df"><td class="memItemLeft" align="right" valign="top">integer(kind=i32), parameter&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__initial__distribution.html#a2fe6e2f4f7fcb1c06b9d1df0bddde3df">sll_p_noise_multigaussian1</a> = 15</td></tr>
+<tr class="separator:a2fe6e2f4f7fcb1c06b9d1df0bddde3df"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5131ae23cbef6656bc2ad358e3dc27f8"><td class="memItemLeft" align="right" valign="top">integer(kind=i32), parameter&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__initial__distribution.html#a5131ae23cbef6656bc2ad358e3dc27f8">sll_p_noise_multigaussian11</a> = 16</td></tr>
+<tr class="separator:a5131ae23cbef6656bc2ad358e3dc27f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="a9545dc422a41dd4f82c9b3c7770511ea"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9545dc422a41dd4f82c9b3c7770511ea">&#9670;&nbsp;</a></span>cos_gaussian_init()</h2>
+<a id="a44bd5a887b0131d5a163a76b3e32ba7a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a44bd5a887b0131d5a163a76b3e32ba7a">&#9670;&nbsp;</a></span>cos_gaussian_init()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -146,7 +182,7 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">subroutine sll_m_initial_distribution::cos_gaussian_init </td>
           <td>(</td>
-          <td class="paramtype">class(<a class="el" href="structsll__m__initial__distribution_1_1sll__t__params__cos__gaussian.html">sll_t_params_cos_gaussian</a>), intent(out)&#160;</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__initial__distribution_1_1sll__t__params__cos__gaussian.html">sll_t_params_cos_gaussian</a> ), intent(out)&#160;</td>
           <td class="paramname"><em>self</em>, </td>
         </tr>
         <tr>
@@ -154,6 +190,184 @@ Variables</h2></td></tr>
           <td></td>
           <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
           <td class="paramname"><em>descriptor</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), dimension(2), intent(in)&#160;</td>
+          <td class="paramname"><em>dims</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>file_id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structsll__m__profile__functions_1_1sll__t__profile__functions.html">sll_t_profile_functions</a>), optional&#160;</td>
+          <td class="paramname"><em>profile</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">descriptor</td><td>descriptor of the test case</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dims</td><td>number of spatial and velocity dimensions</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">file_id</td><td>nml-file with parameters in unified format </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00415">415</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__initial__distribution_a44bd5a887b0131d5a163a76b3e32ba7a_cgraph.svg" width="367" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="a0154368cd76f9136ee6886719def68d5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0154368cd76f9136ee6886719def68d5">&#9670;&nbsp;</a></span>cossum_multigaussian_init_1d2v()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_initial_distribution::cossum_multigaussian_init_1d2v </td>
+          <td>(</td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>file_id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type( <a class="el" href="structsll__m__initial__distribution_1_1sll__t__params__cos__gaussian.html">sll_t_params_cos_gaussian</a> ), intent(inout)&#160;</td>
+          <td class="paramname"><em>params</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>n_gaussians</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>1d2v subroutine for initialization of sum of arbitrary number of Gaussians. Note that v_thermal_1/2 refers her to the velocity dimension instead of the number of the Gaussian in the sum as for the twogaussian case. </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00834">834</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__initial__distribution_a0154368cd76f9136ee6886719def68d5_icgraph.svg" width="367" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="a9e5ea8797737f49df1a5e863c2a85771"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9e5ea8797737f49df1a5e863c2a85771">&#9670;&nbsp;</a></span>free_cos_gaussian()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_initial_distribution::free_cos_gaussian </td>
+          <td>(</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__initial__distribution_1_1sll__t__params__cos__gaussian.html">sll_t_params_cos_gaussian</a> ), intent(inout)&#160;</td>
+          <td class="paramname"><em>self</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00319">319</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
+
+</div>
+</div>
+<a id="ab8b3be6e5b760fac1834713720939889"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab8b3be6e5b760fac1834713720939889">&#9670;&nbsp;</a></span>free_noise_gaussian()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_initial_distribution::free_noise_gaussian </td>
+          <td>(</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__initial__distribution_1_1sll__t__params__noise__gaussian.html">sll_t_params_noise_gaussian</a> ), intent(inout)&#160;</td>
+          <td class="paramname"><em>self</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00333">333</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
+
+</div>
+</div>
+<a id="a491600bbbe93ac2e23967281da8c3d9b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a491600bbbe93ac2e23967281da8c3d9b">&#9670;&nbsp;</a></span>noise_gaussian_init()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_initial_distribution::noise_gaussian_init </td>
+          <td>(</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__initial__distribution_1_1sll__t__params__noise__gaussian.html">sll_t_params_noise_gaussian</a> ), intent(out)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>n_gaussians</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -181,47 +395,19 @@ Variables</h2></td></tr>
 </div><div class="memdoc">
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">descriptor</td><td>descriptor of the test case</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n_gaussians</td><td>descriptor of the test case</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">dims</td><td>number of spatial and velocity dimensions</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">file_id</td><td>nml-file with parameters in unified format </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00177">177</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00344">344</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
 
 </div>
 </div>
-<a id="a9e5ea8797737f49df1a5e863c2a85771"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9e5ea8797737f49df1a5e863c2a85771">&#9670;&nbsp;</a></span>free_cos_gaussian()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">subroutine sll_m_initial_distribution::free_cos_gaussian </td>
-          <td>(</td>
-          <td class="paramtype">class(<a class="el" href="structsll__m__initial__distribution_1_1sll__t__params__cos__gaussian.html">sll_t_params_cos_gaussian</a>), intent(inout)&#160;</td>
-          <td class="paramname"><em>self</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00165">165</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
-
-</div>
-</div>
-<a id="a6a0df39fd5eae7a8edae17faee839e88"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6a0df39fd5eae7a8edae17faee839e88">&#9670;&nbsp;</a></span>sll_f_cos()</h2>
+<a id="a43156cb25d1897302abda9aa935c6a6a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a43156cb25d1897302abda9aa935c6a6a">&#9670;&nbsp;</a></span>sll_f_cos()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -232,14 +418,20 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">real(kind=f64) function sll_m_initial_distribution::sll_f_cos </td>
           <td>(</td>
-          <td class="paramtype">class(<a class="el" href="structsll__m__initial__distribution_1_1sll__t__params__cos__gaussian.html">sll_t_params_cos_gaussian</a>)&#160;</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__initial__distribution_1_1sll__t__params__cos__gaussian.html">sll_t_params_cos_gaussian</a> )&#160;</td>
           <td class="paramname"><em>self</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">real(kind=f64), dimension(:)&#160;</td>
-          <td class="paramname"><em>x</em>&#160;</td>
+          <td class="paramname"><em>x</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), optional&#160;</td>
+          <td class="paramname"><em>v</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -254,12 +446,18 @@ Variables</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00136">136</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00178">178</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__initial__distribution_a43156cb25d1897302abda9aa935c6a6a_icgraph.svg" width="280" height="38"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
 
 </div>
 </div>
-<a id="aa1a1422f7ab3ebd5844f5f5e6148efda"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa1a1422f7ab3ebd5844f5f5e6148efda">&#9670;&nbsp;</a></span>sll_f_cos_gaussian()</h2>
+<a id="afa8940f172a16133176cefd150a60e95"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afa8940f172a16133176cefd150a60e95">&#9670;&nbsp;</a></span>sll_f_cos_gaussian()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -267,7 +465,7 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">real(kind=f64) function sll_m_initial_distribution::sll_f_cos_gaussian </td>
           <td>(</td>
-          <td class="paramtype">class(<a class="el" href="structsll__m__initial__distribution_1_1sll__t__params__cos__gaussian.html">sll_t_params_cos_gaussian</a>)&#160;</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__initial__distribution_1_1sll__t__params__cos__gaussian.html">sll_t_params_cos_gaussian</a> )&#160;</td>
           <td class="paramname"><em>self</em>, </td>
         </tr>
         <tr>
@@ -280,7 +478,13 @@ Variables</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">real(kind=f64), dimension(:)&#160;</td>
-          <td class="paramname"><em>v</em>&#160;</td>
+          <td class="paramname"><em>v</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), optional&#160;</td>
+          <td class="paramname"><em>m</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -290,12 +494,18 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00112">112</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00161">161</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__initial__distribution_afa8940f172a16133176cefd150a60e95_cgraph.svg" width="316" height="88"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
 
 </div>
 </div>
-<a id="a4b27441d1b2135291e74be6fa64b534b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4b27441d1b2135291e74be6fa64b534b">&#9670;&nbsp;</a></span>sll_f_gaussian()</h2>
+<a id="a5a5edcfa962bdb40990dd1d63df2fa99"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5a5edcfa962bdb40990dd1d63df2fa99">&#9670;&nbsp;</a></span>sll_f_cos_gaussian_screwpinch()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -304,15 +514,77 @@ Variables</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">real(kind=f64) function sll_m_initial_distribution::sll_f_gaussian </td>
+          <td class="memname">real(kind=f64) function sll_m_initial_distribution::sll_f_cos_gaussian_screwpinch </td>
           <td>(</td>
-          <td class="paramtype">class(<a class="el" href="structsll__m__initial__distribution_1_1sll__t__params__cos__gaussian.html">sll_t_params_cos_gaussian</a>)&#160;</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__initial__distribution_1_1sll__t__params__cos__gaussian__screwpinch.html">sll_t_params_cos_gaussian_screwpinch</a> )&#160;</td>
           <td class="paramname"><em>self</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">real(kind=f64), dimension(:)&#160;</td>
+          <td class="paramname"><em>x</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:)&#160;</td>
+          <td class="paramname"><em>v</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), optional&#160;</td>
+          <td class="paramname"><em>m</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00267">267</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__initial__distribution_a5a5edcfa962bdb40990dd1d63df2fa99_cgraph.svg" width="396" height="88"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="aa9442fbcda66075977f04500a2be1031"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa9442fbcda66075977f04500a2be1031">&#9670;&nbsp;</a></span>sll_f_cos_screwpinch()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">real(kind=f64) function sll_m_initial_distribution::sll_f_cos_screwpinch </td>
+          <td>(</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__initial__distribution_1_1sll__t__params__cos__gaussian__screwpinch.html">sll_t_params_cos_gaussian_screwpinch</a> )&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:)&#160;</td>
+          <td class="paramname"><em>x</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), optional&#160;</td>
           <td class="paramname"><em>v</em>&#160;</td>
         </tr>
         <tr>
@@ -328,12 +600,326 @@ Variables</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00150">150</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00284">284</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__initial__distribution_aa9442fbcda66075977f04500a2be1031_icgraph.svg" width="360" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
 
 </div>
 </div>
-<a id="ab9597c84945d3b79561a51150ca40077"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab9597c84945d3b79561a51150ca40077">&#9670;&nbsp;</a></span>sll_s_initial_distribution_new()</h2>
+<a id="a5bf6f96c59da327bfe53cb5fa79ba0b3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5bf6f96c59da327bfe53cb5fa79ba0b3">&#9670;&nbsp;</a></span>sll_f_gaussian()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">real(kind=f64) function sll_m_initial_distribution::sll_f_gaussian </td>
+          <td>(</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__initial__distribution_1_1sll__t__params__cos__gaussian.html">sll_t_params_cos_gaussian</a> )&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:)&#160;</td>
+          <td class="paramname"><em>v</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), optional&#160;</td>
+          <td class="paramname"><em>x</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), optional&#160;</td>
+          <td class="paramname"><em>m</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00204">204</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__initial__distribution_a5bf6f96c59da327bfe53cb5fa79ba0b3_icgraph.svg" width="316" height="38"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="aa41162cd180199eb162960700b5cacc7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa41162cd180199eb162960700b5cacc7">&#9670;&nbsp;</a></span>sll_f_gaussian_pnoise()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">real(kind=f64) function sll_m_initial_distribution::sll_f_gaussian_pnoise </td>
+          <td>(</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__initial__distribution_1_1sll__t__params__noise__gaussian.html">sll_t_params_noise_gaussian</a> )&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:)&#160;</td>
+          <td class="paramname"><em>v</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), optional&#160;</td>
+          <td class="paramname"><em>x</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), optional&#160;</td>
+          <td class="paramname"><em>m</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00221">221</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
+
+</div>
+</div>
+<a id="a4c7908e158764556d9723e1d7f44d5e2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4c7908e158764556d9723e1d7f44d5e2">&#9670;&nbsp;</a></span>sll_f_gaussian_screwpinch()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">real(kind=f64) function sll_m_initial_distribution::sll_f_gaussian_screwpinch </td>
+          <td>(</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__initial__distribution_1_1sll__t__params__cos__gaussian__screwpinch.html">sll_t_params_cos_gaussian_screwpinch</a> )&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:)&#160;</td>
+          <td class="paramname"><em>v</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), optional&#160;</td>
+          <td class="paramname"><em>x</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), optional&#160;</td>
+          <td class="paramname"><em>m</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00301">301</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__initial__distribution_a4c7908e158764556d9723e1d7f44d5e2_icgraph.svg" width="396" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="aaf910636651ec93f454c363a85033e2d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaf910636651ec93f454c363a85033e2d">&#9670;&nbsp;</a></span>sll_f_noise()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">real(kind=f64) function sll_m_initial_distribution::sll_f_noise </td>
+          <td>(</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__initial__distribution_1_1sll__t__params__noise__gaussian.html">sll_t_params_noise_gaussian</a> )&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:)&#160;</td>
+          <td class="paramname"><em>x</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), optional&#160;</td>
+          <td class="paramname"><em>v</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00239">239</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
+
+</div>
+</div>
+<a id="a0360b78425014609d9e6efb8b1075d2d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0360b78425014609d9e6efb8b1075d2d">&#9670;&nbsp;</a></span>sll_f_noise_gaussian()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">real(kind=f64) function sll_m_initial_distribution::sll_f_noise_gaussian </td>
+          <td>(</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__initial__distribution_1_1sll__t__params__noise__gaussian.html">sll_t_params_noise_gaussian</a> )&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:)&#160;</td>
+          <td class="paramname"><em>x</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:)&#160;</td>
+          <td class="paramname"><em>v</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), optional&#160;</td>
+          <td class="paramname"><em>m</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00256">256</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
+
+</div>
+</div>
+<a id="acfea77eb5b9e8fba6026d0dc13e98df8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acfea77eb5b9e8fba6026d0dc13e98df8">&#9670;&nbsp;</a></span>sll_s_initial_distribution_file_new()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine, public sll_m_initial_distribution::sll_s_initial_distribution_file_new </td>
+          <td>(</td>
+          <td class="paramtype">integer(kind=i32), dimension(2), intent(in)&#160;</td>
+          <td class="paramname"><em>dims</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">character(*), intent(in)&#160;</td>
+          <td class="paramname"><em>nml_file</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">class(<a class="el" href="structsll__m__initial__distribution_1_1sll__c__distribution__params.html">sll_c_distribution_params</a>), intent(out), allocatable&#160;</td>
+          <td class="paramname"><em>params</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structsll__m__profile__functions_1_1sll__t__profile__functions.html">sll_t_profile_functions</a>), optional&#160;</td>
+          <td class="paramname"><em>profile</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Factory function for <a class="el" href="structsll__m__initial__distribution_1_1sll__c__distribution__params.html" title="Abstract data type for parameters of initial distribution. ">sll_c_distribution_params</a>, parameters read form input file. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">dims</td><td>number of spatial and velocity dimensions</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nml_file</td><td>nml-file with parameters in unified format</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">params</td><td>real array specifying the parameters for the given test case in the predefined order. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00611">611</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
+
+</div>
+</div>
+<a id="a845dbfaf9d99e11b5a49e9340ffa4824"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a845dbfaf9d99e11b5a49e9340ffa4824">&#9670;&nbsp;</a></span>sll_s_initial_distribution_new()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -360,7 +946,13 @@ Variables</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">class(<a class="el" href="structsll__m__initial__distribution_1_1sll__c__distribution__params.html">sll_c_distribution_params</a>), intent(out), allocatable&#160;</td>
-          <td class="paramname"><em>params</em>&#160;</td>
+          <td class="paramname"><em>params</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structsll__m__profile__functions_1_1sll__t__profile__functions.html">sll_t_profile_functions</a>), optional&#160;</td>
+          <td class="paramname"><em>profile</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -381,7 +973,7 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00250">250</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00536">536</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
 
 </div>
 </div>
@@ -434,11 +1026,75 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00283">283</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00694">694</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
 
 </div>
 </div>
 <h2 class="groupheader">Variable Documentation</h2>
+<a id="a6294d754ffa90177b7298a2a0aa5c199"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6294d754ffa90177b7298a2a0aa5c199">&#9670;&nbsp;</a></span>sll_p_cossum_multigaussian1</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">integer(kind=i32), parameter, public sll_p_cossum_multigaussian1 = 4</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00040">40</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
+
+</div>
+</div>
+<a id="ad1f27bbeddc826298159f5307a8ae5ff"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad1f27bbeddc826298159f5307a8ae5ff">&#9670;&nbsp;</a></span>sll_p_cossum_multigaussian11</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">integer(kind=i32), parameter sll_p_cossum_multigaussian11 = 14</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00042">42</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
+
+</div>
+</div>
+<a id="a5f4dc3f75a8cf588061ee1574d3f883a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5f4dc3f75a8cf588061ee1574d3f883a">&#9670;&nbsp;</a></span>sll_p_cossum_multigaussian2</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">integer(kind=i32), parameter sll_p_cossum_multigaussian2 = 5</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00041">41</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
+
+</div>
+</div>
 <a id="a072a88c750f2a4ace3e3f3f33b52bbbf"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a072a88c750f2a4ace3e3f3f33b52bbbf">&#9670;&nbsp;</a></span>sll_p_cossum_onegaussian</h2>
 
@@ -453,7 +1109,7 @@ Variables</h2></td></tr>
 
 <p>Descriptor for (1+cos(  kx_i * x_i))*exp(-0.5(v-v_mean)**2/v_thermal**2) </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00028">28</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00037">37</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
 
 </div>
 </div>
@@ -471,7 +1127,55 @@ Variables</h2></td></tr>
 
 <p>as sll_p_sumcos_onegaussian but with sum of two Gaussians </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00030">30</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00039">39</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
+
+</div>
+</div>
+<a id="a2fe6e2f4f7fcb1c06b9d1df0bddde3df"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2fe6e2f4f7fcb1c06b9d1df0bddde3df">&#9670;&nbsp;</a></span>sll_p_noise_multigaussian1</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">integer(kind=i32), parameter sll_p_noise_multigaussian1 = 15</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00043">43</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
+
+</div>
+</div>
+<a id="a5131ae23cbef6656bc2ad358e3dc27f8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5131ae23cbef6656bc2ad358e3dc27f8">&#9670;&nbsp;</a></span>sll_p_noise_multigaussian11</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">integer(kind=i32), parameter sll_p_noise_multigaussian11 = 16</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00044">44</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
 
 </div>
 </div>
@@ -489,7 +1193,7 @@ Variables</h2></td></tr>
 
 <p>Descriptor for (1+ cos( kx * x_i))*exp(-0.5(v-v_mean)**2/v_thermal**2) </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00027">27</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00036">36</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
 
 </div>
 </div>
@@ -507,7 +1211,7 @@ Variables</h2></td></tr>
 
 <p>as sll_p_sumcos_onegaussian but with sum of two Gaussians </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00029">29</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__initial__distribution_8_f90_source.html#l00038">38</a> of file <a class="el" href="sll__m__initial__distribution_8_f90_source.html">sll_m_initial_distribution.F90</a>.</p>
 
 </div>
 </div>
@@ -518,7 +1222,7 @@ Variables</h2></td></tr>
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Thu Sep 16 2021 15:32:49 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Sep 17 2021 15:35:34 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

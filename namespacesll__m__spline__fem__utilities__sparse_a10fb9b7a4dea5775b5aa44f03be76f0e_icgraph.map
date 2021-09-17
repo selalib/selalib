@@ -1,0 +1,12 @@
+<map id="sll_s_spline_fem_sparsity_mass" name="sll_s_spline_fem_sparsity_mass">
+<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities__sparse.html#a2003f09f29c8034b9cb433328afaef6b" title="Set up 1d mass matrix (sparsity pattern and values) " alt="" coords="298,209,486,235"/>
+<area shape="rect" id="node9" href="$namespacesll__m__spline__fem__utilities__sparse.html#af53327cdd86680d4562373cb2642979f" title="Set up 1d mass matrix for specific spline degree and profile function. " alt="" coords="284,331,500,358"/>
+<area shape="rect" id="node11" href="$namespacesll__m__time__propagator__pic__vm__1d2v__helper.html#abf74b4c925df98cb4ecd1b2734fb7be2" title="Constructor. " alt="" coords="306,383,478,453"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__1d__fem.html#a5b82c557e498ae59986631d0aea7ed63" title="sll_m_maxwell_1d_fem\l::init_1d_fem" alt="" coords="569,5,745,47"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__1d__fem__sm.html#a45e52ba17b5b5af73732917939909d67" title="Initialization. " alt="" coords="569,71,745,112"/>
+<area shape="rect" id="node5" href="$namespacesll__m__maxwell__3d__fem.html#ab814bfc0f843c1a2b8fe485351798ca0" title="Initialization. " alt="" coords="569,136,745,177"/>
+<area shape="rect" id="node6" href="$namespacesll__m__maxwell__3d__fem__fft.html#a8a58004064950f3f15cada7e7c4fb56b" title="Initialization. " alt="" coords="569,201,745,243"/>
+<area shape="rect" id="node7" href="$namespacesll__m__maxwell__clamped__1d__fem__sm.html#a400fe28b25203e207ad0786874c32912" title="Initialization. " alt="" coords="548,267,765,308"/>
+<area shape="rect" id="node8" href="$namespacesll__m__maxwell__clamped__3d__fem.html#afadba212d3f01a688b12c751068d1707" title="Initialization. " alt="" coords="565,332,748,373"/>
+<area shape="rect" id="node10" href="$namespacesll__m__maxwell__1d__trafo.html#a379870fb13734539528b6b4fd558963f" title="Initialization. " alt="" coords="566,397,747,439"/>
+</map>

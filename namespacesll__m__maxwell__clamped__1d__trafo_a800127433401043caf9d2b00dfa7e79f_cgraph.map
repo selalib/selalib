@@ -1,0 +1,19 @@
+<map id="init_1d_trafo" name="init_1d_trafo">
+<area shape="rect" id="node2" href="$namespacesll__m__splines__pp.html#a7e2a3943e2c330a0a9597b535ce259b3" title="Initialize sll_t_spline_pp_1d object (Set poly_coeffs depending on degree) " alt="" coords="185,125,341,167"/>
+<area shape="rect" id="node3" href="$namespacesll__m__spline__fem__utilities__sparse.html#a3fcb7d2b9d5aadd6a42eb295cc25b3b6" title="Set up 1d mass matrix for specific spline degree and profile function. " alt="" coords="167,191,359,247"/>
+<area shape="rect" id="node10" href="$sll__m__maxwell__1d__trafo_8_f90.html#a84da6f16f6cb045957fef43d185b23db" title="profile_0" alt="" coords="224,471,303,498"/>
+<area shape="rect" id="node11" href="$sll__m__maxwell__1d__trafo_8_f90.html#aec56488ee66c0e30e7fd74f20e9d921f" title="profile_1" alt="" coords="224,522,303,549"/>
+<area shape="rect" id="node12" href="$namespacesll__m__spline__fem__utilities__sparse.html#a58ea8913e3f0590a3a20406f15b23c11" title="Set up 1d mixed mass matrix for specific spline degrees and profile function. " alt="" coords="157,391,369,447"/>
+<area shape="rect" id="node18" href="$sll__m__maxwell__1d__trafo_8_f90.html#a9c311415a09c7e5c6d5c7dc66b773bc9" title="profile_m0" alt="" coords="218,573,309,599"/>
+<area shape="rect" id="node4" href="$namespacesll__m__spline__fem__utilities__sparse.html#aa5108c957c08993cf92fe2dd4c340bef" title="Helper function to create sparsity pattern of the clamped mass matrix. " alt="" coords="459,71,651,127"/>
+<area shape="rect" id="node5" href="$namespacesll__m__spline__fem__utilities.html#a6e211d167a3e75ec1bc08389b7b254dc" title="Function computing the boundary part for a mass matrix with clamped splines of degree (full version w..." alt="" coords="459,151,651,207"/>
+<area shape="rect" id="node8" href="$namespacesll__m__spline__fem__utilities__sparse.html#ab9300692ab0bf900dfec4f4af0b73c24" title="Assemble the given row of a sparse matrix for a full mass line. " alt="" coords="417,5,693,47"/>
+<area shape="rect" id="node9" href="$namespacesll__m__spline__fem__utilities.html#ae7d30abb6637e536e1904d1ae44ed287" title="Helper function to find line of mass matrix (full version without symmetry part) " alt="" coords="459,231,651,287"/>
+<area shape="rect" id="node6" href="$namespacesll__m__gauss__legendre__integration.html#a0df63a9e8ee884c2d4a0d1f53602a949" title="Returns a 2d array of size (2,npoints) containing gauss&#45;legendre points and weights in the interval [..." alt="" coords="741,271,964,327"/>
+<area shape="rect" id="node7" href="$namespacesll__m__splines__pp.html#ab63c3a25b861ed9b8701ae2f65942bcf" title="Perform a 1d hornerschema on the pp_coeffs at index. " alt="" coords="765,183,940,224"/>
+<area shape="rect" id="node13" href="$namespacesll__m__spline__fem__utilities__sparse.html#a1e5c3e23523e669b11f0b8178168a425" title="Helper function to create sparsity pattern of the mass matrix with mixed degree deg1 and deg2..." alt="" coords="425,391,685,447"/>
+<area shape="rect" id="node14" href="$namespacesll__m__spline__fem__utilities.html#acacc152220bf5c870311d9bb0e63937f" title="Function computing the boundary part for a mass matrix with clamped splines of degree (full version w..." alt="" coords="445,311,666,367"/>
+<area shape="rect" id="node15" href="$namespacesll__m__spline__fem__utilities__sparse.html#adc62b0f3674def694192b1c6272cc317" title="Assemble the boundary part of a mixed mass matrix. " alt="" coords="442,471,669,527"/>
+<area shape="rect" id="node16" href="$namespacesll__m__spline__fem__utilities.html#a927979382ec5177a15fee8c6d92f1bf8" title="Helper function to find line of mass matrix ( N_i^p N_j^{p&#45;1})) " alt="" coords="445,631,666,687"/>
+<area shape="rect" id="node17" href="$namespacesll__m__spline__fem__utilities__sparse.html#af347360dcee0af16f16745e407adb9cd" title="Assemble the given row of a mixed mass matrix for a full mass_line. " alt="" coords="442,551,669,607"/>
+</map>

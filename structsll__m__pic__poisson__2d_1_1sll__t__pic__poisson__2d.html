@@ -145,9 +145,9 @@ Private Attributes</h2></td></tr>
 <tr class="separator:a22935cd94b89101537919c1a1eaccbb9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6dc36d1847c6dff754aa5b1813b34290"><td class="memItemLeft" align="right" valign="top">integer(kind=i32)&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__pic__poisson__2d_1_1sll__t__pic__poisson__2d.html#a6dc36d1847c6dff754aa5b1813b34290">no_dofs</a></td></tr>
 <tr class="separator:a6dc36d1847c6dff754aa5b1813b34290"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4bfd804104f819f6ae01d002758e731a"><td class="memItemLeft" align="right" valign="top">class(<a class="el" href="structsll__m__particle__mesh__coupling__base_1_1sll__c__particle__mesh__coupling.html">sll_c_particle_mesh_coupling</a>), pointer&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__pic__poisson__2d_1_1sll__t__pic__poisson__2d.html#a4bfd804104f819f6ae01d002758e731a">kernel</a></td></tr>
-<tr class="memdesc:a4bfd804104f819f6ae01d002758e731a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Kernel smoother taking care of charge deposition and field evaluation.  <a href="#a4bfd804104f819f6ae01d002758e731a">More...</a><br /></td></tr>
-<tr class="separator:a4bfd804104f819f6ae01d002758e731a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6705db5fdbcb1adc6bd185d3afc7ee02"><td class="memItemLeft" align="right" valign="top">class(<a class="el" href="structsll__m__particle__mesh__coupling__base__1d_1_1sll__c__particle__mesh__coupling__1d.html">sll_c_particle_mesh_coupling_1d</a>), pointer&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__pic__poisson__2d_1_1sll__t__pic__poisson__2d.html#a6705db5fdbcb1adc6bd185d3afc7ee02">kernel</a></td></tr>
+<tr class="memdesc:a6705db5fdbcb1adc6bd185d3afc7ee02"><td class="mdescLeft">&#160;</td><td class="mdescRight">Kernel smoother taking care of charge deposition and field evaluation.  <a href="#a6705db5fdbcb1adc6bd185d3afc7ee02">More...</a><br /></td></tr>
+<tr class="separator:a6705db5fdbcb1adc6bd185d3afc7ee02"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3b644745be1fd307bc62b5a952421a22"><td class="memItemLeft" align="right" valign="top">class(<a class="el" href="structsll__m__poisson__2d__base_1_1sll__c__poisson__2d__base.html">sll_c_poisson_2d_base</a>), pointer&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__pic__poisson__2d_1_1sll__t__pic__poisson__2d.html#a3b644745be1fd307bc62b5a952421a22">poisson</a></td></tr>
 <tr class="memdesc:a3b644745be1fd307bc62b5a952421a22"><td class="mdescLeft">&#160;</td><td class="mdescRight">Poisson solver.  <a href="#a3b644745be1fd307bc62b5a952421a22">More...</a><br /></td></tr>
 <tr class="separator:a3b644745be1fd307bc62b5a952421a22"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -160,24 +160,24 @@ Private Attributes</h2></td></tr>
 <tr class="memitem:a434d01b9d01f3da212d4d4860ab61202"><td class="memItemLeft" align="right" valign="top">real(kind=f64), dimension(:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__pic__poisson__2d_1_1sll__t__pic__poisson__2d.html#a434d01b9d01f3da212d4d4860ab61202">rho_analyt_dofs</a></td></tr>
 <tr class="memdesc:a434d01b9d01f3da212d4d4860ab61202"><td class="mdescLeft">&#160;</td><td class="mdescRight">Analytic contribution to the coefficients of expansion of rho (for delta f)  <a href="#a434d01b9d01f3da212d4d4860ab61202">More...</a><br /></td></tr>
 <tr class="separator:a434d01b9d01f3da212d4d4860ab61202"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0a9a23ebf26c255216ffd15c935c8e39"><td class="memItemLeft" align="right" valign="top">real(kind=f64), dimension(:, :), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__pic__poisson__2d_1_1sll__t__pic__poisson__2d.html#a0a9a23ebf26c255216ffd15c935c8e39">efield_dofs</a></td></tr>
-<tr class="memdesc:a0a9a23ebf26c255216ffd15c935c8e39"><td class="mdescLeft">&#160;</td><td class="mdescRight">Coefficients of expansion of electric field.  <a href="#a0a9a23ebf26c255216ffd15c935c8e39">More...</a><br /></td></tr>
-<tr class="separator:a0a9a23ebf26c255216ffd15c935c8e39"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0344780ab80fe18ec489665f592b92a8"><td class="memItemLeft" align="right" valign="top">real(kind=f64), dimension(:,:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__pic__poisson__2d_1_1sll__t__pic__poisson__2d.html#a0344780ab80fe18ec489665f592b92a8">efield_dofs</a></td></tr>
+<tr class="memdesc:a0344780ab80fe18ec489665f592b92a8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Coefficients of expansion of electric field.  <a href="#a0344780ab80fe18ec489665f592b92a8">More...</a><br /></td></tr>
+<tr class="separator:a0344780ab80fe18ec489665f592b92a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a95977c253e4f43da338fbd0d750e8ff0"><td class="memItemLeft" align="right" valign="top">real(kind=f64), dimension(:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__pic__poisson__2d_1_1sll__t__pic__poisson__2d.html#a95977c253e4f43da338fbd0d750e8ff0">phi_dofs</a></td></tr>
 <tr class="memdesc:a95977c253e4f43da338fbd0d750e8ff0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Coefficients of expansion of potential.  <a href="#a95977c253e4f43da338fbd0d750e8ff0">More...</a><br /></td></tr>
 <tr class="separator:a95977c253e4f43da338fbd0d750e8ff0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a800a9afcb307a11afdcb06eefd6bcf54"><td class="memItemLeft" align="right" valign="top">real(kind=f64), dimension(:, :), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__pic__poisson__2d_1_1sll__t__pic__poisson__2d.html#a800a9afcb307a11afdcb06eefd6bcf54">rho2d</a></td></tr>
-<tr class="memdesc:a800a9afcb307a11afdcb06eefd6bcf54"><td class="mdescLeft">&#160;</td><td class="mdescRight">2d version of rho_dofs to adjust to field solver format  <a href="#a800a9afcb307a11afdcb06eefd6bcf54">More...</a><br /></td></tr>
-<tr class="separator:a800a9afcb307a11afdcb06eefd6bcf54"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0ff0bbfcfe379b5e64f55b3943d1d08e"><td class="memItemLeft" align="right" valign="top">real(kind=f64), dimension(:, :), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__pic__poisson__2d_1_1sll__t__pic__poisson__2d.html#a0ff0bbfcfe379b5e64f55b3943d1d08e">efield1</a></td></tr>
-<tr class="memdesc:a0ff0bbfcfe379b5e64f55b3943d1d08e"><td class="mdescLeft">&#160;</td><td class="mdescRight">2d version of efield_dofs(:,1) to adjust to field solver format  <a href="#a0ff0bbfcfe379b5e64f55b3943d1d08e">More...</a><br /></td></tr>
-<tr class="separator:a0ff0bbfcfe379b5e64f55b3943d1d08e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a73e6795783f65b972ddb5ac12db8c3db"><td class="memItemLeft" align="right" valign="top">real(kind=f64), dimension(:, :), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__pic__poisson__2d_1_1sll__t__pic__poisson__2d.html#a73e6795783f65b972ddb5ac12db8c3db">efield2</a></td></tr>
-<tr class="memdesc:a73e6795783f65b972ddb5ac12db8c3db"><td class="mdescLeft">&#160;</td><td class="mdescRight">2d version of efield_dofs(:,2) to adjust to field solver format  <a href="#a73e6795783f65b972ddb5ac12db8c3db">More...</a><br /></td></tr>
-<tr class="separator:a73e6795783f65b972ddb5ac12db8c3db"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a592689b875eeec72652a95f4f9ceaaf6"><td class="memItemLeft" align="right" valign="top">real(kind=f64), dimension(:, :), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__pic__poisson__2d_1_1sll__t__pic__poisson__2d.html#a592689b875eeec72652a95f4f9ceaaf6">phi2d</a></td></tr>
-<tr class="memdesc:a592689b875eeec72652a95f4f9ceaaf6"><td class="mdescLeft">&#160;</td><td class="mdescRight">2d version of phi_dofs to adjust to field solver format  <a href="#a592689b875eeec72652a95f4f9ceaaf6">More...</a><br /></td></tr>
-<tr class="separator:a592689b875eeec72652a95f4f9ceaaf6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a871948a663b3cdf6c481f95c60c5cc02"><td class="memItemLeft" align="right" valign="top">real(kind=f64), dimension(:,:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__pic__poisson__2d_1_1sll__t__pic__poisson__2d.html#a871948a663b3cdf6c481f95c60c5cc02">rho2d</a></td></tr>
+<tr class="memdesc:a871948a663b3cdf6c481f95c60c5cc02"><td class="mdescLeft">&#160;</td><td class="mdescRight">2d version of rho_dofs to adjust to field solver format  <a href="#a871948a663b3cdf6c481f95c60c5cc02">More...</a><br /></td></tr>
+<tr class="separator:a871948a663b3cdf6c481f95c60c5cc02"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a259cf7316555093966a96297a5da367c"><td class="memItemLeft" align="right" valign="top">real(kind=f64), dimension(:,:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__pic__poisson__2d_1_1sll__t__pic__poisson__2d.html#a259cf7316555093966a96297a5da367c">efield1</a></td></tr>
+<tr class="memdesc:a259cf7316555093966a96297a5da367c"><td class="mdescLeft">&#160;</td><td class="mdescRight">2d version of efield_dofs(:,1) to adjust to field solver format  <a href="#a259cf7316555093966a96297a5da367c">More...</a><br /></td></tr>
+<tr class="separator:a259cf7316555093966a96297a5da367c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac5930def5c28afa9cf7f31ce56d0756a"><td class="memItemLeft" align="right" valign="top">real(kind=f64), dimension(:,:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__pic__poisson__2d_1_1sll__t__pic__poisson__2d.html#ac5930def5c28afa9cf7f31ce56d0756a">efield2</a></td></tr>
+<tr class="memdesc:ac5930def5c28afa9cf7f31ce56d0756a"><td class="mdescLeft">&#160;</td><td class="mdescRight">2d version of efield_dofs(:,2) to adjust to field solver format  <a href="#ac5930def5c28afa9cf7f31ce56d0756a">More...</a><br /></td></tr>
+<tr class="separator:ac5930def5c28afa9cf7f31ce56d0756a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac122a879e9b5bc0924cbb606d4ff7102"><td class="memItemLeft" align="right" valign="top">real(kind=f64), dimension(:,:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__pic__poisson__2d_1_1sll__t__pic__poisson__2d.html#ac122a879e9b5bc0924cbb606d4ff7102">phi2d</a></td></tr>
+<tr class="memdesc:ac122a879e9b5bc0924cbb606d4ff7102"><td class="mdescLeft">&#160;</td><td class="mdescRight">2d version of phi_dofs to adjust to field solver format  <a href="#ac122a879e9b5bc0924cbb606d4ff7102">More...</a><br /></td></tr>
+<tr class="separator:ac122a879e9b5bc0924cbb606d4ff7102"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abbaf0ad94a9e98d0c2b609e8d0c330c1"><td class="memItemLeft" align="right" valign="top">logical&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__pic__poisson__2d_1_1sll__t__pic__poisson__2d.html#abbaf0ad94a9e98d0c2b609e8d0c330c1">rho_collected</a></td></tr>
 <tr class="memdesc:abbaf0ad94a9e98d0c2b609e8d0c330c1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Flag to indicate if charge deposition has been finished.  <a href="#abbaf0ad94a9e98d0c2b609e8d0c330c1">More...</a><br /></td></tr>
 <tr class="separator:abbaf0ad94a9e98d0c2b609e8d0c330c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -185,7 +185,7 @@ Private Attributes</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>PIC Poisson solver 2d. </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00029">29</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00030">30</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
 </div><h2 class="groupheader">Member Function/Subroutine Documentation</h2>
 <a id="a11f4b12d85e3795558f1f2688042e4d3"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a11f4b12d85e3795558f1f2688042e4d3">&#9670;&nbsp;</a></span>add_analytic_charge()</h2>
@@ -212,7 +212,7 @@ Private Attributes</h2></td></tr>
 
 <p>!&lt; Set charge as linear combination of previously accumulated charge and previously set analytic charge. </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00057">57</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00058">58</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
 
 </div>
 </div>
@@ -241,7 +241,7 @@ Private Attributes</h2></td></tr>
 
 <p>Add contribution of one particle to the charge density. </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00049">49</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00050">50</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
 
 </div>
 </div>
@@ -270,7 +270,7 @@ Private Attributes</h2></td></tr>
 
 <p>Compute the field energy. </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00059">59</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00060">60</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
 
 </div>
 </div>
@@ -299,7 +299,7 @@ Private Attributes</h2></td></tr>
 
 <p>Evaluate field components at given positions. </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00053">53</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00054">54</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
 
 </div>
 </div>
@@ -328,7 +328,7 @@ Private Attributes</h2></td></tr>
 
 <p>Evaluate potential at given position. </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00052">52</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00053">53</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
 
 </div>
 </div>
@@ -357,7 +357,7 @@ Private Attributes</h2></td></tr>
 
 <p>Evaluate charge density at given position. </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00051">51</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00052">52</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
 
 </div>
 </div>
@@ -386,7 +386,7 @@ Private Attributes</h2></td></tr>
 
 <p>finalization </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00061">61</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00062">62</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
 
 </div>
 </div>
@@ -415,7 +415,7 @@ Private Attributes</h2></td></tr>
 
 <p>Initialize the type. </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00060">60</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00061">61</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
 
 </div>
 </div>
@@ -444,7 +444,7 @@ Private Attributes</h2></td></tr>
 
 <p>Reset accumulated charge density to zero. </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00050">50</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00051">51</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
 
 </div>
 </div>
@@ -473,7 +473,7 @@ Private Attributes</h2></td></tr>
 
 <p>Set the value of the analytic charge contribution from a given function. </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00058">58</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00059">59</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
 
 </div>
 </div>
@@ -502,7 +502,7 @@ Private Attributes</h2></td></tr>
 
 <p>Solve Poisson's equation for potential and E-fields. </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00054">54</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00055">55</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
 
 </div>
 </div>
@@ -531,7 +531,7 @@ Private Attributes</h2></td></tr>
 
 <p>Solve for the electric field. </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00056">56</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00057">57</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
 
 </div>
 </div>
@@ -560,13 +560,13 @@ Private Attributes</h2></td></tr>
 
 <p>Solve Poisson's equation for potential. </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00055">55</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00056">56</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
 
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
-<a id="a0ff0bbfcfe379b5e64f55b3943d1d08e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0ff0bbfcfe379b5e64f55b3943d1d08e">&#9670;&nbsp;</a></span>efield1</h2>
+<a id="a259cf7316555093966a96297a5da367c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a259cf7316555093966a96297a5da367c">&#9670;&nbsp;</a></span>efield1</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -575,7 +575,7 @@ Private Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">real(kind=f64), dimension(:, :), allocatable efield1</td>
+          <td class="memname">real(kind=f64), dimension(:,:), allocatable efield1</td>
         </tr>
       </table>
   </td>
@@ -587,12 +587,12 @@ Private Attributes</h2></td></tr>
 
 <p>2d version of efield_dofs(:,1) to adjust to field solver format </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00042">42</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00043">43</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
 
 </div>
 </div>
-<a id="a73e6795783f65b972ddb5ac12db8c3db"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a73e6795783f65b972ddb5ac12db8c3db">&#9670;&nbsp;</a></span>efield2</h2>
+<a id="ac5930def5c28afa9cf7f31ce56d0756a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac5930def5c28afa9cf7f31ce56d0756a">&#9670;&nbsp;</a></span>efield2</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -601,7 +601,7 @@ Private Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">real(kind=f64), dimension(:, :), allocatable efield2</td>
+          <td class="memname">real(kind=f64), dimension(:,:), allocatable efield2</td>
         </tr>
       </table>
   </td>
@@ -613,12 +613,12 @@ Private Attributes</h2></td></tr>
 
 <p>2d version of efield_dofs(:,2) to adjust to field solver format </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00043">43</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00044">44</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
 
 </div>
 </div>
-<a id="a0a9a23ebf26c255216ffd15c935c8e39"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0a9a23ebf26c255216ffd15c935c8e39">&#9670;&nbsp;</a></span>efield_dofs</h2>
+<a id="a0344780ab80fe18ec489665f592b92a8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0344780ab80fe18ec489665f592b92a8">&#9670;&nbsp;</a></span>efield_dofs</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -627,7 +627,7 @@ Private Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">real(kind=f64), dimension(:, :), allocatable efield_dofs</td>
+          <td class="memname">real(kind=f64), dimension(:,:), allocatable efield_dofs</td>
         </tr>
       </table>
   </td>
@@ -639,12 +639,12 @@ Private Attributes</h2></td></tr>
 
 <p>Coefficients of expansion of electric field. </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00039">39</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00040">40</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
 
 </div>
 </div>
-<a id="a4bfd804104f819f6ae01d002758e731a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4bfd804104f819f6ae01d002758e731a">&#9670;&nbsp;</a></span>kernel</h2>
+<a id="a6705db5fdbcb1adc6bd185d3afc7ee02"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6705db5fdbcb1adc6bd185d3afc7ee02">&#9670;&nbsp;</a></span>kernel</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -653,7 +653,7 @@ Private Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">class(<a class="el" href="structsll__m__particle__mesh__coupling__base_1_1sll__c__particle__mesh__coupling.html">sll_c_particle_mesh_coupling</a>), pointer kernel</td>
+          <td class="memname">class(<a class="el" href="structsll__m__particle__mesh__coupling__base__1d_1_1sll__c__particle__mesh__coupling__1d.html">sll_c_particle_mesh_coupling_1d</a>), pointer kernel</td>
         </tr>
       </table>
   </td>
@@ -665,7 +665,7 @@ Private Attributes</h2></td></tr>
 
 <p>Kernel smoother taking care of charge deposition and field evaluation. </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00034">34</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00035">35</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
 
 </div>
 </div>
@@ -689,7 +689,7 @@ Private Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00032">32</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00033">33</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
 
 </div>
 </div>
@@ -713,12 +713,12 @@ Private Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00031">31</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00032">32</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
 
 </div>
 </div>
-<a id="a592689b875eeec72652a95f4f9ceaaf6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a592689b875eeec72652a95f4f9ceaaf6">&#9670;&nbsp;</a></span>phi2d</h2>
+<a id="ac122a879e9b5bc0924cbb606d4ff7102"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac122a879e9b5bc0924cbb606d4ff7102">&#9670;&nbsp;</a></span>phi2d</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -727,7 +727,7 @@ Private Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">real(kind=f64), dimension(:, :), allocatable phi2d</td>
+          <td class="memname">real(kind=f64), dimension(:,:), allocatable phi2d</td>
         </tr>
       </table>
   </td>
@@ -739,7 +739,7 @@ Private Attributes</h2></td></tr>
 
 <p>2d version of phi_dofs to adjust to field solver format </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00044">44</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00045">45</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
 
 </div>
 </div>
@@ -765,7 +765,7 @@ Private Attributes</h2></td></tr>
 
 <p>Coefficients of expansion of potential. </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00040">40</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00041">41</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
 
 </div>
 </div>
@@ -791,12 +791,12 @@ Private Attributes</h2></td></tr>
 
 <p>Poisson solver. </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00035">35</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00036">36</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
 
 </div>
 </div>
-<a id="a800a9afcb307a11afdcb06eefd6bcf54"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a800a9afcb307a11afdcb06eefd6bcf54">&#9670;&nbsp;</a></span>rho2d</h2>
+<a id="a871948a663b3cdf6c481f95c60c5cc02"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a871948a663b3cdf6c481f95c60c5cc02">&#9670;&nbsp;</a></span>rho2d</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -805,7 +805,7 @@ Private Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">real(kind=f64), dimension(:, :), allocatable rho2d</td>
+          <td class="memname">real(kind=f64), dimension(:,:), allocatable rho2d</td>
         </tr>
       </table>
   </td>
@@ -817,7 +817,7 @@ Private Attributes</h2></td></tr>
 
 <p>2d version of rho_dofs to adjust to field solver format </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00041">41</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00042">42</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
 
 </div>
 </div>
@@ -843,7 +843,7 @@ Private Attributes</h2></td></tr>
 
 <p>Analytic contribution to the coefficients of expansion of rho (for delta f) </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00038">38</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00039">39</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
 
 </div>
 </div>
@@ -869,7 +869,7 @@ Private Attributes</h2></td></tr>
 
 <p>Flag to indicate if charge deposition has been finished. </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00046">46</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00047">47</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
 
 </div>
 </div>
@@ -895,7 +895,7 @@ Private Attributes</h2></td></tr>
 
 <p>Coefficients of expansion of rho (MPI global version) </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00036">36</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00037">37</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
 
 </div>
 </div>
@@ -921,7 +921,7 @@ Private Attributes</h2></td></tr>
 
 <p>Coefficients of expansion of rho (MPI local version) </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00037">37</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html#l00038">38</a> of file <a class="el" href="sll__m__pic__poisson__2d_8_f90_source.html">sll_m_pic_poisson_2d.F90</a>.</p>
 
 </div>
 </div>
@@ -932,7 +932,7 @@ Private Attributes</h2></td></tr>
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Thu Sep 16 2021 15:32:50 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Sep 17 2021 15:35:35 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

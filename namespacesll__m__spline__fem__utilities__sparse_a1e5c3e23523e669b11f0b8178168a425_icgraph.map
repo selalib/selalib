@@ -1,0 +1,6 @@
+<map id="sll_s_maxwell_spline_fem_sparsity_mixedmass_clamped" name="sll_s_maxwell_spline_fem_sparsity_mixedmass_clamped">
+<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities__sparse.html#a58ea8913e3f0590a3a20406f15b23c11" title="Set up 1d mixed mass matrix for specific spline degrees and profile function. " alt="" coords="251,71,480,112"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__clamped__1d__fem__sm.html#a400fe28b25203e207ad0786874c32912" title="Initialization. " alt="" coords="528,5,745,47"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__clamped__1d__trafo.html#a800127433401043caf9d2b00dfa7e79f" title="Initialization. " alt="" coords="545,71,728,112"/>
+<area shape="rect" id="node5" href="$namespacesll__m__maxwell__clamped__3d__fem.html#afadba212d3f01a688b12c751068d1707" title="Initialization. " alt="" coords="545,136,728,177"/>
+</map>

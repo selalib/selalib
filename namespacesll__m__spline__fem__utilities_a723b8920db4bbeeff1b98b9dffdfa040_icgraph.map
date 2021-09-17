@@ -1,0 +1,9 @@
+<map id="sll_s_multiply_c" name="sll_s_multiply_c">
+<area shape="rect" id="node2" href="$namespacesll__m__linear__operator__schur__eb__3d.html#a1bb2f57edb4800c7f63a4e3d29ccf2aa" title="sll_m_linear_operator\l_schur_eb_3d::dot_schur_eb_3d" alt="" coords="180,5,407,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__3d__fem.html#adda47047712bfe544a796da917969acb" title="Multiply by discrete curl matrix. " alt="" coords="205,71,381,112"/>
+<area shape="rect" id="node5" href="$namespacesll__m__maxwell__3d__fem__fft.html#a693f776a7a223ebcddd2f3417bc04089" title="Multiply by discrete curl matrix. " alt="" coords="205,136,381,177"/>
+<area shape="rect" id="node7" href="$namespacesll__m__maxwell__3d__trafo.html#a114a0ed3dfdb25cc4a5fb5fe2adef387" title="Multiply by discrete curl matrix. " alt="" coords="203,208,384,249"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__3d__fem.html#a729f6c0c73fc2c94a91b092290637eee" title="Compute Bz from Ey using strong 1D Faraday equation for spline coefficients $B_z^{new}(x_j) = B_z^{ol..." alt="" coords="457,49,633,105"/>
+<area shape="rect" id="node6" href="$namespacesll__m__maxwell__3d__fem__fft.html#a015e46e1fe1fbc9f78ba3195402bcdb3" title="Compute Bz from Ey using strong 1D Faraday equation for spline coefficients $B_z^{new}(x_j) = B_z^{ol..." alt="" coords="457,129,633,185"/>
+<area shape="rect" id="node8" href="$namespacesll__m__maxwell__3d__trafo.html#ac367f83184eafa6e3b6a8314ae5caa17" title="Compute B from E using strong 3D Faraday equation for spline coefficients. " alt="" coords="455,209,636,265"/>
+</map>

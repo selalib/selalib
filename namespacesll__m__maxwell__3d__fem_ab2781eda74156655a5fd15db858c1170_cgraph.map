@@ -1,0 +1,4 @@
+<map id="l2projection_3d_fem" name="l2projection_3d_fem">
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__fem.html#a95142787b4202b0e4d233244a120439e" title="Compute the FEM right&#45;hand&#45;side for a given function f and periodic splines of given degree Its compo..." alt="" coords="208,20,383,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__gauss__legendre__integration.html#a0df63a9e8ee884c2d4a0d1f53602a949" title="Returns a 2d array of size (2,npoints) containing gauss&#45;legendre points and weights in the interval [..." alt="" coords="431,5,653,61"/>
+</map>

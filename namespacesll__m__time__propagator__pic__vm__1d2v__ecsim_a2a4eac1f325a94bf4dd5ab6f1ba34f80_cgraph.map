@@ -1,0 +1,4 @@
+<map id="initialize_pic_vm_1d2v_ecsim" name="initialize_pic_vm_1d2v_ecsim">
+<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities.html#ae3b59ded8bbb13b7762f0ac9dfb320be" title="Computes the mass line for a mass matrix with degree splines. " alt="" coords="224,13,435,54"/>
+<area shape="rect" id="node3" href="$namespacesll__m__gauss__legendre__integration.html#a0df63a9e8ee884c2d4a0d1f53602a949" title="Returns a 2d array of size (2,npoints) containing gauss&#45;legendre points and weights in the interval [..." alt="" coords="483,5,705,61"/>
+</map>

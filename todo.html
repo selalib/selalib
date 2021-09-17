@@ -84,21 +84,21 @@ $(function() {
 <dd><p class="startdd">Implement sll_maxwell_3d_fdtd </p>
 <p class="enddd">Add examples in documentation  </p>
 </dd>
-<dt><a class="anchor" id="_todo000023"></a>Module <a class="el" href="group__nml__mesh__cart.html">nml_mesh_cart</a>  </dt>
+<dt><a class="anchor" id="_todo000029"></a>Module <a class="el" href="group__nml__mesh__cart.html">nml_mesh_cart</a>  </dt>
 <dd>add initialization in 2D,3D,4D if needed  </dd>
-<dt><a class="anchor" id="_todo000020"></a>Module <a class="el" href="group__particle__groups.html">particle_groups</a>  </dt>
+<dt><a class="anchor" id="_todo000026"></a>Module <a class="el" href="group__particle__groups.html">particle_groups</a>  </dt>
 <dd>implement control variates  </dd>
-<dt><a class="anchor" id="_todo000021"></a>Module <a class="el" href="group__particle__mesh__coupling.html">particle_mesh_coupling</a>  </dt>
+<dt><a class="anchor" id="_todo000027"></a>Module <a class="el" href="group__particle__mesh__coupling.html">particle_mesh_coupling</a>  </dt>
 <dd>Implement 3d splines and other basis functions, e.g. Fourier  </dd>
-<dt><a class="anchor" id="_todo000018"></a>Subprogram <a class="el" href="namespacesll__m__collective.html#a9206b729fd41efd01618c3b596c266bb">sll_m_collective::sll_collective_bcast_comp32</a>  (col, buffer, size, root)</dt>
+<dt><a class="anchor" id="_todo000024"></a>Subprogram <a class="el" href="namespacesll__m__collective.html#a9206b729fd41efd01618c3b596c266bb">sll_m_collective::sll_collective_bcast_comp32</a>  (col, buffer, size, root)</dt>
 <dd>WHY DO WE NEED IT?  </dd>
-<dt><a class="anchor" id="_todo000017"></a>Subprogram <a class="el" href="namespacesll__m__collective.html#a23ead6366850b7cc7994a054360a8e86">sll_m_collective::sll_collective_bcast_comp64</a>  (col, buffer, size, root)</dt>
+<dt><a class="anchor" id="_todo000023"></a>Subprogram <a class="el" href="namespacesll__m__collective.html#a23ead6366850b7cc7994a054360a8e86">sll_m_collective::sll_collective_bcast_comp64</a>  (col, buffer, size, root)</dt>
 <dd>WHY DO WE NEED IT?  </dd>
-<dt><a class="anchor" id="_todo000015"></a>Subprogram <a class="el" href="namespacesll__m__collective.html#abee1be2df2e3efa64687942279a3bb7c">sll_m_collective::sll_collective_bcast_real32</a>  (col, buffer, size, root)</dt>
+<dt><a class="anchor" id="_todo000021"></a>Subprogram <a class="el" href="namespacesll__m__collective.html#abee1be2df2e3efa64687942279a3bb7c">sll_m_collective::sll_collective_bcast_real32</a>  (col, buffer, size, root)</dt>
 <dd>WHY DO WE NEED IT?  </dd>
-<dt><a class="anchor" id="_todo000019"></a>Subprogram <a class="el" href="namespacesll__m__collective.html#a1356a5091b5d3c76026ef08cd9a0d6e5">sll_m_collective::sll_s_collective_bcast_3d_real64</a>  (col, buffer, root)</dt>
+<dt><a class="anchor" id="_todo000025"></a>Subprogram <a class="el" href="namespacesll__m__collective.html#a1356a5091b5d3c76026ef08cd9a0d6e5">sll_m_collective::sll_s_collective_bcast_3d_real64</a>  (col, buffer, root)</dt>
 <dd>WHY DO WE NEED IT?  </dd>
-<dt><a class="anchor" id="_todo000016"></a>Subprogram <a class="el" href="namespacesll__m__collective.html#a369bd2c56e6a666d429de47603f0ef8f">sll_m_collective::sll_s_collective_bcast_real64</a>  (col, buffer, size, root)</dt>
+<dt><a class="anchor" id="_todo000022"></a>Subprogram <a class="el" href="namespacesll__m__collective.html#a369bd2c56e6a666d429de47603f0ef8f">sll_m_collective::sll_s_collective_bcast_real64</a>  (col, buffer, size, root)</dt>
 <dd>WHY DO WE NEED IT?  </dd>
 <dt><a class="anchor" id="_todo000009"></a>Subprogram <a class="el" href="namespacesll__m__gnuplot__parallel.html#af740178f10df27740a07f3b3ef67225d">sll_m_gnuplot_parallel::sll_s_gnuplot_rect_2d_parallel</a>  (x_min, delta_x, y_min, delta_y, npts_x, npts_y, array, array_name, iplot, error)</dt>
 <dd>There is a problem with this function. This function should be explicitly told which collective to use, thus permitting the writing of data by a subset of the processors if needed. This assumes that all the processors will contain the writable data. The collective should be passed as an argument. But this may imply that different collectives will write data with the same name... further changes are needed.  </dd>
@@ -112,9 +112,21 @@ $(function() {
 <dd>Function names should be reviewed and improved. What is the best way to express that a derivative is in a particular direction? Why eta???  </dd>
 <dt><a class="anchor" id="_todo000011"></a>Module <a class="el" href="namespacesll__m__io__utilities.html">sll_m_io_utilities</a>  </dt>
 <dd>Add detailed description  </dd>
-<dt><a class="anchor" id="_todo000024"></a>Module <a class="el" href="namespacesll__m__ode__integrator__base.html">sll_m_ode_integrator_base</a>  </dt>
+<dt><a class="anchor" id="_todo000015"></a>Subprogram <a class="el" href="namespacesll__m__linear__operator__block.html#a9be8488ad8526f45b10a38d80d622b3b">sll_m_linear_operator_block::set_linear_operator_block</a>  (self, i_block_row, i_block_col, linop, r_coeff)</dt>
+<dd>use linop % n_rows/cols instead of n_global_rows/cols  </dd>
+<dt><a class="anchor" id="_todo000016"></a>Subprogram <a class="el" href="namespacesll__m__linear__operator__kron.html#a4cfac47f167a2df2e965677387d6adf6">sll_m_linear_operator_kron::sll_transpose</a>  (x, x_t)</dt>
+<dd>to be optimized depending on the biggest size  </dd>
+<dt><a class="anchor" id="_todo000017"></a>Subprogram <a class="el" href="namespacesll__m__linear__solver__block.html#a25765f7bf192fab516072548a7156261">sll_m_linear_solver_block::set_linear_solver_block</a>  (self, i_block_row, i_block_col, linop, r_coeff)</dt>
+<dd>use linop % n_rows/cols instead of n_global_rows/cols  </dd>
+<dt><a class="anchor" id="_todo000018"></a>Subprogram <a class="el" href="namespacesll__m__linear__solver__iter__abstract.html#ad958d3d6a5263680234d854f142a9ba4">sll_m_linear_solver_iter_abstract::set_linop_linear_solver_iter_abstract</a>  (self, linear_operator)</dt>
+<dd>add nullspace arguments  </dd>
+<dt><a class="anchor" id="_todo000019"></a>Subprogram <a class="el" href="namespacesll__m__linear__solver__kron.html#a096d5d164afd4efdee6ff1f1e56a40a8">sll_m_linear_solver_kron::solve_3_real_linear_solver_kron</a>  (self, rhs, unknown)</dt>
+<dd></dd>
+<dt><a class="anchor" id="_todo000020"></a>Module <a class="el" href="namespacesll__m__matrix__csr.html">sll_m_matrix_csr</a>  </dt>
+<dd>must use is_allocated in the create of csr matrices (probably we won't create the graph etc ...) </dd>
+<dt><a class="anchor" id="_todo000030"></a>Module <a class="el" href="namespacesll__m__ode__integrator__base.html">sll_m_ode_integrator_base</a>  </dt>
 <dd>Add detailed description  </dd>
-<dt><a class="anchor" id="_todo000022"></a>Module <a class="el" href="namespacesll__m__pic__poisson__base.html">sll_m_pic_poisson_base</a>  </dt>
+<dt><a class="anchor" id="_todo000028"></a>Module <a class="el" href="namespacesll__m__pic__poisson__base.html">sll_m_pic_poisson_base</a>  </dt>
 <dd><p class="startdd">Try to integrate also general elliptic and quasi neutral solvers. </p>
 <p>Allow for more than one weights </p>
 <p class="enddd">Functions to compute derivatives  </p>
@@ -139,7 +151,7 @@ $(function() {
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Thu Sep 16 2021 15:32:48 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Sep 17 2021 15:35:33 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

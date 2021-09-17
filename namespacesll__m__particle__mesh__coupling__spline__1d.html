@@ -77,7 +77,7 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 <a name="details" id="details"></a><h2 class="groupheader">Description</h2>
-<div class="textblock"><p>Kernel smoother for 2d with splines of arbitrary degree placed on a uniform mesh. </p>
+<div class="textblock"><p>Kernel smoother for 1d with splines of arbitrary degree placed on a uniform mesh. </p>
 <dl class="section author"><dt>Author</dt><dd>Katharina Kormann, IPP</dd></dl>
 <p>Spline with index i starts at point i </p>
 </div><table class="memberdecls">
@@ -89,12 +89,35 @@ Derived types and interfaces</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:a9202c6d02ce159ccc91fa2a695ac4901"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#a9202c6d02ce159ccc91fa2a695ac4901">add_charge_single_spline_pp_1d</a> (self, position, marker_charge, rho_dofs)</td></tr>
-<tr class="memdesc:a9202c6d02ce159ccc91fa2a695ac4901"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destructor.  <a href="#a9202c6d02ce159ccc91fa2a695ac4901">More...</a><br /></td></tr>
-<tr class="separator:a9202c6d02ce159ccc91fa2a695ac4901"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3e58066e7a11fdf7e674aa6cc88b6156"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#a3e58066e7a11fdf7e674aa6cc88b6156">add_charge_single_spline_1d</a> (self, position, marker_charge, rho_dofs)</td></tr>
-<tr class="memdesc:a3e58066e7a11fdf7e674aa6cc88b6156"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add charge of one particle.  <a href="#a3e58066e7a11fdf7e674aa6cc88b6156">More...</a><br /></td></tr>
+<tr class="memdesc:a3e58066e7a11fdf7e674aa6cc88b6156"><td class="mdescLeft">&#160;</td><td class="mdescRight">helper function to compute the integral of j using Gauss quadrature (needs to be provided for the derived type with smoothing)  <a href="#a3e58066e7a11fdf7e674aa6cc88b6156">More...</a><br /></td></tr>
 <tr class="separator:a3e58066e7a11fdf7e674aa6cc88b6156"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0bfc140ffb10d0eb7c4f6563546323bb"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#a0bfc140ffb10d0eb7c4f6563546323bb">add_particle_mass_spline_1d</a> (self, position, marker_charge, particle_mass)</td></tr>
+<tr class="memdesc:a0bfc140ffb10d0eb7c4f6563546323bb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add the contribution of one particle to the approximate mass matrix.  <a href="#a0bfc140ffb10d0eb7c4f6563546323bb">More...</a><br /></td></tr>
+<tr class="separator:a0bfc140ffb10d0eb7c4f6563546323bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a353c7835a923e9d7af28b22a620e1629"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#a353c7835a923e9d7af28b22a620e1629">add_particle_mass_spline_1d_full</a> (self, position, marker_charge, particle_mass)</td></tr>
+<tr class="memdesc:a353c7835a923e9d7af28b22a620e1629"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add the contribution of one particle to the approximate mass matrix.  <a href="#a353c7835a923e9d7af28b22a620e1629">More...</a><br /></td></tr>
+<tr class="separator:a353c7835a923e9d7af28b22a620e1629"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6787a5b034e7fb6350e5ad3c7c23c45b"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#a6787a5b034e7fb6350e5ad3c7c23c45b">evaluate_field_single_spline_1d</a> (self, position, field_dofs, field_value)</td></tr>
+<tr class="memdesc:a6787a5b034e7fb6350e5ad3c7c23c45b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Evaluate field at at position <em>position</em>.  <a href="#a6787a5b034e7fb6350e5ad3c7c23c45b">More...</a><br /></td></tr>
+<tr class="separator:a6787a5b034e7fb6350e5ad3c7c23c45b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa48738fdb62171e96b6caeb687941e2b"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#aa48738fdb62171e96b6caeb687941e2b">evaluate_multiple_spline_1d</a> (self, position, components, field_dofs, field_value)</td></tr>
+<tr class="memdesc:aa48738fdb62171e96b6caeb687941e2b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Evaluate several fields at position <em>position</em>.  <a href="#aa48738fdb62171e96b6caeb687941e2b">More...</a><br /></td></tr>
+<tr class="separator:aa48738fdb62171e96b6caeb687941e2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5df735b09b640ce88bd8becae0c6b04d"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#a5df735b09b640ce88bd8becae0c6b04d">add_current_spline_1d</a> (self, position_old, position_new, marker_charge, j_dofs)</td></tr>
+<tr class="memdesc:a5df735b09b640ce88bd8becae0c6b04d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add current with integration over x.  <a href="#a5df735b09b640ce88bd8becae0c6b04d">More...</a><br /></td></tr>
+<tr class="separator:a5df735b09b640ce88bd8becae0c6b04d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abaac8192aaeff8c33a12ca1afa7f4d5a"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#abaac8192aaeff8c33a12ca1afa7f4d5a">add_current_evaluate_spline_1d</a> (self, position_old, position_new, marker_charge, vbar, field_dofs, j_dofs, field)</td></tr>
+<tr class="memdesc:abaac8192aaeff8c33a12ca1afa7f4d5a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Combines add_current and evaluate_int.  <a href="#abaac8192aaeff8c33a12ca1afa7f4d5a">More...</a><br /></td></tr>
+<tr class="separator:abaac8192aaeff8c33a12ca1afa7f4d5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab475cca6a12935c7b2d6fc336e85558e"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#ab475cca6a12935c7b2d6fc336e85558e">evaluate_int_spline_1d</a> (self, position_old, position_new, vbar, field_dofs, field)</td></tr>
+<tr class="memdesc:ab475cca6a12935c7b2d6fc336e85558e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Evaluates the integral int_{poisition_old}^{position_new} field(x) d x.  <a href="#ab475cca6a12935c7b2d6fc336e85558e">More...</a><br /></td></tr>
+<tr class="separator:ab475cca6a12935c7b2d6fc336e85558e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4e84a7a123785eb90309db9515c7be4d"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#a4e84a7a123785eb90309db9515c7be4d">evaluate_int_quad_spline_1d</a> (self, position_old, position_new, field_dofs, field)</td></tr>
+<tr class="memdesc:a4e84a7a123785eb90309db9515c7be4d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Evaluates an integrated field (between position_old and position_new) but with a quadrature formula for the integration.  <a href="#a4e84a7a123785eb90309db9515c7be4d">More...</a><br /></td></tr>
+<tr class="separator:a4e84a7a123785eb90309db9515c7be4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab014140ea2ecf806650233cd23bc0608"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#ab014140ea2ecf806650233cd23bc0608">evaluate_int_spline_1d_subnewton</a> (self, position_old, position_new, field_dofs, field)</td></tr>
+<tr class="separator:ab014140ea2ecf806650233cd23bc0608"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6b7c93d72d02de2adda751c42ab6cae9"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#a6b7c93d72d02de2adda751c42ab6cae9">add_current_update_v_spline_pp_1d</a> (self, position_old, position_new, marker_charge, qoverm, bfield_dofs, vi, j_dofs)</td></tr>
 <tr class="memdesc:a6b7c93d72d02de2adda751c42ab6cae9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add current for one particle and update v (according to H_p1 part in Hamiltonian splitting)  <a href="#a6b7c93d72d02de2adda751c42ab6cae9">More...</a><br /></td></tr>
 <tr class="separator:a6b7c93d72d02de2adda751c42ab6cae9"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -107,27 +130,121 @@ Functions/Subroutines</h2></td></tr>
 <tr class="memitem:a6b3929440194ac8a502ac582f872cd38"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#a6b3929440194ac8a502ac582f872cd38">update_jv</a> (self, lower, upper, index, marker_charge, qoverm, sign, vi, j_dofs, bfield_dofs)</td></tr>
 <tr class="memdesc:a6b3929440194ac8a502ac582f872cd38"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper function for <em>add_current_update_v</em>.  <a href="#a6b3929440194ac8a502ac582f872cd38">More...</a><br /></td></tr>
 <tr class="separator:a6b3929440194ac8a502ac582f872cd38"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a366dc5d4647b221c4d819c70e07750af"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#a366dc5d4647b221c4d819c70e07750af">evaluate_field_single_spline_pp_1d</a> (self, position, field_dofs_pp, field_value)</td></tr>
-<tr class="memdesc:a366dc5d4647b221c4d819c70e07750af"><td class="mdescLeft">&#160;</td><td class="mdescRight">Evaluate field at at position <em>position</em> using horner scheme.  <a href="#a366dc5d4647b221c4d819c70e07750af">More...</a><br /></td></tr>
-<tr class="separator:a366dc5d4647b221c4d819c70e07750af"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6787a5b034e7fb6350e5ad3c7c23c45b"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#a6787a5b034e7fb6350e5ad3c7c23c45b">evaluate_field_single_spline_1d</a> (self, position, field_dofs, field_value)</td></tr>
-<tr class="memdesc:a6787a5b034e7fb6350e5ad3c7c23c45b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Evaluate field at at position <em>position</em>.  <a href="#a6787a5b034e7fb6350e5ad3c7c23c45b">More...</a><br /></td></tr>
-<tr class="separator:a6787a5b034e7fb6350e5ad3c7c23c45b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa48738fdb62171e96b6caeb687941e2b"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#aa48738fdb62171e96b6caeb687941e2b">evaluate_multiple_spline_1d</a> (self, position, components, field_dofs, field_value)</td></tr>
-<tr class="memdesc:aa48738fdb62171e96b6caeb687941e2b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Evaluate several fields at position <em>position</em>.  <a href="#aa48738fdb62171e96b6caeb687941e2b">More...</a><br /></td></tr>
-<tr class="separator:aa48738fdb62171e96b6caeb687941e2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae6be4e4f9276ec1c5bf702f2333c2062"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#ae6be4e4f9276ec1c5bf702f2333c2062">update_v_partial</a> (self, upper, lower, uppert, lowert, index, field_dofs, bint)</td></tr>
+<tr class="memdesc:ae6be4e4f9276ec1c5bf702f2333c2062"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper function for evaluate_int_quad (despite the name it evaluates a field and does not update v)  <a href="#ae6be4e4f9276ec1c5bf702f2333c2062">More...</a><br /></td></tr>
+<tr class="separator:ae6be4e4f9276ec1c5bf702f2333c2062"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4e84b997b4f7f6b7ff592efbb5510753"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#a4e84b997b4f7f6b7ff592efbb5510753">update_v_partial_newton</a> (self, upper, lower, uppert, lowert, index, field_dofs, bint)</td></tr>
+<tr class="memdesc:a4e84b997b4f7f6b7ff592efbb5510753"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper function for evaluate_int_quad_subnewton (despite the name it evaluates a field and does not update v)  <a href="#a4e84b997b4f7f6b7ff592efbb5510753">More...</a><br /></td></tr>
+<tr class="separator:a4e84b997b4f7f6b7ff592efbb5510753"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acd3198a72571d1253f83aaa909e67031"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#acd3198a72571d1253f83aaa909e67031">convert_x_to_xbox</a> (self, position, xi, box)</td></tr>
+<tr class="memdesc:acd3198a72571d1253f83aaa909e67031"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper function that identifies in which box the particle is found and its normalized poistion in the box.  <a href="#acd3198a72571d1253f83aaa909e67031">More...</a><br /></td></tr>
+<tr class="separator:acd3198a72571d1253f83aaa909e67031"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9c32c194f9381eedf01eaf1d14e579d9"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#a9c32c194f9381eedf01eaf1d14e579d9">init_spline_1d</a> (self, domain, n_cells, no_particles, spline_degree, smoothing_type)</td></tr>
+<tr class="memdesc:a9c32c194f9381eedf01eaf1d14e579d9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initializer.  <a href="#a9c32c194f9381eedf01eaf1d14e579d9">More...</a><br /></td></tr>
+<tr class="separator:a9c32c194f9381eedf01eaf1d14e579d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abecf76afa11f08f6dacbf54dd382acff"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#abecf76afa11f08f6dacbf54dd382acff">free_spline_1d</a> (self)</td></tr>
 <tr class="memdesc:abecf76afa11f08f6dacbf54dd382acff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destructor.  <a href="#abecf76afa11f08f6dacbf54dd382acff">More...</a><br /></td></tr>
 <tr class="separator:abecf76afa11f08f6dacbf54dd382acff"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5c64b4eb9422365a56c39912279cdb7c"><td class="memItemLeft" align="right" valign="top">subroutine, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#a5c64b4eb9422365a56c39912279cdb7c">sll_s_new_particle_mesh_coupling_spline_1d_ptr</a> (smoother, domain, n_grid, no_particles, spline_degree, smoothing_type)</td></tr>
-<tr class="separator:a5c64b4eb9422365a56c39912279cdb7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a979b5d8bfcae0d770e6d1d7795ee593f"><td class="memItemLeft" align="right" valign="top">subroutine, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#a979b5d8bfcae0d770e6d1d7795ee593f">sll_s_new_particle_mesh_coupling_spline_1d</a> (smoother, domain, n_grid, no_particles, spline_degree, smoothing_type)</td></tr>
-<tr class="separator:a979b5d8bfcae0d770e6d1d7795ee593f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8cd446ae4a4dc74bfc2c041c67e2e0cd"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#a8cd446ae4a4dc74bfc2c041c67e2e0cd">init_spline_1d</a> (self, domain, n_grid, no_particles, spline_degree, smoothing_type)</td></tr>
-<tr class="memdesc:a8cd446ae4a4dc74bfc2c041c67e2e0cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initializer.  <a href="#a8cd446ae4a4dc74bfc2c041c67e2e0cd">More...</a><br /></td></tr>
-<tr class="separator:a8cd446ae4a4dc74bfc2c041c67e2e0cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a74cfac08a6c9e1b5bd4082b1519de68b"><td class="memItemLeft" align="right" valign="top">subroutine, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#a74cfac08a6c9e1b5bd4082b1519de68b">sll_s_new_particle_mesh_coupling_spline_1d_ptr</a> (smoother, domain, n_cells, no_particles, spline_degree, smoothing_type)</td></tr>
+<tr class="separator:a74cfac08a6c9e1b5bd4082b1519de68b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac9d9952bba098c1584e3fd6696f43009"><td class="memItemLeft" align="right" valign="top">subroutine, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#ac9d9952bba098c1584e3fd6696f43009">sll_s_new_particle_mesh_coupling_spline_1d</a> (smoother, domain, n_cells, no_particles, spline_degree, smoothing_type)</td></tr>
+<tr class="separator:ac9d9952bba098c1584e3fd6696f43009"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acea0e4dd1eed55700257a56ef621f5fc"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#acea0e4dd1eed55700257a56ef621f5fc">add_current_split_spline_1d</a> (self, position_old, position_new, iter, total_iter, marker_charge, j_dofs)</td></tr>
+<tr class="memdesc:acea0e4dd1eed55700257a56ef621f5fc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add current version with tau and (1-tau) which is needed for the implicit subcycling scheme.  <a href="#acea0e4dd1eed55700257a56ef621f5fc">More...</a><br /></td></tr>
+<tr class="separator:acea0e4dd1eed55700257a56ef621f5fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ace7729313204b066c647e036364c7eaa"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#ace7729313204b066c647e036364c7eaa">update_current_partial</a> (self, upper, lower, uppert, lowert, index, iter, total_iter, marker_charge, j_dofs)</td></tr>
+<tr class="memdesc:ace7729313204b066c647e036364c7eaa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper function for add_current_split.  <a href="#ace7729313204b066c647e036364c7eaa">More...</a><br /></td></tr>
+<tr class="separator:ace7729313204b066c647e036364c7eaa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ace826827e88543c8c916cb1819bf560f"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#ace826827e88543c8c916cb1819bf560f">evaluate_int_linear_quad_spline_1d</a> (self, position_old, position_new, iter, total_iter, field_dofs_1, field_dofs_2, field)</td></tr>
+<tr class="memdesc:ace826827e88543c8c916cb1819bf560f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Evaluates the integrals with tau function for implicit subcycling.  <a href="#ace826827e88543c8c916cb1819bf560f">More...</a><br /></td></tr>
+<tr class="separator:ace826827e88543c8c916cb1819bf560f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aff757b5916d65e396420b5310c7786a7"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#aff757b5916d65e396420b5310c7786a7">update_field_linear_partial</a> (self, upper, lower, uppert, lowert, index, field_dofs_1, field_dofs_2, iter, total_iter, bint)</td></tr>
+<tr class="memdesc:aff757b5916d65e396420b5310c7786a7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper function for evaluate_int_linear_quad (implements part within one cell)  <a href="#aff757b5916d65e396420b5310c7786a7">More...</a><br /></td></tr>
+<tr class="separator:aff757b5916d65e396420b5310c7786a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af59a6f43c0116ba5feb461763f3e7292"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#af59a6f43c0116ba5feb461763f3e7292">evaluate_int_linear_quad_subnewton_spline_1d</a> (self, position_old, position_new, iter, total_iter, field_dofs_1, field_dofs_2, field)</td></tr>
+<tr class="memdesc:af59a6f43c0116ba5feb461763f3e7292"><td class="mdescLeft">&#160;</td><td class="mdescRight">For implicit subcycling propagator, evaluates the integral needed for Newtons's method in the evaluate_int_linear_quad part.  <a href="#af59a6f43c0116ba5feb461763f3e7292">More...</a><br /></td></tr>
+<tr class="separator:af59a6f43c0116ba5feb461763f3e7292"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3113f6c1bbb13f828c6399f51dbcee15"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#a3113f6c1bbb13f828c6399f51dbcee15">update_field_linear_partial_newton</a> (self, upper, lower, uppert, lowert, index, field_dofs_1, field_dofs_2, iter, total_iter, bint)</td></tr>
+<tr class="memdesc:a3113f6c1bbb13f828c6399f51dbcee15"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper function for evaluate_int_linear_quad_subnewton (takes care of the per cell computations)  <a href="#a3113f6c1bbb13f828c6399f51dbcee15">More...</a><br /></td></tr>
+<tr class="separator:a3113f6c1bbb13f828c6399f51dbcee15"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a40d80adc5b57f28513a2859e72d00bc9"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#a40d80adc5b57f28513a2859e72d00bc9">add_charge_int_spline_1d</a> (self, position_old, position_new, marker_charge, j_dofs)</td></tr>
+<tr class="memdesc:a40d80adc5b57f28513a2859e72d00bc9"><td class="mdescLeft">&#160;</td><td class="mdescRight">For explicit version of the subcycling propagator (to evaluate the charge as it comes out integrated from the formulation)  <a href="#a40d80adc5b57f28513a2859e72d00bc9">More...</a><br /></td></tr>
+<tr class="separator:a40d80adc5b57f28513a2859e72d00bc9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2babc2e292880d7c11d96fa8d608005a"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__mesh__coupling__spline__1d.html#a2babc2e292880d7c11d96fa8d608005a">update_charge_int_partial</a> (self, upper, lower, uppert, lowert, index, marker_charge, j_dofs)</td></tr>
+<tr class="memdesc:a2babc2e292880d7c11d96fa8d608005a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper function for add_charge_int (takes care of the per cell computations)  <a href="#a2babc2e292880d7c11d96fa8d608005a">More...</a><br /></td></tr>
+<tr class="separator:a2babc2e292880d7c11d96fa8d608005a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
+<a id="a40d80adc5b57f28513a2859e72d00bc9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a40d80adc5b57f28513a2859e72d00bc9">&#9670;&nbsp;</a></span>add_charge_int_spline_1d()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_particle_mesh_coupling_spline_1d::add_charge_int_spline_1d </td>
+          <td>(</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__particle__mesh__coupling__spline__1d_1_1sll__t__particle__mesh__coupling__spline__1d.html">sll_t_particle_mesh_coupling_spline_1d</a> ), intent(inout)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">dimension(self%dim), intent(in)&#160;</td>
+          <td class="paramname"><em>position_old</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">dimension(self%dim), intent(in)&#160;</td>
+          <td class="paramname"><em>position_new</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">intent(in)&#160;</td>
+          <td class="paramname"><em>marker_charge</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">dimension(self%n_cells), intent(inout)&#160;</td>
+          <td class="paramname"><em>j_dofs</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>For explicit version of the subcycling propagator (to evaluate the charge as it comes out integrated from the formulation) </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>kernel smoother object </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l01379">1379</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__particle__mesh__coupling__spline__1d_a40d80adc5b57f28513a2859e72d00bc9_cgraph.svg" width="440" height="38"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
 <a id="a3e58066e7a11fdf7e674aa6cc88b6156"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a3e58066e7a11fdf7e674aa6cc88b6156">&#9670;&nbsp;</a></span>add_charge_single_spline_1d()</h2>
 
@@ -140,25 +257,25 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="memname">subroutine sll_m_particle_mesh_coupling_spline_1d::add_charge_single_spline_1d </td>
           <td>(</td>
-          <td class="paramtype">class(<a class="el" href="structsll__m__particle__mesh__coupling__spline__1d_1_1sll__t__particle__mesh__coupling__spline__1d.html">sll_t_particle_mesh_coupling_spline_1d</a>), intent(inout)&#160;</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__particle__mesh__coupling__spline__1d_1_1sll__t__particle__mesh__coupling__spline__1d.html">sll_t_particle_mesh_coupling_spline_1d</a> ), intent(inout)&#160;</td>
           <td class="paramname"><em>self</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(self%dim), intent(in)&#160;</td>
+          <td class="paramtype">dimension(self%dim), intent(in)&#160;</td>
           <td class="paramname"><em>position</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
+          <td class="paramtype">intent(in)&#160;</td>
           <td class="paramname"><em>marker_charge</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(self%n_dofs), intent(inout)&#160;</td>
+          <td class="paramtype">dimension(self%n_cells), intent(inout)&#160;</td>
           <td class="paramname"><em>rho_dofs</em>&#160;</td>
         </tr>
         <tr>
@@ -174,23 +291,27 @@ Functions/Subroutines</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Add charge of one particle. </p>
+<p>helper function to compute the integral of j using Gauss quadrature (needs to be provided for the derived type with smoothing) </p>
+<p>Add charge of one particle</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>kernel smoother object</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">position</td><td>Position of the particle</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">marker_charge</td><td>Particle weights time charge</td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">rho_dofs</td><td>Coefficient vector of the charge distribution </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>kernel smoother object </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l00107">107</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l00104">104</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__particle__mesh__coupling__spline__1d_a3e58066e7a11fdf7e674aa6cc88b6156_cgraph.svg" width="416" height="38"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
 
 </div>
 </div>
-<a id="a9202c6d02ce159ccc91fa2a695ac4901"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9202c6d02ce159ccc91fa2a695ac4901">&#9670;&nbsp;</a></span>add_charge_single_spline_pp_1d()</h2>
+<a id="abaac8192aaeff8c33a12ca1afa7f4d5a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abaac8192aaeff8c33a12ca1afa7f4d5a">&#9670;&nbsp;</a></span>add_current_evaluate_spline_1d()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -199,28 +320,52 @@ Functions/Subroutines</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">subroutine sll_m_particle_mesh_coupling_spline_1d::add_charge_single_spline_pp_1d </td>
+          <td class="memname">subroutine sll_m_particle_mesh_coupling_spline_1d::add_current_evaluate_spline_1d </td>
           <td>(</td>
-          <td class="paramtype">class(<a class="el" href="structsll__m__particle__mesh__coupling__spline__1d_1_1sll__t__particle__mesh__coupling__spline__1d.html">sll_t_particle_mesh_coupling_spline_1d</a>), intent(inout)&#160;</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__particle__mesh__coupling__spline__1d_1_1sll__t__particle__mesh__coupling__spline__1d.html">sll_t_particle_mesh_coupling_spline_1d</a> ), intent(inout)&#160;</td>
           <td class="paramname"><em>self</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(self%dim), intent(in)&#160;</td>
-          <td class="paramname"><em>position</em>, </td>
+          <td class="paramtype">dimension(self%dim), intent(in)&#160;</td>
+          <td class="paramname"><em>position_old</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
+          <td class="paramtype">dimension(self%dim), intent(in)&#160;</td>
+          <td class="paramname"><em>position_new</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">intent(in)&#160;</td>
           <td class="paramname"><em>marker_charge</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(self%n_dofs), intent(inout)&#160;</td>
-          <td class="paramname"><em>rho_dofs</em>&#160;</td>
+          <td class="paramtype">intent(in)&#160;</td>
+          <td class="paramname"><em>vbar</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">dimension(self%n_dofs), intent(in)&#160;</td>
+          <td class="paramname"><em>field_dofs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">dimension(self%n_dofs), intent(inout)&#160;</td>
+          <td class="paramname"><em>j_dofs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">intent(out)&#160;</td>
+          <td class="paramname"><em>field</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -235,23 +380,175 @@ Functions/Subroutines</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Destructor. </p>
-<p>Add charge of one particle</p>
+<p>Combines add_current and evaluate_int. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>kernel smoother object</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">position</td><td>Position of the particle</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">marker_charge</td><td>Particle weights time charge</td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">rho_dofs</td><td>Coefficient vector of the charge distribution </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>kernel smoother object </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l00079">79</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l00347">347</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="namespacesll__m__particle__mesh__coupling__spline__1d_a9202c6d02ce159ccc91fa2a695ac4901_cgraph.svg" width="100%" height="300"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__particle__mesh__coupling__spline__1d_abaac8192aaeff8c33a12ca1afa7f4d5a_cgraph.svg" width="396" height="104"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="a5df735b09b640ce88bd8becae0c6b04d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5df735b09b640ce88bd8becae0c6b04d">&#9670;&nbsp;</a></span>add_current_spline_1d()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_particle_mesh_coupling_spline_1d::add_current_spline_1d </td>
+          <td>(</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__particle__mesh__coupling__spline__1d_1_1sll__t__particle__mesh__coupling__spline__1d.html">sll_t_particle_mesh_coupling_spline_1d</a> ), intent(inout)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">dimension(self%dim), intent(in)&#160;</td>
+          <td class="paramname"><em>position_old</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">dimension(self%dim), intent(in)&#160;</td>
+          <td class="paramname"><em>position_new</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">intent(in)&#160;</td>
+          <td class="paramname"><em>marker_charge</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">dimension(self%n_cells), intent(inout)&#160;</td>
+          <td class="paramname"><em>j_dofs</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Add current with integration over x. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>kernel smoother object </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l00263">263</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__particle__mesh__coupling__spline__1d_a5df735b09b640ce88bd8becae0c6b04d_cgraph.svg" width="402" height="104"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="acea0e4dd1eed55700257a56ef621f5fc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acea0e4dd1eed55700257a56ef621f5fc">&#9670;&nbsp;</a></span>add_current_split_spline_1d()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_particle_mesh_coupling_spline_1d::add_current_split_spline_1d </td>
+          <td>(</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__particle__mesh__coupling__spline__1d_1_1sll__t__particle__mesh__coupling__spline__1d.html">sll_t_particle_mesh_coupling_spline_1d</a> ), intent(inout)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(self%dim), intent(in)&#160;</td>
+          <td class="paramname"><em>position_old</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(self%dim), intent(in)&#160;</td>
+          <td class="paramname"><em>position_new</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>iter</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>total_iter</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
+          <td class="paramname"><em>marker_charge</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(self%n_cells,2), intent(inout)&#160;</td>
+          <td class="paramname"><em>j_dofs</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Add current version with tau and (1-tau) which is needed for the implicit subcycling scheme. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>kernel smoother object</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">position_old</td><td>Position of the particle</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">position_new</td><td>Position of the particle</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">marker_charge</td><td>Particle weights time charge</td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">j_dofs</td><td>Coefficient vector of the current density </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l01054">1054</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__particle__mesh__coupling__spline__1d_acea0e4dd1eed55700257a56ef621f5fc_cgraph.svg" width="431" height="38"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
 </div>
 </div>
 
@@ -299,7 +596,7 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(self%n_dofs), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(in)&#160;</td>
           <td class="paramname"><em>bfield_dofs</em>, </td>
         </tr>
         <tr>
@@ -311,7 +608,7 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(self%n_dofs), intent(inout)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(inout)&#160;</td>
           <td class="paramname"><em>j_dofs</em>&#160;</td>
         </tr>
         <tr>
@@ -342,7 +639,13 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l00233">233</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l00701">701</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__particle__mesh__coupling__spline__1d_a9bc7d1daaf4162ccf50ec7c4db42ae71_cgraph.svg" width="355" height="88"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
 
 </div>
 </div>
@@ -388,7 +691,7 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(self%n_dofs), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(in)&#160;</td>
           <td class="paramname"><em>bfield_dofs</em>, </td>
         </tr>
         <tr>
@@ -400,7 +703,7 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(self%n_dofs), intent(inout)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(inout)&#160;</td>
           <td class="paramname"><em>j_dofs</em>&#160;</td>
         </tr>
         <tr>
@@ -431,7 +734,208 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l00134">134</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l00622">622</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="namespacesll__m__particle__mesh__coupling__spline__1d_a6b7c93d72d02de2adda751c42ab6cae9_cgraph.svg" width="100%" height="372"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
+</div>
+
+</div>
+</div>
+<a id="a0bfc140ffb10d0eb7c4f6563546323bb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0bfc140ffb10d0eb7c4f6563546323bb">&#9670;&nbsp;</a></span>add_particle_mass_spline_1d()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_particle_mesh_coupling_spline_1d::add_particle_mass_spline_1d </td>
+          <td>(</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__particle__mesh__coupling__spline__1d_1_1sll__t__particle__mesh__coupling__spline__1d.html">sll_t_particle_mesh_coupling_spline_1d</a> ), intent(inout)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">dimension(self%dim), intent(in)&#160;</td>
+          <td class="paramname"><em>position</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">intent(in)&#160;</td>
+          <td class="paramname"><em>marker_charge</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">dimension(:,:), intent(inout)&#160;</td>
+          <td class="paramname"><em>particle_mass</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Add the contribution of one particle to the approximate mass matrix. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>kernel smoother object </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l00131">131</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__particle__mesh__coupling__spline__1d_a0bfc140ffb10d0eb7c4f6563546323bb_cgraph.svg" width="418" height="38"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="a353c7835a923e9d7af28b22a620e1629"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a353c7835a923e9d7af28b22a620e1629">&#9670;&nbsp;</a></span>add_particle_mass_spline_1d_full()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_particle_mesh_coupling_spline_1d::add_particle_mass_spline_1d_full </td>
+          <td>(</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__particle__mesh__coupling__spline__1d_1_1sll__t__particle__mesh__coupling__spline__1d.html">sll_t_particle_mesh_coupling_spline_1d</a> ), intent(inout)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">dimension(self%dim), intent(in)&#160;</td>
+          <td class="paramname"><em>position</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">intent(in)&#160;</td>
+          <td class="paramname"><em>marker_charge</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">dimension(:,:), intent(inout)&#160;</td>
+          <td class="paramname"><em>particle_mass</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Add the contribution of one particle to the approximate mass matrix. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>kernel smoother object </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l00164">164</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__particle__mesh__coupling__spline__1d_a353c7835a923e9d7af28b22a620e1629_cgraph.svg" width="395" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="acd3198a72571d1253f83aaa909e67031"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acd3198a72571d1253f83aaa909e67031">&#9670;&nbsp;</a></span>convert_x_to_xbox()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_particle_mesh_coupling_spline_1d::convert_x_to_xbox </td>
+          <td>(</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__particle__mesh__coupling__spline__1d_1_1sll__t__particle__mesh__coupling__spline__1d.html">sll_t_particle_mesh_coupling_spline_1d</a> ), intent(inout)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(self%dim), intent(in)&#160;</td>
+          <td class="paramname"><em>position</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), intent(out)&#160;</td>
+          <td class="paramname"><em>xi</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(out)&#160;</td>
+          <td class="paramname"><em>box</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Helper function that identifies in which box the particle is found and its normalized poistion in the box. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>kernel smoother object</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">position</td><td>Position of the particle</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">xi</td><td>Position of the particle</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">box</td><td>Position of the particle </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l00886">886</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="namespacesll__m__particle__mesh__coupling__spline__1d_acd3198a72571d1253f83aaa909e67031_icgraph.svg" width="100%" height="600"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
+</div>
 
 </div>
 </div>
@@ -447,25 +951,25 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="memname">subroutine sll_m_particle_mesh_coupling_spline_1d::evaluate_field_single_spline_1d </td>
           <td>(</td>
-          <td class="paramtype">class(<a class="el" href="structsll__m__particle__mesh__coupling__spline__1d_1_1sll__t__particle__mesh__coupling__spline__1d.html">sll_t_particle_mesh_coupling_spline_1d</a>), intent(inout)&#160;</td>
+          <td class="paramtype">class (<a class="el" href="structsll__m__particle__mesh__coupling__spline__1d_1_1sll__t__particle__mesh__coupling__spline__1d.html">sll_t_particle_mesh_coupling_spline_1d</a>), intent(inout)&#160;</td>
           <td class="paramname"><em>self</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(self%dim), intent(in)&#160;</td>
+          <td class="paramtype">dimension(self%dim), intent(in)&#160;</td>
           <td class="paramname"><em>position</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(self%n_dofs), intent(in)&#160;</td>
+          <td class="paramtype">dimension(self%n_cells), intent(in)&#160;</td>
           <td class="paramname"><em>field_dofs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), intent(out)&#160;</td>
+          <td class="paramtype">intent(out)&#160;</td>
           <td class="paramname"><em>field_value</em>&#160;</td>
         </tr>
         <tr>
@@ -484,20 +988,23 @@ Here is the call graph for this function:</div>
 <p>Evaluate field at at position <em>position</em>. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>Kernel smoother object</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">position</td><td>Position of the particle</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">field_dofs</td><td>Coefficient vector for the field DoFs</td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">field_value</td><td>Value(s) of the electric fields at given position </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>Kernel smoother object </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l00379">379</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l00198">198</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__particle__mesh__coupling__spline__1d_a6787a5b034e7fb6350e5ad3c7c23c45b_cgraph.svg" width="364" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
 
 </div>
 </div>
-<a id="a366dc5d4647b221c4d819c70e07750af"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a366dc5d4647b221c4d819c70e07750af">&#9670;&nbsp;</a></span>evaluate_field_single_spline_pp_1d()</h2>
+<a id="ace826827e88543c8c916cb1819bf560f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ace826827e88543c8c916cb1819bf560f">&#9670;&nbsp;</a></span>evaluate_int_linear_quad_spline_1d()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -506,28 +1013,52 @@ Here is the call graph for this function:</div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">subroutine sll_m_particle_mesh_coupling_spline_1d::evaluate_field_single_spline_pp_1d </td>
+          <td class="memname">subroutine sll_m_particle_mesh_coupling_spline_1d::evaluate_int_linear_quad_spline_1d </td>
           <td>(</td>
-          <td class="paramtype">class(<a class="el" href="structsll__m__particle__mesh__coupling__spline__1d_1_1sll__t__particle__mesh__coupling__spline__1d.html">sll_t_particle_mesh_coupling_spline_1d</a>), intent(inout)&#160;</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__particle__mesh__coupling__spline__1d_1_1sll__t__particle__mesh__coupling__spline__1d.html">sll_t_particle_mesh_coupling_spline_1d</a> ), intent(inout)&#160;</td>
           <td class="paramname"><em>self</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">real(kind=f64), dimension(self%dim), intent(in)&#160;</td>
-          <td class="paramname"><em>position</em>, </td>
+          <td class="paramname"><em>position_old</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:, :), intent(in)&#160;</td>
-          <td class="paramname"><em>field_dofs_pp</em>, </td>
+          <td class="paramtype">real(kind=f64), dimension(self%dim), intent(in)&#160;</td>
+          <td class="paramname"><em>position_new</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), intent(out)&#160;</td>
-          <td class="paramname"><em>field_value</em>&#160;</td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>iter</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>total_iter</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(self%n_cells), intent(in)&#160;</td>
+          <td class="paramname"><em>field_dofs_1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(self%n_cells), intent(in)&#160;</td>
+          <td class="paramname"><em>field_dofs_2</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(2), intent(out)&#160;</td>
+          <td class="paramname"><em>field</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -542,22 +1073,328 @@ Here is the call graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p>Evaluate field at at position <em>position</em> using horner scheme. </p>
+<p>Evaluates the integrals with tau function for implicit subcycling. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>Kernel smoother object</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">position</td><td>Position of the particle</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">field_dofs_pp</td><td>Degrees of freedom in kernel representation.</td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">field_value</td><td>Value(s) of the electric fields at given position </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>kernel smoother object</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">position_old</td><td>Position of the particle</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">position_new</td><td>Position of the particle</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">field_dofs_1</td><td>Coefficient vector of the current density</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">field_dofs_2</td><td>Coefficient vector of the current density </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l00359">359</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l01167">1167</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__particle__mesh__coupling__spline__1d_a366dc5d4647b221c4d819c70e07750af_cgraph.svg" width="394" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__particle__mesh__coupling__spline__1d_ace826827e88543c8c916cb1819bf560f_cgraph.svg" width="352" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="af59a6f43c0116ba5feb461763f3e7292"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af59a6f43c0116ba5feb461763f3e7292">&#9670;&nbsp;</a></span>evaluate_int_linear_quad_subnewton_spline_1d()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_particle_mesh_coupling_spline_1d::evaluate_int_linear_quad_subnewton_spline_1d </td>
+          <td>(</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__particle__mesh__coupling__spline__1d_1_1sll__t__particle__mesh__coupling__spline__1d.html">sll_t_particle_mesh_coupling_spline_1d</a> ), intent(inout)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">dimension(self%dim), intent(in)&#160;</td>
+          <td class="paramname"><em>position_old</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">dimension(self%dim), intent(in)&#160;</td>
+          <td class="paramname"><em>position_new</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">intent(in)&#160;</td>
+          <td class="paramname"><em>iter</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">intent(in)&#160;</td>
+          <td class="paramname"><em>total_iter</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">dimension(self%n_cells), intent(in)&#160;</td>
+          <td class="paramname"><em>field_dofs_1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">dimension(self%n_cells), intent(in)&#160;</td>
+          <td class="paramname"><em>field_dofs_2</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">intent(out)&#160;</td>
+          <td class="paramname"><em>field</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>For implicit subcycling propagator, evaluates the integral needed for Newtons's method in the evaluate_int_linear_quad part. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>kernel smoother object </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l01275">1275</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__particle__mesh__coupling__spline__1d_af59a6f43c0116ba5feb461763f3e7292_cgraph.svg" width="414" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="a4e84a7a123785eb90309db9515c7be4d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4e84a7a123785eb90309db9515c7be4d">&#9670;&nbsp;</a></span>evaluate_int_quad_spline_1d()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_particle_mesh_coupling_spline_1d::evaluate_int_quad_spline_1d </td>
+          <td>(</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__particle__mesh__coupling__spline__1d_1_1sll__t__particle__mesh__coupling__spline__1d.html">sll_t_particle_mesh_coupling_spline_1d</a> ), intent(inout)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">dimension(self%dim), intent(in)&#160;</td>
+          <td class="paramname"><em>position_old</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">dimension(self%dim), intent(in)&#160;</td>
+          <td class="paramname"><em>position_new</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">dimension(self%n_cells), intent(in)&#160;</td>
+          <td class="paramname"><em>field_dofs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">intent(out)&#160;</td>
+          <td class="paramname"><em>field</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Evaluates an integrated field (between position_old and position_new) but with a quadrature formula for the integration. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>kernel smoother object </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l00529">529</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__particle__mesh__coupling__spline__1d_a4e84a7a123785eb90309db9515c7be4d_cgraph.svg" width="415" height="88"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="ab475cca6a12935c7b2d6fc336e85558e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab475cca6a12935c7b2d6fc336e85558e">&#9670;&nbsp;</a></span>evaluate_int_spline_1d()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_particle_mesh_coupling_spline_1d::evaluate_int_spline_1d </td>
+          <td>(</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__particle__mesh__coupling__spline__1d_1_1sll__t__particle__mesh__coupling__spline__1d.html">sll_t_particle_mesh_coupling_spline_1d</a> ), intent(inout)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">dimension(self%dim), intent(in)&#160;</td>
+          <td class="paramname"><em>position_old</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">dimension(self%dim), intent(in)&#160;</td>
+          <td class="paramname"><em>position_new</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">intent(in)&#160;</td>
+          <td class="paramname"><em>vbar</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">dimension(self%n_cells), intent(in)&#160;</td>
+          <td class="paramname"><em>field_dofs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">intent(out)&#160;</td>
+          <td class="paramname"><em>field</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Evaluates the integral int_{poisition_old}^{position_new} field(x) d x. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>kernel smoother object </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l00447">447</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__particle__mesh__coupling__spline__1d_ab475cca6a12935c7b2d6fc336e85558e_cgraph.svg" width="406" height="104"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="ab014140ea2ecf806650233cd23bc0608"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab014140ea2ecf806650233cd23bc0608">&#9670;&nbsp;</a></span>evaluate_int_spline_1d_subnewton()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_particle_mesh_coupling_spline_1d::evaluate_int_spline_1d_subnewton </td>
+          <td>(</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__particle__mesh__coupling__spline__1d_1_1sll__t__particle__mesh__coupling__spline__1d.html">sll_t_particle_mesh_coupling_spline_1d</a> ), intent(inout)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(self%dim), intent(in)&#160;</td>
+          <td class="paramname"><em>position_old</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(self%dim), intent(in)&#160;</td>
+          <td class="paramname"><em>position_new</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(self%n_cells), intent(in)&#160;</td>
+          <td class="paramname"><em>field_dofs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), intent(out)&#160;</td>
+          <td class="paramname"><em>field</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>kernel smoother object</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">position_old</td><td>Position of the particle</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">position_new</td><td>Position of the particle</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">field_dofs</td><td>Coefficient vector of the current density </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l00575">575</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__particle__mesh__coupling__spline__1d_ab014140ea2ecf806650233cd23bc0608_cgraph.svg" width="395" height="88"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
 </div>
 </div>
 
@@ -575,31 +1412,31 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="memname">subroutine sll_m_particle_mesh_coupling_spline_1d::evaluate_multiple_spline_1d </td>
           <td>(</td>
-          <td class="paramtype">class(<a class="el" href="structsll__m__particle__mesh__coupling__spline__1d_1_1sll__t__particle__mesh__coupling__spline__1d.html">sll_t_particle_mesh_coupling_spline_1d</a>), intent(inout)&#160;</td>
+          <td class="paramtype">class (<a class="el" href="structsll__m__particle__mesh__coupling__spline__1d_1_1sll__t__particle__mesh__coupling__spline__1d.html">sll_t_particle_mesh_coupling_spline_1d</a>), intent(inout)&#160;</td>
           <td class="paramname"><em>self</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(self%dim), intent(in)&#160;</td>
+          <td class="paramtype">dimension(self%dim), intent(in)&#160;</td>
           <td class="paramname"><em>position</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">integer(kind=i32), dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">dimension(:), intent(in)&#160;</td>
           <td class="paramname"><em>components</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:, :), intent(in)&#160;</td>
+          <td class="paramtype">dimension(:,:), intent(in)&#160;</td>
           <td class="paramname"><em>field_dofs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:), intent(out)&#160;</td>
+          <td class="paramtype">dimension(:), intent(out)&#160;</td>
           <td class="paramname"><em>field_value</em>&#160;</td>
         </tr>
         <tr>
@@ -618,16 +1455,18 @@ Here is the call graph for this function:</div>
 <p>Evaluate several fields at position <em>position</em>. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>Kernel smoother object</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">position</td><td>Position of the particle</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">components</td><td>Components of field_dofs that shall be updated</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">field_dofs</td><td>Coefficient vector for the field DoFs</td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">field_value</td><td>Value(s) of the electric fields at given position </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>Kernel smoother object </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l00409">409</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l00229">229</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__particle__mesh__coupling__spline__1d_aa48738fdb62171e96b6caeb687941e2b_cgraph.svg" width="414" height="38"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
 
 </div>
 </div>
@@ -643,7 +1482,7 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="memname">subroutine sll_m_particle_mesh_coupling_spline_1d::free_spline_1d </td>
           <td>(</td>
-          <td class="paramtype">class(<a class="el" href="structsll__m__particle__mesh__coupling__spline__1d_1_1sll__t__particle__mesh__coupling__spline__1d.html">sll_t_particle_mesh_coupling_spline_1d</a>), intent(inout)&#160;</td>
+          <td class="paramtype">class (<a class="el" href="structsll__m__particle__mesh__coupling__spline__1d_1_1sll__t__particle__mesh__coupling__spline__1d.html">sll_t_particle_mesh_coupling_spline_1d</a>), intent(inout)&#160;</td>
           <td class="paramname"><em>self</em></td><td>)</td>
           <td></td>
         </tr>
@@ -663,7 +1502,7 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l00442">442</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l00991">991</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -673,8 +1512,8 @@ Here is the call graph for this function:</div>
 
 </div>
 </div>
-<a id="a8cd446ae4a4dc74bfc2c041c67e2e0cd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8cd446ae4a4dc74bfc2c041c67e2e0cd">&#9670;&nbsp;</a></span>init_spline_1d()</h2>
+<a id="a9c32c194f9381eedf01eaf1d14e579d9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9c32c194f9381eedf01eaf1d14e579d9">&#9670;&nbsp;</a></span>init_spline_1d()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -685,7 +1524,7 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="memname">subroutine sll_m_particle_mesh_coupling_spline_1d::init_spline_1d </td>
           <td>(</td>
-          <td class="paramtype">class(<a class="el" href="structsll__m__particle__mesh__coupling__spline__1d_1_1sll__t__particle__mesh__coupling__spline__1d.html">sll_t_particle_mesh_coupling_spline_1d</a>), intent(out)&#160;</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__particle__mesh__coupling__spline__1d_1_1sll__t__particle__mesh__coupling__spline__1d.html">sll_t_particle_mesh_coupling_spline_1d</a>), intent(out)&#160;</td>
           <td class="paramname"><em>self</em>, </td>
         </tr>
         <tr>
@@ -697,8 +1536,8 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">integer(kind=i32), dimension(1), intent(in)&#160;</td>
-          <td class="paramname"><em>n_grid</em>, </td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>n_cells</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -735,7 +1574,7 @@ Here is the call graph for this function:</div>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[out]</td><td class="paramname">self</td><td>kernel smoother object</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">n_grid</td><td>number of DoFs (spline coefficients)</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n_cells</td><td>number of DoFs (spline coefficients)</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">domain</td><td>x_min and x_max of the domain</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">no_particles</td><td>number of particles</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">spline_degree</td><td>Degree of smoothing kernel spline</td></tr>
@@ -744,18 +1583,18 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l00499">499</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l00900">900</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__particle__mesh__coupling__spline__1d_a8cd446ae4a4dc74bfc2c041c67e2e0cd_cgraph.svg" width="394" height="134"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__particle__mesh__coupling__spline__1d_a9c32c194f9381eedf01eaf1d14e579d9_cgraph.svg" width="394" height="134"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
 </div>
 </div>
 
 </div>
 </div>
-<a id="a979b5d8bfcae0d770e6d1d7795ee593f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a979b5d8bfcae0d770e6d1d7795ee593f">&#9670;&nbsp;</a></span>sll_s_new_particle_mesh_coupling_spline_1d()</h2>
+<a id="ac9d9952bba098c1584e3fd6696f43009"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac9d9952bba098c1584e3fd6696f43009">&#9670;&nbsp;</a></span>sll_s_new_particle_mesh_coupling_spline_1d()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -763,7 +1602,7 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="memname">subroutine, public sll_m_particle_mesh_coupling_spline_1d::sll_s_new_particle_mesh_coupling_spline_1d </td>
           <td>(</td>
-          <td class="paramtype">class(<a class="el" href="structsll__m__particle__mesh__coupling__base_1_1sll__c__particle__mesh__coupling.html">sll_c_particle_mesh_coupling</a>), intent(out), allocatable&#160;</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__particle__mesh__coupling__base__1d_1_1sll__c__particle__mesh__coupling__1d.html">sll_c_particle_mesh_coupling_1d</a>), intent(out), allocatable&#160;</td>
           <td class="paramname"><em>smoother</em>, </td>
         </tr>
         <tr>
@@ -775,8 +1614,8 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">integer(kind=i32), dimension(1), intent(in)&#160;</td>
-          <td class="paramname"><em>n_grid</em>, </td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>n_cells</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -806,7 +1645,7 @@ Here is the call graph for this function:</div>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[out]</td><td class="paramname">smoother</td><td>kernel smoother object</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">n_grid</td><td>number of DoFs (spline coefficients)</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n_cells</td><td>number of DoFs (spline coefficients)</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">domain</td><td>x_min and x_max of the domain</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">no_particles</td><td>number of particles</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">spline_degree</td><td>Degree of smoothing kernel spline</td></tr>
@@ -815,12 +1654,12 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l00477">477</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l01028">1028</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
 
 </div>
 </div>
-<a id="a5c64b4eb9422365a56c39912279cdb7c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5c64b4eb9422365a56c39912279cdb7c">&#9670;&nbsp;</a></span>sll_s_new_particle_mesh_coupling_spline_1d_ptr()</h2>
+<a id="a74cfac08a6c9e1b5bd4082b1519de68b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a74cfac08a6c9e1b5bd4082b1519de68b">&#9670;&nbsp;</a></span>sll_s_new_particle_mesh_coupling_spline_1d_ptr()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -828,7 +1667,7 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="memname">subroutine, public sll_m_particle_mesh_coupling_spline_1d::sll_s_new_particle_mesh_coupling_spline_1d_ptr </td>
           <td>(</td>
-          <td class="paramtype">class(<a class="el" href="structsll__m__particle__mesh__coupling__base_1_1sll__c__particle__mesh__coupling.html">sll_c_particle_mesh_coupling</a>), intent(out), pointer&#160;</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__particle__mesh__coupling__base__1d_1_1sll__c__particle__mesh__coupling__1d.html">sll_c_particle_mesh_coupling_1d</a>), intent(out), pointer&#160;</td>
           <td class="paramname"><em>smoother</em>, </td>
         </tr>
         <tr>
@@ -840,8 +1679,8 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">integer(kind=i32), dimension(1), intent(in)&#160;</td>
-          <td class="paramname"><em>n_grid</em>, </td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>n_cells</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -871,7 +1710,7 @@ Here is the call graph for this function:</div>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[out]</td><td class="paramname">smoother</td><td>kernel smoother object</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">n_grid</td><td>number of DoFs (spline coefficients)</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n_cells</td><td>number of DoFs (spline coefficients)</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">domain</td><td>x_min and x_max of the domain</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">no_particles</td><td>number of particles</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">spline_degree</td><td>Degree of smoothing kernel spline</td></tr>
@@ -880,7 +1719,411 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l00454">454</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l01004">1004</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+
+</div>
+</div>
+<a id="a2babc2e292880d7c11d96fa8d608005a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2babc2e292880d7c11d96fa8d608005a">&#9670;&nbsp;</a></span>update_charge_int_partial()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_particle_mesh_coupling_spline_1d::update_charge_int_partial </td>
+          <td>(</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__particle__mesh__coupling__spline__1d_1_1sll__t__particle__mesh__coupling__spline__1d.html">sll_t_particle_mesh_coupling_spline_1d</a> ), intent(inout)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">intent(in)&#160;</td>
+          <td class="paramname"><em>upper</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">intent(in)&#160;</td>
+          <td class="paramname"><em>lower</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">intent(in)&#160;</td>
+          <td class="paramname"><em>uppert</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">intent(in)&#160;</td>
+          <td class="paramname"><em>lowert</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">intent(in)&#160;</td>
+          <td class="paramname"><em>index</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">intent(in)&#160;</td>
+          <td class="paramname"><em>marker_charge</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">dimension(self%n_cells), intent(inout)&#160;</td>
+          <td class="paramname"><em>j_dofs</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Helper function for add_charge_int (takes care of the per cell computations) </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>kernel smoother object </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l01435">1435</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__particle__mesh__coupling__spline__1d_a2babc2e292880d7c11d96fa8d608005a_icgraph.svg" width="440" height="38"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="ace7729313204b066c647e036364c7eaa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ace7729313204b066c647e036364c7eaa">&#9670;&nbsp;</a></span>update_current_partial()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_particle_mesh_coupling_spline_1d::update_current_partial </td>
+          <td>(</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__particle__mesh__coupling__spline__1d_1_1sll__t__particle__mesh__coupling__spline__1d.html">sll_t_particle_mesh_coupling_spline_1d</a> ), intent(inout)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
+          <td class="paramname"><em>upper</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
+          <td class="paramname"><em>lower</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
+          <td class="paramname"><em>uppert</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
+          <td class="paramname"><em>lowert</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>index</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>iter</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>total_iter</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
+          <td class="paramname"><em>marker_charge</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(self%n_cells,2), intent(inout)&#160;</td>
+          <td class="paramname"><em>j_dofs</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Helper function for add_current_split. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>kernel smoother object</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">marker_charge</td><td>Particle weights time charge</td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">j_dofs</td><td>Coefficient vector of the current density </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l01112">1112</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__particle__mesh__coupling__spline__1d_ace7729313204b066c647e036364c7eaa_icgraph.svg" width="431" height="38"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="aff757b5916d65e396420b5310c7786a7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aff757b5916d65e396420b5310c7786a7">&#9670;&nbsp;</a></span>update_field_linear_partial()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_particle_mesh_coupling_spline_1d::update_field_linear_partial </td>
+          <td>(</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__particle__mesh__coupling__spline__1d_1_1sll__t__particle__mesh__coupling__spline__1d.html">sll_t_particle_mesh_coupling_spline_1d</a> ), intent(inout)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
+          <td class="paramname"><em>upper</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
+          <td class="paramname"><em>lower</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
+          <td class="paramname"><em>uppert</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
+          <td class="paramname"><em>lowert</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>index</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(self%n_cells), intent(in)&#160;</td>
+          <td class="paramname"><em>field_dofs_1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(self%n_cells), intent(in)&#160;</td>
+          <td class="paramname"><em>field_dofs_2</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>iter</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>total_iter</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(2), intent(inout)&#160;</td>
+          <td class="paramname"><em>bint</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Helper function for evaluate_int_linear_quad (implements part within one cell) </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>kernel smoother object</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">field_dofs_1</td><td>Coefficient vector of the current density</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">field_dofs_2</td><td>Coefficient vector of the current density </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l01231">1231</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__particle__mesh__coupling__spline__1d_aff757b5916d65e396420b5310c7786a7_icgraph.svg" width="352" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="a3113f6c1bbb13f828c6399f51dbcee15"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3113f6c1bbb13f828c6399f51dbcee15">&#9670;&nbsp;</a></span>update_field_linear_partial_newton()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_particle_mesh_coupling_spline_1d::update_field_linear_partial_newton </td>
+          <td>(</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__particle__mesh__coupling__spline__1d_1_1sll__t__particle__mesh__coupling__spline__1d.html">sll_t_particle_mesh_coupling_spline_1d</a> ), intent(inout)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">intent(in)&#160;</td>
+          <td class="paramname"><em>upper</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">intent(in)&#160;</td>
+          <td class="paramname"><em>lower</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">intent(in)&#160;</td>
+          <td class="paramname"><em>uppert</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">intent(in)&#160;</td>
+          <td class="paramname"><em>lowert</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">intent(in)&#160;</td>
+          <td class="paramname"><em>index</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">dimension(self%n_cells), intent(in)&#160;</td>
+          <td class="paramname"><em>field_dofs_1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">dimension(self%n_cells), intent(in)&#160;</td>
+          <td class="paramname"><em>field_dofs_2</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">intent(in)&#160;</td>
+          <td class="paramname"><em>iter</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">intent(in)&#160;</td>
+          <td class="paramname"><em>total_iter</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">intent(inout)&#160;</td>
+          <td class="paramname"><em>bint</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Helper function for evaluate_int_linear_quad_subnewton (takes care of the per cell computations) </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>kernel smoother object </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l01336">1336</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__particle__mesh__coupling__spline__1d_a3113f6c1bbb13f828c6399f51dbcee15_icgraph.svg" width="414" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
 
 </div>
 </div>
@@ -944,13 +2187,13 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(self%n_dofs), intent(inout)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(self%n_cells), intent(inout)&#160;</td>
           <td class="paramname"><em>j_dofs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(self%n_dofs), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(self%n_cells), intent(in)&#160;</td>
           <td class="paramname"><em>bfield_dofs</em>&#160;</td>
         </tr>
         <tr>
@@ -974,7 +2217,13 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l00292">292</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l00752">752</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__particle__mesh__coupling__spline__1d_a6b3929440194ac8a502ac582f872cd38_icgraph.svg" width="296" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
 
 </div>
 </div>
@@ -1032,13 +2281,13 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(self%n_dofs), intent(inout)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(self%n_cells), intent(inout)&#160;</td>
           <td class="paramname"><em>j_dofs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(self%n_dofs), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(self%n_cells), intent(in)&#160;</td>
           <td class="paramname"><em>bfield_dofs</em>&#160;</td>
         </tr>
         <tr>
@@ -1062,11 +2311,195 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l00199">199</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l00667">667</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__particle__mesh__coupling__spline__1d_a92e471387d403a8ea29430c0b18a5656_cgraph.svg" width="634" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__particle__mesh__coupling__spline__1d_a92e471387d403a8ea29430c0b18a5656_icgraph.svg" width="319" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="ae6be4e4f9276ec1c5bf702f2333c2062"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae6be4e4f9276ec1c5bf702f2333c2062">&#9670;&nbsp;</a></span>update_v_partial()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_particle_mesh_coupling_spline_1d::update_v_partial </td>
+          <td>(</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__particle__mesh__coupling__spline__1d_1_1sll__t__particle__mesh__coupling__spline__1d.html">sll_t_particle_mesh_coupling_spline_1d</a> ), intent(inout)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
+          <td class="paramname"><em>upper</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
+          <td class="paramname"><em>lower</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
+          <td class="paramname"><em>uppert</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
+          <td class="paramname"><em>lowert</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>index</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(self%n_cells), intent(in)&#160;</td>
+          <td class="paramname"><em>field_dofs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), intent(inout)&#160;</td>
+          <td class="paramname"><em>bint</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Helper function for evaluate_int_quad (despite the name it evaluates a field and does not update v) </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>kernel smoother object</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">field_dofs</td><td>Coefficient vector of the current density </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l00795">795</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__particle__mesh__coupling__spline__1d_ae6be4e4f9276ec1c5bf702f2333c2062_icgraph.svg" width="400" height="38"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="a4e84b997b4f7f6b7ff592efbb5510753"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4e84b997b4f7f6b7ff592efbb5510753">&#9670;&nbsp;</a></span>update_v_partial_newton()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_particle_mesh_coupling_spline_1d::update_v_partial_newton </td>
+          <td>(</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__particle__mesh__coupling__spline__1d_1_1sll__t__particle__mesh__coupling__spline__1d.html">sll_t_particle_mesh_coupling_spline_1d</a> ), intent(inout)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
+          <td class="paramname"><em>upper</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
+          <td class="paramname"><em>lower</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
+          <td class="paramname"><em>uppert</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
+          <td class="paramname"><em>lowert</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>index</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(self%n_cells), intent(in)&#160;</td>
+          <td class="paramname"><em>field_dofs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), intent(inout)&#160;</td>
+          <td class="paramname"><em>bint</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Helper function for evaluate_int_quad_subnewton (despite the name it evaluates a field and does not update v) </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>kernel smoother object</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">field_dofs</td><td>Coefficient vector of the current density </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html#l00840">840</a> of file <a class="el" href="sll__m__particle__mesh__coupling__spline__1d_8_f90_source.html">sll_m_particle_mesh_coupling_spline_1d.F90</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__particle__mesh__coupling__spline__1d_a4e84b997b4f7f6b7ff592efbb5510753_icgraph.svg" width="395" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
 </div>
 </div>
 
@@ -1079,7 +2512,7 @@ Here is the call graph for this function:</div>
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Thu Sep 16 2021 15:32:50 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Sep 17 2021 15:35:35 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

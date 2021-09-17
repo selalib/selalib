@@ -1,5 +1,6 @@
 var searchData=
 [
+  ['helper_5fnormalized_5fposition',['helper_normalized_position',['../namespacesll__m__particle__mesh__coupling__spline__strong__1d.html#a9f30e84e3a4a46997c24e38e912cfd02',1,'sll_m_particle_mesh_coupling_spline_strong_1d']]],
   ['hermite_5fc1_5fcoef_5fnat_5fper',['hermite_c1_coef_nat_per',['../namespacesll__m__gyroaverage__2d__polar.html#abfb82f7f95b355d86f7f3a105dc293a6',1,'sll_m_gyroaverage_2d_polar::hermite_c1_coef_nat_per()'],['../namespacesll__m__qn__2d__polar.html#aea3e28d07ddc00a16c7176218c003591',1,'sll_m_qn_2d_polar::hermite_c1_coef_nat_per()']]],
   ['hermite_5fcoef_5fnat_5f1d',['hermite_coef_nat_1d',['../namespacesll__m__hermite__interpolation__1d.html#a9e55ec90d8f8f803dcd2e2f7cc473079',1,'sll_m_hermite_interpolation_1d']]],
   ['hermite_5fcoef_5fnat_5fper',['hermite_coef_nat_per',['../namespacesll__m__gyroaverage__2d__polar.html#ab5853a5652521bebf3ea7eea21e2a24f',1,'sll_m_gyroaverage_2d_polar::hermite_coef_nat_per()'],['../namespacesll__m__qn__2d__polar.html#aadcd84abd4490ba625dd53c78b8fc482',1,'sll_m_qn_2d_polar::hermite_coef_nat_per()'],['../namespacesll__m__hermite__interpolation__2d.html#a416aa4cb794e29bd7e0d0f95414fa8fd',1,'sll_m_hermite_interpolation_2d::hermite_coef_nat_per()']]],

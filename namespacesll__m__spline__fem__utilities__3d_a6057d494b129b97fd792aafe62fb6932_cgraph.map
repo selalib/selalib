@@ -1,0 +1,10 @@
+<map id="sll_s_spline_fem_mass3d" name="sll_s_spline_fem_mass3d">
+<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities__3d__helper.html#ab61e8df08e3414cd54d1b85c91ddb4ad" title="Helper function to create sparsity pattern of the 3d mass matrix. " alt="" coords="257,5,449,61"/>
+<area shape="rect" id="node5" href="$namespacesll__m__gauss__legendre__integration.html#a0df63a9e8ee884c2d4a0d1f53602a949" title="Returns a 2d array of size (2,npoints) containing gauss&#45;legendre points and weights in the interval [..." alt="" coords="241,85,464,141"/>
+<area shape="rect" id="node6" href="$namespacesll__m__spline__fem__utilities__3d.html#adb777f54b3a7be04fd78f00b22f072f9" title="Computes the mass line for a mass matrix with degree splines. " alt="" coords="251,165,454,192"/>
+<area shape="rect" id="node7" href="$namespacesll__m__spline__fem__utilities__3d__helper.html#a4d70bfcfbf78b2dbfed72ee7c3e2d91e" title="Assemble the given row of the 3d mass matrix. " alt="" coords="241,217,464,258"/>
+<area shape="rect" id="node3" href="$namespacesll__m__spline__fem__utilities__3d__helper.html#a0ecb5b69702c19db85ec6fcf8f5cf530" title="sll_m_spline_fem_utilities\l_3d_helper::loop2" alt="" coords="512,13,704,54"/>
+<area shape="rect" id="node4" href="$namespacesll__m__spline__fem__utilities__3d__helper.html#a44ec465b69568824a811ff2ba3831a7a" title="sll_m_spline_fem_utilities\l_3d_helper::loop1" alt="" coords="752,13,944,54"/>
+<area shape="rect" id="node8" href="$namespacesll__m__spline__fem__utilities__3d__helper.html#af847495fdf13923f87f64ce3ab2359f8" title="sll_m_spline_fem_utilities\l_3d_helper::assemble2" alt="" coords="512,217,704,258"/>
+<area shape="rect" id="node9" href="$namespacesll__m__spline__fem__utilities__3d__helper.html#ab84b0dd7f4944ab6de020098b07c7e60" title="sll_m_spline_fem_utilities\l_3d_helper::assemble1" alt="" coords="752,217,944,258"/>
+</map>

@@ -1,3 +1,4 @@
 <map id="sll_t_particle_mesh_coupling_spline_1d" name="sll_t_particle_mesh_coupling_spline_1d">
-<area shape="rect" id="node2" href="$structsll__m__particle__mesh__coupling__base_1_1sll__c__particle__mesh__coupling.html" title="Basic type of a kernel smoother used for PIC simulations. " alt="" coords="7,5,157,47"/>
+<area shape="rect" id="node3" href="$structsll__m__particle__mesh__coupling__spline__smooth__1d_1_1sll__t__particle__mesh__coupling__spline__smooth__1d.html" title="Spline kernel smoother in1d. " alt="" coords="5,184,215,225"/>
+<area shape="rect" id="node2" href="$structsll__m__particle__mesh__coupling__base__1d_1_1sll__c__particle__mesh__coupling__1d.html" title="Basic type of a kernel smoother used for PIC simulations. " alt="" coords="35,5,185,47"/>
 </map>

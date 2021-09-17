@@ -1,0 +1,7 @@
+<map id="sll_s_spline_fem_sparsity_mixedmass3d" name="sll_s_spline_fem_sparsity_mixedmass3d">
+<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities__3d.html#a75c8275b4be3b0c6cb6f5754f0d2a706" title="Set up 3d mixed mass matrix for specific spline degree and profile function. " alt="" coords="243,144,503,185"/>
+<area shape="rect" id="node5" href="$namespacesll__m__maxwell__3d__trafo__parallel.html#a994d8feec849ce52b5243b251decabbc" title="sll_m_maxwell_3d_trafo\l_parallel::init_3d_trafo\l_parallel" alt="" coords="551,217,733,273"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__3d__trafo.html#aaad1e5b0c976c17ca8c2276ab121313d" title="Initialization. " alt="" coords="551,5,733,47"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__clamped__3d__trafo.html#ab614fb88d34d5e55292639d8db6b0353" title="Initialization. " alt="" coords="551,71,733,112"/>
+<area shape="rect" id="node6" href="$namespacesll__m__maxwell__clamped__3d__trafo__parallel.html#ae0872c3bfa3cc2f7b7f3aaca4fd8838e" title="sll_m_maxwell_clamped\l_3d_trafo_parallel::init\l_3d_trafo_parallel" alt="" coords="551,137,733,193"/>
+</map>

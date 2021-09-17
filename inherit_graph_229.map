@@ -1,3 +1,6 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$interfacesll__m__common__array__initializers_1_1sll__i__scalar__initializer__2d.html" title="sll_i_scalar_initializer_2d" alt="" coords="5,5,191,32"/>
+<area shape="rect" id="node1" href="$structsll__m__interpolators__2d__base_1_1sll__c__interpolator__2d.html" title="Base class/basic interface for 2D interpolators. " alt="" coords="5,71,163,98"/>
+<area shape="rect" id="node2" href="$structsll__m__cubic__spline__interpolator__2d_1_1sll__t__cubic__spline__interpolator__2d.html" title="The spline&#45;based interpolator is only a wrapper around the capabilities of the cubic splines..." alt="" coords="243,5,379,47"/>
+<area shape="rect" id="node3" href="$structsll__m__hermite__interpolator__2d_1_1sll__hermite__interpolator__2d.html" title="The hermite&#45;based interpolator is only a wrapper around the capabilities of the hermite interpolation..." alt="" coords="211,71,412,98"/>
+<area shape="rect" id="node4" href="$structsll__m__nufft__interpolator__2d_1_1sll__t__nufft__interpolator__2d.html" title="The nufft&#45;based interpolator is only a wrapper around the capabilities of the nufft package..." alt="" coords="215,122,407,149"/>
 </map>

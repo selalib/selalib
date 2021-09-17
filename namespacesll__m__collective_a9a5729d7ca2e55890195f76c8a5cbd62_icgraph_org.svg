@@ -9,75 +9,75 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 2252)">
 <title>sll_s_test_mpi_error</title>
 <polygon fill="#ffffff" stroke="transparent" points="-4,4 -4,-2252 490,-2252 490,4 -4,4"/>
-<!-- Node399 -->
+<!-- Node429 -->
 <g id="node1" class="node">
-<title>Node399</title>
+<title>Node429</title>
 <polygon fill="#bfbfbf" stroke="#000000" points="0,-1131.5 0,-1150.5 115,-1150.5 115,-1131.5 0,-1131.5"/>
 <text text-anchor="middle" x="57.5" y="-1138.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_test_mpi_error</text>
 </g>
-<!-- Node400 -->
+<!-- Node430 -->
 <g id="node2" class="node">
-<title>Node400</title>
+<title>Node430</title>
 <g id="a_node2"><a xlink:href="namespacesll__m__collective.html#a939e5faf8e7354e95934cc448ea4623d" target="_top" xlink:title="Starts the paralell environment. ">
 <polygon fill="#ffffff" stroke="#ff0000" points="173.5,-2228.5 173.5,-2247.5 291.5,-2247.5 291.5,-2228.5 173.5,-2228.5"/>
 <text text-anchor="middle" x="232.5" y="-2235.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_boot_collective</text>
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node400 -->
+<!-- Node429&#45;&gt;Node430 -->
 <g id="edge1" class="edge">
-<title>Node399&#45;&gt;Node400</title>
+<title>Node429&#45;&gt;Node430</title>
 <path fill="none" stroke="#191970" d="M57.8444,-1160.9334C60.4439,-1301.1282 78.896,-2135.8111 151,-2219 156.8998,-2225.8068 164.7223,-2230.431 173.19,-2233.5306"/>
 <polygon fill="#191970" stroke="#191970" points="61.3413,-1160.7238 57.6619,-1150.7884 54.3424,-1160.8498 61.3413,-1160.7238"/>
 </g>
-<!-- Node404 -->
+<!-- Node434 -->
 <g id="node3" class="node">
-<title>Node404</title>
+<title>Node434</title>
 <g id="a_node3"><a xlink:href="namespacesll__m__collective.html#a592327aa26a80b737512f9d054816c7f" target="_top" xlink:title="Ends the paralell environment. ">
 <polygon fill="#ffffff" stroke="#ff0000" points="175,-2190.5 175,-2209.5 290,-2209.5 290,-2190.5 175,-2190.5"/>
 <text text-anchor="middle" x="232.5" y="-2197.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_halt_collective</text>
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node404 -->
+<!-- Node429&#45;&gt;Node434 -->
 <g id="edge2" class="edge">
-<title>Node399&#45;&gt;Node404</title>
+<title>Node429&#45;&gt;Node434</title>
 <path fill="none" stroke="#191970" d="M57.9138,-1161.0689C60.9317,-1298.7816 81.4345,-2100.9943 151,-2181 157.2918,-2188.2361 165.7565,-2193.0039 174.8555,-2196.0953"/>
 <polygon fill="#191970" stroke="#191970" points="61.4063,-1160.6785 57.6937,-1150.7555 54.4079,-1160.8279 61.4063,-1160.6785"/>
 </g>
-<!-- Node405 -->
+<!-- Node435 -->
 <g id="node4" class="node">
-<title>Node405</title>
+<title>Node435</title>
 <g id="a_node4"><a xlink:href="namespacesll__m__collective.html#a0da50b4855a5305dc03e9f2378f64283" target="_top" xlink:title="Creates new (wrapper around) communicators based on colors and keys. ">
 <polygon fill="#ffffff" stroke="#000000" points="175,-2152.5 175,-2171.5 290,-2171.5 290,-2152.5 175,-2152.5"/>
 <text text-anchor="middle" x="232.5" y="-2159.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_f_new_collective</text>
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node405 -->
+<!-- Node429&#45;&gt;Node435 -->
 <g id="edge3" class="edge">
-<title>Node399&#45;&gt;Node405</title>
+<title>Node429&#45;&gt;Node435</title>
 <path fill="none" stroke="#191970" d="M57.9777,-1160.7531C61.3906,-1294.6365 83.895,-2066.0871 151,-2143 157.3041,-2150.2254 165.7747,-2154.9881 174.8757,-2158.0777"/>
 <polygon fill="#191970" stroke="#191970" points="61.4754,-1160.6141 57.7273,-1150.7044 54.4776,-1160.7886 61.4754,-1160.6141"/>
 </g>
-<!-- Node406 -->
+<!-- Node436 -->
 <g id="node5" class="node">
-<title>Node406</title>
+<title>Node436</title>
 <g id="a_node5"><a xlink:href="namespacesll__m__collective.html#a9998b96a7386b82ea7cf47ab2062e05b" target="_top" xlink:title="Blocks until all processes in the communicator have reached this routine. ">
 <polygon fill="#ffffff" stroke="#000000" points="168.5,-2114.5 168.5,-2133.5 296.5,-2133.5 296.5,-2114.5 168.5,-2114.5"/>
 <text text-anchor="middle" x="232.5" y="-2121.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_collective_barrier</text>
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node406 -->
+<!-- Node429&#45;&gt;Node436 -->
 <g id="edge4" class="edge">
-<title>Node399&#45;&gt;Node406</title>
+<title>Node429&#45;&gt;Node436</title>
 <path fill="none" stroke="#191970" d="M58.1135,-1160.6579C62.3419,-1290.754 88.858,-2024.8298 151,-2100 156.1689,-2106.2526 162.8787,-2110.9263 170.2287,-2114.411"/>
 <polygon fill="#191970" stroke="#191970" points="61.6087,-1160.447 57.7912,-1150.5638 54.6123,-1160.6705 61.6087,-1160.447"/>
 </g>
-<!-- Node407 -->
+<!-- Node437 -->
 <g id="node6" class="node">
-<title>Node407</title>
+<title>Node437</title>
 <g id="a_node6"><a xlink:href="namespacesll__m__point__to__point__comms.html#ab6f3256ff8c0bbee51626a7603f7ef6d" target="_top" xlink:title="sll_m_point_to_point\l_comms::sll_s_delete\l_comm_real64">
 <polygon fill="#ffffff" stroke="#000000" points="357,-2084.5 357,-2125.5 479,-2125.5 479,-2084.5 357,-2084.5"/>
 <text text-anchor="start" x="365" y="-2113.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_point_to_point</text>
@@ -86,15 +86,15 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node407 -->
+<!-- Node429&#45;&gt;Node437 -->
 <g id="edge51" class="edge">
-<title>Node399&#45;&gt;Node407</title>
+<title>Node429&#45;&gt;Node437</title>
 <path fill="none" stroke="#191970" d="M58.0631,-1160.8741C61.888,-1289.3372 85.8901,-1999.1819 151,-2067 178.5219,-2095.6667 286.9404,-2103.0244 356.8718,-2104.7282"/>
 <polygon fill="#191970" stroke="#191970" points="61.553,-1160.4737 57.7632,-1150.5799 54.556,-1160.6776 61.553,-1160.4737"/>
 </g>
-<!-- Node408 -->
+<!-- Node438 -->
 <g id="node7" class="node">
-<title>Node408</title>
+<title>Node438</title>
 <g id="a_node7"><a xlink:href="namespacesll__m__collective.html#afc0876f2ae6ddc95017be355f215a2fc" target="_top" xlink:title="Broadcasts an array of type &#39;logical&#39; from the process with rank &quot;root&quot; to all other processes of the...">
 <polygon fill="#ffffff" stroke="#000000" points="176.5,-2027 176.5,-2057 288.5,-2057 288.5,-2027 176.5,-2027"/>
 <text text-anchor="start" x="184.5" y="-2045" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_bcast</text>
@@ -102,15 +102,15 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node408 -->
+<!-- Node429&#45;&gt;Node438 -->
 <g id="edge6" class="edge">
-<title>Node399&#45;&gt;Node408</title>
+<title>Node429&#45;&gt;Node438</title>
 <path fill="none" stroke="#191970" d="M58.3101,-1160.8557C63.5378,-1284.8538 94.1026,-1949.8027 151,-2018 157.6145,-2025.9281 166.7053,-2031.315 176.4236,-2034.9576"/>
 <polygon fill="#191970" stroke="#191970" points="61.7954,-1160.4288 57.8832,-1150.5827 54.8015,-1160.7195 61.7954,-1160.4288"/>
 </g>
-<!-- Node409 -->
+<!-- Node439 -->
 <g id="node8" class="node">
-<title>Node409</title>
+<title>Node439</title>
 <g id="a_node8"><a xlink:href="namespacesll__m__collective.html#af89da345572519c7af94ca91df136bad" target="_top" xlink:title="Broadcasts an array of type &#39;sll_int32&#39; from the process with rank &quot;root&quot; to all other processes of t...">
 <polygon fill="#ffffff" stroke="#000000" points="176.5,-1978 176.5,-2008 288.5,-2008 288.5,-1978 176.5,-1978"/>
 <text text-anchor="start" x="184.5" y="-1996" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_bcast</text>
@@ -118,15 +118,15 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node409 -->
+<!-- Node429&#45;&gt;Node439 -->
 <g id="edge7" class="edge">
-<title>Node399&#45;&gt;Node409</title>
+<title>Node429&#45;&gt;Node439</title>
 <path fill="none" stroke="#191970" d="M58.4412,-1160.8509C64.2931,-1280.7191 97.2111,-1904.9357 151,-1969 157.6392,-1976.9075 166.7411,-1982.285 176.4627,-1985.9248"/>
 <polygon fill="#191970" stroke="#191970" points="61.9243,-1160.4131 57.9469,-1150.5932 54.9324,-1160.7501 61.9243,-1160.4131"/>
 </g>
-<!-- Node410 -->
+<!-- Node440 -->
 <g id="node9" class="node">
-<title>Node410</title>
+<title>Node440</title>
 <g id="a_node9"><a xlink:href="namespacesll__m__collective.html#a0e11549ffec638c68f5bfc9d6cf343ea" target="_top" xlink:title="Broadcasts an array of type &#39;sll_int64&#39; from the process with rank &quot;root&quot; to all other processes of t...">
 <polygon fill="#ffffff" stroke="#000000" points="176.5,-1929 176.5,-1959 288.5,-1959 288.5,-1929 176.5,-1929"/>
 <text text-anchor="start" x="184.5" y="-1947" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_bcast</text>
@@ -134,15 +134,15 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node410 -->
+<!-- Node429&#45;&gt;Node440 -->
 <g id="edge8" class="edge">
-<title>Node399&#45;&gt;Node410</title>
+<title>Node429&#45;&gt;Node440</title>
 <path fill="none" stroke="#191970" d="M58.5828,-1160.742C65.0775,-1276.1111 100.2995,-1860.0419 151,-1920 157.5716,-1927.7715 166.5214,-1933.0972 176.0901,-1936.731"/>
 <polygon fill="#191970" stroke="#191970" points="62.0662,-1160.3437 58.0159,-1150.5537 55.077,-1160.7328 62.0662,-1160.3437"/>
 </g>
-<!-- Node411 -->
+<!-- Node441 -->
 <g id="node10" class="node">
-<title>Node411</title>
+<title>Node441</title>
 <g id="a_node10"><a xlink:href="namespacesll__m__collective.html#a7717f3f336d8cf3ddf394d63139cc180" target="_top" xlink:title="Broadcasts an array of type &#39;sll_real64&#39; from the process with rank &quot;root&quot; to all other processes of ...">
 <polygon fill="#ffffff" stroke="#000000" points="176.5,-1880 176.5,-1910 288.5,-1910 288.5,-1880 176.5,-1880"/>
 <text text-anchor="start" x="184.5" y="-1898" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_bcast</text>
@@ -150,15 +150,15 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node411 -->
+<!-- Node429&#45;&gt;Node441 -->
 <g id="edge9" class="edge">
-<title>Node399&#45;&gt;Node411</title>
+<title>Node429&#45;&gt;Node441</title>
 <path fill="none" stroke="#191970" d="M58.7578,-1160.8736C65.9694,-1272.1749 103.4175,-1815.1798 151,-1871 157.6024,-1878.7454 166.5664,-1884.0591 176.1393,-1887.6892"/>
 <polygon fill="#191970" stroke="#191970" points="62.2395,-1160.4752 58.1067,-1150.7197 55.2539,-1160.9233 62.2395,-1160.4752"/>
 </g>
-<!-- Node412 -->
+<!-- Node442 -->
 <g id="node11" class="node">
-<title>Node412</title>
+<title>Node442</title>
 <g id="a_node11"><a xlink:href="namespacesll__m__collective.html#abee1be2df2e3efa64687942279a3bb7c" target="_top" xlink:title="Broadcasts an array of type &#39;sll_real32&#39; from the process with rank &quot;root&quot; to all other processes of ...">
 <polygon fill="#ffffff" stroke="#000000" points="176.5,-1831 176.5,-1861 288.5,-1861 288.5,-1831 176.5,-1831"/>
 <text text-anchor="start" x="184.5" y="-1849" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_bcast</text>
@@ -166,15 +166,15 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node412 -->
+<!-- Node429&#45;&gt;Node442 -->
 <g id="edge10" class="edge">
-<title>Node399&#45;&gt;Node412</title>
+<title>Node429&#45;&gt;Node442</title>
 <path fill="none" stroke="#191970" d="M58.9483,-1160.8618C66.899,-1267.6089 106.5083,-1770.282 151,-1822 157.6374,-1829.7154 166.6175,-1835.0153 176.1954,-1838.6412"/>
 <polygon fill="#191970" stroke="#191970" points="62.4332,-1160.5264 58.2066,-1150.8111 55.4522,-1161.0416 62.4332,-1160.5264"/>
 </g>
-<!-- Node413 -->
+<!-- Node443 -->
 <g id="node12" class="node">
-<title>Node413</title>
+<title>Node443</title>
 <g id="a_node12"><a xlink:href="namespacesll__m__collective.html#a369bd2c56e6a666d429de47603f0ef8f" target="_top" xlink:title="Broadcasts an array of type &#39;sll_real64&#39; from the process with rank &quot;root&quot; to all other processes of ...">
 <polygon fill="#ffffff" stroke="#000000" points="171.5,-1782 171.5,-1812 293.5,-1812 293.5,-1782 171.5,-1782"/>
 <text text-anchor="start" x="179.5" y="-1800" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_collective_bcast</text>
@@ -182,15 +182,15 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node413 -->
+<!-- Node429&#45;&gt;Node443 -->
 <g id="edge11" class="edge">
-<title>Node399&#45;&gt;Node413</title>
+<title>Node429&#45;&gt;Node443</title>
 <path fill="none" stroke="#191970" d="M57.6585,-1160.7203C58.8304,-1257.1581 68.6573,-1678.2871 151,-1773 156.5162,-1779.3449 163.6164,-1784.0542 171.3218,-1787.5416"/>
 <polygon fill="#191970" stroke="#191970" points="61.1573,-1160.5763 57.5542,-1150.6129 54.1577,-1160.6486 61.1573,-1160.5763"/>
 </g>
-<!-- Node414 -->
+<!-- Node444 -->
 <g id="node13" class="node">
-<title>Node414</title>
+<title>Node444</title>
 <g id="a_node13"><a xlink:href="namespacesll__m__collective.html#a23ead6366850b7cc7994a054360a8e86" target="_top" xlink:title="Broadcasts an array of type &#39;sll_comp64&#39; from the process with rank &quot;root&quot; to all other processes of ...">
 <polygon fill="#ffffff" stroke="#000000" points="176.5,-1733 176.5,-1763 288.5,-1763 288.5,-1733 176.5,-1733"/>
 <text text-anchor="start" x="184.5" y="-1751" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_bcast</text>
@@ -198,15 +198,15 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node414 -->
+<!-- Node429&#45;&gt;Node444 -->
 <g id="edge12" class="edge">
-<title>Node399&#45;&gt;Node414</title>
+<title>Node429&#45;&gt;Node444</title>
 <path fill="none" stroke="#191970" d="M57.9332,-1160.9131C60.3363,-1253.0844 74.8494,-1637.4763 151,-1724 157.724,-1731.64 166.7441,-1736.9051 176.3341,-1740.5205"/>
 <polygon fill="#191970" stroke="#191970" points="61.4279,-1160.649 57.6874,-1150.7365 54.43,-1160.8181 61.4279,-1160.649"/>
 </g>
-<!-- Node415 -->
+<!-- Node445 -->
 <g id="node14" class="node">
-<title>Node415</title>
+<title>Node445</title>
 <g id="a_node14"><a xlink:href="namespacesll__m__collective.html#a9206b729fd41efd01618c3b596c266bb" target="_top" xlink:title="Broadcasts an array of type &#39;sll_comp32&#39; from the process with rank &quot;root&quot; to all other processes of ...">
 <polygon fill="#ffffff" stroke="#000000" points="176.5,-1684 176.5,-1714 288.5,-1714 288.5,-1684 176.5,-1684"/>
 <text text-anchor="start" x="184.5" y="-1702" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_bcast</text>
@@ -214,15 +214,15 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node415 -->
+<!-- Node429&#45;&gt;Node445 -->
 <g id="edge13" class="edge">
-<title>Node399&#45;&gt;Node415</title>
+<title>Node429&#45;&gt;Node445</title>
 <path fill="none" stroke="#191970" d="M58.2528,-1160.8798C61.9524,-1248.1628 80.9589,-1596.5571 151,-1675 157.7785,-1682.5917 166.8238,-1687.8345 176.4214,-1691.4431"/>
 <polygon fill="#191970" stroke="#191970" points="61.7445,-1160.6011 57.8438,-1150.7505 54.7502,-1160.8836 61.7445,-1160.6011"/>
 </g>
-<!-- Node416 -->
+<!-- Node446 -->
 <g id="node15" class="node">
-<title>Node416</title>
+<title>Node446</title>
 <g id="a_node15"><a xlink:href="namespacesll__m__collective.html#aff792c3cf8f33c94a6a625cc0df4b986" target="_top" xlink:title="Gathers together real values from a group of processes. ">
 <polygon fill="#ffffff" stroke="#000000" points="174,-1635 174,-1665 291,-1665 291,-1635 174,-1635"/>
 <text text-anchor="start" x="182" y="-1653" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_gather</text>
@@ -230,15 +230,15 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node416 -->
+<!-- Node429&#45;&gt;Node446 -->
 <g id="edge14" class="edge">
-<title>Node399&#45;&gt;Node416</title>
+<title>Node429&#45;&gt;Node446</title>
 <path fill="none" stroke="#191970" d="M58.6504,-1161.1074C63.7703,-1243.6811 87.114,-1555.671 151,-1626 157.149,-1632.7691 165.1,-1637.6672 173.6194,-1641.2034"/>
 <polygon fill="#191970" stroke="#191970" points="62.1155,-1160.4183 58.0246,-1150.6451 55.128,-1160.8363 62.1155,-1160.4183"/>
 </g>
-<!-- Node417 -->
+<!-- Node447 -->
 <g id="node16" class="node">
-<title>Node417</title>
+<title>Node447</title>
 <g id="a_node16"><a xlink:href="namespacesll__m__collective.html#a95a00f757ec1e7863920bc95dd107f06" target="_top" xlink:title="sll_collective_gather\l_real64">
 <polygon fill="#ffffff" stroke="#000000" points="174,-1586 174,-1616 291,-1616 291,-1586 174,-1586"/>
 <text text-anchor="start" x="182" y="-1604" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_gather</text>
@@ -246,15 +246,15 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node417 -->
+<!-- Node429&#45;&gt;Node447 -->
 <g id="edge15" class="edge">
-<title>Node399&#45;&gt;Node417</title>
+<title>Node429&#45;&gt;Node447</title>
 <path fill="none" stroke="#191970" d="M59.1164,-1161.0304C65.7301,-1238.1466 93.1625,-1514.6451 151,-1577 157.2191,-1583.7048 165.2062,-1588.5697 173.7401,-1592.0926"/>
 <polygon fill="#191970" stroke="#191970" points="62.5811,-1160.4605 58.2612,-1150.7864 55.6054,-1161.0429 62.5811,-1160.4605"/>
 </g>
-<!-- Node418 -->
+<!-- Node448 -->
 <g id="node17" class="node">
-<title>Node418</title>
+<title>Node448</title>
 <g id="a_node17"><a xlink:href="namespacesll__m__collective.html#a90f99174b4655b4dd74bf90019715b3b" target="_top" xlink:title="sll_collective_gather\l_logical">
 <polygon fill="#ffffff" stroke="#000000" points="174,-1537 174,-1567 291,-1567 291,-1537 174,-1537"/>
 <text text-anchor="start" x="182" y="-1555" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_gather</text>
@@ -262,30 +262,30 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node418 -->
+<!-- Node429&#45;&gt;Node448 -->
 <g id="edge16" class="edge">
-<title>Node399&#45;&gt;Node418</title>
+<title>Node429&#45;&gt;Node448</title>
 <path fill="none" stroke="#191970" d="M59.7317,-1160.9617C68.0753,-1232.1787 99.6156,-1472.437 151,-1527 157.2909,-1533.6801 165.3151,-1538.5909 173.8639,-1542.1975"/>
 <polygon fill="#191970" stroke="#191970" points="63.1716,-1160.2364 58.5545,-1150.7006 56.2172,-1161.0343 63.1716,-1160.2364"/>
 </g>
-<!-- Node419 -->
+<!-- Node449 -->
 <g id="node18" class="node">
-<title>Node419</title>
+<title>Node449</title>
 <g id="a_node18"><a xlink:href="namespacesll__m__collective.html#afd9d40fb05b44d26820f42f7407901e8" target="_top" xlink:title="Gathers real values into specified locations from all processes in a group. ">
 <polygon fill="#ffffff" stroke="#000000" points="153.5,-1498.5 153.5,-1517.5 311.5,-1517.5 311.5,-1498.5 153.5,-1498.5"/>
 <text text-anchor="middle" x="232.5" y="-1505.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_collective_gatherv_real</text>
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node419 -->
+<!-- Node429&#45;&gt;Node449 -->
 <g id="edge17" class="edge">
-<title>Node399&#45;&gt;Node419</title>
+<title>Node429&#45;&gt;Node449</title>
 <path fill="none" stroke="#191970" d="M60.1377,-1160.8261C69.4029,-1227.5103 102.5382,-1442.1324 151,-1489 154.9686,-1492.8381 159.5548,-1495.9553 164.4877,-1498.4812"/>
 <polygon fill="#191970" stroke="#191970" points="63.5896,-1160.2349 58.7711,-1150.7993 56.6538,-1161.1804 63.5896,-1160.2349"/>
 </g>
-<!-- Node420 -->
+<!-- Node450 -->
 <g id="node19" class="node">
-<title>Node420</title>
+<title>Node450</title>
 <g id="a_node19"><a xlink:href="namespacesll__m__collective.html#a93956b1afc2f792f79388dea511083fe" target="_top" xlink:title="Gathers real64 values into specified locations from all processes in a group. ">
 <polygon fill="#ffffff" stroke="#000000" points="165.5,-1449 165.5,-1479 299.5,-1479 299.5,-1449 165.5,-1449"/>
 <text text-anchor="start" x="173.5" y="-1467" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_collective_gatherv</text>
@@ -293,30 +293,30 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node420 -->
+<!-- Node429&#45;&gt;Node450 -->
 <g id="edge18" class="edge">
-<title>Node399&#45;&gt;Node420</title>
+<title>Node429&#45;&gt;Node450</title>
 <path fill="none" stroke="#191970" d="M61.1715,-1160.5258C72.7518,-1220.1774 110.1675,-1398.4278 151,-1439 155.1994,-1443.1727 160.0763,-1446.6517 165.3164,-1449.5521"/>
 <polygon fill="#191970" stroke="#191970" points="64.5776,-1159.7028 59.2605,-1150.5388 57.7024,-1161.0184 64.5776,-1159.7028"/>
 </g>
-<!-- Node421 -->
+<!-- Node451 -->
 <g id="node20" class="node">
-<title>Node421</title>
+<title>Node451</title>
 <g id="a_node20"><a xlink:href="namespacesll__m__collective.html#a8dab7b7d96c959eb3dedd3e19f4d61fe" target="_top" xlink:title="Gathers integer data from all tasks and distribute the combined data to all tasks. ">
 <polygon fill="#ffffff" stroke="#000000" points="159,-1410.5 159,-1429.5 306,-1429.5 306,-1410.5 159,-1410.5"/>
 <text text-anchor="middle" x="232.5" y="-1417.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_allgather_int</text>
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node421 -->
+<!-- Node429&#45;&gt;Node451 -->
 <g id="edge19" class="edge">
-<title>Node399&#45;&gt;Node421</title>
+<title>Node429&#45;&gt;Node451</title>
 <path fill="none" stroke="#191970" d="M58.4516,-1160.6749C61.9104,-1209.2992 77.8562,-1335.8958 151,-1401 155.341,-1404.8638 160.3152,-1407.9841 165.6187,-1410.4988"/>
 <polygon fill="#191970" stroke="#191970" points="61.9369,-1160.3253 57.8374,-1150.5557 54.9497,-1160.7494 61.9369,-1160.3253"/>
 </g>
-<!-- Node422 -->
+<!-- Node452 -->
 <g id="node21" class="node">
-<title>Node422</title>
+<title>Node452</title>
 <g id="a_node21"><a xlink:href="namespacesll__m__collective.html#ac6fd68dc8932ea38d0c68bcece483f2e" target="_top" xlink:title="sll_collective_allgather\l_real64">
 <polygon fill="#ffffff" stroke="#000000" points="168,-1361 168,-1391 297,-1391 297,-1361 168,-1361"/>
 <text text-anchor="start" x="176" y="-1379" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_allgather</text>
@@ -324,15 +324,15 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node422 -->
+<!-- Node429&#45;&gt;Node452 -->
 <g id="edge20" class="edge">
-<title>Node399&#45;&gt;Node422</title>
+<title>Node429&#45;&gt;Node452</title>
 <path fill="none" stroke="#191970" d="M60.5551,-1160.6174C68.0757,-1202.213 91.4004,-1299.7242 151,-1352 155.99,-1356.3768 161.744,-1359.9565 167.8392,-1362.884"/>
 <polygon fill="#191970" stroke="#191970" points="63.9903,-1159.9395 58.8694,-1150.6645 57.0886,-1161.1086 63.9903,-1159.9395"/>
 </g>
-<!-- Node423 -->
+<!-- Node453 -->
 <g id="node22" class="node">
-<title>Node423</title>
+<title>Node453</title>
 <g id="a_node22"><a xlink:href="namespacesll__m__collective.html#a78f61d53d5bdd42f97796955e07bfb4c" target="_top" xlink:title="Gathers real data from all tasks and deliver the combined data to all tasks. ">
 <polygon fill="#ffffff" stroke="#000000" points="165,-1312 165,-1342 300,-1342 300,-1312 165,-1312"/>
 <text text-anchor="start" x="173" y="-1330" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_allgatherv</text>
@@ -340,15 +340,15 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node423 -->
+<!-- Node429&#45;&gt;Node453 -->
 <g id="edge21" class="edge">
-<title>Node399&#45;&gt;Node423</title>
+<title>Node429&#45;&gt;Node453</title>
 <path fill="none" stroke="#191970" d="M63.3628,-1160.4143C74.6481,-1194.464 102.6484,-1264.9396 151,-1303 155.4042,-1306.4668 160.2967,-1309.4333 165.4354,-1311.9714"/>
 <polygon fill="#191970" stroke="#191970" points="66.6478,-1159.1951 60.2814,-1150.7264 59.9771,-1161.3169 66.6478,-1159.1951"/>
 </g>
-<!-- Node424 -->
+<!-- Node454 -->
 <g id="node23" class="node">
-<title>Node424</title>
+<title>Node454</title>
 <g id="a_node23"><a xlink:href="namespacesll__m__collective.html#ab3a27eaa8cbb7d6c15ac06fdbc6cfce2" target="_top" xlink:title="sll_s_collective_allgatherv\l_real64">
 <polygon fill="#ffffff" stroke="#000000" points="159.5,-1263 159.5,-1293 305.5,-1293 305.5,-1263 159.5,-1263"/>
 <text text-anchor="start" x="167.5" y="-1281" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_collective_allgatherv</text>
@@ -356,30 +356,30 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node424 -->
+<!-- Node429&#45;&gt;Node454 -->
 <g id="edge22" class="edge">
-<title>Node399&#45;&gt;Node424</title>
+<title>Node429&#45;&gt;Node454</title>
 <path fill="none" stroke="#191970" d="M68.1611,-1159.5111C83.4056,-1184.3647 113.7492,-1228.2518 151,-1253 156.7939,-1256.8493 163.2074,-1260.1278 169.8178,-1262.9154"/>
 <polygon fill="#191970" stroke="#191970" points="71.0381,-1157.5021 62.9076,-1150.7091 65.0273,-1161.0897 71.0381,-1157.5021"/>
 </g>
-<!-- Node425 -->
+<!-- Node455 -->
 <g id="node24" class="node">
-<title>Node425</title>
+<title>Node455</title>
 <g id="a_node24"><a xlink:href="namespacesll__m__collective.html#a8d1b630a6dbfca96c72de97f01993263" target="_top" xlink:title="Sends data from one process to all other processes in a communicator. ">
 <polygon fill="#ffffff" stroke="#000000" points="161,-1224.5 161,-1243.5 304,-1243.5 304,-1224.5 161,-1224.5"/>
 <text text-anchor="middle" x="232.5" y="-1231.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_scatter_real</text>
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node425 -->
+<!-- Node429&#45;&gt;Node455 -->
 <g id="edge23" class="edge">
-<title>Node399&#45;&gt;Node425</title>
+<title>Node429&#45;&gt;Node455</title>
 <path fill="none" stroke="#191970" d="M73.7892,-1157.6617C91.3139,-1174.6181 120.7611,-1200.4201 151,-1215 158.983,-1218.8491 167.7891,-1221.9426 176.5726,-1224.4221"/>
 <polygon fill="#191970" stroke="#191970" points="76.1868,-1155.1103 66.6163,-1150.5655 71.2638,-1160.0866 76.1868,-1155.1103"/>
 </g>
-<!-- Node426 -->
+<!-- Node456 -->
 <g id="node25" class="node">
-<title>Node426</title>
+<title>Node456</title>
 <g id="a_node25"><a xlink:href="namespacesll__m__collective.html#ade04fbeb0c43410cbefc6200e58f92c6" target="_top" xlink:title="Sends data from one process to all other processes in a communicator. ">
 <polygon fill="#ffffff" stroke="#000000" points="173,-1175 173,-1205 292,-1205 292,-1175 173,-1175"/>
 <text text-anchor="start" x="181" y="-1193" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_scatter</text>
@@ -387,15 +387,15 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node426 -->
+<!-- Node429&#45;&gt;Node456 -->
 <g id="edge24" class="edge">
-<title>Node399&#45;&gt;Node426</title>
+<title>Node429&#45;&gt;Node456</title>
 <path fill="none" stroke="#191970" d="M101.3484,-1153.2776C124.8346,-1159.8537 153.9616,-1168.0092 178.7966,-1174.963"/>
 <polygon fill="#191970" stroke="#191970" points="102.2306,-1149.89 91.6572,-1150.564 100.3431,-1156.6308 102.2306,-1149.89"/>
 </g>
-<!-- Node427 -->
+<!-- Node457 -->
 <g id="node26" class="node">
-<title>Node427</title>
+<title>Node457</title>
 <g id="a_node26"><a xlink:href="namespacesll__m__collective.html#a78e89442edf0c3e6c308fbcb994b8f5d" target="_top" xlink:title="Sends data from one process to all other processes in a communicator. ">
 <polygon fill="#ffffff" stroke="#000000" points="173,-1126 173,-1156 292,-1156 292,-1126 173,-1126"/>
 <text text-anchor="start" x="181" y="-1144" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_scatter</text>
@@ -403,30 +403,30 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node427 -->
+<!-- Node429&#45;&gt;Node457 -->
 <g id="edge25" class="edge">
-<title>Node399&#45;&gt;Node427</title>
+<title>Node429&#45;&gt;Node457</title>
 <path fill="none" stroke="#191970" d="M125.4413,-1141C141.1221,-1141 157.6861,-1141 172.9763,-1141"/>
 <polygon fill="#191970" stroke="#191970" points="125.2866,-1137.5001 115.2865,-1141 125.2865,-1144.5001 125.2866,-1137.5001"/>
 </g>
-<!-- Node428 -->
+<!-- Node458 -->
 <g id="node27" class="node">
-<title>Node428</title>
+<title>Node458</title>
 <g id="a_node27"><a xlink:href="namespacesll__m__collective.html#a236856042450d8918aee0abe8d8edaa9" target="_top" xlink:title="Scatters a buffer in parts to all processes in a communicator. ">
 <polygon fill="#ffffff" stroke="#000000" points="152.5,-1087.5 152.5,-1106.5 312.5,-1106.5 312.5,-1087.5 152.5,-1087.5"/>
 <text text-anchor="middle" x="232.5" y="-1094.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_collective_scatterv_real</text>
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node428 -->
+<!-- Node429&#45;&gt;Node458 -->
 <g id="edge26" class="edge">
-<title>Node399&#45;&gt;Node428</title>
+<title>Node429&#45;&gt;Node458</title>
 <path fill="none" stroke="#191970" d="M104.352,-1128.87C119.2553,-1125.0394 135.8122,-1120.8127 151,-1117 164.7068,-1113.5591 179.7273,-1109.8544 193.0982,-1106.5798"/>
 <polygon fill="#191970" stroke="#191970" points="103.1473,-1125.566 94.3357,-1131.4487 104.8926,-1132.3449 103.1473,-1125.566"/>
 </g>
-<!-- Node429 -->
+<!-- Node459 -->
 <g id="node28" class="node">
-<title>Node429</title>
+<title>Node459</title>
 <g id="a_node28"><a xlink:href="namespacesll__m__collective.html#a58faad76af1ad0a1b388771c8a3c9157" target="_top" xlink:title="Combines real values from all processes and distributes the result back to all processes. ">
 <polygon fill="#ffffff" stroke="#ff0000" points="162,-1038 162,-1068 303,-1068 303,-1038 162,-1038"/>
 <text text-anchor="start" x="170" y="-1056" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_collective_allreduce</text>
@@ -434,15 +434,15 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node429 -->
+<!-- Node429&#45;&gt;Node459 -->
 <g id="edge27" class="edge">
-<title>Node399&#45;&gt;Node429</title>
+<title>Node429&#45;&gt;Node459</title>
 <path fill="none" stroke="#191970" d="M77.3067,-1125.102C95.5494,-1111.0992 123.8262,-1090.9686 151,-1078 158.747,-1074.3028 167.1671,-1070.9976 175.5576,-1068.0966"/>
 <polygon fill="#191970" stroke="#191970" points="74.935,-1122.5133 69.2061,-1131.4257 79.2424,-1128.0311 74.935,-1122.5133"/>
 </g>
-<!-- Node432 -->
+<!-- Node462 -->
 <g id="node29" class="node">
-<title>Node432</title>
+<title>Node462</title>
 <g id="a_node29"><a xlink:href="namespacesll__m__collective.html#ae2c911311879388b315ec2cb2d55ea36" target="_top" xlink:title="Combines real values from all processes and distributes the result back to all processes. ">
 <polygon fill="#ffffff" stroke="#ff0000" points="167,-989 167,-1019 298,-1019 298,-989 167,-989"/>
 <text text-anchor="start" x="175" y="-1007" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_allreduce</text>
@@ -450,15 +450,15 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node432 -->
+<!-- Node429&#45;&gt;Node462 -->
 <g id="edge28" class="edge">
-<title>Node399&#45;&gt;Node432</title>
+<title>Node429&#45;&gt;Node462</title>
 <path fill="none" stroke="#191970" d="M68.1611,-1122.4889C83.4056,-1097.6353 113.7492,-1053.7482 151,-1029 156.7939,-1025.1507 163.2074,-1021.8722 169.8178,-1019.0846"/>
 <polygon fill="#191970" stroke="#191970" points="65.0273,-1120.9103 62.9076,-1131.2909 71.0381,-1124.4979 65.0273,-1120.9103"/>
 </g>
-<!-- Node435 -->
+<!-- Node465 -->
 <g id="node30" class="node">
-<title>Node435</title>
+<title>Node465</title>
 <g id="a_node30"><a xlink:href="namespacesll__m__collective.html#a58358f9e2a29a955f1a74799e8d1ef82" target="_top" xlink:title="Combines real values from all processes and distributes the result back to all processes. ">
 <polygon fill="#ffffff" stroke="#000000" points="167,-940 167,-970 298,-970 298,-940 167,-940"/>
 <text text-anchor="start" x="175" y="-958" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_allreduce</text>
@@ -466,15 +466,15 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node435 -->
+<!-- Node429&#45;&gt;Node465 -->
 <g id="edge29" class="edge">
-<title>Node399&#45;&gt;Node435</title>
+<title>Node429&#45;&gt;Node465</title>
 <path fill="none" stroke="#191970" d="M63.441,-1121.7591C74.8489,-1088.0035 103.0348,-1018.0901 151,-980 155.8678,-976.1344 161.3321,-972.8642 167.0661,-970.0982"/>
 <polygon fill="#191970" stroke="#191970" points="60.0824,-1120.7699 60.3229,-1131.362 66.7402,-1122.9318 60.0824,-1120.7699"/>
 </g>
-<!-- Node436 -->
+<!-- Node466 -->
 <g id="node31" class="node">
-<title>Node436</title>
+<title>Node466</title>
 <g id="a_node31"><a xlink:href="namespacesll__m__collective.html#a2754d94f0999ff85b88c176dfd0a00a1" target="_top" xlink:title="Combines complex values from all processes and distributes the result back to all processes...">
 <polygon fill="#ffffff" stroke="#ff0000" points="167,-891 167,-921 298,-921 298,-891 167,-891"/>
 <text text-anchor="start" x="175" y="-909" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_allreduce</text>
@@ -482,15 +482,15 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node436 -->
+<!-- Node429&#45;&gt;Node466 -->
 <g id="edge30" class="edge">
-<title>Node399&#45;&gt;Node436</title>
+<title>Node429&#45;&gt;Node466</title>
 <path fill="none" stroke="#191970" d="M60.63,-1121.5254C68.2954,-1080.2233 91.8842,-983.3499 151,-931 155.6536,-926.879 160.974,-923.4373 166.617,-920.5629"/>
 <polygon fill="#191970" stroke="#191970" points="57.1768,-1120.9547 58.9081,-1131.4071 64.0729,-1122.1564 57.1768,-1120.9547"/>
 </g>
-<!-- Node439 -->
+<!-- Node469 -->
 <g id="node32" class="node">
-<title>Node439</title>
+<title>Node469</title>
 <g id="a_node32"><a xlink:href="namespacesll__m__collective.html#a53667aea76e2fe9f17e7a9cac24e352f" target="_top" xlink:title="sll_collective_allreduce\l_comp32">
 <polygon fill="#ffffff" stroke="#ff0000" points="167,-842 167,-872 298,-872 298,-842 167,-842"/>
 <text text-anchor="start" x="175" y="-860" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_allreduce</text>
@@ -498,15 +498,15 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node439 -->
+<!-- Node429&#45;&gt;Node469 -->
 <g id="edge31" class="edge">
-<title>Node399&#45;&gt;Node439</title>
+<title>Node429&#45;&gt;Node469</title>
 <path fill="none" stroke="#191970" d="M58.7849,-1121.3761C62.9928,-1073.3899 80.492,-949.1481 151,-882 155.6085,-877.6111 160.9682,-873.9913 166.6968,-871.006"/>
 <polygon fill="#191970" stroke="#191970" points="55.293,-1121.1372 58.0087,-1131.378 62.272,-1121.6789 55.293,-1121.1372"/>
 </g>
-<!-- Node442 -->
+<!-- Node472 -->
 <g id="node33" class="node">
-<title>Node442</title>
+<title>Node472</title>
 <g id="a_node33"><a xlink:href="namespacesll__m__collective.html#a9c298f006bc891c360f347330868b9c7" target="_top" xlink:title="Combines complex values from all processes and distributes the result back to all processes...">
 <polygon fill="#ffffff" stroke="#ff0000" points="167,-793 167,-823 298,-823 298,-793 167,-793"/>
 <text text-anchor="start" x="175" y="-811" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_allreduce</text>
@@ -514,15 +514,15 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node442 -->
+<!-- Node429&#45;&gt;Node472 -->
 <g id="edge32" class="edge">
-<title>Node399&#45;&gt;Node442</title>
+<title>Node429&#45;&gt;Node472</title>
 <path fill="none" stroke="#191970" d="M60.9351,-1121.6131C72.0765,-1060.7764 108.9333,-875.1892 151,-833 155.598,-828.3886 161.023,-824.6239 166.855,-821.551"/>
 <polygon fill="#191970" stroke="#191970" points="57.49,-1120.9955 59.1585,-1131.4581 64.3788,-1122.2386 57.49,-1120.9955"/>
 </g>
-<!-- Node445 -->
+<!-- Node475 -->
 <g id="node34" class="node">
-<title>Node445</title>
+<title>Node475</title>
 <g id="a_node34"><a xlink:href="namespacesll__m__collective.html#a232c8fc8720c6e1ee791617e22f8bf72" target="_top" xlink:title="Combines logical values from all processes and distributes the result back to all processes...">
 <polygon fill="#ffffff" stroke="#000000" points="162,-744 162,-774 303,-774 303,-744 162,-744"/>
 <text text-anchor="start" x="170" y="-762" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_collective_allreduce</text>
@@ -530,30 +530,30 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node445 -->
+<!-- Node429&#45;&gt;Node475 -->
 <g id="edge33" class="edge">
-<title>Node399&#45;&gt;Node445</title>
+<title>Node429&#45;&gt;Node475</title>
 <path fill="none" stroke="#191970" d="M60.1258,-1121.2371C69.4651,-1053.7652 103.0961,-833.9336 151,-784 154.6885,-780.1552 158.9513,-776.8974 163.554,-774.1374"/>
 <polygon fill="#191970" stroke="#191970" points="56.6293,-1120.9747 58.7507,-1131.3549 63.5656,-1121.9174 56.6293,-1120.9747"/>
 </g>
-<!-- Node446 -->
+<!-- Node476 -->
 <g id="node35" class="node">
-<title>Node446</title>
+<title>Node476</title>
 <g id="a_node35"><a xlink:href="namespacesll__m__collective.html#a4a8c68ed0dcd8da51dd472a30ec1e996" target="_top" xlink:title="Reduces integer values on all processes to a single value. ">
 <polygon fill="#ffffff" stroke="#ff0000" points="159,-705.5 159,-724.5 306,-724.5 306,-705.5 159,-705.5"/>
 <text text-anchor="middle" x="232.5" y="-712.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_collective_reduce_int</text>
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node446 -->
+<!-- Node429&#45;&gt;Node476 -->
 <g id="edge34" class="edge">
-<title>Node399&#45;&gt;Node446</title>
+<title>Node429&#45;&gt;Node476</title>
 <path fill="none" stroke="#191970" d="M59.3306,-1121.3372C66.5556,-1047.9446 95.4491,-791.3507 151,-735 155.1935,-730.7461 160.1342,-727.3418 165.4753,-724.6241"/>
 <polygon fill="#191970" stroke="#191970" points="55.8282,-1121.1958 58.3563,-1131.4846 62.7961,-1121.8649 55.8282,-1121.1958"/>
 </g>
-<!-- Node447 -->
+<!-- Node477 -->
 <g id="node36" class="node">
-<title>Node447</title>
+<title>Node477</title>
 <g id="a_node36"><a xlink:href="namespacesll__m__collective.html#af60e669d9e58597b27784437549e8d07" target="_top" xlink:title="Reduces real values on all processes to a single value. ">
 <polygon fill="#ffffff" stroke="#ff0000" points="168,-656 168,-686 297,-686 297,-656 168,-656"/>
 <text text-anchor="start" x="176" y="-674" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_collective_reduce</text>
@@ -561,15 +561,15 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node447 -->
+<!-- Node429&#45;&gt;Node477 -->
 <g id="edge35" class="edge">
-<title>Node399&#45;&gt;Node447</title>
+<title>Node429&#45;&gt;Node477</title>
 <path fill="none" stroke="#191970" d="M59.0355,-1121.0877C65.4291,-1043.1819 92.3854,-760.1769 151,-696 155.691,-690.8638 161.4067,-686.7709 167.6126,-683.5113"/>
 <polygon fill="#191970" stroke="#191970" points="55.5187,-1121.1599 58.212,-1131.4067 62.4965,-1121.7169 55.5187,-1121.1599"/>
 </g>
-<!-- Node448 -->
+<!-- Node478 -->
 <g id="node37" class="node">
-<title>Node448</title>
+<title>Node478</title>
 <g id="a_node37"><a xlink:href="namespacesll__m__collective.html#a7b5259be20c1cf061c6d97f243147eb3" target="_top" xlink:title="sll_s_collective_reduce\l_real64">
 <polygon fill="#ffffff" stroke="#ff0000" points="168,-607 168,-637 297,-637 297,-607 168,-607"/>
 <text text-anchor="start" x="176" y="-625" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_collective_reduce</text>
@@ -577,15 +577,15 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node448 -->
+<!-- Node429&#45;&gt;Node478 -->
 <g id="edge36" class="edge">
-<title>Node399&#45;&gt;Node448</title>
+<title>Node429&#45;&gt;Node478</title>
 <path fill="none" stroke="#191970" d="M58.5865,-1121.0562C63.5106,-1037.8306 86.3642,-719.2096 151,-647 155.738,-641.7068 161.5645,-637.5196 167.9048,-634.2098"/>
 <polygon fill="#191970" stroke="#191970" points="55.0839,-1121.004 58.0082,-1131.1873 62.0725,-1121.403 55.0839,-1121.004"/>
 </g>
-<!-- Node449 -->
+<!-- Node479 -->
 <g id="node38" class="node">
-<title>Node449</title>
+<title>Node479</title>
 <g id="a_node38"><a xlink:href="namespacesll__m__collective.html#ab189d3ef05fd7c8cadabd2963d2b749a" target="_top" xlink:title="sll_collective_reduce\l_real64_2d">
 <polygon fill="#ffffff" stroke="#000000" points="173,-558 173,-588 292,-588 292,-558 173,-558"/>
 <text text-anchor="start" x="181" y="-576" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_reduce</text>
@@ -593,15 +593,15 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node449 -->
+<!-- Node429&#45;&gt;Node479 -->
 <g id="edge37" class="edge">
-<title>Node399&#45;&gt;Node449</title>
+<title>Node429&#45;&gt;Node479</title>
 <path fill="none" stroke="#191970" d="M58.2136,-1121.078C61.7664,-1032.8705 80.3038,-678.3067 151,-598 156.8676,-591.3347 164.4617,-586.4205 172.6507,-582.8027"/>
 <polygon fill="#191970" stroke="#191970" points="54.7153,-1120.9696 57.8297,-1131.0963 61.7102,-1121.2377 54.7153,-1120.9696"/>
 </g>
-<!-- Node450 -->
+<!-- Node480 -->
 <g id="node39" class="node">
-<title>Node450</title>
+<title>Node480</title>
 <g id="a_node39"><a xlink:href="namespacesll__m__collective.html#ae703fe55ecd4d44c738c6c1c160579df" target="_top" xlink:title="Reduces complex values on all processes to a single value. ">
 <polygon fill="#ffffff" stroke="#ff0000" points="173,-509 173,-539 292,-539 292,-509 173,-509"/>
 <text text-anchor="start" x="181" y="-527" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_reduce</text>
@@ -609,15 +609,15 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node450 -->
+<!-- Node429&#45;&gt;Node480 -->
 <g id="edge38" class="edge">
-<title>Node399&#45;&gt;Node450</title>
+<title>Node429&#45;&gt;Node480</title>
 <path fill="none" stroke="#191970" d="M57.902,-1121.0859C60.1749,-1028.0993 74.2254,-637.4409 151,-549 156.9183,-542.1824 164.6435,-537.1944 172.9786,-533.5511"/>
 <polygon fill="#191970" stroke="#191970" points="54.4021,-1121.0476 57.6754,-1131.1241 61.4003,-1121.2056 54.4021,-1121.0476"/>
 </g>
-<!-- Node451 -->
+<!-- Node481 -->
 <g id="node40" class="node">
-<title>Node451</title>
+<title>Node481</title>
 <g id="a_node40"><a xlink:href="namespacesll__m__collective.html#a5eb76797f4689a2e466569436b821115" target="_top" xlink:title="sll_collective_reduce\l_comp32">
 <polygon fill="#ffffff" stroke="#ff0000" points="173,-460 173,-490 292,-490 292,-460 173,-460"/>
 <text text-anchor="start" x="181" y="-478" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_reduce</text>
@@ -625,15 +625,15 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node451 -->
+<!-- Node429&#45;&gt;Node481 -->
 <g id="edge39" class="edge">
-<title>Node399&#45;&gt;Node451</title>
+<title>Node429&#45;&gt;Node481</title>
 <path fill="none" stroke="#191970" d="M59.1444,-1121.0452C67.8055,-1017.953 109.3143,-548.5964 151,-500 156.8779,-493.1476 164.5821,-488.1414 172.9084,-484.4906"/>
 <polygon fill="#191970" stroke="#191970" points="55.6335,-1121.0315 58.2913,-1131.2875 62.6094,-1121.6126 55.6335,-1121.0315"/>
 </g>
-<!-- Node452 -->
+<!-- Node482 -->
 <g id="node41" class="node">
-<title>Node452</title>
+<title>Node482</title>
 <g id="a_node41"><a xlink:href="namespacesll__m__collective.html#aa4f6031897a239a580ca064157f8cd21" target="_top" xlink:title="Reduces logical values on all processes to a single value. ">
 <polygon fill="#ffffff" stroke="#000000" points="168,-411 168,-441 297,-441 297,-411 168,-411"/>
 <text text-anchor="start" x="176" y="-429" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_collective_reduce</text>
@@ -641,30 +641,30 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node452 -->
+<!-- Node429&#45;&gt;Node482 -->
 <g id="edge40" class="edge">
-<title>Node399&#45;&gt;Node452</title>
+<title>Node429&#45;&gt;Node482</title>
 <path fill="none" stroke="#191970" d="M58.9154,-1121.226C66.7656,-1013.8521 106.2257,-503.7366 151,-451 155.5978,-445.5845 161.3367,-441.321 167.6271,-437.9677"/>
 <polygon fill="#191970" stroke="#191970" points="55.4161,-1121.0907 58.1844,-1131.3175 62.3978,-1121.5965 55.4161,-1121.0907"/>
 </g>
-<!-- Node453 -->
+<!-- Node483 -->
 <g id="node42" class="node">
-<title>Node453</title>
+<title>Node483</title>
 <g id="a_node42"><a xlink:href="namespacesll__m__collective.html#aa66cb9d644105795e81bb937f540ef8f" target="_top" xlink:title="Sends integer data from all to all processes. ">
 <polygon fill="#ffffff" stroke="#000000" points="158.5,-372.5 158.5,-391.5 306.5,-391.5 306.5,-372.5 158.5,-372.5"/>
 <text text-anchor="middle" x="232.5" y="-379.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_collective_alltoall_int</text>
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node453 -->
+<!-- Node429&#45;&gt;Node483 -->
 <g id="edge41" class="edge">
-<title>Node399&#45;&gt;Node453</title>
+<title>Node429&#45;&gt;Node483</title>
 <path fill="none" stroke="#191970" d="M58.6784,-1121.2012C65.5199,-1009.1418 101.5514,-457.4774 151,-402 154.7807,-397.7584 159.3009,-394.345 164.2476,-391.6059"/>
 <polygon fill="#191970" stroke="#191970" points="55.1714,-1121.2124 58.0624,-1131.4052 62.1587,-1121.6343 55.1714,-1121.2124"/>
 </g>
-<!-- Node454 -->
+<!-- Node484 -->
 <g id="node43" class="node">
-<title>Node454</title>
+<title>Node484</title>
 <g id="a_node43"><a xlink:href="namespacesll__m__collective.html#a2a65c91d2073effaff0fe89980a68103" target="_top" xlink:title="sll_s_collective_alltoallv\l_int_simple">
 <polygon fill="#ffffff" stroke="#000000" points="350,-348 350,-378 486,-378 486,-348 350,-348"/>
 <text text-anchor="start" x="358" y="-366" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_collective_alltoallv</text>
@@ -672,15 +672,15 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node454 -->
+<!-- Node429&#45;&gt;Node484 -->
 <g id="edge49" class="edge">
-<title>Node399&#45;&gt;Node454</title>
+<title>Node429&#45;&gt;Node484</title>
 <path fill="none" stroke="#191970" d="M58.3472,-1121.0514C63.4954,-1004.505 92.3326,-415.0389 151,-363 212.8998,-308.0939 318.2883,-329.7561 376.4247,-347.9039"/>
 <polygon fill="#191970" stroke="#191970" points="54.8374,-1121.2024 57.9003,-1131.3449 61.8308,-1121.5061 54.8374,-1121.2024"/>
 </g>
-<!-- Node455 -->
+<!-- Node485 -->
 <g id="node44" class="node">
-<title>Node455</title>
+<title>Node485</title>
 <g id="a_node44"><a xlink:href="namespacesll__m__collective.html#a58b101c8bf5b1e4743459cd57510921e" target="_top" xlink:title="sll_collective_alltoall\l_double">
 <polygon fill="#ffffff" stroke="#000000" points="173,-285 173,-315 292,-315 292,-285 173,-285"/>
 <text text-anchor="start" x="181" y="-303" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_alltoall</text>
@@ -688,15 +688,15 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node455 -->
+<!-- Node429&#45;&gt;Node485 -->
 <g id="edge43" class="edge">
-<title>Node399&#45;&gt;Node455</title>
+<title>Node429&#45;&gt;Node485</title>
 <path fill="none" stroke="#191970" d="M58.5486,-1121.2342C64.9703,-1003.1962 100.3891,-394.3519 151,-330 156.7788,-322.6522 164.5389,-317.1038 172.9816,-312.9143"/>
 <polygon fill="#191970" stroke="#191970" points="55.0465,-1121.1815 58.004,-1131.3551 62.0363,-1121.5576 55.0465,-1121.1815"/>
 </g>
-<!-- Node456 -->
+<!-- Node486 -->
 <g id="node45" class="node">
-<title>Node456</title>
+<title>Node486</title>
 <g id="a_node45"><a xlink:href="namespacesll__m__collective.html#afbefcdace51ce1ad308102217db348b4" target="_top" xlink:title="sll_collective_alltoall\l_complex_double">
 <polygon fill="#ffffff" stroke="#000000" points="173,-236 173,-266 292,-266 292,-236 173,-236"/>
 <text text-anchor="start" x="181" y="-254" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_alltoall</text>
@@ -704,30 +704,30 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node456 -->
+<!-- Node429&#45;&gt;Node486 -->
 <g id="edge44" class="edge">
-<title>Node399&#45;&gt;Node456</title>
+<title>Node429&#45;&gt;Node486</title>
 <path fill="none" stroke="#191970" d="M58.3442,-1121.0075C63.7265,-997.5751 94.8218,-342.2437 151,-275 156.7687,-268.0951 164.4156,-263.1181 172.7182,-259.5424"/>
 <polygon fill="#191970" stroke="#191970" points="54.8366,-1121.1133 57.9037,-1131.2545 61.8301,-1121.4141 54.8366,-1121.1133"/>
 </g>
-<!-- Node457 -->
+<!-- Node487 -->
 <g id="node46" class="node">
-<title>Node457</title>
+<title>Node487</title>
 <g id="a_node46"><a xlink:href="namespacesll__m__collective.html#a4ab2422dd7186fe899c788dfa4befe72" target="_top" xlink:title="Sends real data from all to all processes; each process may send a different amount of data and provi...">
 <polygon fill="#ffffff" stroke="#000000" points="152.5,-197.5 152.5,-216.5 312.5,-216.5 312.5,-197.5 152.5,-197.5"/>
 <text text-anchor="middle" x="232.5" y="-204.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_collective_alltoallv_real</text>
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node457 -->
+<!-- Node429&#45;&gt;Node487 -->
 <g id="edge45" class="edge">
-<title>Node399&#45;&gt;Node457</title>
+<title>Node429&#45;&gt;Node487</title>
 <path fill="none" stroke="#191970" d="M58.1692,-1121.0323C62.621,-993.4645 89.6763,-295.6663 151,-226 154.2639,-222.2921 158.0984,-219.234 162.2943,-216.7184"/>
 <polygon fill="#191970" stroke="#191970" points="54.6628,-1121.162 57.818,-1131.2761 61.6587,-1121.4019 54.6628,-1121.162"/>
 </g>
-<!-- Node458 -->
+<!-- Node488 -->
 <g id="node47" class="node">
-<title>Node458</title>
+<title>Node488</title>
 <g id="a_node47"><a xlink:href="namespacesll__m__collective.html#ae09231d0d76fe46ff2592bd3d0c10e27" target="_top" xlink:title="sll_s_collective_alltoallv\l_double">
 <polygon fill="#ffffff" stroke="#000000" points="164.5,-148 164.5,-178 300.5,-178 300.5,-148 164.5,-148"/>
 <text text-anchor="start" x="172.5" y="-166" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_collective_alltoallv</text>
@@ -735,15 +735,15 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node458 -->
+<!-- Node429&#45;&gt;Node488 -->
 <g id="edge46" class="edge">
-<title>Node399&#45;&gt;Node458</title>
+<title>Node429&#45;&gt;Node488</title>
 <path fill="none" stroke="#191970" d="M58.1322,-1121.4729C62.4814,-992.2421 89.6416,-263.032 151,-188 154.7476,-183.4172 159.3139,-179.6562 164.3514,-176.5721"/>
 <polygon fill="#191970" stroke="#191970" points="54.6331,-1121.3896 57.8004,-1131.4999 61.6293,-1121.6211 54.6331,-1121.3896"/>
 </g>
-<!-- Node459 -->
+<!-- Node489 -->
 <g id="node48" class="node">
-<title>Node459</title>
+<title>Node489</title>
 <g id="a_node48"><a xlink:href="namespacesll__m__collective.html#a791a019c8abb4bd59c49410e3e605c8c" target="_top" xlink:title="sll_collective_alltoallv\l_complex_double">
 <polygon fill="#ffffff" stroke="#000000" points="170,-99 170,-129 295,-129 295,-99 170,-99"/>
 <text text-anchor="start" x="178" y="-117" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_alltoallv</text>
@@ -751,30 +751,30 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node459 -->
+<!-- Node429&#45;&gt;Node489 -->
 <g id="edge47" class="edge">
-<title>Node399&#45;&gt;Node459</title>
+<title>Node429&#45;&gt;Node489</title>
 <path fill="none" stroke="#191970" d="M58.0272,-1121.2704C61.7692,-987.5407 86.0671,-216.886 151,-138 156.0619,-131.8503 162.6147,-127.2272 169.8041,-123.7602"/>
 <polygon fill="#191970" stroke="#191970" points="54.5275,-1121.2151 57.7519,-1131.3073 61.5248,-1121.4071 54.5275,-1121.2151"/>
 </g>
-<!-- Node460 -->
+<!-- Node490 -->
 <g id="node49" class="node">
-<title>Node460</title>
+<title>Node490</title>
 <g id="a_node49"><a xlink:href="namespacesll__m__collective.html#ab5ba42bf69215f71166cd562546f0704" target="_top" xlink:title="Sends integer data from all to all processes; each process may send a different amount of data and pr...">
 <polygon fill="#ffffff" stroke="#000000" points="155.5,-60.5 155.5,-79.5 309.5,-79.5 309.5,-60.5 155.5,-60.5"/>
 <text text-anchor="middle" x="232.5" y="-67.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_collective_alltoallv_int</text>
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node460 -->
+<!-- Node429&#45;&gt;Node490 -->
 <g id="edge48" class="edge">
-<title>Node399&#45;&gt;Node460</title>
+<title>Node429&#45;&gt;Node490</title>
 <path fill="none" stroke="#191970" d="M57.888,-1121.1319C60.7603,-983.0888 80.6064,-170.0413 151,-89 154.2393,-85.2707 158.0558,-82.1968 162.239,-79.6701"/>
 <polygon fill="#191970" stroke="#191970" points="54.3824,-1121.3782 57.6792,-1131.447 61.3809,-1121.5199 54.3824,-1121.3782"/>
 </g>
-<!-- Node461 -->
+<!-- Node491 -->
 <g id="node50" class="node">
-<title>Node461</title>
+<title>Node491</title>
 <g id="a_node50"><a xlink:href="namespacesll__m__point__to__point__comms.html#ac3b701c44660ce387e7c0e50adfa8c8f" target="_top" xlink:title="sll_m_point_to_point\l_comms::sll_s_comm_receive\l_real64">
 <polygon fill="#ffffff" stroke="#000000" points="151,-.5 151,-41.5 314,-41.5 314,-.5 151,-.5"/>
 <text text-anchor="start" x="159" y="-29.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_point_to_point</text>
@@ -783,21 +783,21 @@
 </a>
 </g>
 </g>
-<!-- Node399&#45;&gt;Node461 -->
+<!-- Node429&#45;&gt;Node491 -->
 <g id="edge50" class="edge">
-<title>Node399&#45;&gt;Node461</title>
+<title>Node429&#45;&gt;Node491</title>
 <path fill="none" stroke="#191970" d="M57.932,-1121.3748C61.1706,-981.5705 83.408,-139.576 151,-51 153.6525,-47.524 156.7499,-44.4506 160.1574,-41.7331"/>
 <polygon fill="#191970" stroke="#191970" points="54.4308,-1121.3916 57.7033,-1131.4684 61.429,-1121.5502 54.4308,-1121.3916"/>
 </g>
-<!-- Node406&#45;&gt;Node407 -->
+<!-- Node436&#45;&gt;Node437 -->
 <g id="edge5" class="edge">
-<title>Node406&#45;&gt;Node407</title>
+<title>Node436&#45;&gt;Node437</title>
 <path fill="none" stroke="#191970" d="M306.7876,-2116.391C323.3542,-2114.6942 340.7398,-2112.9134 356.7131,-2111.2774"/>
 <polygon fill="#191970" stroke="#191970" points="306.1896,-2112.9339 296.5983,-2117.4347 306.9029,-2119.8974 306.1896,-2112.9339"/>
 </g>
-<!-- Node453&#45;&gt;Node454 -->
+<!-- Node483&#45;&gt;Node484 -->
 <g id="edge42" class="edge">
-<title>Node453&#45;&gt;Node454</title>
+<title>Node483&#45;&gt;Node484</title>
 <path fill="none" stroke="#191970" d="M316.7015,-373.3756C327.7552,-372.2434 338.9722,-371.0945 349.7174,-369.9939"/>
 <polygon fill="#191970" stroke="#191970" points="316.2055,-369.908 306.6142,-374.4088 316.9188,-376.8716 316.2055,-369.908"/>
 </g>

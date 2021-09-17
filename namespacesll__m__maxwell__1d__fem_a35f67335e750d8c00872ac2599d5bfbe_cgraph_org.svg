@@ -9,30 +9,30 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 182)">
 <title>compute_e_from_j_1d_fem</title>
 <polygon fill="#ffffff" stroke="transparent" points="-4,4 -4,-182 561,-182 561,4 -4,4"/>
-<!-- Node0 -->
+<!-- Node10 -->
 <g id="node1" class="node">
-<title>Node0</title>
+<title>Node10</title>
 <polygon fill="#bfbfbf" stroke="#000000" points="0,-79 0,-98 149,-98 149,-79 0,-79"/>
 <text text-anchor="middle" x="74.5" y="-86" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">compute_e_from_j_1d_fem</text>
 </g>
-<!-- Node1 -->
+<!-- Node11 -->
 <g id="node2" class="node">
-<title>Node1</title>
+<title>Node11</title>
 <g id="a_node2"><a xlink:href="namespacesll__m__maxwell__1d__fem.html#a0292d383eb02a02563a4a11367866848" target="_top" xlink:title="solve_circulant">
 <polygon fill="#ffffff" stroke="#000000" points="185,-79 185,-98 275,-98 275,-79 185,-79"/>
 <text text-anchor="middle" x="230" y="-86" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">solve_circulant</text>
 </a>
 </g>
 </g>
-<!-- Node0&#45;&gt;Node1 -->
+<!-- Node10&#45;&gt;Node11 -->
 <g id="edge1" class="edge">
-<title>Node0&#45;&gt;Node1</title>
+<title>Node10&#45;&gt;Node11</title>
 <path fill="none" stroke="#191970" d="M149.0618,-88.5C157.6115,-88.5 166.2126,-88.5 174.4508,-88.5"/>
 <polygon fill="#191970" stroke="#191970" points="174.6606,-92.0001 184.6605,-88.5 174.6605,-85.0001 174.6606,-92.0001"/>
 </g>
-<!-- Node2 -->
+<!-- Node12 -->
 <g id="node3" class="node">
-<title>Node2</title>
+<title>Node12</title>
 <g id="a_node3"><a xlink:href="namespacesll__m__fft.html#ac3f0bdd60b0eb75e936d13bf15f06ea2" target="_top" xlink:title="Compute fast Fourier transform in real to real mode. ">
 <polygon fill="#ffffff" stroke="#000000" points="311,-73.5 311,-103.5 413,-103.5 413,-73.5 311,-73.5"/>
 <text text-anchor="start" x="319" y="-91.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_fft::sll_s_fft</text>
@@ -40,15 +40,15 @@
 </a>
 </g>
 </g>
-<!-- Node1&#45;&gt;Node2 -->
+<!-- Node11&#45;&gt;Node12 -->
 <g id="edge2" class="edge">
-<title>Node1&#45;&gt;Node2</title>
+<title>Node11&#45;&gt;Node12</title>
 <path fill="none" stroke="#191970" d="M275.0577,-88.5C283.3246,-88.5 292.0804,-88.5 300.7275,-88.5"/>
 <polygon fill="#191970" stroke="#191970" points="300.7927,-92.0001 310.7927,-88.5 300.7926,-85.0001 300.7927,-92.0001"/>
 </g>
-<!-- Node3 -->
+<!-- Node13 -->
 <g id="node4" class="node">
-<title>Node3</title>
+<title>Node13</title>
 <g id="a_node4"><a xlink:href="namespacesll__m__fft.html#a07ee4cd52316d2769eee6c35861d1482" target="_top" xlink:title="Compute fast Fourier transform in real to complex mode. ">
 <polygon fill="#ffffff" stroke="#000000" points="452,-147.5 452,-177.5 554,-177.5 554,-147.5 452,-147.5"/>
 <text text-anchor="start" x="460" y="-165.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_fft::sll_s_fft</text>
@@ -56,15 +56,15 @@
 </a>
 </g>
 </g>
-<!-- Node2&#45;&gt;Node3 -->
+<!-- Node12&#45;&gt;Node13 -->
 <g id="edge3" class="edge">
-<title>Node2&#45;&gt;Node3</title>
+<title>Node12&#45;&gt;Node13</title>
 <path fill="none" stroke="#191970" d="M386.7503,-103.6376C403.9585,-113.935 427.5651,-127.6139 449,-138.5 452.0657,-140.057 455.2543,-141.6176 458.481,-143.1543"/>
 <polygon fill="#191970" stroke="#191970" points="457.0618,-146.3543 467.6051,-147.3987 460.0143,-140.0074 457.0618,-146.3543"/>
 </g>
-<!-- Node4 -->
+<!-- Node14 -->
 <g id="node5" class="node">
-<title>Node4</title>
+<title>Node14</title>
 <g id="a_node5"><a xlink:href="namespacesll__m__fft.html#a4b923cd83abdc837029b1eae8fe0d4ed" target="_top" xlink:title="Subroutine to set a complex mode to the real representation of r2r. ">
 <polygon fill="#ffffff" stroke="#000000" points="449.5,-98.5 449.5,-128.5 556.5,-128.5 556.5,-98.5 449.5,-98.5"/>
 <text text-anchor="start" x="457.5" y="-116.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_fft::sll_s_fft</text>
@@ -72,15 +72,15 @@
 </a>
 </g>
 </g>
-<!-- Node2&#45;&gt;Node4 -->
+<!-- Node12&#45;&gt;Node14 -->
 <g id="edge4" class="edge">
-<title>Node2&#45;&gt;Node4</title>
+<title>Node12&#45;&gt;Node14</title>
 <path fill="none" stroke="#191970" d="M413.3031,-97.5963C421.6792,-99.0814 430.4466,-100.6359 439.0812,-102.1669"/>
 <polygon fill="#191970" stroke="#191970" points="438.6675,-105.648 449.125,-103.9477 439.8897,-98.7555 438.6675,-105.648"/>
 </g>
-<!-- Node5 -->
+<!-- Node15 -->
 <g id="node6" class="node">
-<title>Node5</title>
+<title>Node15</title>
 <g id="a_node6"><a xlink:href="namespacesll__m__fft.html#af3511e8ad158957634b1fd7ee1d2e73b" target="_top" xlink:title="Function to reconstruct a complex FFT mode from the data of a r2r transform. ">
 <polygon fill="#ffffff" stroke="#000000" points="449,-49.5 449,-79.5 557,-79.5 557,-49.5 449,-49.5"/>
 <text text-anchor="start" x="457" y="-67.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_fft::sll_f_fft</text>
@@ -88,15 +88,15 @@
 </a>
 </g>
 </g>
-<!-- Node2&#45;&gt;Node5 -->
+<!-- Node12&#45;&gt;Node15 -->
 <g id="edge5" class="edge">
-<title>Node2&#45;&gt;Node5</title>
+<title>Node12&#45;&gt;Node15</title>
 <path fill="none" stroke="#191970" d="M413.3031,-79.7676C421.566,-78.3611 430.2097,-76.8898 438.7311,-75.4394"/>
 <polygon fill="#191970" stroke="#191970" points="439.3771,-78.8799 448.648,-73.7514 438.2025,-71.9791 439.3771,-78.8799"/>
 </g>
-<!-- Node6 -->
+<!-- Node16 -->
 <g id="node7" class="node">
-<title>Node6</title>
+<title>Node16</title>
 <g id="a_node7"><a xlink:href="namespacesll__m__fft.html#a293ae19515b20fa6d456ef2c52f99b23" target="_top" xlink:title="Compute fast Fourier transform in complex to real mode. ">
 <polygon fill="#ffffff" stroke="#000000" points="452,-.5 452,-30.5 554,-30.5 554,-.5 452,-.5"/>
 <text text-anchor="start" x="460" y="-18.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_fft::sll_s_fft</text>
@@ -104,9 +104,9 @@
 </a>
 </g>
 </g>
-<!-- Node2&#45;&gt;Node6 -->
+<!-- Node12&#45;&gt;Node16 -->
 <g id="edge6" class="edge">
-<title>Node2&#45;&gt;Node6</title>
+<title>Node12&#45;&gt;Node16</title>
 <path fill="none" stroke="#191970" d="M388.3938,-73.3032C405.5088,-63.6073 428.379,-50.9456 449,-40.5 452.5784,-38.6874 456.3136,-36.8495 460.0756,-35.0357"/>
 <polygon fill="#191970" stroke="#191970" points="461.8759,-38.0554 469.4085,-30.6048 458.8737,-31.7319 461.8759,-38.0554"/>
 </g>

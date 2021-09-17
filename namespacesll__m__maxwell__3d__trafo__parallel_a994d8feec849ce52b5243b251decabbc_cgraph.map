@@ -1,0 +1,29 @@
+<map id="init_3d_trafo_parallel" name="init_3d_trafo_parallel">
+<area shape="rect" id="node2" href="$namespacesll__m__collective.html#af2d3c240d9dfe7e9c7d7f7c9e0529f17" title="Determines the size of the group associated with a communicator. " alt="" coords="261,71,426,112"/>
+<area shape="rect" id="node4" href="$namespacesll__m__collective.html#a396122f49340f0778eb448430d865b4e" title="Determines the rank of the calling process in the communicator. " alt="" coords="259,5,427,47"/>
+<area shape="rect" id="node5" href="$namespacesll__m__maxwell__3d__trafo__parallel.html#a84d17375e04f522fa7c0c1523afd8813" title="sll_s_compute_mpi_decomposition" alt="" coords="218,137,469,163"/>
+<area shape="rect" id="node6" href="$namespacesll__m__spline__fem__utilities__3d.html#a6057d494b129b97fd792aafe62fb6932" title="Set up 3d mass matrix for specific spline degrees and profile function. " alt="" coords="234,239,453,280"/>
+<area shape="rect" id="node7" href="$namespacesll__m__spline__fem__utilities__3d__helper.html#ab61e8df08e3414cd54d1b85c91ddb4ad" title="Helper function to create sparsity pattern of the 3d mass matrix. " alt="" coords="563,87,755,143"/>
+<area shape="rect" id="node15" href="$sll__m__maxwell__1d__trafo_8_f90.html#a9c311415a09c7e5c6d5c7dc66b773bc9" title="profile_m0" alt="" coords="298,422,389,449"/>
+<area shape="rect" id="node16" href="$sll__m__maxwell__1d__trafo_8_f90.html#a84da6f16f6cb045957fef43d185b23db" title="profile_0" alt="" coords="304,473,383,499"/>
+<area shape="rect" id="node17" href="$sll__m__maxwell__1d__trafo_8_f90.html#aec56488ee66c0e30e7fd74f20e9d921f" title="profile_1" alt="" coords="304,523,383,550"/>
+<area shape="rect" id="node18" href="$sll__m__maxwell__3d__trafo_8_f90.html#a9244f353d2432ca6edccc9ef2913b4b2" title="profile_2" alt="" coords="304,574,383,601"/>
+<area shape="rect" id="node19" href="$namespacesll__m__spline__fem__utilities__3d.html#a75c8275b4be3b0c6cb6f5754f0d2a706" title="Set up 3d mixed mass matrix for specific spline degree and profile function. " alt="" coords="213,356,473,397"/>
+<area shape="rect" id="node20" href="$namespacesll__m__spline__fem__utilities__3d__helper.html#ae167039e30e88a2962d84a83da08516b" title="Helper function to create sparsity pattern of the 3d mass matrix. " alt="" coords="552,379,765,435"/>
+<area shape="rect" id="node27" href="$sll__m__maxwell__3d__trafo_8_f90.html#ac6861e0b4ad080b2a6673ba661b13219" title="profile_m1" alt="" coords="298,625,389,651"/>
+<area shape="rect" id="node28" href="$sll__m__maxwell__3d__trafo_8_f90.html#a83c439dbd644de7e74cac42ca0bd2e34" title="profile_m2" alt="" coords="298,675,389,702"/>
+<area shape="rect" id="node3" href="$namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" title="Checks if the pointer ptr is associated to an object. " alt="" coords="577,11,740,52"/>
+<area shape="rect" id="node10" href="$namespacesll__m__gauss__legendre__integration.html#a0df63a9e8ee884c2d4a0d1f53602a949" title="Returns a 2d array of size (2,npoints) containing gauss&#45;legendre points and weights in the interval [..." alt="" coords="547,299,770,355"/>
+<area shape="rect" id="node11" href="$namespacesll__m__spline__fem__utilities__3d.html#adb777f54b3a7be04fd78f00b22f072f9" title="Computes the mass line for a mass matrix with degree splines. " alt="" coords="541,168,776,209"/>
+<area shape="rect" id="node12" href="$namespacesll__m__spline__fem__utilities__3d__helper.html#a4d70bfcfbf78b2dbfed72ee7c3e2d91e" title="Assemble the given row of the 3d mass matrix. " alt="" coords="547,233,770,275"/>
+<area shape="rect" id="node8" href="$namespacesll__m__spline__fem__utilities__3d__helper.html#a0ecb5b69702c19db85ec6fcf8f5cf530" title="sll_m_spline_fem_utilities\l_3d_helper::loop2" alt="" coords="844,95,1036,136"/>
+<area shape="rect" id="node9" href="$namespacesll__m__spline__fem__utilities__3d__helper.html#a44ec465b69568824a811ff2ba3831a7a" title="sll_m_spline_fem_utilities\l_3d_helper::loop1" alt="" coords="1084,95,1276,136"/>
+<area shape="rect" id="node13" href="$namespacesll__m__spline__fem__utilities__3d__helper.html#af847495fdf13923f87f64ce3ab2359f8" title="sll_m_spline_fem_utilities\l_3d_helper::assemble2" alt="" coords="844,233,1036,275"/>
+<area shape="rect" id="node14" href="$namespacesll__m__spline__fem__utilities__3d__helper.html#ab84b0dd7f4944ab6de020098b07c7e60" title="sll_m_spline_fem_utilities\l_3d_helper::assemble1" alt="" coords="1084,233,1276,275"/>
+<area shape="rect" id="node23" href="$namespacesll__m__spline__fem__utilities__3d.html#aa3d1e27c209113adc1de00472bb7fd13" title="sll_m_spline_fem_utilities\l_3d::sll_s_spline_fem_mixedmass_line" alt="" coords="521,525,796,567"/>
+<area shape="rect" id="node24" href="$namespacesll__m__spline__fem__utilities__3d__helper.html#a1d9f853ac0acaad87465a6c51fe001dd" title="Assemble the given row of the mixed mass matrix. " alt="" coords="527,460,790,501"/>
+<area shape="rect" id="node21" href="$namespacesll__m__spline__fem__utilities__3d__helper.html#a007289d653d48a70bfeb660a09725a03" title="sll_m_spline_fem_utilities\l_3d_helper::mloop2" alt="" coords="844,387,1036,428"/>
+<area shape="rect" id="node22" href="$namespacesll__m__spline__fem__utilities__3d__helper.html#a35ad1ea97da094cf58b058f818620148" title="sll_m_spline_fem_utilities\l_3d_helper::mloop1" alt="" coords="1084,387,1276,428"/>
+<area shape="rect" id="node25" href="$namespacesll__m__spline__fem__utilities__3d__helper.html#ac85b5e0f37a8c44e9b7c6fb266f6620f" title="sll_m_spline_fem_utilities\l_3d_helper::massemble2" alt="" coords="844,460,1036,501"/>
+<area shape="rect" id="node26" href="$namespacesll__m__spline__fem__utilities__3d__helper.html#ae851b296a1b0780753f40ed1a845ea81" title="sll_m_spline_fem_utilities\l_3d_helper::massemble1" alt="" coords="1084,460,1276,501"/>
+</map>

@@ -77,12 +77,13 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 <a name="details" id="details"></a><h2 class="groupheader">Description</h2>
-<div class="textblock"><p>Module interface to solve Maxwell's equations in 1D. </p>
-<p>Contains the abstract class to create a Maxwell solver in 1D. </p>
+<div class="textblock"><p>Solve Maxwell's equations in 1D. </p>
+<p>This version corresponds to conforming spline finite elements </p><dl class="section author"><dt>Authors</dt><dd>Katharina Kormann Eric Sonnendrücker </dd></dl>
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Derived types and interfaces</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">type &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html">sll_t_maxwell_1d_fem</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maxwell solver class.  <a href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
@@ -91,32 +92,137 @@ Functions/Subroutines</h2></td></tr>
 <tr class="memdesc:a47196627859f2c2d812ad68b15d300fb"><td class="mdescLeft">&#160;</td><td class="mdescRight">compute Ey from Bz using weak Ampere formulation  <a href="#a47196627859f2c2d812ad68b15d300fb">More...</a><br /></td></tr>
 <tr class="separator:a47196627859f2c2d812ad68b15d300fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5e87fba6009f2ef888e836db7b8eaf0c"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a5e87fba6009f2ef888e836db7b8eaf0c">sll_s_compute_b_from_e_1d_fem</a> (self, delta_t, field_in, field_out)</td></tr>
-<tr class="memdesc:a5e87fba6009f2ef888e836db7b8eaf0c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute Bz from Ey using strong 1D Faraday equation for spline coefficients $B_z^{new}(x_j) = B_z^{old}(x_j) - { t}{ x} (E_y(x_j) - E_y(x_{j-1}) $.  <a href="#a5e87fba6009f2ef888e836db7b8eaf0c">More...</a><br /></td></tr>
 <tr class="separator:a5e87fba6009f2ef888e836db7b8eaf0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a26d25ea707a2cac922bddd8fdc96d4da"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a26d25ea707a2cac922bddd8fdc96d4da">sll_s_compute_curl_part_1d_fem</a> (self, delta_t, efield, bfield, betar)</td></tr>
+<tr class="separator:a26d25ea707a2cac922bddd8fdc96d4da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9529d7ddd5961fc724e0b452425e5e2f"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a9529d7ddd5961fc724e0b452425e5e2f">weak_curl</a> (self, delta_t, field_in, field_out)</td></tr>
+<tr class="memdesc:a9529d7ddd5961fc724e0b452425e5e2f"><td class="mdescLeft">&#160;</td><td class="mdescRight">compute Ey from Bz using weak Ampere formulation  <a href="#a9529d7ddd5961fc724e0b452425e5e2f">More...</a><br /></td></tr>
+<tr class="separator:a9529d7ddd5961fc724e0b452425e5e2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a366f355703b095d7711a3883ed0a0207"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a366f355703b095d7711a3883ed0a0207">strong_curl</a> (self, delta_t, field_in, field_out)</td></tr>
+<tr class="memdesc:a366f355703b095d7711a3883ed0a0207"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute Bz from Ey using strong 1D Faraday equation for spline coefficients $B_z^{new}(x_j) = B_z^{old}(x_j) - { t}{ x} (E_y(x_j) - E_y(x_{j-1}) $.  <a href="#a366f355703b095d7711a3883ed0a0207">More...</a><br /></td></tr>
+<tr class="separator:a366f355703b095d7711a3883ed0a0207"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2d1b34af6ce5bd3e84443d7ec7e2e1c7"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a2d1b34af6ce5bd3e84443d7ec7e2e1c7">sll_s_compute_e_from_rho_1d_fem</a> (self, field_in, field_out)</td></tr>
+<tr class="separator:a2d1b34af6ce5bd3e84443d7ec7e2e1c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a93a33efea7cd5b3605cd58cea29c20dc"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a93a33efea7cd5b3605cd58cea29c20dc">compute_rho_from_e_1d_fem</a> (self, field_in, field_out)</td></tr>
+<tr class="memdesc:a93a33efea7cd5b3605cd58cea29c20dc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute rho from Gauss law for given efield.  <a href="#a93a33efea7cd5b3605cd58cea29c20dc">More...</a><br /></td></tr>
+<tr class="separator:a93a33efea7cd5b3605cd58cea29c20dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3cb1b8bf0285889d4089bf972aa81c3f"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a3cb1b8bf0285889d4089bf972aa81c3f">choose_interpolation</a> (self, current, component, E)</td></tr>
+<tr class="memdesc:a3cb1b8bf0285889d4089bf972aa81c3f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Choose between compute_E_from_j_1d_fem and compute_E_from_j_1d_fem_shape.  <a href="#a3cb1b8bf0285889d4089bf972aa81c3f">More...</a><br /></td></tr>
+<tr class="separator:a3cb1b8bf0285889d4089bf972aa81c3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a35f67335e750d8c00872ac2599d5bfbe"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a35f67335e750d8c00872ac2599d5bfbe">compute_e_from_j_1d_fem</a> (self, current, component, E)</td></tr>
 <tr class="memdesc:a35f67335e750d8c00872ac2599d5bfbe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute E_i from j_i integrated over the time interval using weak Ampere formulation.  <a href="#a35f67335e750d8c00872ac2599d5bfbe">More...</a><br /></td></tr>
 <tr class="separator:a35f67335e750d8c00872ac2599d5bfbe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaeeec4271a275e01eeb77df71a32532c"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#aaeeec4271a275e01eeb77df71a32532c">sll_s_compute_e_from_rho_1d_fem</a> (self, E, rho)</td></tr>
-<tr class="separator:aaeeec4271a275e01eeb77df71a32532c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af1b844cf1315847ac495f1d957189479"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#af1b844cf1315847ac495f1d957189479">compute_e_from_j_1d_fem_shape</a> (self, current, component, E)</td></tr>
+<tr class="separator:af1b844cf1315847ac495f1d957189479"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae42fa711464cf385b882b84fd8c63511"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#ae42fa711464cf385b882b84fd8c63511">multiply_interpolation_inverse_transpose</a> (self, in, out)</td></tr>
+<tr class="separator:ae42fa711464cf385b882b84fd8c63511"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a24ad9e6b445cc06f4c31dda8b252fd26"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a24ad9e6b445cc06f4c31dda8b252fd26">solve_e_b_1d_fem</a> (self, delta_t, bfield, efield)</td></tr>
+<tr class="memdesc:a24ad9e6b445cc06f4c31dda8b252fd26"><td class="mdescLeft">&#160;</td><td class="mdescRight">Solves for the efield part in a implicit curl part solve.  <a href="#a24ad9e6b445cc06f4c31dda8b252fd26">More...</a><br /></td></tr>
+<tr class="separator:a24ad9e6b445cc06f4c31dda8b252fd26"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0292d383eb02a02563a4a11367866848"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a0292d383eb02a02563a4a11367866848">solve_circulant</a> (self, eigvals, rhs, res)</td></tr>
 <tr class="separator:a0292d383eb02a02563a4a11367866848"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a77a9871dc6155ac337c1fc10a37ce52e"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a77a9871dc6155ac337c1fc10a37ce52e">compute_phi_from_rho_1d_fem</a> (self, in, phi, efield)</td></tr>
+<tr class="memdesc:a77a9871dc6155ac337c1fc10a37ce52e"><td class="mdescLeft">&#160;</td><td class="mdescRight">For model with adiabatic electrons.  <a href="#a77a9871dc6155ac337c1fc10a37ce52e">More...</a><br /></td></tr>
+<tr class="separator:a77a9871dc6155ac337c1fc10a37ce52e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1e96468d8d3973e8cfde8e1c239ad85a"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a1e96468d8d3973e8cfde8e1c239ad85a">compute_phi_from_j_1d_fem</a> (self, in, phi, efield)</td></tr>
+<tr class="memdesc:a1e96468d8d3973e8cfde8e1c239ad85a"><td class="mdescLeft">&#160;</td><td class="mdescRight">For model with adiabatic electrons.  <a href="#a1e96468d8d3973e8cfde8e1c239ad85a">More...</a><br /></td></tr>
+<tr class="separator:a1e96468d8d3973e8cfde8e1c239ad85a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a85c7f5b45eebeb0270c47bfbdaae08d5"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a85c7f5b45eebeb0270c47bfbdaae08d5">sll_s_compute_fem_rhs</a> (self, func, degree, coefs_dofs)</td></tr>
 <tr class="memdesc:a85c7f5b45eebeb0270c47bfbdaae08d5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the FEM right-hand-side for a given function f and periodic splines of given degree Its components are $ f N_i dx$ where $N_i$ is the B-spline starting at $x_i$.  <a href="#a85c7f5b45eebeb0270c47bfbdaae08d5">More...</a><br /></td></tr>
 <tr class="separator:a85c7f5b45eebeb0270c47bfbdaae08d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abfc2b83c57927e44075c5d11b8949235"><td class="memItemLeft" align="right" valign="top">real(kind=f64) function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#abfc2b83c57927e44075c5d11b8949235">l2norm_squared_1d_fem</a> (self, coefs_dofs, degree)</td></tr>
+<tr class="memdesc:abfc2b83c57927e44075c5d11b8949235"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute square of the L2norm.  <a href="#abfc2b83c57927e44075c5d11b8949235">More...</a><br /></td></tr>
+<tr class="separator:abfc2b83c57927e44075c5d11b8949235"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a95835fb7a7173512d52e22df72949289"><td class="memItemLeft" align="right" valign="top">real(kind=f64) function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a95835fb7a7173512d52e22df72949289">inner_product_1d_fem</a> (self, coefs1_dofs, coefs2_dofs, degree, degree2)</td></tr>
+<tr class="separator:a95835fb7a7173512d52e22df72949289"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af92aa77aac30fa9ad87a4cf10cb88ceb"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#af92aa77aac30fa9ad87a4cf10cb88ceb">l2projection_1d_fem</a> (self, func, degree, coefs_dofs)</td></tr>
 <tr class="memdesc:af92aa77aac30fa9ad87a4cf10cb88ceb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the L2 projection of a given function f on periodic splines of given degree.  <a href="#af92aa77aac30fa9ad87a4cf10cb88ceb">More...</a><br /></td></tr>
 <tr class="separator:af92aa77aac30fa9ad87a4cf10cb88ceb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a297e5091887d7400c744050d772749d6"><td class="memItemLeft" align="right" valign="top">function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a297e5091887d7400c744050d772749d6">l2norm_squared_1d_fem</a> (self, coefs_dofs, degree)</td></tr>
-<tr class="memdesc:a297e5091887d7400c744050d772749d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute square of the L2norm.  <a href="#a297e5091887d7400c744050d772749d6">More...</a><br /></td></tr>
-<tr class="separator:a297e5091887d7400c744050d772749d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa1244c81bbfc9976cbfcfd84dd0a1b25"><td class="memItemLeft" align="right" valign="top">function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#aa1244c81bbfc9976cbfcfd84dd0a1b25">inner_product_1d_fem</a> (self, coefs1_dofs, coefs2_dofs, degree)</td></tr>
-<tr class="separator:aa1244c81bbfc9976cbfcfd84dd0a1b25"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0f182f448b394a9ec1d0f5a3cd1f8153"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a0f182f448b394a9ec1d0f5a3cd1f8153">init_1d_fem</a> (self, domain, n_dofs, s_deg_0)</td></tr>
-<tr class="separator:a0f182f448b394a9ec1d0f5a3cd1f8153"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5b82c557e498ae59986631d0aea7ed63"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a5b82c557e498ae59986631d0aea7ed63">init_1d_fem</a> (self, domain, n_dofs, s_deg_0, delta_t, strong_ampere, solver_tolerance, force_sign, adiabatic_electrons)</td></tr>
+<tr class="separator:a5b82c557e498ae59986631d0aea7ed63"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a73395fc583bd3e7ec4530eb3cca63001"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a73395fc583bd3e7ec4530eb3cca63001">free_1d_fem</a> (self)</td></tr>
 <tr class="separator:a73395fc583bd3e7ec4530eb3cca63001"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af164250a221cd8f9727fc31ad44018a1"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#af164250a221cd8f9727fc31ad44018a1">multiply_g</a> (self, in, out)</td></tr>
+<tr class="separator:af164250a221cd8f9727fc31ad44018a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa477d469a63715e37b1d2c9f9d0a57a0"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#aa477d469a63715e37b1d2c9f9d0a57a0">multiply_gt</a> (self, in, out)</td></tr>
+<tr class="separator:aa477d469a63715e37b1d2c9f9d0a57a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acb63eb5eafceb69a879302928c503bfa"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#acb63eb5eafceb69a879302928c503bfa">multiply_mass_1d_fem</a> (self, in, out, degree)</td></tr>
+<tr class="separator:acb63eb5eafceb69a879302928c503bfa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a07ac85d431e1ab78f59da39ba51cdafb"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a07ac85d431e1ab78f59da39ba51cdafb">invert_mass_1d_fem</a> (self, in, out, degree)</td></tr>
+<tr class="memdesc:a07ac85d431e1ab78f59da39ba51cdafb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Invert the mass matrix.  <a href="#a07ac85d431e1ab78f59da39ba51cdafb">More...</a><br /></td></tr>
+<tr class="separator:a07ac85d431e1ab78f59da39ba51cdafb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a51ffa2cd61a78cdc2741d91f48a81574"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a51ffa2cd61a78cdc2741d91f48a81574">transform_dofs_1d_fem</a> (self, in, out, degree)</td></tr>
+<tr class="memdesc:a51ffa2cd61a78cdc2741d91f48a81574"><td class="mdescLeft">&#160;</td><td class="mdescRight">Invert the mass matrix.  <a href="#a51ffa2cd61a78cdc2741d91f48a81574">More...</a><br /></td></tr>
+<tr class="separator:a51ffa2cd61a78cdc2741d91f48a81574"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
+<a id="a3cb1b8bf0285889d4089bf972aa81c3f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3cb1b8bf0285889d4089bf972aa81c3f">&#9670;&nbsp;</a></span>choose_interpolation()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_maxwell_1d_fem::choose_interpolation </td>
+          <td>(</td>
+          <td class="paramtype">class(<a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html">sll_t_maxwell_1d_fem</a>)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(in)&#160;</td>
+          <td class="paramname"><em>current</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>component</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(inout)&#160;</td>
+          <td class="paramname"><em>E</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Choose between compute_E_from_j_1d_fem and compute_E_from_j_1d_fem_shape. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">self</td><td>Maxwell solver class</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">current</td><td>Component <em>component</em> of the current integrated over time interval</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">component</td><td>Component of the Efield to be computed</td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">e</td><td>Updated electric field </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00327">327</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__fem_a3cb1b8bf0285889d4089bf972aa81c3f_cgraph.svg" width="100%" height="486"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
+</div>
+
+</div>
+</div>
 <a id="a35f67335e750d8c00872ac2599d5bfbe"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a35f67335e750d8c00872ac2599d5bfbe">&#9670;&nbsp;</a></span>compute_e_from_j_1d_fem()</h2>
 
@@ -135,19 +241,19 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(in)&#160;</td>
           <td class="paramname"><em>current</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">intent(in)&#160;</td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
           <td class="paramname"><em>component</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">intent(inout)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(inout)&#160;</td>
           <td class="paramname"><em>E</em>&#160;</td>
         </tr>
         <tr>
@@ -166,16 +272,287 @@ Functions/Subroutines</h2></td></tr>
 <p>Compute E_i from j_i integrated over the time interval using weak Ampere formulation. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">self</td><td>Maxwell solver class </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">self</td><td>Maxwell solver class</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">current</td><td>Component <em>component</em> of the current integrated over time interval</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">component</td><td>Component of the Efield to be computed</td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">e</td><td>Updated electric field </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00123">123</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00343">343</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__fem_a35f67335e750d8c00872ac2599d5bfbe_cgraph.svg" width="100%" height="486"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
+</div>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__fem_a35f67335e750d8c00872ac2599d5bfbe_icgraph.svg" width="416" height="38"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="af1b844cf1315847ac495f1d957189479"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af1b844cf1315847ac495f1d957189479">&#9670;&nbsp;</a></span>compute_e_from_j_1d_fem_shape()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_maxwell_1d_fem::compute_e_from_j_1d_fem_shape </td>
+          <td>(</td>
+          <td class="paramtype">class(<a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html">sll_t_maxwell_1d_fem</a>)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(in)&#160;</td>
+          <td class="paramname"><em>current</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>component</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(inout)&#160;</td>
+          <td class="paramname"><em>E</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">self</td><td>Maxwell solver class</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">current</td><td>Component <em>component</em> of the current integrated over time interval</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">component</td><td>Component of the Efield to be computed</td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">e</td><td>Updated electric field </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00364">364</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__fem_af1b844cf1315847ac495f1d957189479_cgraph.svg" width="100%" height="486"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
+</div>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__fem_af1b844cf1315847ac495f1d957189479_icgraph.svg" width="384" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="a1e96468d8d3973e8cfde8e1c239ad85a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1e96468d8d3973e8cfde8e1c239ad85a">&#9670;&nbsp;</a></span>compute_phi_from_j_1d_fem()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_maxwell_1d_fem::compute_phi_from_j_1d_fem </td>
+          <td>(</td>
+          <td class="paramtype">class(<a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html">sll_t_maxwell_1d_fem</a>)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(in)&#160;</td>
+          <td class="paramname"><em>in</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(out)&#160;</td>
+          <td class="paramname"><em>phi</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(out)&#160;</td>
+          <td class="paramname"><em>efield</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>For model with adiabatic electrons. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">self</td><td>Maxwell solver class</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">in</td><td>Current integrated over time interval</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">efield</td><td>E </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00456">456</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__fem_a1e96468d8d3973e8cfde8e1c239ad85a_cgraph.svg" width="550" height="118"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="a77a9871dc6155ac337c1fc10a37ce52e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a77a9871dc6155ac337c1fc10a37ce52e">&#9670;&nbsp;</a></span>compute_phi_from_rho_1d_fem()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_maxwell_1d_fem::compute_phi_from_rho_1d_fem </td>
+          <td>(</td>
+          <td class="paramtype">class(<a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html">sll_t_maxwell_1d_fem</a>)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(in)&#160;</td>
+          <td class="paramname"><em>in</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(out)&#160;</td>
+          <td class="paramname"><em>phi</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(out)&#160;</td>
+          <td class="paramname"><em>efield</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>For model with adiabatic electrons. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">self</td><td>Maxwell solver class</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">in</td><td>rho</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">efield</td><td>E </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00439">439</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__fem_a77a9871dc6155ac337c1fc10a37ce52e_cgraph.svg" width="562" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="a93a33efea7cd5b3605cd58cea29c20dc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a93a33efea7cd5b3605cd58cea29c20dc">&#9670;&nbsp;</a></span>compute_rho_from_e_1d_fem()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_maxwell_1d_fem::compute_rho_from_e_1d_fem </td>
+          <td>(</td>
+          <td class="paramtype">class(<a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html">sll_t_maxwell_1d_fem</a>)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(in)&#160;</td>
+          <td class="paramname"><em>field_in</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(out)&#160;</td>
+          <td class="paramname"><em>field_out</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Compute rho from Gauss law for given efield. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">self</td><td>Maxwell solver class</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">field_out</td><td>rho </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00295">295</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__fem_a93a33efea7cd5b3605cd58cea29c20dc_cgraph.svg" width="100%" height="486"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 </div>
 
@@ -204,8 +581,14 @@ Here is the call graph for this function:</div>
   </tr>
 </table>
 </div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">self</td><td>Maxwell solver class </td></tr>
+  </table>
+  </dd>
+</dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00436">436</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00864">864</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -215,8 +598,8 @@ Here is the call graph for this function:</div>
 
 </div>
 </div>
-<a id="a0f182f448b394a9ec1d0f5a3cd1f8153"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0f182f448b394a9ec1d0f5a3cd1f8153">&#9670;&nbsp;</a></span>init_1d_fem()</h2>
+<a id="a5b82c557e498ae59986631d0aea7ed63"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5b82c557e498ae59986631d0aea7ed63">&#9670;&nbsp;</a></span>init_1d_fem()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -233,20 +616,50 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">dimension(2), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(2), intent(in)&#160;</td>
           <td class="paramname"><em>domain</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">intent(in)&#160;</td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
           <td class="paramname"><em>n_dofs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">intent(in)&#160;</td>
-          <td class="paramname"><em>s_deg_0</em>&#160;</td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>s_deg_0</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
+          <td class="paramname"><em>delta_t</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">logical, intent(in), optional&#160;</td>
+          <td class="paramname"><em>strong_ampere</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), intent(in), optional&#160;</td>
+          <td class="paramname"><em>solver_tolerance</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), intent(in), optional&#160;</td>
+          <td class="paramname"><em>force_sign</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">logical, intent(in), optional&#160;</td>
+          <td class="paramname"><em>adiabatic_electrons</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -262,23 +675,31 @@ Here is the call graph for this function:</div>
 </div><div class="memdoc">
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">self</td><td>solver object </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">self</td><td>Maxwell solver class</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">domain</td><td>xmin, xmax</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n_dofs</td><td>number of degrees of freedom (here number of cells and grid points)</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">s_deg_0</td><td>highest spline degree</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">delta_t</td><td>Time step</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">strong_ampere</td><td>flag to switch between strong and weak Ampere formulation</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">solver_tolerance</td><td>tolerance for Schur complement solver</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">force_sign</td><td>sign of particle force</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">adiabatic_electrons</td><td>flag if adiabatic electrons are used </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00323">323</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00616">616</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__fem_a0f182f448b394a9ec1d0f5a3cd1f8153_cgraph.svg" width="294" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__fem_a5b82c557e498ae59986631d0aea7ed63_cgraph.svg" width="100%" height="600"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 </div>
 
 </div>
 </div>
-<a id="aa1244c81bbfc9976cbfcfd84dd0a1b25"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa1244c81bbfc9976cbfcfd84dd0a1b25">&#9670;&nbsp;</a></span>inner_product_1d_fem()</h2>
+<a id="a95835fb7a7173512d52e22df72949289"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a95835fb7a7173512d52e22df72949289">&#9670;&nbsp;</a></span>inner_product_1d_fem()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -287,7 +708,7 @@ Here is the call graph for this function:</div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">function sll_m_maxwell_1d_fem::inner_product_1d_fem </td>
+          <td class="memname">real(kind=f64) function sll_m_maxwell_1d_fem::inner_product_1d_fem </td>
           <td>(</td>
           <td class="paramtype">class(<a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html">sll_t_maxwell_1d_fem</a>)&#160;</td>
           <td class="paramname"><em>self</em>, </td>
@@ -295,19 +716,92 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:)&#160;</td>
           <td class="paramname"><em>coefs1_dofs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:)&#160;</td>
           <td class="paramname"><em>coefs2_dofs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">&#160;</td>
+          <td class="paramtype">integer(kind=i32)&#160;</td>
+          <td class="paramname"><em>degree</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), optional&#160;</td>
+          <td class="paramname"><em>degree2</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">self</td><td>Maxwell solver class</td></tr>
+    <tr><td class="paramname">coefs1_dofs</td><td>Coefficient for each DoF</td></tr>
+    <tr><td class="paramname">coefs2_dofs</td><td>Coefficient for each DoF</td></tr>
+    <tr><td class="paramname">degree</td><td>Specify the degree of the basis functions</td></tr>
+    <tr><td class="paramname">degree2</td><td>Specify the degree of the basis functions</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Result: squared L2 norm </dd></dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00542">542</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__fem_a95835fb7a7173512d52e22df72949289_cgraph.svg" width="100%" height="486"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
+</div>
+
+</div>
+</div>
+<a id="a07ac85d431e1ab78f59da39ba51cdafb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a07ac85d431e1ab78f59da39ba51cdafb">&#9670;&nbsp;</a></span>invert_mass_1d_fem()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_maxwell_1d_fem::invert_mass_1d_fem </td>
+          <td>(</td>
+          <td class="paramtype">class(<a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html">sll_t_maxwell_1d_fem</a>), intent(inout)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(in)&#160;</td>
+          <td class="paramname"><em>in</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(out)&#160;</td>
+          <td class="paramname"><em>out</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
           <td class="paramname"><em>degree</em>&#160;</td>
         </tr>
         <tr>
@@ -322,29 +816,30 @@ Here is the call graph for this function:</div>
   </tr>
 </table>
 </div><div class="memdoc">
+
+<p>Invert the mass matrix. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">self</td><td>Maxwell solver object</td></tr>
-    <tr><td class="paramname">self</td><td>Coefficient for each DoF</td></tr>
-    <tr><td class="paramname">self</td><td>Coefficient for each DoF</td></tr>
-    <tr><td class="paramname">self</td><td>Specify the degree of the basis functions</td></tr>
-    <tr><td class="paramname">self</td><td>Result: squared L2 norm </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>Maxwell solver class</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">degree</td><td>Specify the degree of the basis functions</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">in</td><td>spline coefficients of projection</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out</td><td>spline coefficients of projection </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00299">299</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00929">929</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__fem_aa1244c81bbfc9976cbfcfd84dd0a1b25_cgraph.svg" width="100%" height="486"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__fem_a07ac85d431e1ab78f59da39ba51cdafb_cgraph.svg" width="100%" height="486"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 </div>
 
 </div>
 </div>
-<a id="a297e5091887d7400c744050d772749d6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a297e5091887d7400c744050d772749d6">&#9670;&nbsp;</a></span>l2norm_squared_1d_fem()</h2>
+<a id="abfc2b83c57927e44075c5d11b8949235"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abfc2b83c57927e44075c5d11b8949235">&#9670;&nbsp;</a></span>l2norm_squared_1d_fem()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -353,7 +848,7 @@ Here is the call graph for this function:</div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">function sll_m_maxwell_1d_fem::l2norm_squared_1d_fem </td>
+          <td class="memname">real(kind=f64) function sll_m_maxwell_1d_fem::l2norm_squared_1d_fem </td>
           <td>(</td>
           <td class="paramtype">class(<a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html">sll_t_maxwell_1d_fem</a>)&#160;</td>
           <td class="paramname"><em>self</em>, </td>
@@ -361,13 +856,13 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:)&#160;</td>
           <td class="paramname"><em>coefs_dofs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">&#160;</td>
+          <td class="paramtype">integer(kind=i32)&#160;</td>
           <td class="paramname"><em>degree</em>&#160;</td>
         </tr>
         <tr>
@@ -386,19 +881,19 @@ Here is the call graph for this function:</div>
 <p>Compute square of the L2norm. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">self</td><td>Maxwell solver object</td></tr>
-    <tr><td class="paramname">self</td><td>Coefficient for each DoF</td></tr>
-    <tr><td class="paramname">self</td><td>Specify the degree of the basis functions</td></tr>
-    <tr><td class="paramname">self</td><td>Result: squared L2 norm </td></tr>
+    <tr><td class="paramname">self</td><td>Maxwell solver class</td></tr>
+    <tr><td class="paramname">coefs_dofs</td><td>Coefficient for each DoF</td></tr>
+    <tr><td class="paramname">degree</td><td>Specify the degree of the basis functions</td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>Result: squared L2 norm </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00276">276</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00517">517</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__fem_a297e5091887d7400c744050d772749d6_cgraph.svg" width="100%" height="486"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__fem_abfc2b83c57927e44075c5d11b8949235_cgraph.svg" width="100%" height="486"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 </div>
 
@@ -428,13 +923,13 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">intent(in)&#160;</td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
           <td class="paramname"><em>degree</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">dimension(:), intent(out)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(out)&#160;</td>
           <td class="paramname"><em>coefs_dofs</em>&#160;</td>
         </tr>
         <tr>
@@ -451,12 +946,271 @@ Here is the call graph for this function:</div>
 </div><div class="memdoc">
 
 <p>Compute the L2 projection of a given function f on periodic splines of given degree. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">self</td><td>Maxwell solver class</td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">func</td><td>function</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">degree</td><td>Specify the degree of the basis functions </td></tr>
+  </table>
+  </dd>
+</dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00240">240</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00591">591</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__fem_af92aa77aac30fa9ad87a4cf10cb88ceb_cgraph.svg" width="100%" height="486"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
+</div>
+
+</div>
+</div>
+<a id="af164250a221cd8f9727fc31ad44018a1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af164250a221cd8f9727fc31ad44018a1">&#9670;&nbsp;</a></span>multiply_g()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_maxwell_1d_fem::multiply_g </td>
+          <td>(</td>
+          <td class="paramtype">class(<a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html">sll_t_maxwell_1d_fem</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(in)&#160;</td>
+          <td class="paramname"><em>in</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(out)&#160;</td>
+          <td class="paramname"><em>out</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>Maxwell_Clamped solver class</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">in</td><td>field_in</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out</td><td>G*field_in </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00882">882</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__fem_af164250a221cd8f9727fc31ad44018a1_cgraph.svg" width="342" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__fem_af164250a221cd8f9727fc31ad44018a1_icgraph.svg" width="322" height="118"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="aa477d469a63715e37b1d2c9f9d0a57a0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa477d469a63715e37b1d2c9f9d0a57a0">&#9670;&nbsp;</a></span>multiply_gt()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_maxwell_1d_fem::multiply_gt </td>
+          <td>(</td>
+          <td class="paramtype">class(<a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html">sll_t_maxwell_1d_fem</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(in)&#160;</td>
+          <td class="paramname"><em>in</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(out)&#160;</td>
+          <td class="paramname"><em>out</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>Maxwell_Clamped solver class</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">in</td><td>field_in</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out</td><td>G^T*field_in </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00892">892</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__fem_aa477d469a63715e37b1d2c9f9d0a57a0_cgraph.svg" width="347" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__fem_aa477d469a63715e37b1d2c9f9d0a57a0_icgraph.svg" width="310" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="ae42fa711464cf385b882b84fd8c63511"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae42fa711464cf385b882b84fd8c63511">&#9670;&nbsp;</a></span>multiply_interpolation_inverse_transpose()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_maxwell_1d_fem::multiply_interpolation_inverse_transpose </td>
+          <td>(</td>
+          <td class="paramtype">class(<a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html">sll_t_maxwell_1d_fem</a>)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(in)&#160;</td>
+          <td class="paramname"><em>in</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(inout)&#160;</td>
+          <td class="paramname"><em>out</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">self</td><td>Maxwell solver class</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">in</td><td>input</td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">out</td><td>output </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00379">379</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__fem_ae42fa711464cf385b882b84fd8c63511_cgraph.svg" width="100%" height="486"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
+</div>
+
+</div>
+</div>
+<a id="acb63eb5eafceb69a879302928c503bfa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acb63eb5eafceb69a879302928c503bfa">&#9670;&nbsp;</a></span>multiply_mass_1d_fem()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_maxwell_1d_fem::multiply_mass_1d_fem </td>
+          <td>(</td>
+          <td class="paramtype">class(<a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html">sll_t_maxwell_1d_fem</a>), intent(inout)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(in)&#160;</td>
+          <td class="paramname"><em>in</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(out)&#160;</td>
+          <td class="paramname"><em>out</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>degree</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>Maxwell solver class</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">in</td><td>Coefficient for each DoF</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out</td><td>Coefficient for each DoF</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">degree</td><td>Specify the degree of the basis functions </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00902">902</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__fem_acb63eb5eafceb69a879302928c503bfa_cgraph.svg" width="100%" height="486"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 </div>
 
@@ -480,19 +1234,19 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
           <td class="paramname"><em>delta_t</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(in)&#160;</td>
           <td class="paramname"><em>field_in</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">dimension(:), intent(inout)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(inout)&#160;</td>
           <td class="paramname"><em>field_out</em>&#160;</td>
         </tr>
         <tr>
@@ -507,10 +1261,89 @@ Here is the call graph for this function:</div>
   </tr>
 </table>
 </div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">self</td><td>Maxwell solver class</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">delta_t</td><td>Time step</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">field_in</td><td>Ey</td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">field_out</td><td>Bz </td></tr>
+  </table>
+  </dd>
+</dl>
 
-<p>Compute Bz from Ey using strong 1D Faraday equation for spline coefficients $B_z^{new}(x_j) = B_z^{old}(x_j) - { t}{ x} (E_y(x_j) - E_y(x_{j-1}) $. </p>
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00170">170</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__fem_a5e87fba6009f2ef888e836db7b8eaf0c_cgraph.svg" width="100%" height="486"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
+</div>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00104">104</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+</div>
+</div>
+<a id="a26d25ea707a2cac922bddd8fdc96d4da"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a26d25ea707a2cac922bddd8fdc96d4da">&#9670;&nbsp;</a></span>sll_s_compute_curl_part_1d_fem()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_maxwell_1d_fem::sll_s_compute_curl_part_1d_fem </td>
+          <td>(</td>
+          <td class="paramtype">class(<a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html">sll_t_maxwell_1d_fem</a>)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
+          <td class="paramname"><em>delta_t</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(inout)&#160;</td>
+          <td class="paramname"><em>efield</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(inout)&#160;</td>
+          <td class="paramname"><em>bfield</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), optional&#160;</td>
+          <td class="paramname"><em>betar</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">self</td><td>Maxwell solver class</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">delta_t</td><td>Time step</td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">efield</td><td>Ey</td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">bfield</td><td>Bz</td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">betar</td><td>1/beta </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00185">185</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
 
 </div>
 </div>
@@ -532,19 +1365,19 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
           <td class="paramname"><em>delta_t</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(in)&#160;</td>
           <td class="paramname"><em>field_in</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">dimension(:), intent(inout)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(inout)&#160;</td>
           <td class="paramname"><em>field_out</em>&#160;</td>
         </tr>
         <tr>
@@ -561,8 +1394,17 @@ Here is the call graph for this function:</div>
 </div><div class="memdoc">
 
 <p>compute Ey from Bz using weak Ampere formulation </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">self</td><td>Maxwell solver class</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">delta_t</td><td>Time step</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">field_in</td><td>Bz</td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">field_out</td><td>Ey </td></tr>
+  </table>
+  </dd>
+</dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00086">86</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00154">154</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -572,8 +1414,8 @@ Here is the call graph for this function:</div>
 
 </div>
 </div>
-<a id="aaeeec4271a275e01eeb77df71a32532c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aaeeec4271a275e01eeb77df71a32532c">&#9670;&nbsp;</a></span>sll_s_compute_e_from_rho_1d_fem()</h2>
+<a id="a2d1b34af6ce5bd3e84443d7ec7e2e1c7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2d1b34af6ce5bd3e84443d7ec7e2e1c7">&#9670;&nbsp;</a></span>sll_s_compute_e_from_rho_1d_fem()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -590,14 +1432,14 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">intent(out)&#160;</td>
-          <td class="paramname"><em>E</em>, </td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(in)&#160;</td>
+          <td class="paramname"><em>field_in</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">intent(in)&#160;</td>
-          <td class="paramname"><em>rho</em>&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(out)&#160;</td>
+          <td class="paramname"><em>field_out</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -611,12 +1453,20 @@ Here is the call graph for this function:</div>
   </tr>
 </table>
 </div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">self</td><td>Maxwell solver class</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">field_in</td><td>rho</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">field_out</td><td>E </td></tr>
+  </table>
+  </dd>
+</dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00153">153</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00266">266</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__fem_aaeeec4271a275e01eeb77df71a32532c_cgraph.svg" width="100%" height="486"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__fem_a2d1b34af6ce5bd3e84443d7ec7e2e1c7_cgraph.svg" width="100%" height="486"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 </div>
 
@@ -646,13 +1496,13 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">intent(in)&#160;</td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
           <td class="paramname"><em>degree</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">dimension(:), intent(out)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(out)&#160;</td>
           <td class="paramname"><em>coefs_dofs</em>&#160;</td>
         </tr>
         <tr>
@@ -669,8 +1519,16 @@ Here is the call graph for this function:</div>
 </div><div class="memdoc">
 
 <p>Compute the FEM right-hand-side for a given function f and periodic splines of given degree Its components are $ f N_i dx$ where $N_i$ is the B-spline starting at $x_i$. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">self</td><td>Maxwell solver class</td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">func</td><td>function</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">degree</td><td>Specify the degree of the basis functions </td></tr>
+  </table>
+  </dd>
+</dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00202">202</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00478">478</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -704,19 +1562,19 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(in)&#160;</td>
           <td class="paramname"><em>eigvals</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(in)&#160;</td>
           <td class="paramname"><em>rhs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">dimension(:), intent(out)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(out)&#160;</td>
           <td class="paramname"><em>res</em>&#160;</td>
         </tr>
         <tr>
@@ -731,8 +1589,16 @@ Here is the caller graph for this function:</div>
   </tr>
 </table>
 </div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">self</td><td>Maxwell solver class</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">eigvals</td><td>eigenvalues of circulant matrix</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">res</td><td>result </td></tr>
+  </table>
+  </dd>
+</dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00171">171</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00406">406</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -742,7 +1608,281 @@ Here is the call graph for this function:</div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__fem_a0292d383eb02a02563a4a11367866848_icgraph.svg" width="378" height="323"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__fem_a0292d383eb02a02563a4a11367866848_icgraph.svg" width="100%" height="600"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
+</div>
+
+</div>
+</div>
+<a id="a24ad9e6b445cc06f4c31dda8b252fd26"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a24ad9e6b445cc06f4c31dda8b252fd26">&#9670;&nbsp;</a></span>solve_e_b_1d_fem()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_maxwell_1d_fem::solve_e_b_1d_fem </td>
+          <td>(</td>
+          <td class="paramtype">class(<a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html">sll_t_maxwell_1d_fem</a>)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
+          <td class="paramname"><em>delta_t</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(in)&#160;</td>
+          <td class="paramname"><em>bfield</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(inout)&#160;</td>
+          <td class="paramname"><em>efield</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Solves for the efield part in a implicit curl part solve. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">self</td><td>Maxwell solver class</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">delta_t</td><td>Time step</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">bfield</td><td>Component <em>component</em> of the current integrated over time interval</td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">efield</td><td>Updated electric field </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00391">391</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__fem_a24ad9e6b445cc06f4c31dda8b252fd26_cgraph.svg" width="100%" height="486"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
+</div>
+
+</div>
+</div>
+<a id="a366f355703b095d7711a3883ed0a0207"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a366f355703b095d7711a3883ed0a0207">&#9670;&nbsp;</a></span>strong_curl()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_maxwell_1d_fem::strong_curl </td>
+          <td>(</td>
+          <td class="paramtype">class(<a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html">sll_t_maxwell_1d_fem</a>)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
+          <td class="paramname"><em>delta_t</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(in)&#160;</td>
+          <td class="paramname"><em>field_in</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(inout)&#160;</td>
+          <td class="paramname"><em>field_out</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Compute Bz from Ey using strong 1D Faraday equation for spline coefficients $B_z^{new}(x_j) = B_z^{old}(x_j) - { t}{ x} (E_y(x_j) - E_y(x_{j-1}) $. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">self</td><td>Maxwell solver class</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">delta_t</td><td>Time step</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">field_in</td><td>Ey</td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">field_out</td><td>Bz </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00247">247</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__fem_a366f355703b095d7711a3883ed0a0207_icgraph.svg" width="322" height="118"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="a51ffa2cd61a78cdc2741d91f48a81574"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a51ffa2cd61a78cdc2741d91f48a81574">&#9670;&nbsp;</a></span>transform_dofs_1d_fem()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_maxwell_1d_fem::transform_dofs_1d_fem </td>
+          <td>(</td>
+          <td class="paramtype">class(<a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html">sll_t_maxwell_1d_fem</a>), intent(inout)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(in)&#160;</td>
+          <td class="paramname"><em>in</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(out)&#160;</td>
+          <td class="paramname"><em>out</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>degree</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Invert the mass matrix. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>Maxwell solver class</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">degree</td><td>Specify the degree of the basis functions ! this is 0 for 0 form and 1 for 1 form</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">in</td><td>spline coefficients of projection</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out</td><td>spline coefficients of projection </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00951">951</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__fem_a51ffa2cd61a78cdc2741d91f48a81574_cgraph.svg" width="100%" height="486"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
+</div>
+
+</div>
+</div>
+<a id="a9529d7ddd5961fc724e0b452425e5e2f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9529d7ddd5961fc724e0b452425e5e2f">&#9670;&nbsp;</a></span>weak_curl()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_maxwell_1d_fem::weak_curl </td>
+          <td>(</td>
+          <td class="paramtype">class(<a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html">sll_t_maxwell_1d_fem</a>)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
+          <td class="paramname"><em>delta_t</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(in)&#160;</td>
+          <td class="paramname"><em>field_in</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(inout)&#160;</td>
+          <td class="paramname"><em>field_out</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>compute Ey from Bz using weak Ampere formulation </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">self</td><td>Maxwell solver class</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">delta_t</td><td>Time step</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">field_in</td><td>input field</td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">field_out</td><td>output_field </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00227">227</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__fem_a9529d7ddd5961fc724e0b452425e5e2f_cgraph.svg" width="643" height="248"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__fem_a9529d7ddd5961fc724e0b452425e5e2f_icgraph.svg" width="315" height="118"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
 </div>
 </div>
 
@@ -755,7 +1895,7 @@ Here is the caller graph for this function:</div>
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Thu Sep 16 2021 15:32:49 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Sep 17 2021 15:35:34 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

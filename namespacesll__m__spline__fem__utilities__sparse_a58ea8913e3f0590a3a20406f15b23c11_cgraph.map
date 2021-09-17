@@ -1,0 +1,9 @@
+<map id="sll_s_spline_fem_mixedmass1d_clamped_full" name="sll_s_spline_fem_mixedmass1d_clamped_full">
+<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities__sparse.html#a1e5c3e23523e669b11f0b8178168a425" title="Helper function to create sparsity pattern of the mass matrix with mixed degree deg1 and deg2..." alt="" coords="295,5,492,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__spline__fem__utilities.html#acacc152220bf5c870311d9bb0e63937f" title="Function computing the boundary part for a mass matrix with clamped splines of degree (full version w..." alt="" coords="283,85,504,141"/>
+<area shape="rect" id="node6" href="$namespacesll__m__spline__fem__utilities__sparse.html#adc62b0f3674def694192b1c6272cc317" title="Assemble the boundary part of a mixed mass matrix. " alt="" coords="309,166,477,207"/>
+<area shape="rect" id="node7" href="$namespacesll__m__spline__fem__utilities.html#a927979382ec5177a15fee8c6d92f1bf8" title="Helper function to find line of mass matrix ( N_i^p N_j^{p&#45;1})) " alt="" coords="283,232,504,288"/>
+<area shape="rect" id="node8" href="$namespacesll__m__spline__fem__utilities__sparse.html#af347360dcee0af16f16745e407adb9cd" title="Assemble the given row of a mixed mass matrix for a full mass_line. " alt="" coords="309,313,477,354"/>
+<area shape="rect" id="node4" href="$namespacesll__m__gauss__legendre__integration.html#a0df63a9e8ee884c2d4a0d1f53602a949" title="Returns a 2d array of size (2,npoints) containing gauss&#45;legendre points and weights in the interval [..." alt="" coords="552,195,775,251"/>
+<area shape="rect" id="node5" href="$namespacesll__m__splines__pp.html#ab63c3a25b861ed9b8701ae2f65942bcf" title="Perform a 1d hornerschema on the pp_coeffs at index. " alt="" coords="576,93,751,134"/>
+</map>

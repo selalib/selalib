@@ -1,0 +1,4 @@
+<map id="push_x_accumulate_j" name="push_x_accumulate_j">
+<area shape="rect" id="node2" href="$namespacesll__m__time__propagator__pic__vm__1d2v__boris.html#a3cf6fda0130133cfc272f9b90ea21601" title="Second order Boris pusher using staggered grid. " alt="" coords="250,5,366,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__time__propagator__pic__vm__1d2v__boris.html#aa09695c9126ee8e88807b60dcafb8464" title="Propagate E_0 to E_{1/2} and x_0 to x_{1/2} to initialize the staggering. " alt="" coords="216,57,400,98"/>
+</map>

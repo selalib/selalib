@@ -1,0 +1,4 @@
+<map id="add_charge_box" name="add_charge_box">
+<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__smooth__1d.html#a2601f12d1b49d88942bce7003ea4c0f1" title="Add particle mass for one particle (upper triangular version) " alt="" coords="181,5,372,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__particle__mesh__coupling__spline__smooth__1d.html#a73728cac68f4c9b867f7cfcc98e50bd3" title="Add particle mass for one particle (full matrix) WARNING: THIS FUNCTION SEEMS TO HAVE BUGS..." alt="" coords="191,71,363,112"/>
+</map>

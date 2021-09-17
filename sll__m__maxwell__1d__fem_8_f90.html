@@ -87,12 +87,13 @@ $(function() {
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Types</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">type &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html">sll_t_maxwell_1d_fem</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maxwell solver class.  <a href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="namespaces"></a>
 Modules</h2></td></tr>
 <tr class="memitem:namespacesll__m__maxwell__1d__fem"><td class="memItemLeft" align="right" valign="top">module &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html">sll_m_maxwell_1d_fem</a></td></tr>
-<tr class="memdesc:namespacesll__m__maxwell__1d__fem"><td class="mdescLeft">&#160;</td><td class="mdescRight">Module interface to solve Maxwell's equations in 1D. <br /></td></tr>
+<tr class="memdesc:namespacesll__m__maxwell__1d__fem"><td class="mdescLeft">&#160;</td><td class="mdescRight">Solve Maxwell's equations in 1D. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
@@ -101,30 +102,68 @@ Functions/Subroutines</h2></td></tr>
 <tr class="memdesc:a47196627859f2c2d812ad68b15d300fb"><td class="mdescLeft">&#160;</td><td class="mdescRight">compute Ey from Bz using weak Ampere formulation  <a href="namespacesll__m__maxwell__1d__fem.html#a47196627859f2c2d812ad68b15d300fb">More...</a><br /></td></tr>
 <tr class="separator:a47196627859f2c2d812ad68b15d300fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5e87fba6009f2ef888e836db7b8eaf0c"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a5e87fba6009f2ef888e836db7b8eaf0c">sll_s_compute_b_from_e_1d_fem</a> (self, delta_t, field_in, field_out)</td></tr>
-<tr class="memdesc:a5e87fba6009f2ef888e836db7b8eaf0c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute Bz from Ey using strong 1D Faraday equation for spline coefficients $B_z^{new}(x_j) = B_z^{old}(x_j) - { t}{ x} (E_y(x_j) - E_y(x_{j-1}) $.  <a href="namespacesll__m__maxwell__1d__fem.html#a5e87fba6009f2ef888e836db7b8eaf0c">More...</a><br /></td></tr>
 <tr class="separator:a5e87fba6009f2ef888e836db7b8eaf0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a26d25ea707a2cac922bddd8fdc96d4da"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a26d25ea707a2cac922bddd8fdc96d4da">sll_s_compute_curl_part_1d_fem</a> (self, delta_t, efield, bfield, betar)</td></tr>
+<tr class="separator:a26d25ea707a2cac922bddd8fdc96d4da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9529d7ddd5961fc724e0b452425e5e2f"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a9529d7ddd5961fc724e0b452425e5e2f">weak_curl</a> (self, delta_t, field_in, field_out)</td></tr>
+<tr class="memdesc:a9529d7ddd5961fc724e0b452425e5e2f"><td class="mdescLeft">&#160;</td><td class="mdescRight">compute Ey from Bz using weak Ampere formulation  <a href="namespacesll__m__maxwell__1d__fem.html#a9529d7ddd5961fc724e0b452425e5e2f">More...</a><br /></td></tr>
+<tr class="separator:a9529d7ddd5961fc724e0b452425e5e2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a366f355703b095d7711a3883ed0a0207"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a366f355703b095d7711a3883ed0a0207">strong_curl</a> (self, delta_t, field_in, field_out)</td></tr>
+<tr class="memdesc:a366f355703b095d7711a3883ed0a0207"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute Bz from Ey using strong 1D Faraday equation for spline coefficients $B_z^{new}(x_j) = B_z^{old}(x_j) - { t}{ x} (E_y(x_j) - E_y(x_{j-1}) $.  <a href="namespacesll__m__maxwell__1d__fem.html#a366f355703b095d7711a3883ed0a0207">More...</a><br /></td></tr>
+<tr class="separator:a366f355703b095d7711a3883ed0a0207"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2d1b34af6ce5bd3e84443d7ec7e2e1c7"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a2d1b34af6ce5bd3e84443d7ec7e2e1c7">sll_s_compute_e_from_rho_1d_fem</a> (self, field_in, field_out)</td></tr>
+<tr class="separator:a2d1b34af6ce5bd3e84443d7ec7e2e1c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a93a33efea7cd5b3605cd58cea29c20dc"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a93a33efea7cd5b3605cd58cea29c20dc">compute_rho_from_e_1d_fem</a> (self, field_in, field_out)</td></tr>
+<tr class="memdesc:a93a33efea7cd5b3605cd58cea29c20dc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute rho from Gauss law for given efield.  <a href="namespacesll__m__maxwell__1d__fem.html#a93a33efea7cd5b3605cd58cea29c20dc">More...</a><br /></td></tr>
+<tr class="separator:a93a33efea7cd5b3605cd58cea29c20dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3cb1b8bf0285889d4089bf972aa81c3f"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a3cb1b8bf0285889d4089bf972aa81c3f">choose_interpolation</a> (self, current, component, E)</td></tr>
+<tr class="memdesc:a3cb1b8bf0285889d4089bf972aa81c3f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Choose between compute_E_from_j_1d_fem and compute_E_from_j_1d_fem_shape.  <a href="namespacesll__m__maxwell__1d__fem.html#a3cb1b8bf0285889d4089bf972aa81c3f">More...</a><br /></td></tr>
+<tr class="separator:a3cb1b8bf0285889d4089bf972aa81c3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a35f67335e750d8c00872ac2599d5bfbe"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a35f67335e750d8c00872ac2599d5bfbe">compute_e_from_j_1d_fem</a> (self, current, component, E)</td></tr>
 <tr class="memdesc:a35f67335e750d8c00872ac2599d5bfbe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute E_i from j_i integrated over the time interval using weak Ampere formulation.  <a href="namespacesll__m__maxwell__1d__fem.html#a35f67335e750d8c00872ac2599d5bfbe">More...</a><br /></td></tr>
 <tr class="separator:a35f67335e750d8c00872ac2599d5bfbe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaeeec4271a275e01eeb77df71a32532c"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#aaeeec4271a275e01eeb77df71a32532c">sll_s_compute_e_from_rho_1d_fem</a> (self, E, rho)</td></tr>
-<tr class="separator:aaeeec4271a275e01eeb77df71a32532c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af1b844cf1315847ac495f1d957189479"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#af1b844cf1315847ac495f1d957189479">compute_e_from_j_1d_fem_shape</a> (self, current, component, E)</td></tr>
+<tr class="separator:af1b844cf1315847ac495f1d957189479"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae42fa711464cf385b882b84fd8c63511"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#ae42fa711464cf385b882b84fd8c63511">multiply_interpolation_inverse_transpose</a> (self, in, out)</td></tr>
+<tr class="separator:ae42fa711464cf385b882b84fd8c63511"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a24ad9e6b445cc06f4c31dda8b252fd26"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a24ad9e6b445cc06f4c31dda8b252fd26">solve_e_b_1d_fem</a> (self, delta_t, bfield, efield)</td></tr>
+<tr class="memdesc:a24ad9e6b445cc06f4c31dda8b252fd26"><td class="mdescLeft">&#160;</td><td class="mdescRight">Solves for the efield part in a implicit curl part solve.  <a href="namespacesll__m__maxwell__1d__fem.html#a24ad9e6b445cc06f4c31dda8b252fd26">More...</a><br /></td></tr>
+<tr class="separator:a24ad9e6b445cc06f4c31dda8b252fd26"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0292d383eb02a02563a4a11367866848"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a0292d383eb02a02563a4a11367866848">solve_circulant</a> (self, eigvals, rhs, res)</td></tr>
 <tr class="separator:a0292d383eb02a02563a4a11367866848"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a77a9871dc6155ac337c1fc10a37ce52e"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a77a9871dc6155ac337c1fc10a37ce52e">compute_phi_from_rho_1d_fem</a> (self, in, phi, efield)</td></tr>
+<tr class="memdesc:a77a9871dc6155ac337c1fc10a37ce52e"><td class="mdescLeft">&#160;</td><td class="mdescRight">For model with adiabatic electrons.  <a href="namespacesll__m__maxwell__1d__fem.html#a77a9871dc6155ac337c1fc10a37ce52e">More...</a><br /></td></tr>
+<tr class="separator:a77a9871dc6155ac337c1fc10a37ce52e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1e96468d8d3973e8cfde8e1c239ad85a"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a1e96468d8d3973e8cfde8e1c239ad85a">compute_phi_from_j_1d_fem</a> (self, in, phi, efield)</td></tr>
+<tr class="memdesc:a1e96468d8d3973e8cfde8e1c239ad85a"><td class="mdescLeft">&#160;</td><td class="mdescRight">For model with adiabatic electrons.  <a href="namespacesll__m__maxwell__1d__fem.html#a1e96468d8d3973e8cfde8e1c239ad85a">More...</a><br /></td></tr>
+<tr class="separator:a1e96468d8d3973e8cfde8e1c239ad85a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a85c7f5b45eebeb0270c47bfbdaae08d5"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a85c7f5b45eebeb0270c47bfbdaae08d5">sll_s_compute_fem_rhs</a> (self, func, degree, coefs_dofs)</td></tr>
 <tr class="memdesc:a85c7f5b45eebeb0270c47bfbdaae08d5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the FEM right-hand-side for a given function f and periodic splines of given degree Its components are $ f N_i dx$ where $N_i$ is the B-spline starting at $x_i$.  <a href="namespacesll__m__maxwell__1d__fem.html#a85c7f5b45eebeb0270c47bfbdaae08d5">More...</a><br /></td></tr>
 <tr class="separator:a85c7f5b45eebeb0270c47bfbdaae08d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abfc2b83c57927e44075c5d11b8949235"><td class="memItemLeft" align="right" valign="top">real(kind=f64) function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#abfc2b83c57927e44075c5d11b8949235">l2norm_squared_1d_fem</a> (self, coefs_dofs, degree)</td></tr>
+<tr class="memdesc:abfc2b83c57927e44075c5d11b8949235"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute square of the L2norm.  <a href="namespacesll__m__maxwell__1d__fem.html#abfc2b83c57927e44075c5d11b8949235">More...</a><br /></td></tr>
+<tr class="separator:abfc2b83c57927e44075c5d11b8949235"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a95835fb7a7173512d52e22df72949289"><td class="memItemLeft" align="right" valign="top">real(kind=f64) function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a95835fb7a7173512d52e22df72949289">inner_product_1d_fem</a> (self, coefs1_dofs, coefs2_dofs, degree, degree2)</td></tr>
+<tr class="separator:a95835fb7a7173512d52e22df72949289"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af92aa77aac30fa9ad87a4cf10cb88ceb"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#af92aa77aac30fa9ad87a4cf10cb88ceb">l2projection_1d_fem</a> (self, func, degree, coefs_dofs)</td></tr>
 <tr class="memdesc:af92aa77aac30fa9ad87a4cf10cb88ceb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the L2 projection of a given function f on periodic splines of given degree.  <a href="namespacesll__m__maxwell__1d__fem.html#af92aa77aac30fa9ad87a4cf10cb88ceb">More...</a><br /></td></tr>
 <tr class="separator:af92aa77aac30fa9ad87a4cf10cb88ceb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a297e5091887d7400c744050d772749d6"><td class="memItemLeft" align="right" valign="top">function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a297e5091887d7400c744050d772749d6">l2norm_squared_1d_fem</a> (self, coefs_dofs, degree)</td></tr>
-<tr class="memdesc:a297e5091887d7400c744050d772749d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute square of the L2norm.  <a href="namespacesll__m__maxwell__1d__fem.html#a297e5091887d7400c744050d772749d6">More...</a><br /></td></tr>
-<tr class="separator:a297e5091887d7400c744050d772749d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa1244c81bbfc9976cbfcfd84dd0a1b25"><td class="memItemLeft" align="right" valign="top">function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#aa1244c81bbfc9976cbfcfd84dd0a1b25">inner_product_1d_fem</a> (self, coefs1_dofs, coefs2_dofs, degree)</td></tr>
-<tr class="separator:aa1244c81bbfc9976cbfcfd84dd0a1b25"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0f182f448b394a9ec1d0f5a3cd1f8153"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a0f182f448b394a9ec1d0f5a3cd1f8153">init_1d_fem</a> (self, domain, n_dofs, s_deg_0)</td></tr>
-<tr class="separator:a0f182f448b394a9ec1d0f5a3cd1f8153"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5b82c557e498ae59986631d0aea7ed63"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a5b82c557e498ae59986631d0aea7ed63">init_1d_fem</a> (self, domain, n_dofs, s_deg_0, delta_t, strong_ampere, solver_tolerance, force_sign, adiabatic_electrons)</td></tr>
+<tr class="separator:a5b82c557e498ae59986631d0aea7ed63"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a73395fc583bd3e7ec4530eb3cca63001"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a73395fc583bd3e7ec4530eb3cca63001">free_1d_fem</a> (self)</td></tr>
 <tr class="separator:a73395fc583bd3e7ec4530eb3cca63001"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af164250a221cd8f9727fc31ad44018a1"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#af164250a221cd8f9727fc31ad44018a1">multiply_g</a> (self, in, out)</td></tr>
+<tr class="separator:af164250a221cd8f9727fc31ad44018a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa477d469a63715e37b1d2c9f9d0a57a0"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#aa477d469a63715e37b1d2c9f9d0a57a0">multiply_gt</a> (self, in, out)</td></tr>
+<tr class="separator:aa477d469a63715e37b1d2c9f9d0a57a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acb63eb5eafceb69a879302928c503bfa"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#acb63eb5eafceb69a879302928c503bfa">multiply_mass_1d_fem</a> (self, in, out, degree)</td></tr>
+<tr class="separator:acb63eb5eafceb69a879302928c503bfa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a07ac85d431e1ab78f59da39ba51cdafb"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a07ac85d431e1ab78f59da39ba51cdafb">invert_mass_1d_fem</a> (self, in, out, degree)</td></tr>
+<tr class="memdesc:a07ac85d431e1ab78f59da39ba51cdafb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Invert the mass matrix.  <a href="namespacesll__m__maxwell__1d__fem.html#a07ac85d431e1ab78f59da39ba51cdafb">More...</a><br /></td></tr>
+<tr class="separator:a07ac85d431e1ab78f59da39ba51cdafb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a51ffa2cd61a78cdc2741d91f48a81574"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__fem.html#a51ffa2cd61a78cdc2741d91f48a81574">transform_dofs_1d_fem</a> (self, in, out, degree)</td></tr>
+<tr class="memdesc:a51ffa2cd61a78cdc2741d91f48a81574"><td class="mdescLeft">&#160;</td><td class="mdescRight">Invert the mass matrix.  <a href="namespacesll__m__maxwell__1d__fem.html#a51ffa2cd61a78cdc2741d91f48a81574">More...</a><br /></td></tr>
+<tr class="separator:a51ffa2cd61a78cdc2741d91f48a81574"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 </div><!-- contents -->
 <!-- HTML footer for doxygen 1.8.7-->
@@ -133,7 +172,7 @@ Functions/Subroutines</h2></td></tr>
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Thu Sep 16 2021 15:32:48 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Sep 17 2021 15:35:33 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

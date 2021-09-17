@@ -1,0 +1,11 @@
+<map id="sll_t_time_propagator_pic_vm_2d3v_hs" name="sll_t_time_propagator_pic_vm_2d3v_hs">
+<area shape="rect" id="node2" href="$structsll__m__time__propagator__base_1_1sll__c__time__propagator__base.html" title="Type for Hamiltonian splittings. " alt="" coords="1039,276,1243,303"/>
+<area shape="rect" id="node3" href="$structsll__m__hamiltonian__splitting__base_1_1sll__c__hamiltonian__splitting__base.html" title="Type for Hamiltonian splittings. " alt="" coords="647,243,881,269"/>
+<area shape="rect" id="node4" href="$structsll__m__maxwell__2d__fem__fft_1_1sll__t__maxwell__2d__fem__fft.html" title="sll_t_maxwell_2d_fem_fft" alt="" coords="1046,360,1235,387"/>
+<area shape="rect" id="node5" href="$structsll__m__poisson__2d__fem__fft_1_1sll__t__poisson__2d__fem__fft.html" title="sll_t_poisson_2d_fem_fft" alt="" coords="673,360,855,387"/>
+<area shape="rect" id="node6" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib. " alt="" coords="331,208,401,235"/>
+<area shape="rect" id="node10" href="$structsll__m__linear__solver__spline__mass__2d__fft_1_1sll__t__linear__solver__spline__mass__2d__fft.html" title="Data type for a linear solver inverting a 2d tensor product of circulant matrices based on FFT..." alt="" coords="687,294,841,335"/>
+<area shape="rect" id="node11" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver " alt="" coords="296,82,436,123"/>
+<area shape="rect" id="node12" href="$structsll__m__particle__mesh__coupling__spline__2d__feec_1_1sll__t__particle__mesh__coupling__spline__2d__feec.html" title="Particle mesh coupling in 3d based on (arbitrary degree) spline on a tensor product uniform mesh..." alt="" coords="1047,838,1235,879"/>
+<area shape="rect" id="node13" href="$structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html" title="arbitrary degree 1d spline " alt="" coords="693,647,835,673"/>
+</map>

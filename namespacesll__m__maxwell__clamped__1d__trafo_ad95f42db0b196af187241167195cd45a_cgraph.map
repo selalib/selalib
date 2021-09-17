@@ -1,0 +1,4 @@
+<map id="compute_rho_from_e_1d_trafo" name="compute_rho_from_e_1d_trafo">
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__clamped__1d__trafo.html#af80d8382e5e69b6521296cd7ea11e8d9" title="Multiply by transpose of dicrete gradient matrix. " alt="" coords="213,20,309,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__spline__fem__utilities__3d__clamped.html#a6ae5272825c9bf38331b26ebffaa115f" title="Multiplication of the input vector in by the transposed clamped derivative matrix G^T..." alt="" coords="357,5,564,61"/>
+</map>

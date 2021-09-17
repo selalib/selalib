@@ -1,0 +1,5 @@
+<map id="sll_t_preconditioner_poisson_fft" name="sll_t_preconditioner_poisson_fft">
+<area shape="rect" id="node2" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver " alt="" coords="296,149,436,190"/>
+<area shape="rect" id="node6" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib. " alt="" coords="331,241,401,268"/>
+<area shape="rect" id="node5" href="$structsll__m__poisson__3d__fem__fft_1_1sll__t__poisson__3d__fem__fft.html" title="sll_t_poisson_3d_fem_fft" alt="" coords="627,357,809,384"/>
+</map>

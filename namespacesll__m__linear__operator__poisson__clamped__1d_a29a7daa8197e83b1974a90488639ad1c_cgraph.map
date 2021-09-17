@@ -1,0 +1,4 @@
+<map id="dot_poisson_clamped_1d" name="dot_poisson_clamped_1d">
+<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities__3d__clamped.html#ad4e7ae8afab3728922de98d2ce93989e" title="Multiplication of the input vector in by the clamped derivative matrix G. " alt="" coords="240,5,447,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__spline__fem__utilities__3d__clamped.html#a6ae5272825c9bf38331b26ebffaa115f" title="Multiplication of the input vector in by the transposed clamped derivative matrix G^T..." alt="" coords="240,85,447,141"/>
+</map>

@@ -1,0 +1,16 @@
+<map id="sll_t_maxwell_clamped_1d_trafo" name="sll_t_maxwell_clamped_1d_trafo">
+<area shape="rect" id="node2" href="$structsll__m__maxwell__1d__base_1_1sll__c__maxwell__1d__base.html" title="sll_c_maxwell_1d_base" alt="" coords="505,5,680,32"/>
+<area shape="rect" id="node4" href="$structsll__m__mapping__3d_1_1sll__t__mapping__3d.html" title="type collecting functions for analytical coordinate mapping " alt="" coords="1391,1049,1527,1076"/>
+<area shape="rect" id="node12" href="$structsll__m__linear__operator__abstract_1_1sll__t__linear__operator__abstract.html" title="class for abstract linear operator " alt="" coords="310,146,465,187"/>
+<area shape="rect" id="node13" href="$structsll__m__matrix__csr_1_1sll__t__matrix__csr.html" title="class for a csr matrix " alt="" coords="1032,148,1157,175"/>
+<area shape="rect" id="node17" href="$structsll__m__linear__solver__iter__abstract_1_1sll__t__linear__solver__iter__abstract.html" title="class for abstract iterative linear solver " alt="" coords="713,573,853,614"/>
+<area shape="rect" id="node18" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver " alt="" coords="317,578,457,619"/>
+<area shape="rect" id="node10" href="$structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html" title="arbitrary degree 1d spline " alt="" coords="713,1217,854,1244"/>
+<area shape="rect" id="node11" href="$structsll__m__linear__operator__poisson__clamped__1d_1_1sll__t__linear__operator__poisson__clamped__1d.html" title="sll_t_linear_operator\l_poisson_clamped_1d" alt="" coords="1376,605,1541,646"/>
+<area shape="rect" id="node15" href="$structsll__m__linear__operator__schur__eb__cl__1d_1_1sll__t__linear__operator__schur__eb__cl__1d.html" title="sll_t_linear_operator\l_schur_eb_cl_1d" alt="" coords="1381,379,1536,421"/>
+<area shape="rect" id="node22" href="$structsll__m__linear__solver__mgmres_1_1sll__t__linear__solver__mgmres.html" title="class for a sequential gmres linear solver " alt="" coords="1025,815,1165,857"/>
+<area shape="rect" id="node6" href="$structsll__m__mapping__3d_1_1matrix__element.html" title="matrix_element" alt="" coords="1031,1111,1158,1137"/>
+<area shape="rect" id="node9" href="$structsll__m__splines__pp_1_1sll__t__spline__pp__3d.html" title="arbitrary degree 3d spline " alt="" coords="1024,1161,1165,1188"/>
+<area shape="rect" id="node14" href="$structsll__m__matrix__abstract_1_1sll__t__matrix__abstract.html" title="abstract class for matrix " alt="" coords="704,148,863,175"/>
+<area shape="rect" id="node16" href="$structsll__m__linear__solver__cg_1_1sll__t__linear__solver__cg.html" title="class for the cg linear solver " alt="" coords="1189,708,1352,735"/>
+</map>

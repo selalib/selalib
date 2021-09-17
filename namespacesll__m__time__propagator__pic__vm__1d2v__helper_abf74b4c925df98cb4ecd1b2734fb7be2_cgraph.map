@@ -1,0 +1,6 @@
+<map id="initialize_pic_vm_1d2v_helper" name="initialize_pic_vm_1d2v_helper">
+<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities.html#ae3b59ded8bbb13b7762f0ac9dfb320be" title="Computes the mass line for a mass matrix with degree splines. " alt="" coords="224,13,435,54"/>
+<area shape="rect" id="node4" href="$namespacesll__m__spline__fem__utilities__sparse.html#a10fb9b7a4dea5775b5aa44f03be76f0e" title="Helper function to create sparsity pattern of the mass matrix. " alt="" coords="233,79,425,135"/>
+<area shape="rect" id="node5" href="$namespacesll__m__fft.html#a928055b91495cdbe4e1fcfaca976a8bc" title="Create new 1d real to real plan. " alt="" coords="261,159,397,201"/>
+<area shape="rect" id="node3" href="$namespacesll__m__gauss__legendre__integration.html#a0df63a9e8ee884c2d4a0d1f53602a949" title="Returns a 2d array of size (2,npoints) containing gauss&#45;legendre points and weights in the interval [..." alt="" coords="483,5,705,61"/>
+</map>

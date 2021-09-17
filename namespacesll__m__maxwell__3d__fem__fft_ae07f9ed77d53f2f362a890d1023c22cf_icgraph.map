@@ -1,0 +1,4 @@
+<map id="multiply_mass_1form" name="multiply_mass_1form">
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__fem__fft.html#a3aaf003e9993faa41ebfc6d5b81fd5ca" title="compute rho from e using weak Gauss law ( rho = G^T M_1 e ) " alt="" coords="224,5,405,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__3d__fem__fft.html#adf449c72634051c9778ba058092a3162" title="Multiply by the mass matrix. " alt="" coords="217,71,412,98"/>
+</map>

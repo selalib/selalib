@@ -1,0 +1,5 @@
+<map id="l2norm_squared_2d_fem" name="l2norm_squared_2d_fem">
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__2d__fem__fft.html#aa51ed5a01418cd3e1b624e1ebce8b256" title="inner_product_2d_fem" alt="" coords="236,13,403,39"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__2d__fem__fft.html#aa50fa038089df0d0bd86994241630dcb" title="Multiply by the mass matrix. " alt="" coords="451,13,621,39"/>
+<area shape="rect" id="node4" href="$namespacesll__m__spline__fem__utilities.html#a528fc7241e39fd979bd521f0c2d7b350" title="Multiply the vector invec with the spline FEM mass matrix with mass line mass. " alt="" coords="669,5,911,47"/>
+</map>

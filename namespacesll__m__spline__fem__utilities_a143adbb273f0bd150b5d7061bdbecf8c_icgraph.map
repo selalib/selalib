@@ -1,0 +1,8 @@
+<map id="sll_s_multiply_g" name="sll_s_multiply_g">
+<area shape="rect" id="node2" href="$namespacesll__m__linear__operator__poisson__3d.html#a1befd05f3dc9f5b28ceab901680adb35" title="sll_m_linear_operator\l_poisson_3d::dot_poisson_3d" alt="" coords="180,5,391,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__3d__fem.html#a0de8ea52dfb960a82d6d1ae71e5517a4" title="Multiply by dicrete gradient matrix. " alt="" coords="197,71,373,112"/>
+<area shape="rect" id="node5" href="$namespacesll__m__maxwell__3d__fem__fft.html#a4bb652298a6117e8fe549a3759c36671" title="Multiply by dicrete gradient matrix. " alt="" coords="197,136,373,177"/>
+<area shape="rect" id="node6" href="$namespacesll__m__maxwell__3d__trafo.html#a56c05c8453d3e51ace24968645af63af" title="Multiply by dicrete gradient matrix. " alt="" coords="195,201,376,243"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__3d__fem.html#a447c5bf0006a5cdebdcafb93e331a06d" title="Compute E_i from rho_i integrated over the time interval using weak Poisson&#39;s equation. " alt="" coords="441,63,617,119"/>
+<area shape="rect" id="node7" href="$namespacesll__m__maxwell__3d__trafo.html#ac6c20b5dec627afb9d94ca9e1644e848" title="Compute E_i from rho_i integrated over the time interval using weak Poisson&#39;s equation. " alt="" coords="439,194,620,250"/>
+</map>

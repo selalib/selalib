@@ -1,0 +1,21 @@
+<map id="sll_t_maxwell_3d_fem_fft" name="sll_t_maxwell_3d_fem_fft">
+<area shape="rect" id="node2" href="$structsll__m__maxwell__3d__base_1_1sll__c__maxwell__3d__base.html" title="sll_c_maxwell_3d_base" alt="" coords="1083,1009,1257,1036"/>
+<area shape="rect" id="node3" href="$structsll__m__profile__functions_1_1sll__t__profile__functions.html" title="sll_t_profile_functions" alt="" coords="732,1169,896,1196"/>
+<area shape="rect" id="node5" href="$structsll__m__linear__operator__block_1_1sll__t__linear__operator__block.html" title="class for a linear operator_block " alt="" coords="737,1529,891,1570"/>
+<area shape="rect" id="node11" href="$structsll__m__poisson__3d__fem__fft_1_1sll__t__poisson__3d__fem__fft.html" title="sll_t_poisson_3d_fem_fft" alt="" coords="723,765,905,792"/>
+<area shape="rect" id="node14" href="$structsll__m__linear__solver__iter__abstract_1_1sll__t__linear__solver__iter__abstract.html" title="class for abstract iterative linear solver " alt="" coords="744,1694,884,1735"/>
+<area shape="rect" id="node22" href="$structsll__m__linear__solver__spline__mass__fft_1_1sll__t__linear__solver__spline__mass__fft.html" title="Linear solver for FFT&#45;based inversion of 3d tensor product of circulant matrices (extending the abstr..." alt="" coords="744,655,884,697"/>
+<area shape="rect" id="node23" href="$structsll__m__linear__solver__mgmres_1_1sll__t__linear__solver__mgmres.html" title="class for a sequential gmres linear solver " alt="" coords="1100,1430,1240,1471"/>
+<area shape="rect" id="node26" href="$structsll__m__linear__solver__block_1_1sll__t__linear__solver__block.html" title="class for a linear solver_block " alt="" coords="744,919,884,961"/>
+<area shape="rect" id="node6" href="$structsll__m__linear__operator__abstract_1_1sll__t__linear__operator__abstract.html" title="class for abstract linear operator " alt="" coords="372,190,527,231"/>
+<area shape="rect" id="node19" href="$structsll__m__matrix__abstract_1_1sll__t__matrix__abstract.html" title="abstract class for matrix " alt="" coords="735,185,893,212"/>
+<area shape="rect" id="node20" href="$structsll__m__linear__operator__maxwell__eb__schur_1_1sll__t__linear__operator__maxwell__eb__schur.html" title="sll_t_linear_operator\l_maxwell_eb_schur" alt="" coords="737,119,891,161"/>
+<area shape="rect" id="node24" href="$structsll__m__linear__operator__kron_1_1sll__t__linear__operator__kron.html" title="class for a linear operator " alt="" coords="719,324,909,351"/>
+<area shape="rect" id="node12" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib. " alt="" coords="414,508,485,535"/>
+<area shape="rect" id="node15" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver " alt="" coords="379,815,519,857"/>
+<area shape="rect" id="node18" href="$structsll__m__matrix__csr_1_1sll__t__matrix__csr.html" title="class for a csr matrix " alt="" coords="1107,185,1233,212"/>
+<area shape="rect" id="node9" href="$structsll__m__linear__operator__block_1_1jrk__t__linear__operator__pointer.html" title="class that contains a pointer to a linear operator " alt="" coords="371,1601,528,1642"/>
+<area shape="rect" id="node13" href="$structsll__m__linear__solver__cg_1_1sll__t__linear__solver__cg.html" title="class for the cg linear solver " alt="" coords="1089,1628,1251,1655"/>
+<area shape="rect" id="node27" href="$structsll__m__linear__solver__block_1_1jrk__t__linear__solver__pointer.html" title="class that contains a pointer to a linear solver " alt="" coords="378,1142,521,1183"/>
+<area shape="rect" id="node25" href="$structsll__m__preconditioner__fft_1_1sll__t__preconditioner__fft.html" title="sll_t_preconditioner_fft" alt="" coords="1085,816,1255,843"/>
+</map>

@@ -1,0 +1,4 @@
+<map id="evaluate_int_spline_1d_subnewton" name="evaluate_int_spline_1d_subnewton">
+<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__1d.html#acd3198a72571d1253f83aaa909e67031" title="Helper function that identifies in which box the particle is found and its normalized poistion in the..." alt="" coords="223,5,369,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__particle__mesh__coupling__spline__1d.html#a4e84b997b4f7f6b7ff592efbb5510753" title="Helper function for evaluate_int_quad_subnewton (despite the name it evaluates a field and does not u..." alt="" coords="203,56,389,83"/>
+</map>

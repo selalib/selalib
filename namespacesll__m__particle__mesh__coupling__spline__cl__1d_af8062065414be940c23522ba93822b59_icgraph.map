@@ -1,0 +1,10 @@
+<map id="convert_x_to_xbox" name="convert_x_to_xbox">
+<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__cl__1d.html#a1fb0b088ca4fd34ef12638f900989ad8" title="Destructor. " alt="" coords="199,5,389,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__particle__mesh__coupling__spline__cl__1d.html#a2537a7b25caf250ec7ab8c63b1a52986" title="Add the contribution of one particle to the approximate mass matrix. " alt="" coords="199,71,389,112"/>
+<area shape="rect" id="node4" href="$namespacesll__m__particle__mesh__coupling__spline__cl__1d.html#a29a0c85e6d216bafe9fd599a64d997db" title="Add the contribution of one particle to the approximate mass matrix. " alt="" coords="199,136,389,177"/>
+<area shape="rect" id="node5" href="$namespacesll__m__particle__mesh__coupling__spline__cl__1d.html#a7df1e51a06da3a98bd3b663656a6cde5" title="Evaluate field at at position position. " alt="" coords="214,201,374,243"/>
+<area shape="rect" id="node6" href="$namespacesll__m__particle__mesh__coupling__spline__cl__1d.html#a3cd7dad01a129cee909ad1cb166ec3e1" title="Evaluate several fields at position position. " alt="" coords="201,267,387,308"/>
+<area shape="rect" id="node7" href="$namespacesll__m__particle__mesh__coupling__spline__cl__1d.html#a042c2f3c84f21487e6a950cb8097907e" title="Add current with integration over x. " alt="" coords="221,332,367,373"/>
+<area shape="rect" id="node8" href="$namespacesll__m__particle__mesh__coupling__spline__cl__1d.html#a8d22d199ad8045b29c7465b4826a2c0c" title="Combines add_current and evaluate_int. " alt="" coords="213,397,375,439"/>
+<area shape="rect" id="node9" href="$namespacesll__m__particle__mesh__coupling__spline__cl__1d.html#a7c9dc0dd7dd6d96de09e505111a6c8e7" title="Add current for one particle and update v (according to H_p1 part in Hamiltonian splitting) ..." alt="" coords="219,463,369,504"/>
+</map>

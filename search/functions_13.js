@@ -1,5 +1,6 @@
 var searchData=
 [
+  ['t_5fe',['t_e',['../structsll__m__profile__functions_1_1sll__t__profile__functions.html#ae579400f9a569549d8944b24fd58ce6c',1,'sll_m_profile_functions::sll_t_profile_functions::t_e()'],['../namespacesll__m__profile__functions.html#ae93b3118af840cb542b630c1c77e9dd5',1,'sll_m_profile_functions::t_e()']]],
   ['t_5fhdf5_5fserial_5f_5fclose',['t_hdf5_serial__close',['../namespacesll__m__hdf5__serial.html#a140be15ac495f7b0aeecb095a1695d7c',1,'sll_m_hdf5_serial']]],
   ['t_5fhdf5_5fserial_5f_5fcreate',['t_hdf5_serial__create',['../namespacesll__m__hdf5__serial.html#a0390252d8c846d6d13d2a3565c69d8cb',1,'sll_m_hdf5_serial']]],
   ['t_5fhdf5_5fserial_5f_5fdelete',['t_hdf5_serial__delete',['../namespacesll__m__hdf5__serial.html#a8d801f3569f43bbe469c002948699ba8',1,'sll_m_hdf5_serial']]],
@@ -11,6 +12,7 @@ var searchData=
   ['t_5fhdf5_5fserial_5f_5fwrite_5fint_5farray_5f1d',['t_hdf5_serial__write_int_array_1d',['../namespacesll__m__hdf5__serial.html#a36c9f137798576444500eeb289dc1f74',1,'sll_m_hdf5_serial']]],
   ['t_5fhdf5_5fserial_5f_5fwrite_5fint_5farray_5f2d',['t_hdf5_serial__write_int_array_2d',['../namespacesll__m__hdf5__serial.html#a4b9a0a8210a842c2702f47af806039dc',1,'sll_m_hdf5_serial']]],
   ['t_5fhdf5_5fserial_5f_5fwrite_5fint_5farray_5f3d',['t_hdf5_serial__write_int_array_3d',['../namespacesll__m__hdf5__serial.html#ae9f82dd11a978987a55f7df72b8c4689',1,'sll_m_hdf5_serial']]],
+  ['t_5fi',['t_i',['../structsll__m__profile__functions_1_1sll__t__profile__functions.html#aacbce928c6d3f8a00e923175b3f42655',1,'sll_m_profile_functions::sll_t_profile_functions::t_i()'],['../namespacesll__m__profile__functions.html#a18815ab0e2961fa484ddd44762e225bc',1,'sll_m_profile_functions::t_i()']]],
   ['t_5fxdmf_5f_5fadd_5ffield',['t_xdmf__add_field',['../namespacesll__m__xdmf__light__serial.html#ae7492113291a1a6e3ed86e9e0d335dad',1,'sll_m_xdmf_light_serial']]],
   ['t_5fxdmf_5f_5fadd_5fgrid',['t_xdmf__add_grid',['../namespacesll__m__xdmf__light__serial.html#acaa2d1c6211e3dde3e258f758b497cd0',1,'sll_m_xdmf_light_serial']]],
   ['t_5fxdmf_5f_5fdelete',['t_xdmf__delete',['../namespacesll__m__xdmf__light__serial.html#aa0b902ff8fef1c55449feb7501601cec',1,'sll_m_xdmf_light_serial']]],
@@ -66,6 +68,9 @@ var searchData=
   ['toroidal_5f1',['toroidal_1',['../namespacesll__m__fcisl__toroidal.html#a3ca26babb29f2aa3a9c19e127f611b38',1,'sll_m_fcisl_toroidal']]],
   ['toroidal_5f2',['toroidal_2',['../namespacesll__m__fcisl__toroidal.html#aea442fdae18e85541759322fbb865390',1,'sll_m_fcisl_toroidal']]],
   ['transf_5f2d_5fjacobian_5fnode_5fdiscrete',['transf_2d_jacobian_node_discrete',['../namespacesll__m__coordinate__transformations__2d.html#ac97df32aed38f539cd4910d6b6dad49a',1,'sll_m_coordinate_transformations_2d']]],
+  ['transform_5fdofs',['transform_dofs',['../structsll__m__maxwell__1d__base_1_1sll__c__maxwell__1d__base.html#a9fa62e3dc86371a62699f392b6dc472a',1,'sll_m_maxwell_1d_base::sll_c_maxwell_1d_base::transform_dofs()'],['../structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#a579193a6fe9e4d9bf283b624c8572207',1,'sll_m_maxwell_1d_fem::sll_t_maxwell_1d_fem::transform_dofs()'],['../structsll__m__maxwell__1d__ps_1_1sll__t__maxwell__1d__ps.html#a293c32eb7feab980416d634a995296a7',1,'sll_m_maxwell_1d_ps::sll_t_maxwell_1d_ps::transform_dofs()'],['../namespacesll__m__maxwell__1d__base.html#aaf85cecf5caaf65e4878b59fc382b046',1,'sll_m_maxwell_1d_base::transform_dofs()']]],
+  ['transform_5fdofs_5f1d_5ffem',['transform_dofs_1d_fem',['../namespacesll__m__maxwell__1d__fem.html#a51ffa2cd61a78cdc2741d91f48a81574',1,'sll_m_maxwell_1d_fem']]],
+  ['transform_5fdofs_5f1d_5fps',['transform_dofs_1d_ps',['../namespacesll__m__maxwell__1d__ps.html#ae284c34a8333b70f2809cbeefc25b95d',1,'sll_m_maxwell_1d_ps']]],
   ['trapz_5fintegral_5f1d',['trapz_integral_1d',['../interfacesll__m__trapz__integration_1_1sll__o__trapz__integrate__1d.html#a126f2fb2a9cce19a3c84531e8d25cda9',1,'sll_m_trapz_integration::sll_o_trapz_integrate_1d::trapz_integral_1d()'],['../namespacesll__m__trapz__integration.html#af5354563267946d96ff5d989f0aaf122',1,'sll_m_trapz_integration::trapz_integral_1d()']]],
   ['trapz_5fweights',['trapz_weights',['../namespacesll__m__trapz__integration.html#a0fe42aba5c8e37593d725bbd1420e134',1,'sll_m_trapz_integration']]],
   ['triangle_5farea',['triangle_area',['../namespacesll__m__fekete__integration.html#a300188a7e5cadce739ea1ba63ac4544f',1,'sll_m_fekete_integration']]],

@@ -1,0 +1,9 @@
+<map id="multiply_mass_3dkron" name="multiply_mass_3dkron">
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__fem__fft.html#adea1bfe8cb9efebd4413b03e46082a41" title="Compute inner product. " alt="" coords="224,9,412,36"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__3d__fem__fft.html#adf449c72634051c9778ba058092a3162" title="Multiply by the mass matrix. " alt="" coords="465,123,659,149"/>
+<area shape="rect" id="node5" href="$namespacesll__m__maxwell__3d__fem__fft.html#ae07f9ed77d53f2f362a890d1023c22cf" title="Helper function for multiply_mass. " alt="" coords="236,68,400,95"/>
+<area shape="rect" id="node7" href="$namespacesll__m__maxwell__3d__fem__fft.html#a13ab31c6639d576f0086381c07ea33f5" title="Helper function for multiply_mass. " alt="" coords="236,169,400,196"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__3d__fem__fft.html#ae7e382ae93d590b8fa62b3af5c0d8df1" title="Compute square of the L2norm. " alt="" coords="460,5,664,32"/>
+<area shape="rect" id="node6" href="$namespacesll__m__maxwell__3d__fem__fft.html#a3aaf003e9993faa41ebfc6d5b81fd5ca" title="compute rho from e using weak Gauss law ( rho = G^T M_1 e ) " alt="" coords="471,57,653,98"/>
+<area shape="rect" id="node8" href="$namespacesll__m__maxwell__3d__fem__fft.html#a01c619d73d2b079d62d58e5d7b18f07a" title="compute Ey from Bz using weak Ampere formulation " alt="" coords="478,174,646,215"/>
+</map>

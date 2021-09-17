@@ -1,4 +1,11 @@
 <map id="sll_t_maxwell_1d_fem" name="sll_t_maxwell_1d_fem">
-<area shape="rect" id="node2" href="$structsll__m__maxwell__1d__base_1_1sll__c__maxwell__1d__base.html" title="sll_c_maxwell_1d_base" alt="" coords="5,139,180,165"/>
-<area shape="rect" id="node3" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib. " alt="" coords="204,139,275,165"/>
+<area shape="rect" id="node2" href="$structsll__m__maxwell__1d__base_1_1sll__c__maxwell__1d__base.html" title="sll_c_maxwell_1d_base" alt="" coords="508,57,683,84"/>
+<area shape="rect" id="node5" href="$structsll__m__linear__operator__abstract_1_1sll__t__linear__operator__abstract.html" title="class for abstract linear operator " alt="" coords="313,177,467,218"/>
+<area shape="rect" id="node7" href="$structsll__m__matrix__csr_1_1sll__t__matrix__csr.html" title="class for a csr matrix " alt="" coords="1053,149,1178,176"/>
+<area shape="rect" id="node10" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib. " alt="" coords="355,260,425,287"/>
+<area shape="rect" id="node12" href="$structsll__m__linear__solver__iter__abstract_1_1sll__t__linear__solver__iter__abstract.html" title="class for abstract iterative linear solver " alt="" coords="716,567,856,609"/>
+<area shape="rect" id="node13" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver " alt="" coords="320,511,460,553"/>
+<area shape="rect" id="node4" href="$structsll__m__linear__operator__schur__eb__1d_1_1sll__t__linear__operator__schur__eb__1d.html" title="sll_t_linear_operator\l_schur_eb_1d" alt="" coords="1281,295,1436,337"/>
+<area shape="rect" id="node8" href="$structsll__m__matrix__abstract_1_1sll__t__matrix__abstract.html" title="abstract class for matrix " alt="" coords="707,159,865,185"/>
+<area shape="rect" id="node11" href="$structsll__m__linear__solver__mgmres_1_1sll__t__linear__solver__mgmres.html" title="class for a sequential gmres linear solver " alt="" coords="1045,462,1185,503"/>
 </map>

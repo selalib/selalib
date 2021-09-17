@@ -9,25 +9,25 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 35)">
 <title>sll_s_collective_bcast_real64</title>
 <polygon fill="#ffffff" stroke="transparent" points="-4,4 -4,-35 277,-35 277,4 -4,4"/>
-<!-- Node348 -->
+<!-- Node378 -->
 <g id="node1" class="node">
-<title>Node348</title>
+<title>Node378</title>
 <polygon fill="#bfbfbf" stroke="#000000" points="0,-.5 0,-30.5 122,-30.5 122,-.5 0,-.5"/>
 <text text-anchor="start" x="8" y="-18.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_collective_bcast</text>
 <text text-anchor="middle" x="61" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">_real64</text>
 </g>
-<!-- Node349 -->
+<!-- Node379 -->
 <g id="node2" class="node">
-<title>Node349</title>
+<title>Node379</title>
 <g id="a_node2"><a xlink:href="namespacesll__m__collective.html#a9a5729d7ca2e55890195f76c8a5cbd62" target="_top" xlink:title="Checks the good execution of collective instruction. ">
 <polygon fill="#ffffff" stroke="#000000" points="158,-6 158,-25 273,-25 273,-6 158,-6"/>
 <text text-anchor="middle" x="215.5" y="-13" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_test_mpi_error</text>
 </a>
 </g>
 </g>
-<!-- Node348&#45;&gt;Node349 -->
+<!-- Node378&#45;&gt;Node379 -->
 <g id="edge1" class="edge">
-<title>Node348&#45;&gt;Node349</title>
+<title>Node378&#45;&gt;Node379</title>
 <path fill="none" stroke="#191970" d="M122.0625,-15.5C130.4576,-15.5 139.1198,-15.5 147.6279,-15.5"/>
 <polygon fill="#191970" stroke="#191970" points="147.9013,-19.0001 157.9013,-15.5 147.9012,-12.0001 147.9013,-19.0001"/>
 </g>

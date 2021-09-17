@@ -101,7 +101,7 @@ $(function() {
  <br />
  </p><div class="fragment"><div class="line">&amp;mesh_1d_cart_1</div><div class="line"> choice_1 = <span class="stringliteral">&quot;landau&quot;</span></div><div class="line">/</div><div class="line">&amp;mesh_1d_landau_cart_1</div><div class="line"> num_cells_1 = 32</div><div class="line"> eta_min_1 = 0.</div><div class="line"> nbox_1 = 1</div><div class="line"> kmode_1 = 0.5</div><div class="line">/</div><div class="line"></div><div class="line">&amp;mesh_1d_cart_2</div><div class="line"> choice_2 = <span class="stringliteral">&quot;unif&quot;</span></div><div class="line">/</div><div class="line">&amp;mesh_1d_unif_cart_2</div><div class="line"> num_cells_2 = 32</div><div class="line"> eta_min_2 = -6.</div><div class="line"> eta_max_2 = 6.</div><div class="line">/</div></div><!-- fragment --><p> <br />
  and the following code </p><div class="fragment"><div class="line"><span class="comment">!ADD_EXECUTABLE(my_prog my_prog.f90)</span></div><div class="line"><span class="comment">!TARGET_LINK_LIBRARIES(my_prog sll_nml_mesh_cart)</span></div><div class="line"><span class="keyword">program</span> my_prog</div><div class="line"><span class="keywordtype">use </span><a class="code" href="namespacesll__m__nml__mesh__1d__cart.html">sll_m_nml_mesh_1d_cart</a><span class="keywordtype">, only</span> : &amp;</div><div class="line">    sll_s_nml_mesh_1d_cart</div><div class="line">  <span class="keywordtype">implicit none</span></div><div class="line">  <span class="keywordtype">real(kind=f64)</span>, <span class="keywordtype">pointer</span> :: x(:)</div><div class="line">  <span class="keywordtype">real(kind=f64)</span>, <span class="keywordtype">pointer</span> :: v(:)</div><div class="line">  <span class="keyword">call </span>sll_s_nml_mesh_1d_cart( <span class="stringliteral">&quot;test&quot;</span>, x, clone=<span class="stringliteral">&quot;_1&quot;</span> )</div><div class="line">  <span class="keyword">call </span>sll_s_nml_mesh_1d_cart( <span class="stringliteral">&quot;test&quot;</span>, v, clone=<span class="stringliteral">&quot;_2&quot;</span> )</div><div class="line">  print *,<span class="stringliteral">&#39;#num_cells=&#39;</span>,<span class="keyword">size</span>(x)-1,<span class="keyword">size</span>(v)-1</div><div class="line"><span class="keyword">end program</span></div></div><!-- fragment --><p> Information from namelist file test.nml is stored in <code> x </code> and <code> v </code>. </p><dl class="section author"><dt>Author</dt><dd>Michel Mehrenberger </dd></dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000023">Todo:</a></b></dt><dd>add initialization in 2D,3D,4D if needed </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000029">Todo:</a></b></dt><dd>add initialization in 2D,3D,4D if needed </dd></dl>
 </div><!-- contents -->
 <!-- HTML footer for doxygen 1.8.7-->
 <!-- start footer part -->
@@ -109,7 +109,7 @@ $(function() {
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Thu Sep 16 2021 15:32:48 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Sep 17 2021 15:35:33 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

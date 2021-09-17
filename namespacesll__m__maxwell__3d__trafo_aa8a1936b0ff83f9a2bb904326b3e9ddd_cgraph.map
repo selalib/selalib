@@ -1,0 +1,8 @@
+<map id="l2projection_3d_trafo" name="l2projection_3d_trafo">
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__trafo.html#a11b0cc50d265c800a17b7a50d8e48b43" title="Compute the FEM right&#45;hand&#45;side for a given function f and periodic splines of given degree Its compo..." alt="" coords="213,81,393,108"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__3d__trafo.html#a0506d473b0b0214b79338d1738fc3912" title="Compute $ f(F()) N_i() J_F() d$ for scalar function f, where $N_i$ is the B&#45;spline starting at $$..." alt="" coords="445,5,553,32"/>
+<area shape="rect" id="node5" href="$namespacesll__m__maxwell__3d__trafo.html#a1fffa041bdfafa6dc01ea62c1ae55c05" title="Compute $ f(F()) DF^{&#45;T}() N_i() J_F() d$ for vector function f, where $N_i$ is the B&#45;spline starting..." alt="" coords="447,56,551,83"/>
+<area shape="rect" id="node6" href="$namespacesll__m__maxwell__3d__trafo.html#a17b45ce77c01edb0c17bb4dbd62ca69e" title="Compute $ f(F()) DF() N_i() d$ for vector function f, where $N_i$ is the B&#45;spline starting at $$..." alt="" coords="447,107,551,133"/>
+<area shape="rect" id="node7" href="$namespacesll__m__maxwell__3d__trafo.html#a3a36bf021d89292fe56b88e22f20fef0" title="Compute $ f(F()) N_i() d$ for scalar function f, where $N_i$ is the B&#45;spline starting at $$..." alt="" coords="441,157,556,184"/>
+<area shape="rect" id="node4" href="$namespacesll__m__gauss__legendre__integration.html#a0df63a9e8ee884c2d4a0d1f53602a949" title="Returns a 2d array of size (2,npoints) containing gauss&#45;legendre points and weights in the interval [..." alt="" coords="604,67,827,123"/>
+</map>

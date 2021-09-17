@@ -1,6 +1,14 @@
 <map id="sll_s_spline_pp_free_1d" name="sll_s_spline_pp_free_1d">
-<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__1d.html#abecf76afa11f08f6dacbf54dd382acff" title="Destructor. " alt="" coords="239,5,395,61"/>
-<area shape="rect" id="node3" href="$namespacesll__m__splines__pp.html#af936c44d09c3ce67e7e0ac1dd39066b5" title="Destructor 2d. " alt="" coords="229,85,405,112"/>
-<area shape="rect" id="node5" href="$namespacesll__m__splines__pp.html#a602fe559b4885a83bfed2a0dd588a92d" title="Destructor 3d. " alt="" coords="229,136,405,163"/>
-<area shape="rect" id="node4" href="$namespacesll__m__particle__mesh__coupling__spline__2d.html#a56f1caf3ced92c6836be738ab3ece1bc" title="Destructor. " alt="" coords="453,71,609,127"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__clamped__1d__fem__sm.html#a11cb1b6cb5cdaad6d1b79fc5cdd3bc86" title="Finalization. " alt="" coords="229,5,452,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__clamped__1d__trafo.html#a7f21a297bb1eb86a91ce51481cd0f277" title="Finalization. " alt="" coords="249,71,432,112"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__clamped__3d__fem.html#aa7794e62691f3cbdfe3ac795bf2a1ded" title="Finalization. " alt="" coords="249,136,432,177"/>
+<area shape="rect" id="node5" href="$namespacesll__m__maxwell__clamped__3d__trafo.html#a5818738d759faa52fe939877d6c6553c" title="Finalization. " alt="" coords="249,201,432,243"/>
+<area shape="rect" id="node6" href="$namespacesll__m__particle__mesh__coupling__spline__1d.html#abecf76afa11f08f6dacbf54dd382acff" title="Destructor. " alt="" coords="263,267,419,323"/>
+<area shape="rect" id="node7" href="$namespacesll__m__particle__mesh__coupling__spline__3d__feec.html#a4b1d3a2cc5275fb671c6dd233eaf7667" title="Destructor. " alt="" coords="500,390,695,446"/>
+<area shape="rect" id="node8" href="$namespacesll__m__particle__mesh__coupling__spline__cl__1d.html#a8a0d4a0966c8f6d92e836e11534b6dd5" title="Finalizer. " alt="" coords="257,398,424,454"/>
+<area shape="rect" id="node9" href="$namespacesll__m__particle__mesh__coupling__spline__strong__1d.html#aa930d383265a71d0b75c60474999873f" title="Destructor. " alt="" coords="243,478,439,534"/>
+<area shape="rect" id="node10" href="$namespacesll__m__splines__pp.html#af936c44d09c3ce67e7e0ac1dd39066b5" title="Destructor 2d. " alt="" coords="253,618,429,645"/>
+<area shape="rect" id="node12" href="$namespacesll__m__splines__pp.html#a602fe559b4885a83bfed2a0dd588a92d" title="Destructor 3d. " alt="" coords="253,558,429,585"/>
+<area shape="rect" id="node11" href="$namespacesll__m__particle__mesh__coupling__spline__2d.html#a56f1caf3ced92c6836be738ab3ece1bc" title="Destructor. " alt="" coords="519,622,675,678"/>
+<area shape="rect" id="node13" href="$namespacesll__m__particle__mesh__coupling__spline__cl__3d__feec.html#af6660b4f90db07314cfdb129b5862ae2" title="Finalizer. " alt="" coords="517,527,677,597"/>
 </map>

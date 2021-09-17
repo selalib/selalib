@@ -1,0 +1,5 @@
+<map id="compute_phi_from_rho_fft" name="compute_phi_from_rho_fft">
+<area shape="rect" id="node2" href="$namespacesll__m__poisson__2d__fem__fft.html#aa4910be1ce75a6a69aa714258f81a256" title="fft2d" alt="" coords="249,5,301,32"/>
+<area shape="rect" id="node4" href="$namespacesll__m__poisson__2d__fem__fft.html#a731d887011b633a14af792426bb2e619" title="Helper function for 3d fft. " alt="" coords="247,56,303,83"/>
+<area shape="rect" id="node3" href="$namespacesll__m__fft.html#a98e3ba2b5431c58a3f5100ac171616a5" title="Compute fast Fourier transform in complex to complex mode. " alt="" coords="351,23,487,65"/>
+</map>

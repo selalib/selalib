@@ -1,0 +1,12 @@
+<map id="sll_t_time_propagator_pic_vm_1d2v_disgradec" name="sll_t_time_propagator_pic_vm_1d2v_disgradec">
+<area shape="rect" id="node2" href="$structsll__m__time__propagator__base_1_1sll__c__time__propagator__base.html" title="Type for Hamiltonian splittings. " alt="" coords="1391,164,1595,191"/>
+<area shape="rect" id="node3" href="$structsll__m__hamiltonian__splitting__base_1_1sll__c__hamiltonian__splitting__base.html" title="Type for Hamiltonian splittings. " alt="" coords="979,5,1213,32"/>
+<area shape="rect" id="node4" href="$structsll__m__time__propagator__pic__vm__1d2v__helper_1_1sll__t__time__propagator__pic__vm__1d2v__helper.html" title="Hamiltonian splitting type for Vlasov&#45;Maxwell 1d2v. " alt="" coords="1411,374,1575,415"/>
+<area shape="rect" id="node11" href="$structsll__m__linear__solver__iter__abstract_1_1sll__t__linear__solver__iter__abstract.html" title="class for abstract iterative linear solver " alt="" coords="671,401,811,442"/>
+<area shape="rect" id="node12" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver " alt="" coords="320,463,460,505"/>
+<area shape="rect" id="node18" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib. " alt="" coords="355,777,425,804"/>
+<area shape="rect" id="node19" href="$structsll__m__matrix__csr_1_1sll__t__matrix__csr.html" title="class for a csr matrix " alt="" coords="1033,501,1159,528"/>
+<area shape="rect" id="node21" href="$structsll__m__linear__operator__abstract_1_1sll__t__linear__operator__abstract.html" title="class for abstract linear operator " alt="" coords="313,651,467,693"/>
+<area shape="rect" id="node10" href="$structsll__m__linear__solver__cg_1_1sll__t__linear__solver__cg.html" title="class for the cg linear solver " alt="" coords="1015,441,1177,468"/>
+<area shape="rect" id="node20" href="$structsll__m__matrix__abstract_1_1sll__t__matrix__abstract.html" title="abstract class for matrix " alt="" coords="661,617,820,644"/>
+</map>

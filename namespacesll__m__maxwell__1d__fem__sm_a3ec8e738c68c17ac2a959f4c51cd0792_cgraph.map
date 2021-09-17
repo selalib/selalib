@@ -1,0 +1,4 @@
+<map id="sll_s_compute_e_from_rho_1d_fem_sm" name="sll_s_compute_e_from_rho_1d_fem_sm">
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__1d__fem__sm.html#abcef6d11f5385de6b19bdd2d9f884e8c" title="Multiply by dicrete gradient matrix. " alt="" coords="221,13,312,39"/>
+<area shape="rect" id="node3" href="$namespacesll__m__spline__fem__utilities.html#a249985cbe30c29c9e949f668c82d2e88" title="Multiplication of the input vector in by the derivative matrix G. " alt="" coords="360,5,552,47"/>
+</map>

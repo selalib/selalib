@@ -1,0 +1,5 @@
+<map id="multiply_mass_3dkron" name="multiply_mass_3dkron">
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__fem.html#a2dd7dbe46a9eef93ba701583dd682085" title="Compute inner product. " alt="" coords="228,5,395,32"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__3d__fem.html#a92d2dfc41bc806c1a999d2f94cdc8f9d" title="Multiply by the mass matrix. " alt="" coords="224,56,399,83"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__3d__fem.html#a5fc38d7461b2f12a65e34990f95d0a8d" title="Compute square of the L2norm. " alt="" coords="447,5,629,32"/>
+</map>

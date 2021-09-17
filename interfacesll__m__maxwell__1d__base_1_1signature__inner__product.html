@@ -83,15 +83,15 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-methods"></a>
 Private Member Functions</h2></td></tr>
-<tr class="memitem:a74f820ec795e6463b48a5ae3b7e340c2"><td class="memItemLeft" align="right" valign="top">function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacesll__m__maxwell__1d__base_1_1signature__inner__product.html#a74f820ec795e6463b48a5ae3b7e340c2">signature_inner_product</a> (self, coefs1_dofs, coefs2_dofs, degree)</td></tr>
-<tr class="separator:a74f820ec795e6463b48a5ae3b7e340c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6dd647f775061fee02a12387ae8168d5"><td class="memItemLeft" align="right" valign="top">real(kind=f64) function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacesll__m__maxwell__1d__base_1_1signature__inner__product.html#a6dd647f775061fee02a12387ae8168d5">signature_inner_product</a> (self, coefs1_dofs, coefs2_dofs, degree, degree2)</td></tr>
+<tr class="separator:a6dd647f775061fee02a12387ae8168d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__base_8_f90_source.html#l00073">73</a> of file <a class="el" href="sll__m__maxwell__1d__base_8_f90_source.html">sll_m_maxwell_1d_base.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__base_8_f90_source.html#l00119">119</a> of file <a class="el" href="sll__m__maxwell__1d__base_8_f90_source.html">sll_m_maxwell_1d_base.F90</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a74f820ec795e6463b48a5ae3b7e340c2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a74f820ec795e6463b48a5ae3b7e340c2">&#9670;&nbsp;</a></span>signature_inner_product()</h2>
+<a id="a6dd647f775061fee02a12387ae8168d5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6dd647f775061fee02a12387ae8168d5">&#9670;&nbsp;</a></span>signature_inner_product()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -100,28 +100,34 @@ Private Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">function <a class="el" href="interfacesll__m__maxwell__1d__base_1_1signature__inner__product.html">signature_inner_product</a> </td>
+          <td class="memname">real(kind=f64) function <a class="el" href="interfacesll__m__maxwell__1d__base_1_1signature__inner__product.html">signature_inner_product</a> </td>
           <td>(</td>
-          <td class="paramtype">class(<a class="el" href="structsll__m__maxwell__1d__base_1_1sll__c__maxwell__1d__base.html">sll_c_maxwell_1d_base</a>)&#160;</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__maxwell__1d__base_1_1sll__c__maxwell__1d__base.html">sll_c_maxwell_1d_base</a>)&#160;</td>
           <td class="paramname"><em>self</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:)&#160;</td>
           <td class="paramname"><em>coefs1_dofs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:)&#160;</td>
           <td class="paramname"><em>coefs2_dofs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>degree</em>&#160;</td>
+          <td class="paramtype">integer(kind=i32)&#160;</td>
+          <td class="paramname"><em>degree</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), optional&#160;</td>
+          <td class="paramname"><em>degree2</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -138,14 +144,15 @@ Private Member Functions</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">self</td><td>Maxwell solver object.</td></tr>
-    <tr><td class="paramname">self</td><td>Values of the coefficient vectors for each DoF</td></tr>
-    <tr><td class="paramname">self</td><td>Values of the coefficient vectors for each Do</td></tr>
-    <tr><td class="paramname">self</td><td>Degree of the basis function used for whcih the DoF-coefficients are given. </td></tr>
+    <tr><td class="paramname">coefs1_dofs</td><td>Values of the coefficient vectors for each DoF</td></tr>
+    <tr><td class="paramname">coefs2_dofs</td><td>Values of the coefficient vectors for each Do</td></tr>
+    <tr><td class="paramname">degree</td><td>Degree of the basis function used for which the DoF-coefficients are given.</td></tr>
+    <tr><td class="paramname">degree2</td><td>Degree of the basis function used for which the second DoF-coefficients are given (if not present same as degree). </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__base_8_f90_source.html#l00074">74</a> of file <a class="el" href="sll__m__maxwell__1d__base_8_f90_source.html">sll_m_maxwell_1d_base.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__base_8_f90_source.html#l00120">120</a> of file <a class="el" href="sll__m__maxwell__1d__base_8_f90_source.html">sll_m_maxwell_1d_base.F90</a>.</p>
 
 </div>
 </div>
@@ -156,7 +163,7 @@ Private Member Functions</h2></td></tr>
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Thu Sep 16 2021 15:32:49 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Sep 17 2021 15:35:34 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

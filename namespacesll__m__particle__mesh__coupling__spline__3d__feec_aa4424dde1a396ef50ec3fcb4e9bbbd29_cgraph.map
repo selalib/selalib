@@ -1,0 +1,9 @@
+<map id="add_current_update_v_component1_spline_3d_feec" name="add_current_update_v_component1_spline_3d_feec">
+<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__3d__feec.html#a39a81ff368618dfab16433c68acc90ee" title="Identify the box in which the particle is located and its normalized position within the box..." alt="" coords="250,5,395,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__particle__mesh__coupling__spline__3d__feec.html#aaf71064e07d819e03d3b2fa73940c2bd" title="Identify the box in which the particle is located and its normalized position within the box (only al..." alt="" coords="239,56,407,83"/>
+<area shape="rect" id="node4" href="$namespacesll__m__splines__pp.html#a9c41e0d7f233767c475e68b606091447" title="Perform a 1d hornerschema on the poly_coeffs. " alt="" coords="224,107,421,149"/>
+<area shape="rect" id="node6" href="$namespacesll__m__particle__mesh__coupling__spline__3d__feec.html#abfee33f2a32f4155838f54794a32b78b" title="Sets the index of the splines that are involved in computations that concern splines from index box..." alt="" coords="278,173,367,200"/>
+<area shape="rect" id="node7" href="$namespacesll__m__particle__mesh__coupling__spline__3d__feec.html#adf185bec92d7d95d9df1c0c279e95aac" title="Add current for one particle and update v (according to H_p1 part in Hamiltonian splitting) ..." alt="" coords="261,224,384,251"/>
+<area shape="rect" id="node5" href="$namespacesll__m__splines__pp.html#ab63c3a25b861ed9b8701ae2f65942bcf" title="Perform a 1d hornerschema on the pp_coeffs at index. " alt="" coords="469,107,644,149"/>
+<area shape="rect" id="node8" href="$namespacesll__m__particle__mesh__coupling__spline__3d__feec.html#a58549de6968ed8de0c6cb6b315fb52b1" title="Helper function for add_current_update_v. " alt="" coords="513,224,600,251"/>
+</map>

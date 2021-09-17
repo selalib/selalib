@@ -1,0 +1,5 @@
+<map id="add_charge_single_spline_3d_feec" name="add_charge_single_spline_3d_feec">
+<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__3d__feec.html#a39a81ff368618dfab16433c68acc90ee" title="Identify the box in which the particle is located and its normalized position within the box..." alt="" coords="260,5,405,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__particle__mesh__coupling__spline__3d__feec.html#abfee33f2a32f4155838f54794a32b78b" title="Sets the index of the splines that are involved in computations that concern splines from index box..." alt="" coords="288,56,377,83"/>
+<area shape="rect" id="node4" href="$namespacesll__m__particle__mesh__coupling__spline__3d__feec.html#af155e911078ed9972cca6201549a8048" title="Convert 3d index to 1d index (first dimension without stride) " alt="" coords="243,107,423,133"/>
+</map>

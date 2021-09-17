@@ -12,9 +12,9 @@
 <!-- Node0 -->
 <g id="node1" class="node">
 <title>Node0</title>
-<g id="a_node1"><a xlink:href="interfacesll__m__particle__mesh__coupling__base_1_1add__update.html" target="_top" xlink:title="add_update">
+<g id="a_node1"><a xlink:href="interfacesll__m__particle__mesh__coupling__base__1d_1_1add__current.html" target="_top" xlink:title="add_current">
 <polygon fill="#ffffff" stroke="#000000" points="0,-.5 0,-19.5 74,-19.5 74,-.5 0,-.5"/>
-<text text-anchor="middle" x="37" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">add_update</text>
+<text text-anchor="middle" x="37" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">add_current</text>
 </a>
 </g>
 </g>

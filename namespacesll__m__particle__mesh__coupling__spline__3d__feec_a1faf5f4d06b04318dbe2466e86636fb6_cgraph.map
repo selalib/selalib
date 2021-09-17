@@ -1,0 +1,5 @@
+<map id="add_current_3d" name="add_current_3d">
+<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__3d__feec.html#a39a81ff368618dfab16433c68acc90ee" title="Identify the box in which the particle is located and its normalized position within the box..." alt="" coords="179,5,324,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__particle__mesh__coupling__spline__3d__feec.html#a22b4a15e45a35cda93472d3bc8576718" title="Helper function for add_current_3d, takes care of the per box computations. " alt="" coords="176,56,327,83"/>
+<area shape="rect" id="node4" href="$namespacesll__m__particle__mesh__coupling__spline__3d__feec.html#abfee33f2a32f4155838f54794a32b78b" title="Sets the index of the splines that are involved in computations that concern splines from index box..." alt="" coords="375,56,464,83"/>
+</map>

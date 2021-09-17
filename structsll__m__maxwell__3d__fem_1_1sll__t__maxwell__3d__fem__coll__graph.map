@@ -1,0 +1,23 @@
+<map id="sll_t_maxwell_3d_fem" name="sll_t_maxwell_3d_fem">
+<area shape="rect" id="node2" href="$structsll__m__maxwell__3d__base_1_1sll__c__maxwell__3d__base.html" title="sll_c_maxwell_3d_base" alt="" coords="1120,1103,1295,1129"/>
+<area shape="rect" id="node3" href="$structsll__m__profile__functions_1_1sll__t__profile__functions.html" title="sll_t_profile_functions" alt="" coords="769,1105,933,1132"/>
+<area shape="rect" id="node6" href="$structsll__m__linear__operator__block_1_1sll__t__linear__operator__block.html" title="class for a linear operator_block " alt="" coords="774,1687,929,1729"/>
+<area shape="rect" id="node11" href="$structsll__m__linear__operator__schur__eb__3d_1_1sll__t__linear__operator__schur__eb__3d.html" title="sll_t_linear_operator\l_schur_eb_3d" alt="" coords="1130,1466,1285,1507"/>
+<area shape="rect" id="node12" href="$structsll__m__linear__operator__poisson__3d_1_1sll__t__linear__operator__poisson__3d.html" title="sll_t_linear_operator\l_poisson_3d" alt="" coords="1130,1626,1285,1667"/>
+<area shape="rect" id="node18" href="$structsll__m__linear__solver__iter__abstract_1_1sll__t__linear__solver__iter__abstract.html" title="class for abstract iterative linear solver " alt="" coords="781,911,921,953"/>
+<area shape="rect" id="node22" href="$structsll__m__linear__operator__penalized_1_1sll__t__linear__operator__penalized.html" title="class for a linear operator_penalized " alt="" coords="774,1423,929,1465"/>
+<area shape="rect" id="node23" href="$structsll__m__linear__solver__mgmres_1_1sll__t__linear__solver__mgmres.html" title="class for a sequential gmres linear solver " alt="" coords="1137,1161,1277,1202"/>
+<area shape="rect" id="node26" href="$structsll__m__linear__solver__block_1_1sll__t__linear__solver__block.html" title="class for a linear solver_block " alt="" coords="781,385,921,426"/>
+<area shape="rect" id="node28" href="$structsll__m__linear__solver__spline__mass__fft_1_1sll__t__linear__solver__spline__mass__fft.html" title="Linear solver for FFT&#45;based inversion of 3d tensor product of circulant matrices (extending the abstr..." alt="" coords="781,319,921,361"/>
+<area shape="rect" id="node7" href="$structsll__m__linear__operator__abstract_1_1sll__t__linear__operator__abstract.html" title="class for abstract linear operator " alt="" coords="403,1486,557,1527"/>
+<area shape="rect" id="node14" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver " alt="" coords="410,406,550,447"/>
+<area shape="rect" id="node20" href="$structsll__m__matrix__csr_1_1sll__t__matrix__csr.html" title="class for a csr matrix " alt="" coords="1145,860,1270,887"/>
+<area shape="rect" id="node29" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib. " alt="" coords="445,119,515,145"/>
+<area shape="rect" id="node21" href="$structsll__m__matrix__abstract_1_1sll__t__matrix__abstract.html" title="abstract class for matrix " alt="" coords="772,860,931,887"/>
+<area shape="rect" id="node24" href="$structsll__m__linear__operator__kron_1_1sll__t__linear__operator__kron.html" title="class for a linear operator " alt="" coords="756,1900,947,1927"/>
+<area shape="rect" id="node13" href="$structsll__m__linear__solver__kron_1_1sll__t__linear__solver__kron.html" title="class for the kronecker linear solver " alt="" coords="763,556,939,583"/>
+<area shape="rect" id="node9" href="$structsll__m__linear__operator__block_1_1jrk__t__linear__operator__pointer.html" title="class that contains a pointer to a linear operator " alt="" coords="401,1962,559,2003"/>
+<area shape="rect" id="node27" href="$structsll__m__linear__solver__block_1_1jrk__t__linear__solver__pointer.html" title="class that contains a pointer to a linear solver " alt="" coords="409,233,551,274"/>
+<area shape="rect" id="node17" href="$structsll__m__linear__solver__cg_1_1sll__t__linear__solver__cg.html" title="class for the cg linear solver " alt="" coords="1126,1023,1289,1049"/>
+<area shape="rect" id="node25" href="$structsll__m__preconditioner__fft_1_1sll__t__preconditioner__fft.html" title="sll_t_preconditioner_fft" alt="" coords="1122,392,1293,419"/>
+</map>

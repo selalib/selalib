@@ -50,44 +50,44 @@
 <!-- Node5 -->
 <g id="node4" class="node">
 <title>Node5</title>
-<polygon fill="#ffffff" stroke="#bfbfbf" points="105.5,-290.5 105.5,-309.5 208.5,-309.5 208.5,-290.5 105.5,-290.5"/>
-<text text-anchor="middle" x="157" y="-297.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">integer(kind=i32)</text>
-</g>
-<!-- Node5&#45;&gt;Node2 -->
-<g id="edge6" class="edge">
-<title>Node5&#45;&gt;Node2</title>
-<path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M154.7556,-280.4843C150.8581,-241.368 144.8773,-150.8768 163,-78 167.2675,-60.839 176.7503,-42.9237 184.1117,-30.6963"/>
-<polygon fill="#9a32cd" stroke="#9a32cd" points="151.2829,-280.9275 155.8237,-290.5 158.2434,-280.1852 151.2829,-280.9275"/>
-<text text-anchor="middle" x="187" y="-114" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> bc_type2</text>
-<text text-anchor="middle" x="187" y="-103" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">npts1</text>
-<text text-anchor="middle" x="187" y="-92" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">npts2</text>
-<text text-anchor="middle" x="187" y="-81" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">bc_type1</text>
+<polygon fill="#ffffff" stroke="#bfbfbf" points="248.5,-290.5 248.5,-309.5 297.5,-309.5 297.5,-290.5 248.5,-290.5"/>
+<text text-anchor="middle" x="273" y="-297.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">logical</text>
 </g>
 <!-- Node5&#45;&gt;Node4 -->
 <g id="edge3" class="edge">
 <title>Node5&#45;&gt;Node4</title>
-<path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M162.6249,-280.546C174.8038,-238.5215 202.7076,-142.7994 205,-140 216.5933,-125.8425 234.552,-116.0153 249.9897,-109.6451"/>
-<polygon fill="#9a32cd" stroke="#9a32cd" points="159.248,-279.6243 159.8291,-290.2032 165.9719,-281.5709 159.248,-279.6243"/>
-<text text-anchor="middle" x="236.5" y="-220" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> num_pts_x1</text>
-<text text-anchor="middle" x="236.5" y="-209" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">num_pts_x2</text>
-<text text-anchor="middle" x="236.5" y="-198" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">x1_bc_type</text>
-<text text-anchor="middle" x="236.5" y="-187" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">x2_bc_type</text>
-</g>
-<!-- Node6 -->
-<g id="node5" class="node">
-<title>Node6</title>
-<polygon fill="#ffffff" stroke="#bfbfbf" points="228.5,-290.5 228.5,-309.5 317.5,-309.5 317.5,-290.5 228.5,-290.5"/>
-<text text-anchor="middle" x="273" y="-297.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">logical, private</text>
-</g>
-<!-- Node6&#45;&gt;Node4 -->
-<g id="edge4" class="edge">
-<title>Node6&#45;&gt;Node4</title>
 <path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M272.2167,-280.1454C271.2268,-249.8634 270.0871,-190.3429 274,-140 274.8054,-129.6385 276.6849,-117.8883 278.1274,-109.8183"/>
 <polygon fill="#9a32cd" stroke="#9a32cd" points="268.7224,-280.3712 272.5778,-290.2396 275.7179,-280.1208 268.7224,-280.3712"/>
 <text text-anchor="middle" x="337.5" y="-220" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> compute_slopes_x1_max</text>
 <text text-anchor="middle" x="337.5" y="-209" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">compute_slopes_x2_max</text>
 <text text-anchor="middle" x="337.5" y="-198" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">compute_slopes_x1_min</text>
 <text text-anchor="middle" x="337.5" y="-187" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">compute_slopes_x2_min</text>
+</g>
+<!-- Node6 -->
+<g id="node5" class="node">
+<title>Node6</title>
+<polygon fill="#ffffff" stroke="#bfbfbf" points="115.5,-290.5 115.5,-309.5 218.5,-309.5 218.5,-290.5 115.5,-290.5"/>
+<text text-anchor="middle" x="167" y="-297.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">integer(kind=i32)</text>
+</g>
+<!-- Node6&#45;&gt;Node2 -->
+<g id="edge6" class="edge">
+<title>Node6&#45;&gt;Node2</title>
+<path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M163.3935,-279.9719C157.0157,-240.6306 145.9471,-150.7586 163,-78 167.0353,-60.7829 176.5508,-42.8755 183.9831,-30.6652"/>
+<polygon fill="#9a32cd" stroke="#9a32cd" points="159.9855,-280.809 165.1135,-290.0801 166.8863,-279.6347 159.9855,-280.809"/>
+<text text-anchor="middle" x="187" y="-114" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> bc_type2</text>
+<text text-anchor="middle" x="187" y="-103" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">npts1</text>
+<text text-anchor="middle" x="187" y="-92" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">npts2</text>
+<text text-anchor="middle" x="187" y="-81" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">bc_type1</text>
+</g>
+<!-- Node6&#45;&gt;Node4 -->
+<g id="edge4" class="edge">
+<title>Node6&#45;&gt;Node4</title>
+<path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M166.6944,-280.1181C167.1995,-247.5023 172.5558,-182.0629 205,-140 216.0858,-125.6276 233.8326,-115.8322 249.2804,-109.5334"/>
+<polygon fill="#9a32cd" stroke="#9a32cd" points="163.1944,-280.1893 166.6815,-290.1938 170.1944,-280.1983 163.1944,-280.1893"/>
+<text text-anchor="middle" x="236.5" y="-220" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> num_pts_x1</text>
+<text text-anchor="middle" x="236.5" y="-209" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">num_pts_x2</text>
+<text text-anchor="middle" x="236.5" y="-198" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">x1_bc_type</text>
+<text text-anchor="middle" x="236.5" y="-187" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">x2_bc_type</text>
 </g>
 <!-- Node7 -->
 <g id="node6" class="node">

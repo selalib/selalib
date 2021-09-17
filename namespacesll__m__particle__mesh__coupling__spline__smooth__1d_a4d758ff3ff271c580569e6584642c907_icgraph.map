@@ -1,0 +1,4 @@
+<map id="update_smoothened_single_spline_1d" name="update_smoothened_single_spline_1d">
+<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__smooth__1d.html#acdea933147e213fd06106118c3cdb29c" title="Add current for one particle and update v (according to H_p1 part in Hamiltonian splitting) ..." alt="" coords="255,5,449,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__particle__mesh__coupling__spline__smooth__1d.html#a91ab63ce2e29463015c0bc07f2f42a71" title="Add current for one particle and evaluate the field (according to iterative part in discrete gradient..." alt="" coords="497,5,676,47"/>
+</map>

@@ -82,12 +82,13 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><code>#include &quot;sll_assert.h&quot;</code><br />
+<code>#include &quot;sll_errors.h&quot;</code><br />
 <code>#include &quot;sll_memory.h&quot;</code><br />
 <code>#include &quot;sll_working_precision.h&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for sll_m_particle_group_1d2v.F90:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="sll__m__particle__group__1d2v_8_f90__incl.svg" width="440" height="142"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+<div class="center"><iframe scrolling="no" frameborder="0" src="sll__m__particle__group__1d2v_8_f90__incl.svg" width="560" height="142"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
 </div>
 </div>
 </div>
@@ -108,7 +109,7 @@ Modules</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
 <tr class="memitem:a515b8c4e388304eb52b1b48ebf05a5d9"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__group__1d2v.html#a515b8c4e388304eb52b1b48ebf05a5d9">delete_particle_group_1d2v</a> (self)</td></tr>
-<tr class="memdesc:a515b8c4e388304eb52b1b48ebf05a5d9"><td class="mdescLeft">&#160;</td><td class="mdescRight">print particle array to file  <a href="namespacesll__m__particle__group__1d2v.html#a515b8c4e388304eb52b1b48ebf05a5d9">More...</a><br /></td></tr>
+<tr class="memdesc:a515b8c4e388304eb52b1b48ebf05a5d9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destructor.  <a href="namespacesll__m__particle__group__1d2v.html#a515b8c4e388304eb52b1b48ebf05a5d9">More...</a><br /></td></tr>
 <tr class="separator:a515b8c4e388304eb52b1b48ebf05a5d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a46495fa0d7259b0ea9926a45405b02c2"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__group__1d2v.html#a46495fa0d7259b0ea9926a45405b02c2">initialize_particle_group_1d2v</a> (self, n_particles, n_total_particles, charge, mass, n_weights)</td></tr>
 <tr class="memdesc:a46495fa0d7259b0ea9926a45405b02c2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialization of the particle group.  <a href="namespacesll__m__particle__group__1d2v.html#a46495fa0d7259b0ea9926a45405b02c2">More...</a><br /></td></tr>
@@ -134,6 +135,9 @@ Functions/Subroutines</h2></td></tr>
 <tr class="memitem:acc10b22d1ebb3cba83c3d1faf4ed4cf3"><td class="memItemLeft" align="right" valign="top">pure real(kind=f64) function, dimension(self%n_weights)&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__group__1d2v.html#acc10b22d1ebb3cba83c3d1faf4ed4cf3">get_weights_1d2v</a> (self, i)</td></tr>
 <tr class="memdesc:acc10b22d1ebb3cba83c3d1faf4ed4cf3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get particle weights.  <a href="namespacesll__m__particle__group__1d2v.html#acc10b22d1ebb3cba83c3d1faf4ed4cf3">More...</a><br /></td></tr>
 <tr class="separator:acc10b22d1ebb3cba83c3d1faf4ed4cf3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8d47d73bf184fb12bd5fca0f7d0455c3"><td class="memItemLeft" align="right" valign="top">pure real(kind=f64) function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__group__1d2v.html#a8d47d73bf184fb12bd5fca0f7d0455c3">get_common_weight_1d2v</a> (self)</td></tr>
+<tr class="memdesc:a8d47d73bf184fb12bd5fca0f7d0455c3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the common weight.  <a href="namespacesll__m__particle__group__1d2v.html#a8d47d73bf184fb12bd5fca0f7d0455c3">More...</a><br /></td></tr>
+<tr class="separator:a8d47d73bf184fb12bd5fca0f7d0455c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a98ee7641ed7cd12bd063693bb40e965e"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__group__1d2v.html#a98ee7641ed7cd12bd063693bb40e965e">set_x_1d2v</a> (self, i, x)</td></tr>
 <tr class="memdesc:a98ee7641ed7cd12bd063693bb40e965e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set position of particle <em>i</em>.  <a href="namespacesll__m__particle__group__1d2v.html#a98ee7641ed7cd12bd063693bb40e965e">More...</a><br /></td></tr>
 <tr class="separator:a98ee7641ed7cd12bd063693bb40e965e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -149,6 +153,9 @@ Functions/Subroutines</h2></td></tr>
 <tr class="memitem:a980e1a2aa5c586ec3ffc51060201b635"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__group__1d2v.html#a980e1a2aa5c586ec3ffc51060201b635">print_particle_group_1d2v</a> (self, filename)</td></tr>
 <tr class="memdesc:a980e1a2aa5c586ec3ffc51060201b635"><td class="mdescLeft">&#160;</td><td class="mdescRight">Print particle array to file.  <a href="namespacesll__m__particle__group__1d2v.html#a980e1a2aa5c586ec3ffc51060201b635">More...</a><br /></td></tr>
 <tr class="separator:a980e1a2aa5c586ec3ffc51060201b635"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8f7d64d7ef028d30833ad8fb55150833"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__group__1d2v.html#a8f7d64d7ef028d30833ad8fb55150833">read_particle_group_1d2v</a> (self, filename)</td></tr>
+<tr class="memdesc:a8f7d64d7ef028d30833ad8fb55150833"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read particle array from file.  <a href="namespacesll__m__particle__group__1d2v.html#a8f7d64d7ef028d30833ad8fb55150833">More...</a><br /></td></tr>
+<tr class="separator:a8f7d64d7ef028d30833ad8fb55150833"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 </div><!-- contents -->
 <!-- HTML footer for doxygen 1.8.7-->
@@ -157,7 +164,7 @@ Functions/Subroutines</h2></td></tr>
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Thu Sep 16 2021 15:32:48 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Sep 17 2021 15:35:33 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

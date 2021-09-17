@@ -9,15 +9,15 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 324.5)">
 <title>sll_s_fft_init_r2c_1d</title>
 <polygon fill="#ffffff" stroke="transparent" points="-4,4 -4,-324.5 309,-324.5 309,4 -4,4"/>
-<!-- Node166 -->
+<!-- Node274 -->
 <g id="node1" class="node">
-<title>Node166</title>
+<title>Node274</title>
 <polygon fill="#bfbfbf" stroke="#000000" points="0,-156.5 0,-175.5 113,-175.5 113,-156.5 0,-156.5"/>
 <text text-anchor="middle" x="56.5" y="-163.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_fft_init_r2c_1d</text>
 </g>
-<!-- Node167 -->
+<!-- Node275 -->
 <g id="node2" class="node">
-<title>Node167</title>
+<title>Node275</title>
 <g id="a_node2"><a xlink:href="namespacesll__m__maxwell__2d__pstd.html#adcf5bb75c1aa065d33e42588cfdfe224" target="_top" xlink:title="Solve maxwell solver 2d cartesian periodic with PSTD scheme. ">
 <polygon fill="#ffffff" stroke="#000000" points="149,-290 149,-320 305,-320 305,-290 149,-290"/>
 <text text-anchor="start" x="157" y="-308" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_2d_pstd</text>
@@ -25,15 +25,15 @@
 </a>
 </g>
 </g>
-<!-- Node166&#45;&gt;Node167 -->
+<!-- Node274&#45;&gt;Node275 -->
 <g id="edge1" class="edge">
-<title>Node166&#45;&gt;Node167</title>
+<title>Node274&#45;&gt;Node275</title>
 <path fill="none" stroke="#191970" d="M66.6549,-184.6308C81.4657,-210.0864 111.372,-255.4802 149,-281 154.0421,-284.4196 159.591,-287.3676 165.3342,-289.9059"/>
 <polygon fill="#191970" stroke="#191970" points="69.5405,-182.6231 61.5721,-175.6407 63.447,-186.0683 69.5405,-182.6231"/>
 </g>
-<!-- Node168 -->
+<!-- Node276 -->
 <g id="node3" class="node">
-<title>Node168</title>
+<title>Node276</title>
 <g id="a_node3"><a xlink:href="namespacesll__m__maxwell__3d__pstd.html#a5b298dd4c8ea032cc430d64be6628a93" target="_top" xlink:title="Initialize 3d maxwell solver on cartesian mesh with PSTD scheme. ">
 <polygon fill="#ffffff" stroke="#000000" points="149,-241 149,-271 305,-271 305,-241 149,-241"/>
 <text text-anchor="start" x="157" y="-259" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_3d_pstd</text>
@@ -41,15 +41,15 @@
 </a>
 </g>
 </g>
-<!-- Node166&#45;&gt;Node168 -->
+<!-- Node274&#45;&gt;Node276 -->
 <g id="edge2" class="edge">
-<title>Node166&#45;&gt;Node168</title>
+<title>Node274&#45;&gt;Node276</title>
 <path fill="none" stroke="#191970" d="M75.3437,-182.23C93.2623,-196.9617 121.4918,-218.4013 149,-232 155.7315,-235.3277 163.019,-238.3063 170.3437,-240.9376"/>
 <polygon fill="#191970" stroke="#191970" points="77.3386,-179.3355 67.4238,-175.6007 72.8455,-184.7033 77.3386,-179.3355"/>
 </g>
-<!-- Node169 -->
+<!-- Node277 -->
 <g id="node4" class="node">
-<title>Node169</title>
+<title>Node277</title>
 <g id="a_node4"><a xlink:href="namespacesll__m__maxwell__2d__periodic__cartesian__par.html#a7da36e2a3fe4bb2910c7633316e79c13" target="_top" xlink:title="Presently, this function receives the geometric information as individual arguments. We should consider passing the &#39;simple geometry&#39; object that we have for the cartesian cases. ">
 <polygon fill="#ffffff" stroke="#000000" points="151,-170 151,-222 303,-222 303,-170 151,-170"/>
 <text text-anchor="start" x="159" y="-210" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_2d_periodic</text>
@@ -59,15 +59,15 @@
 </a>
 </g>
 </g>
-<!-- Node166&#45;&gt;Node169 -->
+<!-- Node274&#45;&gt;Node277 -->
 <g id="edge3" class="edge">
-<title>Node166&#45;&gt;Node169</title>
+<title>Node274&#45;&gt;Node277</title>
 <path fill="none" stroke="#191970" d="M120.9013,-177.3316C130.6396,-179.0451 140.7647,-180.8266 150.7245,-182.5791"/>
 <polygon fill="#191970" stroke="#191970" points="121.3713,-173.8606 110.916,-175.5747 120.1582,-180.7547 121.3713,-173.8606"/>
 </g>
-<!-- Node170 -->
+<!-- Node278 -->
 <g id="node5" class="node">
-<title>Node170</title>
+<title>Node278</title>
 <g id="a_node5"><a xlink:href="namespacesll__m__poisson__1d__hmf.html#aae08072cc17e25c6d41f142de5c63a49" target="_top" xlink:title="Initialize the poisson 1d hmf solver. ">
 <polygon fill="#ffffff" stroke="#000000" points="152,-121 152,-151 302,-151 302,-121 152,-121"/>
 <text text-anchor="start" x="160" y="-139" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_poisson_1d_hmf</text>
@@ -75,15 +75,15 @@
 </a>
 </g>
 </g>
-<!-- Node166&#45;&gt;Node170 -->
+<!-- Node274&#45;&gt;Node278 -->
 <g id="edge4" class="edge">
-<title>Node166&#45;&gt;Node170</title>
+<title>Node274&#45;&gt;Node278</title>
 <path fill="none" stroke="#191970" d="M120.8966,-154.6692C131.0401,-152.8844 141.6032,-151.0258 151.9623,-149.2031"/>
 <polygon fill="#191970" stroke="#191970" points="120.1582,-151.2453 110.916,-156.4253 121.3713,-158.1394 120.1582,-151.2453"/>
 </g>
-<!-- Node171 -->
+<!-- Node279 -->
 <g id="node6" class="node">
-<title>Node171</title>
+<title>Node279</title>
 <g id="a_node6"><a xlink:href="namespacesll__m__advection__1d__ampere.html#a3e5a945347e7e82c7146746f1fbf76f3" target="_top" xlink:title="sll_m_advection_1d\l_ampere::advector_1d\l_ampere_init">
 <polygon fill="#ffffff" stroke="#000000" points="164.5,-60.5 164.5,-101.5 289.5,-101.5 289.5,-60.5 164.5,-60.5"/>
 <text text-anchor="start" x="172.5" y="-89.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_advection_1d</text>
@@ -92,15 +92,15 @@
 </a>
 </g>
 </g>
-<!-- Node166&#45;&gt;Node171 -->
+<!-- Node274&#45;&gt;Node279 -->
 <g id="edge5" class="edge">
-<title>Node166&#45;&gt;Node171</title>
+<title>Node274&#45;&gt;Node279</title>
 <path fill="none" stroke="#191970" d="M79.7558,-151.1095C98.1476,-139.6584 124.6888,-123.8443 149,-112 156.336,-108.4259 164.1949,-104.9321 171.9969,-101.6545"/>
 <polygon fill="#191970" stroke="#191970" points="77.785,-148.2142 71.1818,-156.4997 81.5107,-154.1404 77.785,-148.2142"/>
 </g>
-<!-- Node172 -->
+<!-- Node280 -->
 <g id="node7" class="node">
-<title>Node172</title>
+<title>Node280</title>
 <g id="a_node7"><a xlink:href="namespacesll__m__advection__1d__spectral.html#ac96f9986754a15eaa0cb1f161fbf6f65" target="_top" xlink:title="sll_m_advection_1d\l_spectral::advector\l_1d_spectral_init">
 <polygon fill="#ffffff" stroke="#000000" points="170.5,-.5 170.5,-41.5 283.5,-41.5 283.5,-.5 170.5,-.5"/>
 <text text-anchor="start" x="178.5" y="-29.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_advection_1d</text>
@@ -109,9 +109,9 @@
 </a>
 </g>
 </g>
-<!-- Node166&#45;&gt;Node172 -->
+<!-- Node274&#45;&gt;Node280 -->
 <g id="edge6" class="edge">
-<title>Node166&#45;&gt;Node172</title>
+<title>Node274&#45;&gt;Node280</title>
 <path fill="none" stroke="#191970" d="M67.1353,-147.3548C82.3182,-122.2508 112.4531,-77.6633 149,-51 155.4465,-46.2969 162.7234,-42.2299 170.1762,-38.7428"/>
 <polygon fill="#191970" stroke="#191970" points="63.9638,-145.8427 61.8994,-156.2345 69.9936,-149.3982 63.9638,-145.8427"/>
 </g>

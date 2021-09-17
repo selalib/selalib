@@ -1,0 +1,8 @@
+<map id="helper_normalized_position" name="helper_normalized_position">
+<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__strong__1d.html#a2c39e68b27ddfc0983fc68355ae2c796" title="Add charge of one particle. " alt="" coords="270,5,459,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__particle__mesh__coupling__spline__strong__1d.html#a7e2bf04a4b806d7d305b230b088ed047" title="Add current for one particle and update v (according to H_p1 part in Hamiltonian splitting). Implementation based on quadrature rather than the primitive. " alt="" coords="287,71,442,127"/>
+<area shape="rect" id="node4" href="$namespacesll__m__particle__mesh__coupling__spline__strong__1d.html#a3d4e5a2c4bb104c2d869585f41088946" title="Add current for one particle and update v (according to H_p1 part in Hamiltonian splitting) ..." alt="" coords="287,152,442,193"/>
+<area shape="rect" id="node5" href="$namespacesll__m__particle__mesh__coupling__spline__strong__1d.html#afc591995167bc56a4c3d01e0c8347e87" title="evaluate_field_single\l_spline_strong_1d" alt="" coords="285,217,445,259"/>
+<area shape="rect" id="node6" href="$namespacesll__m__particle__mesh__coupling__spline__strong__1d.html#a9e52244d1cff635f45a21b6fdb716d87" title="Add current for one particle and update v (according to H_p1 part in Hamiltonian splitting). Implementation based on quadrature rather than the primitive. " alt="" coords="256,283,473,324"/>
+<area shape="rect" id="node7" href="$namespacesll__m__particle__mesh__coupling__spline__strong__1d.html#a1ccca54d7bdca6b0173527dd7cac48fb" title="add_current_evaluate\l_spline_strong_1d" alt="" coords="283,348,446,389"/>
+</map>

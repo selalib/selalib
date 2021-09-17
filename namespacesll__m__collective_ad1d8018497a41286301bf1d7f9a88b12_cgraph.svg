@@ -9,16 +9,16 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 84)">
 <title>sll_collective_globalsum_array_comp32</title>
 <polygon fill="#ffffff" stroke="transparent" points="-4,4 -4,-84 477,-84 477,4 -4,4"/>
-<!-- Node150 -->
+<!-- Node164 -->
 <g id="node1" class="node">
-<title>Node150</title>
+<title>Node164</title>
 <polygon fill="#bfbfbf" stroke="#000000" points="0,-24.5 0,-54.5 137,-54.5 137,-24.5 0,-24.5"/>
 <text text-anchor="start" x="8" y="-42.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_globalsum</text>
 <text text-anchor="middle" x="68.5" y="-31.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">_array_comp32</text>
 </g>
-<!-- Node151 -->
+<!-- Node165 -->
 <g id="node2" class="node">
-<title>Node151</title>
+<title>Node165</title>
 <g id="a_node2"><a xlink:href="namespacesll__m__collective.html#a5eb76797f4689a2e466569436b821115" target="_top" xlink:title="sll_collective_reduce\l_comp32">
 <polygon fill="#ffffff" stroke="#000000" points="179,-49.5 179,-79.5 298,-79.5 298,-49.5 179,-49.5"/>
 <text text-anchor="start" x="187" y="-67.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_reduce</text>
@@ -26,15 +26,15 @@
 </a>
 </g>
 </g>
-<!-- Node150&#45;&gt;Node151 -->
+<!-- Node164&#45;&gt;Node165 -->
 <g id="edge1" class="edge">
-<title>Node150&#45;&gt;Node151</title>
+<title>Node164&#45;&gt;Node165</title>
 <path fill="none" stroke="#191970" d="M137.1555,-49.5964C147.6305,-51.1368 158.4496,-52.7279 168.9437,-54.2711"/>
 <polygon fill="#191970" stroke="#191970" points="168.4808,-57.7406 178.8837,-55.7329 169.4993,-50.8151 168.4808,-57.7406"/>
 </g>
-<!-- Node153 -->
+<!-- Node167 -->
 <g id="node4" class="node">
-<title>Node153</title>
+<title>Node167</title>
 <g id="a_node4"><a xlink:href="namespacesll__m__collective.html#a53667aea76e2fe9f17e7a9cac24e352f" target="_top" xlink:title="sll_collective_allreduce\l_comp32">
 <polygon fill="#ffffff" stroke="#000000" points="173,-.5 173,-30.5 304,-30.5 304,-.5 173,-.5"/>
 <text text-anchor="start" x="181" y="-18.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_collective_allreduce</text>
@@ -42,45 +42,45 @@
 </a>
 </g>
 </g>
-<!-- Node150&#45;&gt;Node153 -->
+<!-- Node164&#45;&gt;Node167 -->
 <g id="edge3" class="edge">
-<title>Node150&#45;&gt;Node153</title>
+<title>Node164&#45;&gt;Node167</title>
 <path fill="none" stroke="#191970" d="M137.1555,-29.8075C145.6334,-28.6106 154.3367,-27.3819 162.9107,-26.1714"/>
 <polygon fill="#191970" stroke="#191970" points="163.4826,-29.6255 172.8952,-24.7619 162.5041,-22.6942 163.4826,-29.6255"/>
 </g>
-<!-- Node152 -->
+<!-- Node166 -->
 <g id="node3" class="node">
-<title>Node152</title>
+<title>Node166</title>
 <g id="a_node3"><a xlink:href="namespacesll__m__collective.html#a9a5729d7ca2e55890195f76c8a5cbd62" target="_top" xlink:title="Checks the good execution of collective instruction. ">
 <polygon fill="#ffffff" stroke="#000000" points="349,-49 349,-68 464,-68 464,-49 349,-49"/>
 <text text-anchor="middle" x="406.5" y="-56" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_test_mpi_error</text>
 </a>
 </g>
 </g>
-<!-- Node151&#45;&gt;Node152 -->
+<!-- Node165&#45;&gt;Node166 -->
 <g id="edge2" class="edge">
-<title>Node151&#45;&gt;Node152</title>
+<title>Node165&#45;&gt;Node166</title>
 <path fill="none" stroke="#191970" d="M298.2035,-62.3677C311.3557,-61.898 325.3774,-61.3972 338.8192,-60.9172"/>
 <polygon fill="#191970" stroke="#191970" points="339.0925,-64.4097 348.9612,-60.555 338.8426,-57.4142 339.0925,-64.4097"/>
 </g>
-<!-- Node153&#45;&gt;Node152 -->
+<!-- Node167&#45;&gt;Node166 -->
 <g id="edge5" class="edge">
-<title>Node153&#45;&gt;Node152</title>
+<title>Node167&#45;&gt;Node166</title>
 <path fill="none" stroke="#191970" d="M297.2582,-30.5393C317.6441,-35.7571 340.2165,-41.5346 359.5256,-46.4768"/>
 <polygon fill="#191970" stroke="#191970" points="358.7412,-49.8888 369.2968,-48.9777 360.477,-43.1074 358.7412,-49.8888"/>
 </g>
-<!-- Node154 -->
+<!-- Node168 -->
 <g id="node5" class="node">
-<title>Node154</title>
+<title>Node168</title>
 <g id="a_node5"><a xlink:href="namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" target="_top" xlink:title="Checks if the pointer ptr is associated to an object. ">
 <polygon fill="#ffffff" stroke="#000000" points="340,-6 340,-25 473,-25 473,-6 340,-6"/>
 <text text-anchor="middle" x="406.5" y="-13" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_check_collective_ptr</text>
 </a>
 </g>
 </g>
-<!-- Node153&#45;&gt;Node154 -->
+<!-- Node167&#45;&gt;Node168 -->
 <g id="edge4" class="edge">
-<title>Node153&#45;&gt;Node154</title>
+<title>Node167&#45;&gt;Node168</title>
 <path fill="none" stroke="#191970" d="M304.4159,-15.5C312.7158,-15.5 321.263,-15.5 329.7122,-15.5"/>
 <polygon fill="#191970" stroke="#191970" points="329.9465,-19.0001 339.9464,-15.5 329.9464,-12.0001 329.9465,-19.0001"/>
 </g>

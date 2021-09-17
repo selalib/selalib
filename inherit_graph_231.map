@@ -1,3 +1,9 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$interfacesll__m__characteristics__2d__base_1_1sll__i__signature__process__outside__point.html" title="sll_i_signature_process\l_outside_point" alt="" coords="5,5,179,47"/>
+<area shape="rect" id="node1" href="$structsll__m__maxwell__1d__base_1_1sll__c__maxwell__1d__base.html" title="sll_c_maxwell_1d_base" alt="" coords="5,132,180,159"/>
+<area shape="rect" id="node2" href="$structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html" title="Maxwell solver class. " alt="" coords="241,5,409,32"/>
+<area shape="rect" id="node3" href="$structsll__m__maxwell__1d__fem__sm_1_1sll__t__maxwell__1d__fem__sm.html" title="Maxwell solver class for spline FEM with sparse matrix solvers. " alt="" coords="228,56,423,83"/>
+<area shape="rect" id="node4" href="$structsll__m__maxwell__1d__ps_1_1sll__t__maxwell__1d__ps.html" title="Maxwell solver class with pseudospectral method. " alt="" coords="247,107,404,133"/>
+<area shape="rect" id="node5" href="$structsll__m__maxwell__1d__trafo_1_1sll__t__maxwell__1d__trafo.html" title="sll_t_maxwell_1d_trafo" alt="" coords="239,157,412,184"/>
+<area shape="rect" id="node6" href="$structsll__m__maxwell__clamped__1d__fem__sm_1_1sll__t__maxwell__clamped__1d__fem__sm.html" title="sll_t_maxwell_clamped\l_1d_fem_sm" alt="" coords="238,209,413,250"/>
+<area shape="rect" id="node7" href="$structsll__m__maxwell__clamped__1d__trafo_1_1sll__t__maxwell__clamped__1d__trafo.html" title="sll_t_maxwell_clamped\l_1d_trafo" alt="" coords="238,274,413,315"/>
 </map>

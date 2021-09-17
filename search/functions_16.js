@@ -1,5 +1,6 @@
 var searchData=
 [
+  ['weak_5fcurl',['weak_curl',['../namespacesll__m__maxwell__1d__fem.html#a9529d7ddd5961fc724e0b452425e5e2f',1,'sll_m_maxwell_1d_fem']]],
   ['weight_5fproduct1d',['weight_product1d',['../interfacesll__m__lagrange__interpolation_1_1sll__o__weight__product__x1.html#a58ff6d3bef6110bb766df267229deb82',1,'sll_m_lagrange_interpolation::sll_o_weight_product_x1::weight_product1d()'],['../namespacesll__m__lagrange__interpolation.html#a856bccdbfeb834c6549ec6eb0ba696da',1,'sll_m_lagrange_interpolation::weight_product1d()']]],
   ['weight_5fproduct1d_5fnat',['weight_product1d_nat',['../namespacesll__m__lagrange__interpolation.html#a47f8c32ab80560946b6226cb33cd1a6f',1,'sll_m_lagrange_interpolation']]],
   ['weight_5fproduct1d_5fper',['weight_product1d_per',['../namespacesll__m__lagrange__interpolation.html#af72f2e5ea1da3a950fa938cffd898a8a',1,'sll_m_lagrange_interpolation']]],

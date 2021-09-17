@@ -1,0 +1,8 @@
+<map id="sll_s_spline_fem_mass1d_clamped_full" name="sll_s_spline_fem_mass1d_clamped_full">
+<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities__sparse.html#aa5108c957c08993cf92fe2dd4c340bef" title="Helper function to create sparsity pattern of the clamped mass matrix. " alt="" coords="256,5,445,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__spline__fem__utilities.html#a6e211d167a3e75ec1bc08389b7b254dc" title="Function computing the boundary part for a mass matrix with clamped splines of degree (full version w..." alt="" coords="255,71,447,127"/>
+<area shape="rect" id="node6" href="$namespacesll__m__spline__fem__utilities__sparse.html#ab9300692ab0bf900dfec4f4af0b73c24" title="Assemble the given row of a sparse matrix for a full mass line. " alt="" coords="241,151,460,178"/>
+<area shape="rect" id="node7" href="$namespacesll__m__spline__fem__utilities.html#ae7d30abb6637e536e1904d1ae44ed287" title="Helper function to find line of mass matrix (full version without symmetry part) " alt="" coords="255,202,447,258"/>
+<area shape="rect" id="node4" href="$namespacesll__m__gauss__legendre__integration.html#a0df63a9e8ee884c2d4a0d1f53602a949" title="Returns a 2d array of size (2,npoints) containing gauss&#45;legendre points and weights in the interval [..." alt="" coords="508,173,731,229"/>
+<area shape="rect" id="node5" href="$namespacesll__m__splines__pp.html#ab63c3a25b861ed9b8701ae2f65942bcf" title="Perform a 1d hornerschema on the pp_coeffs at index. " alt="" coords="532,79,707,120"/>
+</map>

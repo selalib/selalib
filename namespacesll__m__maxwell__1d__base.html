@@ -78,7 +78,7 @@ $(function() {
 <div class="contents">
 <a name="details" id="details"></a><h2 class="groupheader">Description</h2>
 <div class="textblock"><p>Module interface to solve Maxwell's equations in 1D. </p>
-<p>Contains the abstract class to create a Maxwell solver in 1D. </p>
+<p>Contains the abstract class to create a Maxwell solver in 1D. </p><dl class="section author"><dt>Author</dt><dd>Katharina Kormann </dd></dl>
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Derived types and interfaces</h2></td></tr>
@@ -86,13 +86,19 @@ Derived types and interfaces</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacesll__m__maxwell__1d__base_1_1empty.html">empty</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacesll__m__maxwell__1d__base_1_1multiply__derivative.html">multiply_derivative</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacesll__m__maxwell__1d__base_1_1norm__squared.html">norm_squared</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacesll__m__maxwell__1d__base_1_1signature__compute___e__from__j__1d.html">signature_compute_E_from_j_1d</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacesll__m__maxwell__1d__base_1_1signature__compute___e__from__rho__1d.html">signature_compute_E_from_rho_1d</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacesll__m__maxwell__1d__base_1_1signature__compute__field__from__field.html">signature_compute_field_from_field</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacesll__m__maxwell__1d__base_1_1signature__compute__phi__from__field.html">signature_compute_phi_from_field</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacesll__m__maxwell__1d__base_1_1signature__inner__product.html">signature_inner_product</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacesll__m__maxwell__1d__base_1_1signature__mass.html">signature_mass</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">type &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__base_1_1sll__c__maxwell__1d__base.html">sll_c_maxwell_1d_base</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -107,8 +113,81 @@ Functions/Subroutines</h2></td></tr>
 <tr class="memitem:ad09cd57cfefd49d69b4cb52e778dbab3"><td class="memItemLeft" align="right" valign="top">subroutine, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__base.html#ad09cd57cfefd49d69b4cb52e778dbab3">sll_s_plot_two_fields_1d</a> (fname, n1, f1, f2, iplot, time)</td></tr>
 <tr class="memdesc:ad09cd57cfefd49d69b4cb52e778dbab3"><td class="mdescLeft">&#160;</td><td class="mdescRight">write files to visualize 1d fields with gnuplot  <a href="#ad09cd57cfefd49d69b4cb52e778dbab3">More...</a><br /></td></tr>
 <tr class="separator:ad09cd57cfefd49d69b4cb52e778dbab3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaf85cecf5caaf65e4878b59fc382b046"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__base.html#aaf85cecf5caaf65e4878b59fc382b046">transform_dofs</a> (self, in, out, degree)</td></tr>
+<tr class="memdesc:aaf85cecf5caaf65e4878b59fc382b046"><td class="mdescLeft">&#160;</td><td class="mdescRight">Transformation of the dofs (identity by default)  <a href="#aaf85cecf5caaf65e4878b59fc382b046">More...</a><br /></td></tr>
+<tr class="separator:aaf85cecf5caaf65e4878b59fc382b046"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a805d6e83becb7dea4ed220a7083ebc6d"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__base.html#a805d6e83becb7dea4ed220a7083ebc6d">compute_curl_part</a> (self, delta_t, efield, bfield, betar)</td></tr>
+<tr class="memdesc:a805d6e83becb7dea4ed220a7083ebc6d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Solve source-free Maxwell's equations: Default implementation by solving first B_from_E then E_from_B.  <a href="#a805d6e83becb7dea4ed220a7083ebc6d">More...</a><br /></td></tr>
+<tr class="separator:a805d6e83becb7dea4ed220a7083ebc6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
+<a id="a805d6e83becb7dea4ed220a7083ebc6d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a805d6e83becb7dea4ed220a7083ebc6d">&#9670;&nbsp;</a></span>compute_curl_part()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_maxwell_1d_base::compute_curl_part </td>
+          <td>(</td>
+          <td class="paramtype">class(<a class="el" href="structsll__m__maxwell__1d__base_1_1sll__c__maxwell__1d__base.html">sll_c_maxwell_1d_base</a>)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
+          <td class="paramname"><em>delta_t</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(inout)&#160;</td>
+          <td class="paramname"><em>efield</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(inout)&#160;</td>
+          <td class="paramname"><em>bfield</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), optional&#160;</td>
+          <td class="paramname"><em>betar</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Solve source-free Maxwell's equations: Default implementation by solving first B_from_E then E_from_B. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">delta_t</td><td>Time step</td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">efield</td><td>Ey</td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">bfield</td><td>Bz</td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">betar</td><td>1/beta </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__base_8_f90_source.html#l00269">269</a> of file <a class="el" href="sll__m__maxwell__1d__base_8_f90_source.html">sll_m_maxwell_1d_base.F90</a>.</p>
+
+</div>
+</div>
 <a id="ad09cd57cfefd49d69b4cb52e778dbab3"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad09cd57cfefd49d69b4cb52e778dbab3">&#9670;&nbsp;</a></span>sll_s_plot_two_fields_1d()</h2>
 
@@ -124,31 +203,31 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramtype">intent(in)&#160;</td>
           <td class="paramname"><em>n1</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(n1), intent(in)&#160;</td>
+          <td class="paramtype">intent(in)&#160;</td>
           <td class="paramname"><em>f1</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(n1), intent(in)&#160;</td>
+          <td class="paramtype">intent(in)&#160;</td>
           <td class="paramname"><em>f2</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramtype">intent(in)&#160;</td>
           <td class="paramname"><em>iplot</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
+          <td class="paramtype">intent(in)&#160;</td>
           <td class="paramname"><em>time</em>&#160;</td>
         </tr>
         <tr>
@@ -162,23 +241,70 @@ Functions/Subroutines</h2></td></tr>
 <p>write files to visualize 1d fields with gnuplot </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">fname</td><td>output file name</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">n1</td><td>size of f1 and f2</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">f1</td><td>first field 2d</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">f2</td><td>second field 2d</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">iplot</td><td>plot counter</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">time</td><td>step time </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">fname</td><td>output file name </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__base_8_f90_source.html#l00144">144</a> of file <a class="el" href="sll__m__maxwell__1d__base_8_f90_source.html">sll_m_maxwell_1d_base.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__base_8_f90_source.html#l00217">217</a> of file <a class="el" href="sll__m__maxwell__1d__base_8_f90_source.html">sll_m_maxwell_1d_base.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__1d__base_ad09cd57cfefd49d69b4cb52e778dbab3_cgraph.svg" width="374" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
 </div>
 </div>
+
+</div>
+</div>
+<a id="aaf85cecf5caaf65e4878b59fc382b046"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaf85cecf5caaf65e4878b59fc382b046">&#9670;&nbsp;</a></span>transform_dofs()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_maxwell_1d_base::transform_dofs </td>
+          <td>(</td>
+          <td class="paramtype">class(<a class="el" href="structsll__m__maxwell__1d__base_1_1sll__c__maxwell__1d__base.html">sll_c_maxwell_1d_base</a>), intent(inout)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">dimension(:), intent(in)&#160;</td>
+          <td class="paramname"><em>in</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">dimension(:), intent(out)&#160;</td>
+          <td class="paramname"><em>out</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">intent(in)&#160;</td>
+          <td class="paramname"><em>degree</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Transformation of the dofs (identity by default) </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__base_8_f90_source.html#l00257">257</a> of file <a class="el" href="sll__m__maxwell__1d__base_8_f90_source.html">sll_m_maxwell_1d_base.F90</a>.</p>
 
 </div>
 </div>
@@ -189,7 +315,7 @@ Here is the call graph for this function:</div>
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Thu Sep 16 2021 15:32:49 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Sep 17 2021 15:35:34 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

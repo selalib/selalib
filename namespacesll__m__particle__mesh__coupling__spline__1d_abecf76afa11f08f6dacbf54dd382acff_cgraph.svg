@@ -9,15 +9,15 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 35)">
 <title>free_spline_1d</title>
 <polygon fill="#ffffff" stroke="transparent" points="-4,4 -4,-35 249,-35 249,4 -4,4"/>
-<!-- Node17 -->
+<!-- Node71 -->
 <g id="node1" class="node">
-<title>Node17</title>
+<title>Node71</title>
 <polygon fill="#bfbfbf" stroke="#000000" points="0,-6 0,-25 88,-25 88,-6 0,-6"/>
 <text text-anchor="middle" x="44" y="-13" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">free_spline_1d</text>
 </g>
-<!-- Node18 -->
+<!-- Node72 -->
 <g id="node2" class="node">
-<title>Node18</title>
+<title>Node72</title>
 <g id="a_node2"><a xlink:href="namespacesll__m__splines__pp.html#a801edc3f369eab9b8195bb24b1f649a1" target="_top" xlink:title="Destructor 1d. ">
 <polygon fill="#ffffff" stroke="#000000" points="124,-.5 124,-30.5 245,-30.5 245,-.5 124,-.5"/>
 <text text-anchor="start" x="132" y="-18.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_splines_pp::sll</text>
@@ -25,9 +25,9 @@
 </a>
 </g>
 </g>
-<!-- Node17&#45;&gt;Node18 -->
+<!-- Node71&#45;&gt;Node72 -->
 <g id="edge1" class="edge">
-<title>Node17&#45;&gt;Node18</title>
+<title>Node71&#45;&gt;Node72</title>
 <path fill="none" stroke="#191970" d="M88.0696,-15.5C96.2254,-15.5 104.9306,-15.5 113.6481,-15.5"/>
 <polygon fill="#191970" stroke="#191970" points="113.8553,-19.0001 123.8553,-15.5 113.8552,-12.0001 113.8553,-19.0001"/>
 </g>

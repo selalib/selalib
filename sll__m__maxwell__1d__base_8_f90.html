@@ -92,6 +92,8 @@ Data Types</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacesll__m__maxwell__1d__base_1_1norm__squared.html">norm_squared</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacesll__m__maxwell__1d__base_1_1signature__mass.html">signature_mass</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacesll__m__maxwell__1d__base_1_1signature__inner__product.html">signature_inner_product</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacesll__m__maxwell__1d__base_1_1sll__i__function__1d__real64.html">sll_i_function_1d_real64</a></td></tr>
@@ -101,9 +103,13 @@ Data Types</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacesll__m__maxwell__1d__base_1_1compute__field1__from__field2.html">compute_field1_from_field2</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacesll__m__maxwell__1d__base_1_1signature__compute___e__from__rho__1d.html">signature_compute_E_from_rho_1d</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacesll__m__maxwell__1d__base_1_1signature__compute__field__from__field.html">signature_compute_field_from_field</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacesll__m__maxwell__1d__base_1_1signature__compute___e__from__j__1d.html">signature_compute_E_from_j_1d</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacesll__m__maxwell__1d__base_1_1signature__compute__phi__from__field.html">signature_compute_phi_from_field</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacesll__m__maxwell__1d__base_1_1multiply__derivative.html">multiply_derivative</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="namespaces"></a>
@@ -117,6 +123,12 @@ Functions/Subroutines</h2></td></tr>
 <tr class="memitem:ad09cd57cfefd49d69b4cb52e778dbab3"><td class="memItemLeft" align="right" valign="top">subroutine, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__base.html#ad09cd57cfefd49d69b4cb52e778dbab3">sll_s_plot_two_fields_1d</a> (fname, n1, f1, f2, iplot, time)</td></tr>
 <tr class="memdesc:ad09cd57cfefd49d69b4cb52e778dbab3"><td class="mdescLeft">&#160;</td><td class="mdescRight">write files to visualize 1d fields with gnuplot  <a href="namespacesll__m__maxwell__1d__base.html#ad09cd57cfefd49d69b4cb52e778dbab3">More...</a><br /></td></tr>
 <tr class="separator:ad09cd57cfefd49d69b4cb52e778dbab3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaf85cecf5caaf65e4878b59fc382b046"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__base.html#aaf85cecf5caaf65e4878b59fc382b046">transform_dofs</a> (self, in, out, degree)</td></tr>
+<tr class="memdesc:aaf85cecf5caaf65e4878b59fc382b046"><td class="mdescLeft">&#160;</td><td class="mdescRight">Transformation of the dofs (identity by default)  <a href="namespacesll__m__maxwell__1d__base.html#aaf85cecf5caaf65e4878b59fc382b046">More...</a><br /></td></tr>
+<tr class="separator:aaf85cecf5caaf65e4878b59fc382b046"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a805d6e83becb7dea4ed220a7083ebc6d"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__1d__base.html#a805d6e83becb7dea4ed220a7083ebc6d">compute_curl_part</a> (self, delta_t, efield, bfield, betar)</td></tr>
+<tr class="memdesc:a805d6e83becb7dea4ed220a7083ebc6d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Solve source-free Maxwell's equations: Default implementation by solving first B_from_E then E_from_B.  <a href="namespacesll__m__maxwell__1d__base.html#a805d6e83becb7dea4ed220a7083ebc6d">More...</a><br /></td></tr>
+<tr class="separator:a805d6e83becb7dea4ed220a7083ebc6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 </div><!-- contents -->
 <!-- HTML footer for doxygen 1.8.7-->
@@ -125,7 +137,7 @@ Functions/Subroutines</h2></td></tr>
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Thu Sep 16 2021 15:32:48 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Sep 17 2021 15:35:33 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

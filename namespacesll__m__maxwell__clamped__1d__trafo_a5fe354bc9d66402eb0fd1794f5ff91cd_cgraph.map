@@ -1,0 +1,4 @@
+<map id="sll_s_compute_e_from_rho_1d_trafo" name="sll_s_compute_e_from_rho_1d_trafo">
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__clamped__1d__trafo.html#ad56588cf85e6fbd6f57d82403b1ed31c" title="Multiply by dicrete gradient matrix. " alt="" coords="221,20,312,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__spline__fem__utilities__3d__clamped.html#ad4e7ae8afab3728922de98d2ce93989e" title="Multiplication of the input vector in by the clamped derivative matrix G. " alt="" coords="360,5,567,61"/>
+</map>

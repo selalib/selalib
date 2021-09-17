@@ -19,10 +19,10 @@
 <!-- Node1 -->
 <g id="node2" class="node">
 <title>Node1</title>
-<g id="a_node2"><a xlink:href="structsll__m__particle__mesh__coupling__base_1_1sll__c__particle__mesh__coupling.html" target="_top" xlink:title="Basic type of a kernel smoother used for PIC simulations. ">
+<g id="a_node2"><a xlink:href="structsll__m__particle__mesh__coupling__base__1d_1_1sll__c__particle__mesh__coupling__1d.html" target="_top" xlink:title="Basic type of a kernel smoother used for PIC simulations. ">
 <polygon fill="#ffffff" stroke="#000000" points="1,-67.5 1,-97.5 114,-97.5 114,-67.5 1,-67.5"/>
 <text text-anchor="start" x="9" y="-85.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_c_particle_mesh</text>
-<text text-anchor="middle" x="57.5" y="-74.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">_coupling</text>
+<text text-anchor="middle" x="57.5" y="-74.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">_coupling_1d</text>
 </a>
 </g>
 </g>

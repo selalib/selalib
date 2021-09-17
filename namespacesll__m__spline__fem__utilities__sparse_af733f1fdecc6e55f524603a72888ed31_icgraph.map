@@ -1,0 +1,9 @@
+<map id="assemble_mass" name="assemble_mass">
+<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities__sparse.html#a2003f09f29c8034b9cb433328afaef6b" title="Set up 1d mass matrix (sparsity pattern and values) " alt="" coords="180,177,368,203"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__1d__fem.html#a5b82c557e498ae59986631d0aea7ed63" title="sll_m_maxwell_1d_fem\l::init_1d_fem" alt="" coords="437,5,613,47"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__1d__fem__sm.html#a45e52ba17b5b5af73732917939909d67" title="Initialization. " alt="" coords="437,71,613,112"/>
+<area shape="rect" id="node5" href="$namespacesll__m__maxwell__3d__fem.html#ab814bfc0f843c1a2b8fe485351798ca0" title="Initialization. " alt="" coords="437,136,613,177"/>
+<area shape="rect" id="node6" href="$namespacesll__m__maxwell__3d__fem__fft.html#a8a58004064950f3f15cada7e7c4fb56b" title="Initialization. " alt="" coords="437,201,613,243"/>
+<area shape="rect" id="node7" href="$namespacesll__m__maxwell__clamped__1d__fem__sm.html#a400fe28b25203e207ad0786874c32912" title="Initialization. " alt="" coords="416,267,633,308"/>
+<area shape="rect" id="node8" href="$namespacesll__m__maxwell__clamped__3d__fem.html#afadba212d3f01a688b12c751068d1707" title="Initialization. " alt="" coords="433,332,616,373"/>
+</map>

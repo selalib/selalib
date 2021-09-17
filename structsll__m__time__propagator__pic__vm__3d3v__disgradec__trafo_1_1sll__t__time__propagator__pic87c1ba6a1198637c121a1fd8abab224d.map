@@ -1,0 +1,23 @@
+<map id="sll_t_time_propagator_pic_vm_3d3v_disgradec_trafo" name="sll_t_time_propagator_pic_vm_3d3v_disgradec_trafo">
+<area shape="rect" id="node2" href="$structsll__m__time__propagator__base_1_1sll__c__time__propagator__base.html" title="Type for Hamiltonian splittings. " alt="" coords="1497,5,1701,32"/>
+<area shape="rect" id="node3" href="$structsll__m__hamiltonian__splitting__base_1_1sll__c__hamiltonian__splitting__base.html" title="Type for Hamiltonian splittings. " alt="" coords="1056,5,1291,32"/>
+<area shape="rect" id="node5" href="$structsll__m__time__propagator__pic__vm__3d3v__trafo__helper_1_1sll__t__time__propagator__pic__vm__3d3v__trafo__helper.html" title="Helper for implicit time propagator for 3d3v Vlasov&#45;Maxwell with coordinate transformation. " alt="" coords="1499,1349,1700,1390"/>
+<area shape="rect" id="node7" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver " alt="" coords="413,570,553,611"/>
+<area shape="rect" id="node14" href="$structsll__m__linear__operator__abstract_1_1sll__t__linear__operator__abstract.html" title="class for abstract linear operator " alt="" coords="405,1142,560,1183"/>
+<area shape="rect" id="node18" href="$structsll__m__mapping__3d_1_1sll__t__mapping__3d.html" title="type collecting functions for analytical coordinate mapping " alt="" coords="1105,1971,1241,1997"/>
+<area shape="rect" id="node27" href="$structsll__m__linear__solver__iter__abstract_1_1sll__t__linear__solver__iter__abstract.html" title="class for abstract iterative linear solver " alt="" coords="735,334,875,375"/>
+<area shape="rect" id="node34" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib. " alt="" coords="447,805,518,832"/>
+<area shape="rect" id="node6" href="$structsll__m__preconditioner__singular_1_1sll__t__preconditioner__singular.html" title="sll_t_preconditioner\l_singular" alt="" coords="1098,674,1249,715"/>
+<area shape="rect" id="node9" href="$structsll__m__linear__solver__block_1_1sll__t__linear__solver__block.html" title="class for a linear solver_block " alt="" coords="735,674,875,715"/>
+<area shape="rect" id="node33" href="$structsll__m__linear__solver__spline__mass__fft_1_1sll__t__linear__solver__spline__mass__fft.html" title="Linear solver for FFT&#45;based inversion of 3d tensor product of circulant matrices (extending the abstr..." alt="" coords="735,811,875,853"/>
+<area shape="rect" id="node13" href="$structsll__m__linear__operator__block_1_1sll__t__linear__operator__block.html" title="class for a linear operator_block " alt="" coords="728,1183,883,1225"/>
+<area shape="rect" id="node22" href="$structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html" title="arbitrary degree 1d spline " alt="" coords="412,2169,553,2196"/>
+<area shape="rect" id="node29" href="$structsll__m__linear__operator__schur__ev__3d_1_1sll__t__linear__operator__schur__ev__3d.html" title="sll_t_linear_operator\l_schur_ev_3d" alt="" coords="1096,1289,1251,1330"/>
+<area shape="rect" id="node31" href="$structsll__m__linear__operator__schur__phiv__3d_1_1sll__t__linear__operator__schur__phiv__3d.html" title="sll_t_linear_operator\l_schur_phiv_3d" alt="" coords="1096,1454,1251,1495"/>
+<area shape="rect" id="node32" href="$structsll__m__preconditioner__fft_1_1sll__t__preconditioner__fft.html" title="sll_t_preconditioner_fft" alt="" coords="1088,819,1259,845"/>
+<area shape="rect" id="node21" href="$structsll__m__splines__pp_1_1sll__t__spline__pp__3d.html" title="arbitrary degree 3d spline " alt="" coords="735,2175,876,2201"/>
+<area shape="rect" id="node11" href="$structsll__m__linear__solver__block_1_1jrk__t__linear__solver__pointer.html" title="class that contains a pointer to a linear solver " alt="" coords="411,363,554,405"/>
+<area shape="rect" id="node15" href="$structsll__m__linear__operator__block_1_1jrk__t__linear__operator__pointer.html" title="class that contains a pointer to a linear operator " alt="" coords="404,1077,561,1118"/>
+<area shape="rect" id="node19" href="$structsll__m__mapping__3d_1_1matrix__element.html" title="matrix_element" alt="" coords="742,1971,869,1997"/>
+<area shape="rect" id="node26" href="$structsll__m__linear__solver__cg_1_1sll__t__linear__solver__cg.html" title="class for the cg linear solver " alt="" coords="1092,468,1255,495"/>
+</map>

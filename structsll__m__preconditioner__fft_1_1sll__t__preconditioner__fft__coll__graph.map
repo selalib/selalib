@@ -1,0 +1,7 @@
+<map id="sll_t_preconditioner_fft" name="sll_t_preconditioner_fft">
+<area shape="rect" id="node2" href="$structsll__m__linear__solver__block_1_1sll__t__linear__solver__block.html" title="class for a linear solver_block " alt="" coords="663,144,803,185"/>
+<area shape="rect" id="node3" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver " alt="" coords="356,363,496,404"/>
+<area shape="rect" id="node9" href="$structsll__m__linear__solver__spline__mass__fft_1_1sll__t__linear__solver__spline__mass__fft.html" title="Linear solver for FFT&#45;based inversion of 3d tensor product of circulant matrices (extending the abstr..." alt="" coords="663,277,803,319"/>
+<area shape="rect" id="node10" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib. " alt="" coords="391,521,461,547"/>
+<area shape="rect" id="node7" href="$structsll__m__linear__solver__block_1_1jrk__t__linear__solver__pointer.html" title="class that contains a pointer to a linear solver " alt="" coords="355,5,497,47"/>
+</map>

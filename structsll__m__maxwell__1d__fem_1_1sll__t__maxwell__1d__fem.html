@@ -81,6 +81,9 @@ $(function() {
 <div class="title">sll_t_maxwell_1d_fem Type Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p>Maxwell solver class.  
+ <a href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#details">More...</a></p>
 <div class="dynheader">
 Inheritance diagram for sll_t_maxwell_1d_fem:</div>
 <div class="dyncontent">
@@ -90,45 +93,104 @@ Inheritance diagram for sll_t_maxwell_1d_fem:</div>
 <div class="dynheader">
 Collaboration diagram for sll_t_maxwell_1d_fem:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem__coll__graph.svg" width="406" height="275"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem__coll__graph.svg" width="100%" height="600"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 </div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-methods"></a>
 Private Member Functions</h2></td></tr>
 <tr class="memitem:a9bdea2253b2241d3ef21eaf2300bbcd2"><td class="memItemLeft" align="right" valign="top">procedure&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#a9bdea2253b2241d3ef21eaf2300bbcd2">compute_e_from_b</a> =&gt; <a class="el" href="namespacesll__m__maxwell__1d__fem.html#a47196627859f2c2d812ad68b15d300fb">sll_s_compute_e_from_b_1d_fem</a></td></tr>
+<tr class="memdesc:a9bdea2253b2241d3ef21eaf2300bbcd2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Solve E and B part of Amperes law with B constant in time.  <a href="#a9bdea2253b2241d3ef21eaf2300bbcd2">More...</a><br /></td></tr>
 <tr class="separator:a9bdea2253b2241d3ef21eaf2300bbcd2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad3555fa4accc7e9ba7a8b8e0b1205ecc"><td class="memItemLeft" align="right" valign="top">procedure&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#ad3555fa4accc7e9ba7a8b8e0b1205ecc">compute_b_from_e</a> =&gt; <a class="el" href="namespacesll__m__maxwell__1d__fem.html#a5e87fba6009f2ef888e836db7b8eaf0c">sll_s_compute_b_from_e_1d_fem</a></td></tr>
+<tr class="memdesc:ad3555fa4accc7e9ba7a8b8e0b1205ecc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Solve Faraday equation with E constant in time.  <a href="#ad3555fa4accc7e9ba7a8b8e0b1205ecc">More...</a><br /></td></tr>
 <tr class="separator:ad3555fa4accc7e9ba7a8b8e0b1205ecc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a505ad93bef73f0b2acd29f1c75e37bbe"><td class="memItemLeft" align="right" valign="top">procedure&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#a505ad93bef73f0b2acd29f1c75e37bbe">compute_e_from_rho</a> =&gt; <a class="el" href="namespacesll__m__maxwell__1d__fem.html#aaeeec4271a275e01eeb77df71a32532c">sll_s_compute_e_from_rho_1d_fem</a></td></tr>
+<tr class="memitem:a7fedcd37323d73706dbf59eb9abccccf"><td class="memItemLeft" align="right" valign="top">procedure&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#a7fedcd37323d73706dbf59eb9abccccf">compute_curl_part</a> =&gt; <a class="el" href="namespacesll__m__maxwell__1d__fem.html#a26d25ea707a2cac922bddd8fdc96d4da">sll_s_compute_curl_part_1d_fem</a></td></tr>
+<tr class="memdesc:a7fedcd37323d73706dbf59eb9abccccf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Solve source-free Maxwell's equations.  <a href="#a7fedcd37323d73706dbf59eb9abccccf">More...</a><br /></td></tr>
+<tr class="separator:a7fedcd37323d73706dbf59eb9abccccf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a505ad93bef73f0b2acd29f1c75e37bbe"><td class="memItemLeft" align="right" valign="top">procedure&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#a505ad93bef73f0b2acd29f1c75e37bbe">compute_e_from_rho</a> =&gt; <a class="el" href="namespacesll__m__maxwell__1d__fem.html#a2d1b34af6ce5bd3e84443d7ec7e2e1c7">sll_s_compute_e_from_rho_1d_fem</a></td></tr>
+<tr class="memdesc:a505ad93bef73f0b2acd29f1c75e37bbe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Solve E from rho using Poisson.  <a href="#a505ad93bef73f0b2acd29f1c75e37bbe">More...</a><br /></td></tr>
 <tr class="separator:a505ad93bef73f0b2acd29f1c75e37bbe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5cf28f881cb7602b8a5987da762d59da"><td class="memItemLeft" align="right" valign="top">procedure&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#a5cf28f881cb7602b8a5987da762d59da">compute_e_from_j</a> =&gt; compute_E_from_j_1d_fem</td></tr>
-<tr class="separator:a5cf28f881cb7602b8a5987da762d59da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab272dcf33e176eef545ca6bea436fa89"><td class="memItemLeft" align="right" valign="top">procedure&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#ab272dcf33e176eef545ca6bea436fa89">compute_rho_from_e</a> =&gt; <a class="el" href="namespacesll__m__maxwell__1d__fem.html#a93a33efea7cd5b3605cd58cea29c20dc">compute_rho_from_e_1d_fem</a></td></tr>
+<tr class="memdesc:ab272dcf33e176eef545ca6bea436fa89"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute rho from E.  <a href="#ab272dcf33e176eef545ca6bea436fa89">More...</a><br /></td></tr>
+<tr class="separator:ab272dcf33e176eef545ca6bea436fa89"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a89ea645585b37fa1583ab6200487ed2e"><td class="memItemLeft" align="right" valign="top">procedure&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#a89ea645585b37fa1583ab6200487ed2e">compute_e_from_j</a> =&gt; <a class="el" href="namespacesll__m__maxwell__1d__fem.html#a3cb1b8bf0285889d4089bf972aa81c3f">choose_interpolation</a></td></tr>
+<tr class="memdesc:a89ea645585b37fa1583ab6200487ed2e"><td class="mdescLeft">&#160;</td><td class="mdescRight">choose compute_E_from_j_1d_fem or compute_E_from_j_1d_fem_shape  <a href="#a89ea645585b37fa1583ab6200487ed2e">More...</a><br /></td></tr>
+<tr class="separator:a89ea645585b37fa1583ab6200487ed2e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adcb6d493ae78b331c016f500c755d4f4"><td class="memItemLeft" align="right" valign="top">procedure&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#adcb6d493ae78b331c016f500c755d4f4">compute_phi_from_rho</a> =&gt; <a class="el" href="namespacesll__m__maxwell__1d__fem.html#a77a9871dc6155ac337c1fc10a37ce52e">compute_phi_from_rho_1d_fem</a></td></tr>
+<tr class="memdesc:adcb6d493ae78b331c016f500c755d4f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute phi from rho (by solving the quasi-neutrality equation)  <a href="#adcb6d493ae78b331c016f500c755d4f4">More...</a><br /></td></tr>
+<tr class="separator:adcb6d493ae78b331c016f500c755d4f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a02caaeb3d7957b562f265818eb1e5613"><td class="memItemLeft" align="right" valign="top">procedure&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#a02caaeb3d7957b562f265818eb1e5613">compute_phi_from_j</a> =&gt; <a class="el" href="namespacesll__m__maxwell__1d__fem.html#a1e96468d8d3973e8cfde8e1c239ad85a">compute_phi_from_j_1d_fem</a></td></tr>
+<tr class="memdesc:a02caaeb3d7957b562f265818eb1e5613"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute phi from j (dynamic of quasi-neutrality equation for adiabatic electrons)  <a href="#a02caaeb3d7957b562f265818eb1e5613">More...</a><br /></td></tr>
+<tr class="separator:a02caaeb3d7957b562f265818eb1e5613"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adb4e080189ba7719b366d0c7aaaf4cf2"><td class="memItemLeft" align="right" valign="top">procedure&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#adb4e080189ba7719b366d0c7aaaf4cf2">compute_rhs_from_function</a> =&gt; <a class="el" href="namespacesll__m__maxwell__1d__fem.html#a85c7f5b45eebeb0270c47bfbdaae08d5">sll_s_compute_fem_rhs</a></td></tr>
+<tr class="memdesc:adb4e080189ba7719b366d0c7aaaf4cf2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute integral over given function tested by the basis.  <a href="#adb4e080189ba7719b366d0c7aaaf4cf2">More...</a><br /></td></tr>
 <tr class="separator:adb4e080189ba7719b366d0c7aaaf4cf2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4b40ef2ff33639333d495dc8d8e5bc79"><td class="memItemLeft" align="right" valign="top">procedure&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#a4b40ef2ff33639333d495dc8d8e5bc79">l2norm_squared</a> =&gt; L2norm_squared_1d_fem</td></tr>
-<tr class="separator:a4b40ef2ff33639333d495dc8d8e5bc79"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7aa669e0f88ea9d894e214c2720334d8"><td class="memItemLeft" align="right" valign="top">procedure&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#a7aa669e0f88ea9d894e214c2720334d8">inner_product</a> =&gt; <a class="el" href="namespacesll__m__maxwell__1d__fem.html#aa1244c81bbfc9976cbfcfd84dd0a1b25">inner_product_1d_fem</a></td></tr>
-<tr class="separator:a7aa669e0f88ea9d894e214c2720334d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a76013935efaf85cfe296af6be57c1379"><td class="memItemLeft" align="right" valign="top">procedure&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#a76013935efaf85cfe296af6be57c1379">l2projection</a> =&gt; L2projection_1d_fem</td></tr>
+<tr class="memdesc:a76013935efaf85cfe296af6be57c1379"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute L_2 projection of a given function.  <a href="#a76013935efaf85cfe296af6be57c1379">More...</a><br /></td></tr>
 <tr class="separator:a76013935efaf85cfe296af6be57c1379"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a445f23ec290ba2b081688611afbfe78d"><td class="memItemLeft" align="right" valign="top">procedure&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#a445f23ec290ba2b081688611afbfe78d">free</a> =&gt; <a class="el" href="namespacesll__m__maxwell__1d__fem.html#a73395fc583bd3e7ec4530eb3cca63001">free_1d_fem</a></td></tr>
-<tr class="separator:a445f23ec290ba2b081688611afbfe78d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2b35e7d254d3db249d279e9814708c56"><td class="memItemLeft" align="right" valign="top">procedure&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#a2b35e7d254d3db249d279e9814708c56">init</a> =&gt; <a class="el" href="namespacesll__m__maxwell__1d__fem.html#a0f182f448b394a9ec1d0f5a3cd1f8153">init_1d_fem</a></td></tr>
+<tr class="memitem:a4b40ef2ff33639333d495dc8d8e5bc79"><td class="memItemLeft" align="right" valign="top">procedure&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#a4b40ef2ff33639333d495dc8d8e5bc79">l2norm_squared</a> =&gt; L2norm_squared_1d_fem</td></tr>
+<tr class="memdesc:a4b40ef2ff33639333d495dc8d8e5bc79"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the square of the L2 norm of a given vector.  <a href="#a4b40ef2ff33639333d495dc8d8e5bc79">More...</a><br /></td></tr>
+<tr class="separator:a4b40ef2ff33639333d495dc8d8e5bc79"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7aa669e0f88ea9d894e214c2720334d8"><td class="memItemLeft" align="right" valign="top">procedure&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#a7aa669e0f88ea9d894e214c2720334d8">inner_product</a> =&gt; <a class="el" href="namespacesll__m__maxwell__1d__fem.html#a95835fb7a7173512d52e22df72949289">inner_product_1d_fem</a></td></tr>
+<tr class="memdesc:a7aa669e0f88ea9d894e214c2720334d8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Inner product of two dof-vectors with mass matrix.  <a href="#a7aa669e0f88ea9d894e214c2720334d8">More...</a><br /></td></tr>
+<tr class="separator:a7aa669e0f88ea9d894e214c2720334d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2b35e7d254d3db249d279e9814708c56"><td class="memItemLeft" align="right" valign="top">procedure&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#a2b35e7d254d3db249d279e9814708c56">init</a> =&gt; <a class="el" href="namespacesll__m__maxwell__1d__fem.html#a5b82c557e498ae59986631d0aea7ed63">init_1d_fem</a></td></tr>
+<tr class="memdesc:a2b35e7d254d3db249d279e9814708c56"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize the Maxwell class.  <a href="#a2b35e7d254d3db249d279e9814708c56">More...</a><br /></td></tr>
 <tr class="separator:a2b35e7d254d3db249d279e9814708c56"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a445f23ec290ba2b081688611afbfe78d"><td class="memItemLeft" align="right" valign="top">procedure&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#a445f23ec290ba2b081688611afbfe78d">free</a> =&gt; <a class="el" href="namespacesll__m__maxwell__1d__fem.html#a73395fc583bd3e7ec4530eb3cca63001">free_1d_fem</a></td></tr>
+<tr class="memdesc:a445f23ec290ba2b081688611afbfe78d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free Maxwell class.  <a href="#a445f23ec290ba2b081688611afbfe78d">More...</a><br /></td></tr>
+<tr class="separator:a445f23ec290ba2b081688611afbfe78d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9710190a18856480f2dc743cc52ed0fc"><td class="memItemLeft" align="right" valign="top">procedure&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#a9710190a18856480f2dc743cc52ed0fc">multiply_g</a></td></tr>
+<tr class="memdesc:a9710190a18856480f2dc743cc52ed0fc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Multiplication with gradient matrix.  <a href="#a9710190a18856480f2dc743cc52ed0fc">More...</a><br /></td></tr>
+<tr class="separator:a9710190a18856480f2dc743cc52ed0fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac2d2b31189e769b55df505fadcf4c3b2"><td class="memItemLeft" align="right" valign="top">procedure&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#ac2d2b31189e769b55df505fadcf4c3b2">multiply_gt</a></td></tr>
+<tr class="memdesc:ac2d2b31189e769b55df505fadcf4c3b2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Multiplication with divergence matrix.  <a href="#ac2d2b31189e769b55df505fadcf4c3b2">More...</a><br /></td></tr>
+<tr class="separator:ac2d2b31189e769b55df505fadcf4c3b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aad758c99161846fd73e29e34cb511ff2"><td class="memItemLeft" align="right" valign="top">procedure&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#aad758c99161846fd73e29e34cb511ff2">invert_mass</a> =&gt; <a class="el" href="namespacesll__m__maxwell__1d__fem.html#a07ac85d431e1ab78f59da39ba51cdafb">invert_mass_1d_fem</a></td></tr>
+<tr class="memdesc:aad758c99161846fd73e29e34cb511ff2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Invert mass matrix.  <a href="#aad758c99161846fd73e29e34cb511ff2">More...</a><br /></td></tr>
+<tr class="separator:aad758c99161846fd73e29e34cb511ff2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae60834f21e30a2a4d4a868c9be7e5e8b"><td class="memItemLeft" align="right" valign="top">procedure&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#ae60834f21e30a2a4d4a868c9be7e5e8b">multiply_mass</a> =&gt; <a class="el" href="namespacesll__m__maxwell__1d__fem.html#acb63eb5eafceb69a879302928c503bfa">multiply_mass_1d_fem</a></td></tr>
+<tr class="memdesc:ae60834f21e30a2a4d4a868c9be7e5e8b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Product with the mass matrix.  <a href="#ae60834f21e30a2a4d4a868c9be7e5e8b">More...</a><br /></td></tr>
+<tr class="separator:ae60834f21e30a2a4d4a868c9be7e5e8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a579193a6fe9e4d9bf283b624c8572207"><td class="memItemLeft" align="right" valign="top">procedure&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#a579193a6fe9e4d9bf283b624c8572207">transform_dofs</a> =&gt; <a class="el" href="namespacesll__m__maxwell__1d__fem.html#a51ffa2cd61a78cdc2741d91f48a81574">transform_dofs_1d_fem</a></td></tr>
+<tr class="separator:a579193a6fe9e4d9bf283b624c8572207"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9c79db7c930b0dc3ace961fe8c9dfc7f"><td class="memItemLeft" align="right" valign="top">procedure&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#a9c79db7c930b0dc3ace961fe8c9dfc7f">multiply_interpolation_inverse_transpose</a></td></tr>
+<tr class="separator:a9c79db7c930b0dc3ace961fe8c9dfc7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7d1b08964d70035b9b1ecc87114df2f2"><td class="memItemLeft" align="right" valign="top">procedure&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#a7d1b08964d70035b9b1ecc87114df2f2">solve_e_b</a> =&gt; <a class="el" href="namespacesll__m__maxwell__1d__fem.html#a24ad9e6b445cc06f4c31dda8b252fd26">solve_e_b_1d_fem</a></td></tr>
+<tr class="separator:a7d1b08964d70035b9b1ecc87114df2f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-attribs"></a>
 Private Attributes</h2></td></tr>
+<tr class="memitem:a65f415d476de3bc8e182cb3a90185bb3"><td class="memItemLeft" align="right" valign="top">type(<a class="el" href="structsll__m__linear__operator__schur__eb__1d_1_1sll__t__linear__operator__schur__eb__1d.html">sll_t_linear_operator_schur_eb_1d</a>)&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#a65f415d476de3bc8e182cb3a90185bb3">linear_op_schur_eb</a></td></tr>
+<tr class="memdesc:a65f415d476de3bc8e182cb3a90185bb3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Schur complement operator for advect_eb.  <a href="#a65f415d476de3bc8e182cb3a90185bb3">More...</a><br /></td></tr>
+<tr class="separator:a65f415d476de3bc8e182cb3a90185bb3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa6ef0518587b292c6ddff204d6479e7b"><td class="memItemLeft" align="right" valign="top">type(<a class="el" href="structsll__m__linear__solver__mgmres_1_1sll__t__linear__solver__mgmres.html">sll_t_linear_solver_mgmres</a>)&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#aa6ef0518587b292c6ddff204d6479e7b">linear_solver_schur_eb</a></td></tr>
+<tr class="memdesc:aa6ef0518587b292c6ddff204d6479e7b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Schur complement solver for advect_eb.  <a href="#aa6ef0518587b292c6ddff204d6479e7b">More...</a><br /></td></tr>
+<tr class="separator:aa6ef0518587b292c6ddff204d6479e7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6bcf50078f35b1e522c9c34eb0d59422"><td class="memItemLeft" align="right" valign="top">type(<a class="el" href="structsll__m__matrix__csr_1_1sll__t__matrix__csr.html">sll_t_matrix_csr</a>)&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#a6bcf50078f35b1e522c9c34eb0d59422">mass0</a></td></tr>
+<tr class="memdesc:a6bcf50078f35b1e522c9c34eb0d59422"><td class="mdescLeft">&#160;</td><td class="mdescRight">0-form mass matrix  <a href="#a6bcf50078f35b1e522c9c34eb0d59422">More...</a><br /></td></tr>
+<tr class="separator:a6bcf50078f35b1e522c9c34eb0d59422"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a86e8c03a9aeb98a7f577bbb008042730"><td class="memItemLeft" align="right" valign="top">type(<a class="el" href="structsll__m__matrix__csr_1_1sll__t__matrix__csr.html">sll_t_matrix_csr</a>)&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#a86e8c03a9aeb98a7f577bbb008042730">mass1</a></td></tr>
+<tr class="memdesc:a86e8c03a9aeb98a7f577bbb008042730"><td class="mdescLeft">&#160;</td><td class="mdescRight">1-form mass matrix  <a href="#a86e8c03a9aeb98a7f577bbb008042730">More...</a><br /></td></tr>
+<tr class="separator:a86e8c03a9aeb98a7f577bbb008042730"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a391611e3214e39c4455e865fcde92f3a"><td class="memItemLeft" align="right" valign="top">type(<a class="el" href="structsll__m__matrix__csr_1_1sll__t__matrix__csr.html">sll_t_matrix_csr</a>)&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#a391611e3214e39c4455e865fcde92f3a">mixed_mass</a></td></tr>
+<tr class="memdesc:a391611e3214e39c4455e865fcde92f3a"><td class="mdescLeft">&#160;</td><td class="mdescRight">mixed mass matrix  <a href="#a391611e3214e39c4455e865fcde92f3a">More...</a><br /></td></tr>
+<tr class="separator:a391611e3214e39c4455e865fcde92f3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:addebfc14d7f83a7c2a7f7bb01d1b3d8d"><td class="memItemLeft" align="right" valign="top">type(<a class="el" href="structsll__m__fft_1_1sll__t__fft.html">sll_t_fft</a>)&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#addebfc14d7f83a7c2a7f7bb01d1b3d8d">plan_fw</a></td></tr>
 <tr class="memdesc:addebfc14d7f83a7c2a7f7bb01d1b3d8d"><td class="mdescLeft">&#160;</td><td class="mdescRight">fft plan (forward)  <a href="#addebfc14d7f83a7c2a7f7bb01d1b3d8d">More...</a><br /></td></tr>
 <tr class="separator:addebfc14d7f83a7c2a7f7bb01d1b3d8d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6c1928a97d27438c071c6bc8e611c982"><td class="memItemLeft" align="right" valign="top">type(<a class="el" href="structsll__m__fft_1_1sll__t__fft.html">sll_t_fft</a>)&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#a6c1928a97d27438c071c6bc8e611c982">plan_bw</a></td></tr>
 <tr class="memdesc:a6c1928a97d27438c071c6bc8e611c982"><td class="mdescLeft">&#160;</td><td class="mdescRight">fft plan (backward)  <a href="#a6c1928a97d27438c071c6bc8e611c982">More...</a><br /></td></tr>
 <tr class="separator:a6c1928a97d27438c071c6bc8e611c982"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad62a0098600d2d1aada9360f9c74c6a5"><td class="memItemLeft" align="right" valign="top">logical&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__maxwell__1d__fem_1_1sll__t__maxwell__1d__fem.html#ad62a0098600d2d1aada9360f9c74c6a5">adiabatic_electrons</a></td></tr>
+<tr class="memdesc:ad62a0098600d2d1aada9360f9c74c6a5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set true if solver with adiabatic electrions.  <a href="#ad62a0098600d2d1aada9360f9c74c6a5">More...</a><br /></td></tr>
+<tr class="separator:ad62a0098600d2d1aada9360f9c74c6a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock">
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00041">41</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<div class="textblock"><p>Maxwell solver class. </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00067">67</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
 </div><h2 class="groupheader">Member Function/Subroutine Documentation</h2>
 <a id="ad3555fa4accc7e9ba7a8b8e0b1205ecc"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad3555fa4accc7e9ba7a8b8e0b1205ecc">&#9670;&nbsp;</a></span>compute_b_from_e()</h2>
@@ -153,7 +215,38 @@ Private Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00062">62</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<p>Solve Faraday equation with E constant in time. </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00106">106</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+
+</div>
+</div>
+<a id="a7fedcd37323d73706dbf59eb9abccccf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7fedcd37323d73706dbf59eb9abccccf">&#9670;&nbsp;</a></span>compute_curl_part()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">procedure compute_curl_part </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Solve source-free Maxwell's equations. </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00108">108</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
 
 </div>
 </div>
@@ -180,12 +273,14 @@ Private Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00060">60</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<p>Solve E and B part of Amperes law with B constant in time. </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00104">104</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
 
 </div>
 </div>
-<a id="a5cf28f881cb7602b8a5987da762d59da"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5cf28f881cb7602b8a5987da762d59da">&#9670;&nbsp;</a></span>compute_e_from_j()</h2>
+<a id="a89ea645585b37fa1583ab6200487ed2e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a89ea645585b37fa1583ab6200487ed2e">&#9670;&nbsp;</a></span>compute_e_from_j()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -207,7 +302,9 @@ Private Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00066">66</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<p>choose compute_E_from_j_1d_fem or compute_E_from_j_1d_fem_shape </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00114">114</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
 
 </div>
 </div>
@@ -234,7 +331,96 @@ Private Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00064">64</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<p>Solve E from rho using Poisson. </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00110">110</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+
+</div>
+</div>
+<a id="a02caaeb3d7957b562f265818eb1e5613"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a02caaeb3d7957b562f265818eb1e5613">&#9670;&nbsp;</a></span>compute_phi_from_j()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">procedure compute_phi_from_j </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Compute phi from j (dynamic of quasi-neutrality equation for adiabatic electrons) </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00118">118</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+
+</div>
+</div>
+<a id="adcb6d493ae78b331c016f500c755d4f4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adcb6d493ae78b331c016f500c755d4f4">&#9670;&nbsp;</a></span>compute_phi_from_rho()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">procedure compute_phi_from_rho </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Compute phi from rho (by solving the quasi-neutrality equation) </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00116">116</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+
+</div>
+</div>
+<a id="ab272dcf33e176eef545ca6bea436fa89"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab272dcf33e176eef545ca6bea436fa89">&#9670;&nbsp;</a></span>compute_rho_from_e()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">procedure compute_rho_from_e </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Compute rho from E. </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00112">112</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
 
 </div>
 </div>
@@ -261,7 +447,9 @@ Private Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00068">68</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<p>Compute integral over given function tested by the basis. </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00120">120</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
 
 </div>
 </div>
@@ -288,7 +476,9 @@ Private Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00076">76</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<p>Free Maxwell class. </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00130">130</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
 
 </div>
 </div>
@@ -315,7 +505,9 @@ Private Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00078">78</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<p>Initialize the Maxwell class. </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00128">128</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
 
 </div>
 </div>
@@ -342,7 +534,38 @@ Private Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00072">72</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<p>Inner product of two dof-vectors with mass matrix. </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00126">126</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+
+</div>
+</div>
+<a id="aad758c99161846fd73e29e34cb511ff2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aad758c99161846fd73e29e34cb511ff2">&#9670;&nbsp;</a></span>invert_mass()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">procedure invert_mass </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Invert mass matrix. </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00136">136</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
 
 </div>
 </div>
@@ -369,7 +592,9 @@ Private Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00070">70</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<p>Compute the square of the L2 norm of a given vector. </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00124">124</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
 
 </div>
 </div>
@@ -396,11 +621,337 @@ Private Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00074">74</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<p>Compute L_2 projection of a given function. </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00122">122</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+
+</div>
+</div>
+<a id="a9710190a18856480f2dc743cc52ed0fc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9710190a18856480f2dc743cc52ed0fc">&#9670;&nbsp;</a></span>multiply_g()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">procedure multiply_g </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Multiplication with gradient matrix. </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00132">132</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+
+</div>
+</div>
+<a id="ac2d2b31189e769b55df505fadcf4c3b2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac2d2b31189e769b55df505fadcf4c3b2">&#9670;&nbsp;</a></span>multiply_gt()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">procedure multiply_gt </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Multiplication with divergence matrix. </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00134">134</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+
+</div>
+</div>
+<a id="a9c79db7c930b0dc3ace961fe8c9dfc7f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9c79db7c930b0dc3ace961fe8c9dfc7f">&#9670;&nbsp;</a></span>multiply_interpolation_inverse_transpose()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">procedure multiply_interpolation_inverse_transpose </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00142">142</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+
+</div>
+</div>
+<a id="ae60834f21e30a2a4d4a868c9be7e5e8b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae60834f21e30a2a4d4a868c9be7e5e8b">&#9670;&nbsp;</a></span>multiply_mass()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">procedure multiply_mass </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Product with the mass matrix. </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00138">138</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+
+</div>
+</div>
+<a id="a7d1b08964d70035b9b1ecc87114df2f2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7d1b08964d70035b9b1ecc87114df2f2">&#9670;&nbsp;</a></span>solve_e_b()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">procedure solve_e_b </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00144">144</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+
+</div>
+</div>
+<a id="a579193a6fe9e4d9bf283b624c8572207"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a579193a6fe9e4d9bf283b624c8572207">&#9670;&nbsp;</a></span>transform_dofs()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">procedure transform_dofs </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00140">140</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
 
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
+<a id="ad62a0098600d2d1aada9360f9c74c6a5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad62a0098600d2d1aada9360f9c74c6a5">&#9670;&nbsp;</a></span>adiabatic_electrons</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">logical adiabatic_electrons</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Set true if solver with adiabatic electrions. </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00100">100</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+
+</div>
+</div>
+<a id="a65f415d476de3bc8e182cb3a90185bb3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a65f415d476de3bc8e182cb3a90185bb3">&#9670;&nbsp;</a></span>linear_op_schur_eb</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">type( <a class="el" href="structsll__m__linear__operator__schur__eb__1d_1_1sll__t__linear__operator__schur__eb__1d.html">sll_t_linear_operator_schur_eb_1d</a> ) linear_op_schur_eb</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Schur complement operator for advect_eb. </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00069">69</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+
+</div>
+</div>
+<a id="aa6ef0518587b292c6ddff204d6479e7b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa6ef0518587b292c6ddff204d6479e7b">&#9670;&nbsp;</a></span>linear_solver_schur_eb</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">type( <a class="el" href="structsll__m__linear__solver__mgmres_1_1sll__t__linear__solver__mgmres.html">sll_t_linear_solver_mgmres</a> ) linear_solver_schur_eb</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Schur complement solver for advect_eb. </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00070">70</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+
+</div>
+</div>
+<a id="a6bcf50078f35b1e522c9c34eb0d59422"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6bcf50078f35b1e522c9c34eb0d59422">&#9670;&nbsp;</a></span>mass0</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">type(<a class="el" href="structsll__m__matrix__csr_1_1sll__t__matrix__csr.html">sll_t_matrix_csr</a>) mass0</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>0-form mass matrix </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00072">72</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+
+</div>
+</div>
+<a id="a86e8c03a9aeb98a7f577bbb008042730"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a86e8c03a9aeb98a7f577bbb008042730">&#9670;&nbsp;</a></span>mass1</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">type(<a class="el" href="structsll__m__matrix__csr_1_1sll__t__matrix__csr.html">sll_t_matrix_csr</a>) mass1</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>1-form mass matrix </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00073">73</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+
+</div>
+</div>
+<a id="a391611e3214e39c4455e865fcde92f3a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a391611e3214e39c4455e865fcde92f3a">&#9670;&nbsp;</a></span>mixed_mass</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">type(<a class="el" href="structsll__m__matrix__csr_1_1sll__t__matrix__csr.html">sll_t_matrix_csr</a>) mixed_mass</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>mixed mass matrix </p>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00074">74</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+
+</div>
+</div>
 <a id="a6c1928a97d27438c071c6bc8e611c982"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a6c1928a97d27438c071c6bc8e611c982">&#9670;&nbsp;</a></span>plan_bw</h2>
 
@@ -423,7 +974,7 @@ Private Attributes</h2></td></tr>
 
 <p>fft plan (backward) </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00055">55</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00095">95</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
 
 </div>
 </div>
@@ -449,7 +1000,7 @@ Private Attributes</h2></td></tr>
 
 <p>fft plan (forward) </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00054">54</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html#l00094">94</a> of file <a class="el" href="sll__m__maxwell__1d__fem_8_f90_source.html">sll_m_maxwell_1d_fem.F90</a>.</p>
 
 </div>
 </div>
@@ -460,7 +1011,7 @@ Private Attributes</h2></td></tr>
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Thu Sep 16 2021 15:32:49 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Sep 17 2021 15:35:34 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

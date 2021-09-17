@@ -1,18 +1,38 @@
 <map id="sll_s_fft_exec_c2r_1d" name="sll_s_fft_exec_c2r_1d">
-<area shape="rect" id="node2" href="$namespacesll__m__poisson__1d__hmf.html#a2b4b53444694dd14c7284f4cc0fa0bfd" title="Solve the 1d equation for the Vlasov&#45;HMF model. " alt="" coords="237,156,407,212"/>
-<area shape="rect" id="node4" href="$namespacesll__m__fft.html#ac3f0bdd60b0eb75e936d13bf15f06ea2" title="Compute fast Fourier transform in real to real mode. " alt="" coords="243,240,401,267"/>
-<area shape="rect" id="node16" href="$namespacesll__m__advection__1d__ampere.html#adf823e7b66c7a72a566f83a2a1d4264b" title="sll_m_advection_1d\l_ampere::advect_1d_constant" alt="" coords="213,291,431,333"/>
-<area shape="rect" id="node17" href="$namespacesll__m__advection__1d__spectral.html#af930378a409712cb569be92a5f3749c6" title="sll_m_advection_1d\l_spectral::advect_1d\l_constant" alt="" coords="244,357,400,413"/>
-<area shape="rect" id="node3" href="$namespacesll__m__poisson__1d__hmf.html#aca5cc2791e1093ebe7bb28c8850f9af9" title="solves &#160;with &#160;in 2d " alt="" coords="481,152,652,208"/>
-<area shape="rect" id="node5" href="$namespacesll__m__maxwell__1d__fem.html#a0292d383eb02a02563a4a11367866848" title="sll_m_maxwell_1d_fem\l::solve_circulant" alt="" coords="479,233,655,274"/>
-<area shape="rect" id="node12" href="$namespacesll__m__periodic__interp.html#af13c2d535538f2d6ca1e3e7b40b38139" title="sll_m_periodic_interp\l::sll_s_periodic_interp" alt="" coords="485,465,648,506"/>
-<area shape="rect" id="node6" href="$namespacesll__m__maxwell__1d__fem.html#a47196627859f2c2d812ad68b15d300fb" title="compute Ey from Bz using weak Ampere formulation " alt="" coords="718,5,894,61"/>
-<area shape="rect" id="node7" href="$namespacesll__m__maxwell__1d__fem.html#a35f67335e750d8c00872ac2599d5bfbe" title="Compute E_i from j_i integrated over the time interval using weak Ampere formulation. " alt="" coords="703,86,909,127"/>
-<area shape="rect" id="node8" href="$namespacesll__m__maxwell__1d__fem.html#aaeeec4271a275e01eeb77df71a32532c" title="sll_m_maxwell_1d_fem\l::sll_s_compute_e_from\l_rho_1d_fem" alt="" coords="718,152,894,208"/>
-<area shape="rect" id="node9" href="$namespacesll__m__maxwell__1d__fem.html#af92aa77aac30fa9ad87a4cf10cb88ceb" title="Compute the L2 projection of a given function f on periodic splines of given degree. " alt="" coords="718,233,894,274"/>
-<area shape="rect" id="node10" href="$namespacesll__m__maxwell__1d__fem.html#a297e5091887d7400c744050d772749d6" title="Compute square of the L2norm. " alt="" coords="711,298,901,339"/>
-<area shape="rect" id="node11" href="$namespacesll__m__maxwell__1d__fem.html#aa1244c81bbfc9976cbfcfd84dd0a1b25" title="sll_m_maxwell_1d_fem\l::inner_product_1d_fem" alt="" coords="718,363,894,405"/>
-<area shape="rect" id="node13" href="$namespacesll__m__periodic__interpolator__1d.html#ae6f0cb5c46ddb52e2ab53c9c1e65792b" title="sll_m_periodic_interpolator\l_1d::per_interpolate1d_disp" alt="" coords="705,429,907,470"/>
-<area shape="rect" id="node14" href="$namespacesll__m__periodic__interpolator__1d.html#afddf771cf26aba1439b7c9068626b0a2" title="sll_m_periodic_interpolator\l_1d::per_interpolate1d_disp\l_inplace" alt="" coords="705,495,907,551"/>
-<area shape="rect" id="node15" href="$namespacesll__m__advection__1d__periodic.html#a83e408dd2f8ef25942506b71256ab110" title="sll_m_advection_1d\l_periodic::periodic\l_advect_1d_constant" alt="" coords="727,575,885,631"/>
+<area shape="rect" id="node2" href="$namespacesll__m__poisson__1d__hmf.html#a2b4b53444694dd14c7284f4cc0fa0bfd" title="Solve the 1d equation for the Vlasov&#45;HMF model. " alt="" coords="237,568,407,624"/>
+<area shape="rect" id="node4" href="$namespacesll__m__fft.html#ac3f0bdd60b0eb75e936d13bf15f06ea2" title="Compute fast Fourier transform in real to real mode. " alt="" coords="243,783,401,809"/>
+<area shape="rect" id="node36" href="$namespacesll__m__advection__1d__ampere.html#adf823e7b66c7a72a566f83a2a1d4264b" title="sll_m_advection_1d\l_ampere::advect_1d_constant" alt="" coords="213,834,431,875"/>
+<area shape="rect" id="node37" href="$namespacesll__m__advection__1d__spectral.html#af930378a409712cb569be92a5f3749c6" title="sll_m_advection_1d\l_spectral::advect_1d\l_constant" alt="" coords="244,900,400,956"/>
+<area shape="rect" id="node3" href="$namespacesll__m__poisson__1d__hmf.html#aca5cc2791e1093ebe7bb28c8850f9af9" title="solves &#160;with &#160;in 2d " alt="" coords="500,433,671,489"/>
+<area shape="rect" id="node5" href="$namespacesll__m__maxwell__1d__fem.html#a0292d383eb02a02563a4a11367866848" title="sll_m_maxwell_1d_fem\l::solve_circulant" alt="" coords="497,514,673,555"/>
+<area shape="rect" id="node22" href="$namespacesll__m__maxwell__1d__ps.html#a5c9b2f85c669dd1b29e92187d52ff1eb" title="sll_m_maxwell_1d_ps\l::grad_proj0" alt="" coords="503,579,668,621"/>
+<area shape="rect" id="node23" href="$namespacesll__m__maxwell__1d__ps.html#a46e3fb15ca597b392b2a0e6614bd19a3" title="sll_m_maxwell_1d_ps\l::proj1_grad" alt="" coords="503,645,668,686"/>
+<area shape="rect" id="node24" href="$namespacesll__m__maxwell__1d__ps.html#addd00456d6978f3e54ed7c92ef1fed51" title="Compute E_i from j_i integrated over the time interval using weak Ampere formulation. " alt="" coords="487,710,683,751"/>
+<area shape="rect" id="node25" href="$namespacesll__m__maxwell__1d__ps.html#ae284c34a8333b70f2809cbeefc25b95d" title="sll_m_maxwell_1d_ps\l::transform_dofs_1d_ps" alt="" coords="498,775,673,817"/>
+<area shape="rect" id="node26" href="$namespacesll__m__maxwell__1d__ps.html#af92d3c7405230ec0d3d67e6d6035ec11" title="sll_m_maxwell_1d_ps\l::compute_e_from_rho_1d_ps" alt="" coords="479,841,692,882"/>
+<area shape="rect" id="node27" href="$namespacesll__m__maxwell__1d__ps.html#a969d68da25da33b0f5277a0787f4efd3" title="sll_m_maxwell_1d_ps\l::compute_rho_from_e_1d_ps" alt="" coords="479,906,692,947"/>
+<area shape="rect" id="node28" href="$namespacesll__m__maxwell__1d__ps.html#a362d231e63166df52032a375a65d7553" title="Compute the L2 projection of a given function f on periodic splines of given degree. " alt="" coords="503,971,668,1013"/>
+<area shape="rect" id="node29" href="$namespacesll__m__periodic__interp.html#af13c2d535538f2d6ca1e3e7b40b38139" title="sll_m_periodic_interp\l::sll_s_periodic_interp" alt="" coords="504,1037,667,1078"/>
+<area shape="rect" id="node33" href="$namespacesll__m__fft__filter__1d.html#a266fbb587e0a14b965c2406cbf9855de" title="sll_m_fft_filter_1d\l::sll_s_fft_filter" alt="" coords="516,1190,655,1231"/>
+<area shape="rect" id="node6" href="$namespacesll__m__maxwell__1d__fem.html#a9529d7ddd5961fc724e0b452425e5e2f" title="compute Ey from Bz using weak Ampere formulation " alt="" coords="755,53,931,94"/>
+<area shape="rect" id="node9" href="$namespacesll__m__maxwell__1d__fem.html#a2d1b34af6ce5bd3e84443d7ec7e2e1c7" title="sll_m_maxwell_1d_fem\l::sll_s_compute_e_from\l_rho_1d_fem" alt="" coords="755,119,931,175"/>
+<area shape="rect" id="node10" href="$namespacesll__m__maxwell__1d__fem.html#a93a33efea7cd5b3605cd58cea29c20dc" title="Compute rho from Gauss law for given efield. " alt="" coords="755,199,931,255"/>
+<area shape="rect" id="node11" href="$namespacesll__m__maxwell__1d__fem.html#a35f67335e750d8c00872ac2599d5bfbe" title="Compute E_i from j_i integrated over the time interval using weak Ampere formulation. " alt="" coords="740,279,947,321"/>
+<area shape="rect" id="node13" href="$namespacesll__m__maxwell__1d__fem.html#af1b844cf1315847ac495f1d957189479" title="sll_m_maxwell_1d_fem\l::compute_e_from_j_1d\l_fem_shape" alt="" coords="755,345,931,401"/>
+<area shape="rect" id="node14" href="$namespacesll__m__maxwell__1d__fem.html#ae42fa711464cf385b882b84fd8c63511" title="sll_m_maxwell_1d_fem\l::multiply_interpolation\l_inverse_transpose" alt="" coords="755,425,931,481"/>
+<area shape="rect" id="node15" href="$namespacesll__m__maxwell__1d__fem.html#a24ad9e6b445cc06f4c31dda8b252fd26" title="Solves for the efield part in a implicit curl part solve. " alt="" coords="755,506,931,547"/>
+<area shape="rect" id="node16" href="$namespacesll__m__maxwell__1d__fem.html#abfc2b83c57927e44075c5d11b8949235" title="Compute square of the L2norm. " alt="" coords="748,571,939,613"/>
+<area shape="rect" id="node17" href="$namespacesll__m__maxwell__1d__fem.html#a95835fb7a7173512d52e22df72949289" title="sll_m_maxwell_1d_fem\l::inner_product_1d_fem" alt="" coords="755,637,931,678"/>
+<area shape="rect" id="node18" href="$namespacesll__m__maxwell__1d__fem.html#af92aa77aac30fa9ad87a4cf10cb88ceb" title="Compute the L2 projection of a given function f on periodic splines of given degree. " alt="" coords="755,702,931,743"/>
+<area shape="rect" id="node19" href="$namespacesll__m__maxwell__1d__fem.html#acb63eb5eafceb69a879302928c503bfa" title="sll_m_maxwell_1d_fem\l::multiply_mass_1d_fem" alt="" coords="752,767,935,809"/>
+<area shape="rect" id="node20" href="$namespacesll__m__maxwell__1d__fem.html#a07ac85d431e1ab78f59da39ba51cdafb" title="Invert the mass matrix. " alt="" coords="755,833,931,874"/>
+<area shape="rect" id="node21" href="$namespacesll__m__maxwell__1d__fem.html#a51ffa2cd61a78cdc2741d91f48a81574" title="Invert the mass matrix. " alt="" coords="751,898,936,939"/>
+<area shape="rect" id="node7" href="$namespacesll__m__maxwell__1d__fem.html#a47196627859f2c2d812ad68b15d300fb" title="compute Ey from Bz using weak Ampere formulation " alt="" coords="995,5,1171,61"/>
+<area shape="rect" id="node8" href="$namespacesll__m__maxwell__1d__fem.html#a5e87fba6009f2ef888e836db7b8eaf0c" title="sll_m_maxwell_1d_fem\l::sll_s_compute_b_from\l_e_1d_fem" alt="" coords="995,85,1171,141"/>
+<area shape="rect" id="node12" href="$namespacesll__m__maxwell__1d__fem.html#a3cb1b8bf0285889d4089bf972aa81c3f" title="Choose between compute_E_from_j_1d_fem and compute_E_from_j_1d_fem_shape. " alt="" coords="995,315,1171,357"/>
+<area shape="rect" id="node30" href="$namespacesll__m__periodic__interpolator__1d.html#ae6f0cb5c46ddb52e2ab53c9c1e65792b" title="sll_m_periodic_interpolator\l_1d::per_interpolate1d_disp" alt="" coords="742,963,945,1005"/>
+<area shape="rect" id="node31" href="$namespacesll__m__periodic__interpolator__1d.html#afddf771cf26aba1439b7c9068626b0a2" title="sll_m_periodic_interpolator\l_1d::per_interpolate1d_disp\l_inplace" alt="" coords="742,1029,945,1085"/>
+<area shape="rect" id="node32" href="$namespacesll__m__advection__1d__periodic.html#a83e408dd2f8ef25942506b71256ab110" title="sll_m_advection_1d\l_periodic::periodic\l_advect_1d_constant" alt="" coords="764,1109,923,1165"/>
+<area shape="rect" id="node34" href="$namespacesll__m__fft__filter__1d.html#a0bf667222115b04c68c72b447b5e7d7b" title="sll_m_fft_filter_1d\l::apply_fft_1d" alt="" coords="774,1190,913,1231"/>
+<area shape="rect" id="node35" href="$namespacesll__m__fft__filter__1d.html#a8cf6b779bce6f08b9c19fa30506288ef" title="sll_m_fft_filter_1d\l::apply_inplace_fft_1d" alt="" coords="761,1255,925,1297"/>
 </map>

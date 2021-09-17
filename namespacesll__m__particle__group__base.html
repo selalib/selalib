@@ -81,6 +81,8 @@ $(function() {
 Derived types and interfaces</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacesll__m__particle__group__base_1_1empty.html">empty</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacesll__m__particle__group__base_1_1get__scalar.html">get_scalar</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacesll__m__particle__group__base_1_1i__get__array.html">i_get_array</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacesll__m__particle__group__base_1_1i__get__coords.html">i_get_coords</a></td></tr>
@@ -100,6 +102,8 @@ Derived types and interfaces</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacesll__m__particle__group__base_1_1set__scalar.html">set_scalar</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">type &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__particle__group__base_1_1sll__c__particle__group__base.html">sll_c_particle_group_base</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">type &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__particle__group__base_1_1sll__t__particle__array.html">sll_t_particle_array</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">type &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsll__m__particle__group__base_1_1sll__t__species.html">sll_t_species</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -147,6 +151,9 @@ Functions/Subroutines</h2></td></tr>
 <tr class="memitem:a45d7eb503b2969ce2dfa74dd8feb970c"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__group__base.html#a45d7eb503b2969ce2dfa74dd8feb970c">print</a> (self, filename)</td></tr>
 <tr class="memdesc:a45d7eb503b2969ce2dfa74dd8feb970c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dummy print function ( can be overwritten to print for debugging )  <a href="#a45d7eb503b2969ce2dfa74dd8feb970c">More...</a><br /></td></tr>
 <tr class="separator:a45d7eb503b2969ce2dfa74dd8feb970c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3c0ebed6e27a4aa9c0fe2234f2a40daf"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__group__base.html#a3c0ebed6e27a4aa9c0fe2234f2a40daf">read</a> (self, filename)</td></tr>
+<tr class="memdesc:a3c0ebed6e27a4aa9c0fe2234f2a40daf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dummy read function ( can be overwritten to read for restart )  <a href="#a3c0ebed6e27a4aa9c0fe2234f2a40daf">More...</a><br /></td></tr>
+<tr class="separator:a3c0ebed6e27a4aa9c0fe2234f2a40daf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4426490058f3d2cf70e8c70d351bbcfe"><td class="memItemLeft" align="right" valign="top">pure integer(kind=i32) function, dimension(2), public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__group__base.html#a4426490058f3d2cf70e8c70d351bbcfe">sll_f_index_1dto2d</a> (num_pts, ind1d)</td></tr>
 <tr class="memdesc:a4426490058f3d2cf70e8c70d351bbcfe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper function to compute the 2d index for a tensor product grid from the 1d index.  <a href="#a4426490058f3d2cf70e8c70d351bbcfe">More...</a><br /></td></tr>
 <tr class="separator:a4426490058f3d2cf70e8c70d351bbcfe"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -209,7 +216,7 @@ Functions/Subroutines</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00356">356</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00392">392</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
 
 </div>
 </div>
@@ -237,7 +244,7 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">integer(kind=i32), dimension(:, :), intent(out), pointer&#160;</td>
+          <td class="paramtype">integer(kind=i32), dimension(:,:), intent(out), pointer&#160;</td>
           <td class="paramname"><em>boxnd</em>&#160;</td>
         </tr>
         <tr>
@@ -261,7 +268,7 @@ Functions/Subroutines</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00370">370</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00406">406</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
 
 </div>
 </div>
@@ -313,7 +320,7 @@ Functions/Subroutines</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00384">384</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00420">420</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
 
 </div>
 </div>
@@ -341,7 +348,7 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:, :), intent(out), pointer&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:,:), intent(out), pointer&#160;</td>
           <td class="paramname"><em>v</em>&#160;</td>
         </tr>
         <tr>
@@ -365,7 +372,7 @@ Functions/Subroutines</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00328">328</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00364">364</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
 
 </div>
 </div>
@@ -393,7 +400,7 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:, :), intent(out), pointer&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:,:), intent(out), pointer&#160;</td>
           <td class="paramname"><em>weights</em>&#160;</td>
         </tr>
         <tr>
@@ -417,7 +424,7 @@ Functions/Subroutines</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00342">342</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00378">378</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
 
 </div>
 </div>
@@ -445,7 +452,7 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:, :), intent(out), pointer&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:,:), intent(out), pointer&#160;</td>
           <td class="paramname"><em>x</em>&#160;</td>
         </tr>
         <tr>
@@ -469,7 +476,7 @@ Functions/Subroutines</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00314">314</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00350">350</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
 
 </div>
 </div>
@@ -514,7 +521,7 @@ Functions/Subroutines</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00231">231</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00262">262</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
 
 </div>
 </div>
@@ -559,7 +566,7 @@ Functions/Subroutines</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00242">242</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00273">273</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
 
 </div>
 </div>
@@ -606,7 +613,7 @@ Functions/Subroutines</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00264">264</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00295">295</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
 
 </div>
 </div>
@@ -651,7 +658,7 @@ Functions/Subroutines</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00253">253</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00284">284</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
 
 </div>
 </div>
@@ -698,7 +705,7 @@ Functions/Subroutines</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00275">275</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00306">306</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
 
 </div>
 </div>
@@ -742,7 +749,7 @@ Functions/Subroutines</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00216">216</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00244">244</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
 
 </div>
 </div>
@@ -788,7 +795,7 @@ Functions/Subroutines</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00398">398</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00434">434</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
 
 </div>
 </div>
@@ -804,7 +811,7 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="memname">pure real(kind=f64) function sll_m_particle_group_base::q_over_m </td>
           <td>(</td>
-          <td class="paramtype">class(<a class="el" href="structsll__m__particle__group__base_1_1sll__t__species.html">sll_t_species</a>), intent(in)&#160;</td>
+          <td class="paramtype">class( <a class="el" href="structsll__m__particle__group__base_1_1sll__t__species.html">sll_t_species</a> ), intent(in)&#160;</td>
           <td class="paramname"><em>self</em></td><td>)</td>
           <td></td>
         </tr>
@@ -819,7 +826,53 @@ Functions/Subroutines</h2></td></tr>
 <p>&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; </p>
 <p>&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00204">204</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00231">231</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
+
+</div>
+</div>
+<a id="a3c0ebed6e27a4aa9c0fe2234f2a40daf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3c0ebed6e27a4aa9c0fe2234f2a40daf">&#9670;&nbsp;</a></span>read()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_particle_group_base::read </td>
+          <td>(</td>
+          <td class="paramtype">class(<a class="el" href="structsll__m__particle__group__base_1_1sll__c__particle__group__base.html">sll_c_particle_group_base</a>), intent(inout)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">character(len=*), intent(in)&#160;</td>
+          <td class="paramname"><em>filename</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Dummy read function ( can be overwritten to read for restart ) </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>particle group object </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00441">441</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
 
 </div>
 </div>
@@ -873,7 +926,7 @@ Functions/Subroutines</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00286">286</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00318">318</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
 
 </div>
 </div>
@@ -927,7 +980,7 @@ Functions/Subroutines</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00294">294</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00327">327</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
 
 </div>
 </div>
@@ -981,7 +1034,7 @@ Functions/Subroutines</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00302">302</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00337">337</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
 
 </div>
 </div>
@@ -1013,7 +1066,7 @@ Functions/Subroutines</h2></td></tr>
 
 <p>Helper function to compute the 2d index for a tensor product grid from the 1d index. </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00409">409</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00452">452</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
 
 </div>
 </div>
@@ -1045,7 +1098,7 @@ Functions/Subroutines</h2></td></tr>
 
 <p>Helper function to compute the 2d index for a tensor product grid from the 1d index. </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00431">431</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00476">476</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
 
 </div>
 </div>
@@ -1077,7 +1130,7 @@ Functions/Subroutines</h2></td></tr>
 
 <p>Helper function to compute the 1d index for a tensor product grid from the 2d index. </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00421">421</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00464">464</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
 
 </div>
 </div>
@@ -1109,7 +1162,7 @@ Functions/Subroutines</h2></td></tr>
 
 <p>Helper function to compute the 1d index for a tensor product grid from the 2d index. </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00448">448</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__group__base_8_f90_source.html#l00493">493</a> of file <a class="el" href="sll__m__particle__group__base_8_f90_source.html">sll_m_particle_group_base.F90</a>.</p>
 
 </div>
 </div>
@@ -1120,7 +1173,7 @@ Functions/Subroutines</h2></td></tr>
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Thu Sep 16 2021 15:32:49 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Sep 17 2021 15:35:35 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

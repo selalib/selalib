@@ -34,6 +34,7 @@ var searchData=
   ['sll_5fperiodic_5finterpolation',['sll_periodic_interpolation',['../group__periodic__interpolation.html',1,'']]],
   ['sll_5fpic_5ffield_5fsolvers',['sll_pic_field_solvers',['../group__pic__field__solvers.html',1,'']]],
   ['sll_5fpic_5fsampling',['sll_pic_sampling',['../group__pic__sampling.html',1,'']]],
+  ['sll_5fpic_5ftime_5fintegration',['sll_pic_time_integration',['../group__pic__time__integration.html',1,'']]],
   ['sll_5fm_5fquadtree',['sll_m_quadtree',['../group__pic__utilities.html',1,'']]],
   ['sll_5fpic_5fvisu',['sll_pic_visu',['../group__pic__visu.html',1,'']]],
   ['sll_5fpic_5fweights',['sll_pic_weights',['../group__pic__weights.html',1,'']]],
