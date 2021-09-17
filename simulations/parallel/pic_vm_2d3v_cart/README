@@ -1,0 +1,15 @@
+Directory structure
+===================
+   test_pic_vm_2d3v_cart        -- executable (simulation)
+   params_pic_vm_2d3v_cart      -- input file
+   README                       -- info (this file)
+   run/                         -- output directory
+
+HOWTO
+=====
+0. Create output directory if missing, and move into it
+     $ mkdir run
+     $ cd run
+
+1. Run parallel simulation within directory
+     $ mpirun -np 2 ../../../bin/test_pic_vm_2d3v_cart params_pic_vm_2d3v_cart_symplectic_testing.nml

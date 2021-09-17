@@ -245,7 +245,7 @@ contains
 
       do i = 1, self%nd
          k = self%id(i)
-         b(k) = 1.0e20*(self%xd(k)*self%xd(k) + self%yd(k)*self%yd(k))
+         b(k) = 1.0d20*(self%xd(k)*self%xd(k) + self%yd(k)*self%yd(k))
       end do
 
       call dpbtrs('U', (nx + 1)*(ny + 1), nx + 2, 1, self%mat, nx + 3, b, (nx + 1)*(ny + 1), error)

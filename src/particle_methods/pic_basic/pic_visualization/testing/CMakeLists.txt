@@ -1,10 +1,10 @@
-add_executable(test_particle_visualization_interface
-               test_particle_visualization_interface.F90)
-target_link_libraries(test_particle_visualization_interface
-                      sll_pic_visualization sll_pic_sampling sll_pic_weights)
+ADD_EXECUTABLE( test_particle_visualization_interface test_particle_visualization_interface.F90)
+TARGET_LINK_LIBRARIES( test_particle_visualization_interface
+  sll_pic_visualization
+  sll_pic_sampling
+  sll_pic_weights
+  )
 
-set(NML_FILE ${CMAKE_CURRENT_SOURCE_DIR}/distribution_for_the_test.nml)
-add_test(NAME particle_visualization_interface
-         COMMAND test_particle_visualization_interface ${NML_FILE})
-set_tests_properties(particle_visualization_interface
-                     PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+SET( NML_FILE ${CMAKE_CURRENT_SOURCE_DIR}/distribution_for_the_test.nml )
+ADD_TEST( NAME particle_visualization_interface COMMAND test_particle_visualization_interface ${NML_FILE})
+SET_TESTS_PROPERTIES(particle_visualization_interface PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")

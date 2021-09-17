@@ -9,6 +9,7 @@ add_subdirectory(fftpack)
 add_subdirectory(pppack)
 add_subdirectory(nufft)
 add_subdirectory(burkardt)
+add_subdirectory(sparsekit)
 
 if(BUILD_MUDPACK)
   add_subdirectory(mudpack)
