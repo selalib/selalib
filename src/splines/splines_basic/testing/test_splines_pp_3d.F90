@@ -44,7 +44,7 @@ contains
       type(sll_t_spline_pp_3d), intent(inout) :: spline_pp !arbitrary degree spline
       sll_int32, intent(in) :: degree(3) !spline degree
       sll_int32, intent(in) :: n_cells(3) !grid cells
-      logical, intent(out)    :: fail
+      logical, intent(inout)    :: fail
 
       sll_real64 :: b_coeffs(n_cells(1)*n_cells(2)*n_cells(3))
       sll_real64 :: pp_coeffs((degree(1) + 1)*(degree(2) + 1)*(degree(3) + 1), n_cells(1)*n_cells(2)*n_cells(3))
