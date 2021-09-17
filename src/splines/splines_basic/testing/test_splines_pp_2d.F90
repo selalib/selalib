@@ -146,7 +146,7 @@ contains
       sll_int32, intent(in) :: n_cells(2) !grid cells
       sll_int32, intent(in) :: boundary(2) ! boundaries
       sll_real64, intent(in) :: xnorm(2)
-      logical, intent(out)    :: fail
+      logical, intent(inout)    :: fail
 
       sll_real64 :: b_coeffs((n_cells(1) + degree(1))*(n_cells(2) + degree(2)))
       sll_real64 :: b_coeffs2d((n_cells(1) + degree(1)), (n_cells(2) + degree(2)))
