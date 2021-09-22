@@ -1,7 +1,7 @@
 ! TODO: Use input from file to initialize and compare
 ! Unit test for antisymmetric splitting with coordinate transformation
 ! author: Benedikt Perse, IPP
-program test_time_propagator_pic_3d3v_vm_clamped_trafo
+program test_time_propagator_pic_3d3v_vm_clamped_hs_trafo
   !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -18,9 +18,9 @@ program test_time_propagator_pic_3d3v_vm_clamped_trafo
   use sll_m_constants, only: &
        sll_p_pi, sll_p_twopi
 
-  use sll_m_time_propagator_pic_vm_3d3v_cef_trafo, only: &
-       sll_t_time_propagator_pic_vm_3d3v_cef_trafo
-
+  use sll_m_time_propagator_pic_vm_3d3v_hs_trafo, only: &
+       sll_t_time_propagator_pic_vm_3d3v_hs_trafo
+  
   use sll_m_time_propagator_pic_vm_3d3v_cl_helper, only: &
        sll_p_boundary_particles_periodic, &
        sll_p_boundary_particles_singular, &
@@ -70,16 +70,15 @@ program test_time_propagator_pic_3d3v_vm_clamped_trafo
   sll_real64, allocatable :: rho(:), rho_local(:)
 
   ! Abstract kernel smoothers
-  type(sll_t_particle_mesh_coupling_spline_cl_3d_feec), pointer :: particle_mesh_coupling     
-
+  type(sll_t_particle_mesh_coupling_spline_cl_3d_feec), pointer :: particle_mesh_coupling
 
   ! Maxwell solver 
   ! Abstract 
   class(sll_c_maxwell_3d_base), pointer :: maxwell_solver
 
-  ! Specific Hamiltonian splitting
-  type(sll_t_time_propagator_pic_vm_3d3v_cef_trafo) :: propagator
-
+  ! Specific time propagator
+  type(sll_t_time_propagator_pic_vm_3d3v_hs_trafo) :: propagator
+ 
   type(sll_t_mapping_3d), pointer :: map  
 
   ! Parameters
@@ -229,15 +228,15 @@ program test_time_propagator_pic_3d3v_vm_clamped_trafo
   call propagator%init( maxwell_solver, &
        particle_mesh_coupling, particle_group, &
        phi, efield, bfield, &
-       domain(:,1), domain(:,3), map=map, boundary_particles=sll_p_boundary_particles_reflection, iter_tolerance=1d-12, max_iter=0 )
+       domain(:,1), domain(:,3), map=map, boundary_particles=sll_p_boundary_particles_reflection, iter_tolerance=1d-10, max_iter=0 )
 
   call propagator%operatorHp( delta_t )
   ! Compare to reference
   ! Particle information after advect_x application
   particle_info_check(:,1) = [0.994904996676037_f64, 0.422813311291097_f64, 0.143898589332929_f64,  &
-       -1.2239398911599892_f64, -0.927238449821443_f64, -1.63999999999999_f64, -6.2832_f64 ]
+       -1.24426628370137_f64, -0.900407937476361_f64, -1.64_f64, -6.2832_f64 ]
   particle_info_check(:,2) = [1.64054262438696E-002_f64, 0.765876265788995_f64, 0.376101410667070_f64, &
-       1.53_f64, -0.13_f64, 1.63999999999999_f64, -6.2832_f64 ]
+       1.52775767066983_f64, -0.156390491347432_f64, 1.64_f64, -6.2832_f64 ]
   
   ! Compare computed values to reference values
   do i_part=1,n_particles
@@ -383,7 +382,7 @@ program test_time_propagator_pic_3d3v_vm_clamped_trafo
       -5.943179171294694E-002_f64, 3.6032563631318119E-002_f64,-2.3729539283397681E-002_f64, 8.1038562627475507E-003_f64, &
       -7.154271600771797E-003_f64, 8.0409700959687101E-003_f64,-1.1971496216675665E-002_f64, 3.3447503864706296E-002_f64, &
       -8.086508094670813E-002_f64,-0.0000000000000000_f64, -0.0000000000000000_f64,4.1405427114159780E-002_f64, &
-      -3.149997464374115E-002_f64, 1.2402685052007409E-002_f64,-9.7057499639530559E-003_f64, 1.0892166801091781E-002_f64, &
+      -3.14999746437411E-002_f64, 1.24026850520074E-002_f64,-9.70574996395306E-003_f64, 1.08921668010918E-002_f64, &
       -1.404818421064380E-002_f64, 4.0942602205223014E-002_f64,-7.9314447220032988E-002_f64,0.19215014611245049_f64, -0.0000000000000000_f64 ]
 
   
@@ -413,9 +412,9 @@ program test_time_propagator_pic_3d3v_vm_clamped_trafo
   ! Compare to reference
   ! Particle information after HB application 
   particle_info_check(:,1) = [ 0.98_f64, 0.42_f64, 0.17_f64,  &
-     1.5267829805681130_f64, 0.16350452668825111_f64, -1.6399999999999999_f64, -6.2832_f64 ]
+     1.53_f64, 0.13_f64, -1.64_f64, -6.2832_f64 ]
   particle_info_check(:,2) = [0.01_f64,  0.77_f64,  0.35_f64, &
-      -1.5275302537032702_f64, -0.15636919140681993_f64, 1.6399999999999999_f64, -6.2832_f64 ]
+      -1.53_f64, -0.13_f64, 1.64_f64, -6.2832_f64 ]
 
   ! Compare computed values to reference values
   do i_part=1,n_particles
@@ -564,7 +563,7 @@ program test_time_propagator_pic_3d3v_vm_clamped_trafo
        -7.1542716007717971E-003_f64,8.0409700959687101E-003_f64,-1.1971496216675665E-002_f64,3.3447503864706296E-002_f64,&
        -8.0865080946708134E-002_f64,0.0000000000000000_f64,0.0000000000000000_f64,4.1405427114159780E-002_f64,&
        -3.1499974643741158E-002_f64,1.2402685052007409E-002_f64,-9.7057499639530559E-003_f64,1.0892166801091781E-002_f64,&
-       -1.4048184210643805E-002_f64,4.0942602205223014E-002_f64,-7.9314447220032988E-002_f64,0.19215014611245049_f64,0.0000000000000000_f64    ]
+       -1.40481842106438E-002_f64,4.09426022052230E-002_f64,-7.9314447220033E-002_f64,0.19215014611245_f64,0.0_f64    ]
 
 
   error = maxval(abs(efield-efield_ref))
@@ -761,7 +760,7 @@ program test_time_propagator_pic_3d3v_vm_clamped_trafo
        6.2730675243093286_f64,6.3397702659863375_f64,6.1989101259390447_f64,6.4689046856671846_f64,&
        5.9418570412950960_f64,7.1817947961230484_f64,4.1024031105536825_f64,6.7422814813857359_f64,&
        6.2060317181705411_f64,6.2986181651563768_f64,6.3139273126426918_f64,6.2285670827740693_f64,&
-       6.4265487459900887_f64,6.0080681479823950_f64,6.9219327729547793_f64,4.5553317303825311_f64,11.401524224691773_f64   ]
+       6.42654874599_f64,6.008068147982395_f64,6.921932772954779_f64,4.555331730382531_f64,11.40152422469177_f64   ]
   
  
   error = maxval(abs(bfield-bfield_ref))
@@ -799,4 +798,4 @@ program test_time_propagator_pic_3d3v_vm_clamped_trafo
 
   call sll_s_halt_collective()
 
-end program test_time_propagator_pic_3d3v_vm_clamped_trafo
+end program test_time_propagator_pic_3d3v_vm_clamped_hs_trafo
