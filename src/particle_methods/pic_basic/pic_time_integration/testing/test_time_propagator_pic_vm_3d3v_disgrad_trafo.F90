@@ -1,7 +1,7 @@
 ! TODO: Use input from file to initialize and compare
 ! Unit test for antisymmetric splitting with coordinate transformation
 ! author: Benedikt Perse, IPP
-program test_time_propagator_pic_3d3v_vm_trafo
+program test_time_propagator_pic_3d3v_vm_disgrad_trafo
   !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -484,13 +484,13 @@ program test_time_propagator_pic_3d3v_vm_trafo
   error = maxval(abs(efield-efield_ref))
   if (error> EQV_TOL) then
      passed = .FALSE.
-     print*, 'e field wrong in advect_eb_avf.', error
+     print*, 'e field wrong in advect_eb.', error
   end if
   error = maxval(abs(bfield-bfield_ref))
 
   if (error> EQV_TOL) then
      passed = .FALSE.
-     print*, 'b field wrong in advect_eb_avf.', error
+     print*, 'b field wrong in advect_eb.', error
   end if
 
   !call propagator%free()
@@ -907,4 +907,4 @@ program test_time_propagator_pic_3d3v_vm_trafo
   call sll_s_halt_collective()
 
 
-end program test_time_propagator_pic_3d3v_vm_trafo
+end program test_time_propagator_pic_3d3v_vm_disgrad_trafo
