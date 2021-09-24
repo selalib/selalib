@@ -796,7 +796,7 @@ contains
                   sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
                   sim%domain(1), sim%domain(3), sim%filter, trim(filename), sim%boundary_particles, sim%force_sign, sim%control_variate, sim%no_weights, sim%plasma_betar(1:2), electrostatic, jmean  )
           end if
-          sim%efield_dofs_n => qpdisgradE%efield_dofs
+          sim%efield_dofs_n => qpdisgradE%helper%efield_dofs
        end select
     elseif  (sim%splitting_case == sll_p_splitting_cef) then
        allocate( sll_t_time_propagator_pic_vm_1d2v_cef :: sim%propagator )
@@ -830,9 +830,9 @@ contains
        allocate( sll_t_time_propagator_pic_vm_1d2v_disgradEC :: sim%propagator )
        select type( qpdisgradEC=>sim%propagator )
        type is ( sll_t_time_propagator_pic_vm_1d2v_disgradEC )
-          call qpdisgradEC%init( sim%maxwell_solver, &
+          call qpdisgradEC%init_from_file( sim%maxwell_solver, &
                sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
-               sim%efield_dofs, sim%bfield_dofs, &
+               sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
                sim%domain(1), sim%domain(3), sim%filter, trim(filename) )
           sim%efield_dofs_n => qpdisgradEC%helper%efield_dofs
        end select
@@ -840,9 +840,9 @@ contains
        allocate( sll_t_time_propagator_pic_vm_1d2v_disgradEC_sub :: sim%propagator )
        select type( qpdgs=>sim%propagator )
        type is ( sll_t_time_propagator_pic_vm_1d2v_disgradEC_sub )
-          call qpdgs%init( sim%maxwell_solver, &
+          call qpdgs%init_from_file( sim%maxwell_solver, &
                sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
-               sim%efield_dofs, sim%bfield_dofs, &
+               sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
                sim%domain(1), sim%domain(3), sim%bfilter, trim(filename) )
           sim%efield_dofs_n => qpdgs%helper%efield_dofs
        end select

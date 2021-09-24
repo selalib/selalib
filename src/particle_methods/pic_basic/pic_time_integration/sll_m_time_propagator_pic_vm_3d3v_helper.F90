@@ -151,12 +151,12 @@ module sll_m_time_propagator_pic_vm_3d3v_helper
      class(sll_c_filter_base_3d), pointer :: filter !< filter
 
    contains
-     procedure :: advect_x => advect_x_pic_vm_3d3v_avf !> Advect x-part
-     procedure :: advect_eb => advect_eb_schur_pic_vm_3d3v_avf !> Solve Faraday and B-part of Ampere using Schur complement
-     procedure :: advect_vb => advect_vb_pic_vm_3d3v_avf !> Push v, vxB-part only
-     procedure :: advect_e => advect_e_pic_vm_3d3v_avf !> Advect ev-part
-     procedure :: advect_e_trunc => advect_e_pic_vm_3d3v_avf_trunc !> Advect ev-part with truncated particle mass
-     procedure :: advect_ex !> Advect ev-part together with x-part in nonlinear iteration
+     procedure :: advect_x => advect_x_pic_vm_3d3v !> Advect x-part
+     procedure :: advect_eb => advect_eb_schur_pic_vm_3d3v !> Solve Faraday and B-part of Ampere using Schur complement
+     procedure :: advect_vb => advect_vb_pic_vm_3d3v !> Push v, vxB-part only
+     procedure :: advect_e => advect_e_pic_vm_3d3v !> Advect ev-part
+     procedure :: advect_e_trunc => advect_e_pic_vm_3d3v_trunc !> Advect ev-part with truncated particle mass
+     procedure :: advect_ex  => advect_ex_pic_vm_3d3v !> Advect ev-part together with x-part in nonlinear iteration
 
      procedure :: init => initialize_pic_vm_3d3v !> Initialize the type
      procedure :: init_from_file => initialize_file_pic_vm_3d3v !> Initialize the type
@@ -170,7 +170,7 @@ contains
   !---------------------------------------------------------------------------!
   !> advect_x: Equations to be solved
   !> $X^{n+1}=X^n + \Delta t V^n
-  subroutine advect_x_pic_vm_3d3v_avf ( self, dt )
+  subroutine advect_x_pic_vm_3d3v ( self, dt )
     class(sll_t_time_propagator_pic_vm_3d3v_helper), intent(inout) :: self !< time propagator object 
     sll_real64,                                     intent(in)    :: dt   !< time step
     !local variables
@@ -198,7 +198,7 @@ contains
        end do
     end do
 
-  end subroutine advect_x_pic_vm_3d3v_avf
+  end subroutine advect_x_pic_vm_3d3v
 
 
   !> Helper function for \a advect_x
@@ -241,7 +241,7 @@ contains
   !---------------------------------------------------------------------------!
   !> advect_vb: Equations to be solved
   !> $(\mathbb{I}-\Delta \frac{\Delta t q}{2 m}  \mathbb{B}(X^n,b^n) V^{n+1}=(\mathbb{I}+ \frac{\Delta t q}{2 m} \mathbb{B}(X^n,b^n) V^n$
-  subroutine advect_vb_pic_vm_3d3v_avf ( self, dt )
+  subroutine advect_vb_pic_vm_3d3v ( self, dt )
     class(sll_t_time_propagator_pic_vm_3d3v_helper), intent(inout) :: self !< time propagator object 
     sll_real64,                                     intent(in)    :: dt   !< time step
     !local variables
@@ -294,7 +294,7 @@ contains
        end do
     end do
 
-  end subroutine advect_vb_pic_vm_3d3v_avf
+  end subroutine advect_vb_pic_vm_3d3v
 
 
   !---------------------------------------------------------------------------!
@@ -302,13 +302,13 @@ contains
   !> Solution with Schur complement: $ S=M_1+\frac{\Delta t^2}{4} C^\top M_2 C $
   !> $ e^{n+1}=S^{-1}( (M_1-\frac{\Delta t^2}{4} C^\top M_2 C)e^n+\Delta t C^\top M_2 b^n) $
   !> $ b^{n+1}=b^n-\frac{\Delta t}{2} C(e^n+e^{n+1}) $
-  subroutine advect_eb_schur_pic_vm_3d3v_avf ( self, dt )
+  subroutine advect_eb_schur_pic_vm_3d3v ( self, dt )
     class(sll_t_time_propagator_pic_vm_3d3v_helper), intent(inout) :: self !< time propagator object 
     sll_real64,                                     intent(in)    :: dt   !< time step
 
     call self%maxwell_solver%compute_curl_part( dt, self%efield_dofs, self%bfield_dofs, self%betar(1) )
 
-  end subroutine advect_eb_schur_pic_vm_3d3v_avf
+  end subroutine advect_eb_schur_pic_vm_3d3v
 
 
   !---------------------------------------------------------------------------!
@@ -317,7 +317,7 @@ contains
   !> $e^{n+1}=S_{+}^{-1}\left(S_{-}e^n-\Delta t (\mathbb{\Lambda}^1)^\top \mathbb{W}_q V^n \right)$
   !> $V^{n+1}=V^n+\frac{\Delta t}{2} \mathbb{W}_{\frac{q}{m}} \mathbb{\Lambda}^1(e^{n+1}+e^n)$
   ! TODO: Here we need to merge at least the steps for the particle mass to improve the scaling
-  subroutine advect_e_pic_vm_3d3v_avf( self, dt )
+  subroutine advect_e_pic_vm_3d3v( self, dt )
     class(sll_t_time_propagator_pic_vm_3d3v_helper), intent(inout) :: self !< time propagator object 
     sll_real64,                                     intent(in)    :: dt   !< time step
     ! local variables
@@ -510,7 +510,7 @@ contains
        end do
     end do
 
-  end subroutine advect_e_pic_vm_3d3v_avf
+  end subroutine advect_e_pic_vm_3d3v
 
 
   !---------------------------------------------------------------------------!
@@ -519,7 +519,7 @@ contains
   !> $\frac{V^{n+1}-V^n}{\Delta t}=\mathbb{W}_{\frac{q}{m}} \frac{1}{\Delta t}\int_{t^n}^{t^{n+1}} \mathbb{\Lambda}^1(X(\tau))  d\tau \frac{e^{n+1}+e^n}{2}$
   !> $\frac{M_1 e^{n+1}-M_1 e^n}{\Delta t} = - \frac{1}{\Delta t} \int_{t^n}^{t^{n+1}} \mathbb{\Lambda}^1(X(\tau))^\top  d\tau \mathbb{W}_q\frac{V^{n+1}+V^n}{2}$
   ! TODO: Here we need to merge at least the steps for the particle mass to improve the scaling
-  subroutine advect_ex( self, dt )
+  subroutine advect_ex_pic_vm_3d3v( self, dt )
     class(sll_t_time_propagator_pic_vm_3d3v_helper), intent(inout) :: self !< time propagator object 
     sll_real64,                                     intent(in)    :: dt   !< time step
     ! local variables
@@ -687,7 +687,7 @@ contains
     self%iter_counter = self%iter_counter + 1
     self%niter(self%iter_counter) = niter
 
-  end subroutine advect_ex
+  end subroutine advect_ex_pic_vm_3d3v
 
 
   !> Helper function for \a advect_ex
@@ -752,7 +752,7 @@ contains
   !---------------------------------------------------------------------------!
   !> advect_e_trunc: This is a version of advect_e where the Particle Mass is
   !> approximated by the mass matrix
-  subroutine advect_e_pic_vm_3d3v_avf_trunc( self, dt )
+  subroutine advect_e_pic_vm_3d3v_trunc( self, dt )
     class(sll_t_time_propagator_pic_vm_3d3v_helper), intent(inout) :: self !< time propagator object 
     sll_real64,                                     intent(in)    :: dt   !< time step
     ! local variables
@@ -855,7 +855,7 @@ contains
        end do
     end do
 
-  end subroutine advect_e_pic_vm_3d3v_avf_trunc
+  end subroutine advect_e_pic_vm_3d3v_trunc
 
 
   !---------------------------------------------------------------------------!
@@ -984,7 +984,7 @@ contains
        allocate( sll_t_linear_operator_particle_mass_3d_diag  :: self%particle_mass_2 )
        allocate( sll_t_linear_operator_particle_mass_3d_diag  :: self%particle_mass_3 )
     end if
-
+  
     call self%particle_mass_1%create( self%particle_mesh_coupling%n_cells, [self%spline_degree(1)-1, self%spline_degree(2), self%spline_degree(3)] )
     call self%particle_mass_2%create( self%particle_mesh_coupling%n_cells, [self%spline_degree(1), self%spline_degree(2)-1, self%spline_degree(3)] )
     call self%particle_mass_3%create( self%particle_mesh_coupling%n_cells, [self%spline_degree(1), self%spline_degree(2), self%spline_degree(3)-1]  )

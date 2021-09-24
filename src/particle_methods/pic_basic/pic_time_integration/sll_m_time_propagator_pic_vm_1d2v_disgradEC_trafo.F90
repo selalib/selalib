@@ -8,11 +8,6 @@ module sll_m_time_propagator_pic_vm_1d2v_disgradEC_trafo
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  use sll_m_collective, only: &
-       sll_f_get_collective_rank, &
-       sll_o_collective_allreduce, &
-       sll_v_world_collective
-
   use sll_m_mapping_3d, only: &
        sll_t_mapping_3d
 

@@ -195,7 +195,10 @@ contains
     !local variables
     sll_real64 :: xmid, xbar, dx
 
-    if(xnew < 0._f64 .or. xnew > 1._f64 )then
+    if(xnew < -1._f64 .or. xnew > 2._f64)then
+       print*, xnew
+       SLL_ERROR("particle boundary", "particle out of bound")
+    else if(xnew < 0._f64 .or. xnew > 1._f64 )then
        if(xnew < 0._f64  )then
           xbar = 0._f64
           self%counter_left = self%counter_left+1
@@ -470,14 +473,24 @@ contains
                 end if
 
                 xmid = xbar
-                call self%kernel_smoother_1%add_current_evaluate &
-                     ( xi(1), xmid(1), wi(1), vbar(1), self%efield_dofs_work(1:self%n_dofs1,1), self%j_dofs_local(1:self%n_dofs1,1), &
-                     efield(1) )
-                call self%kernel_smoother_0%add_current_evaluate &
-                     ( xi(1), xmid(1), wi(1)*vbar(2)/vbar(1), vbar(1), &
-                     self%efield_dofs_work(:,2), self%j_dofs_local(:,2), &
-                     efield(2) )
-
+                if ( abs(vbar(1)) > 1.0D-16 ) then
+                   call self%kernel_smoother_1%add_current_evaluate &
+                        ( xi(1), xmid(1), wi(1), vbar(1), self%efield_dofs_work(1:self%n_dofs1,1), self%j_dofs_local(1:self%n_dofs1,1), &
+                        efield(1) )
+                   call self%kernel_smoother_0%add_current_evaluate &
+                        ( xi(1), xmid(1), wi(1)*vbar(2)/vbar(1), vbar(1), &
+                        self%efield_dofs_work(:,2), self%j_dofs_local(:,2), &
+                        efield(2) )
+                else
+                   call self%kernel_smoother_1%evaluate &
+                        (xi(1), self%efield_dofs_work(1:self%n_dofs1,1), efield(1) )
+                   efield(1) = efield(1)*dt
+                   call self%kernel_smoother_0%add_charge( xi(1), &
+                        wi(1)* vbar(2)*dt, self%j_dofs_local(:,2) )
+                   call self%kernel_smoother_0%evaluate &
+                        (xi(1), self%efield_dofs_work(:,2), efield(2) )
+                   efield(2) = efield(2)*dt
+                end if
                 jmatrix = self%map%jacobian_matrix_inverse_transposed( [xmid(1), 0._f64, 0._f64] )
                 do j = 1, 2
                    vi(j) = vi(j) + qoverm *0.5_f64*((jmatrix(j,1)+jmat(j,1))*efield(1) + (jmatrix(j,2)+jmat(j,2))*efield(2))
@@ -499,7 +512,7 @@ contains
                    xnew = modulo(xnew, 1._f64)
                    xmid = 1._f64-xbar
                 end select
-                if( abs(xnew(1)-xmid(1)) > self%iter_tolerance ) then
+                if ( abs(vbar(1)) > 1.0D-16 ) then
                    call self%kernel_smoother_1%add_current_evaluate &
                         ( xmid(1), xnew(1), wi(1), vbar(1), self%efield_dofs_work(1:self%n_dofs1,1), self%j_dofs_local(1:self%n_dofs1,1), &
                         efield(1) )
@@ -511,11 +524,9 @@ contains
                    do j = 1, 2
                       vi(j) = vi(j) + qoverm *0.5_f64*((jmatrix(j,1)+jmat(j,1))*efield(1) + (jmatrix(j,2)+jmat(j,2))*efield(2))
                    end do
-                   if(self%boundary_particles == sll_p_boundary_particles_reflection) then
-                      vi(1) = - vi(1)
-                   end if
-                else
-                   xnew(1) = xmid(1)   
+                end if
+                if(self%boundary_particles == sll_p_boundary_particles_reflection) then
+                   vi(1) = - vi(1)
                 end if
              else
                 if ( abs(vbar(1)) > 1.0D-16 ) then
@@ -644,14 +655,24 @@ contains
        end if
 
        xmid = xbar
-
-       call self%kernel_smoother_1%add_current_evaluate &
-            ( xi(1), xmid(1), wi(1), vbar(1), self%efield_dofs_work(1:self%n_dofs1,1), self%j_dofs_local(1:self%n_dofs1,1), &
-            efield(1) )
-       call self%kernel_smoother_0%add_current_evaluate &
-            ( xi(1), xmid(1), wi(1)*vbar(2)/vbar(1), vbar(1), &
-            self%efield_dofs_work(:,2), self%j_dofs_local(:,2), &
-            efield(2) )
+       if ( abs(vbar(1)) > 1.0D-16 ) then
+          call self%kernel_smoother_1%add_current_evaluate &
+               ( xi(1), xmid(1), wi(1), vbar(1), self%efield_dofs_work(1:self%n_dofs1,1), self%j_dofs_local(1:self%n_dofs1,1), &
+               efield(1) )
+          call self%kernel_smoother_0%add_current_evaluate &
+               ( xi(1), xmid(1), wi(1)*vbar(2)/vbar(1), vbar(1), &
+               self%efield_dofs_work(:,2), self%j_dofs_local(:,2), &
+               efield(2) )
+       else
+          call self%kernel_smoother_1%evaluate &
+               (xi(1), self%efield_dofs_work(1:self%n_dofs1,1), efield(1) )
+          efield(1) = efield(1)*dt
+          call self%kernel_smoother_0%add_charge( xi(1), &
+               wi(1)* vbar(2)*dt, self%j_dofs_local(:,2) )
+          call self%kernel_smoother_0%evaluate &
+               (xi(1), self%efield_dofs_work(:,2), efield(2) )
+          efield(2) = efield(2)*dt
+       end if
 
        jmatrix = self%map%jacobian_matrix_inverse_transposed( [xmid(1), 0._f64, 0._f64] )
        do j = 1, 2
@@ -674,7 +695,7 @@ contains
           xnew = modulo(xnew, 1._f64)
           xmid = 1._f64-xbar
        end select
-       if( abs(xnew(1)-xmid(1)) > self%iter_tolerance ) then
+       if ( abs(vbar(1)) > 1.0D-16 ) then
           call self%kernel_smoother_1%add_current_evaluate &
                ( xmid(1), xnew(1), wi(1), vbar(1), self%efield_dofs_work(1:self%n_dofs1,1), self%j_dofs_local(1:self%n_dofs1,1), &
                efield(1) )
@@ -686,8 +707,6 @@ contains
           do j = 1, 2
              vi(j) = vi(j) + qoverm *0.5_f64*((jmatrix(j,1)+jmat(j,1))*efield(1) + (jmatrix(j,2)+jmat(j,2))*efield(2))
           end do
-       else
-          xnew(1) = xmid(1)   
        end if
     else
        if ( abs(vbar(1)) > 1.0D-16 ) then
