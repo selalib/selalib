@@ -830,7 +830,7 @@ contains
        allocate( sll_t_time_propagator_pic_vm_1d2v_disgradEC :: sim%propagator )
        select type( qpdisgradEC=>sim%propagator )
        type is ( sll_t_time_propagator_pic_vm_1d2v_disgradEC )
-          call qpdisgradEC%init( sim%maxwell_solver, &
+          call qpdisgradEC%init_from_file( sim%maxwell_solver, &
                sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
                sim%efield_dofs, sim%bfield_dofs, &
                sim%domain(1), sim%domain(3), sim%filter, trim(filename) )
@@ -840,7 +840,7 @@ contains
        allocate( sll_t_time_propagator_pic_vm_1d2v_disgradEC_sub :: sim%propagator )
        select type( qpdgs=>sim%propagator )
        type is ( sll_t_time_propagator_pic_vm_1d2v_disgradEC_sub )
-          call qpdgs%init( sim%maxwell_solver, &
+          call qpdgs%init_from_file( sim%maxwell_solver, &
                sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
                sim%efield_dofs, sim%bfield_dofs, &
                sim%domain(1), sim%domain(3), sim%bfilter, trim(filename) )
