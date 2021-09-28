@@ -46,6 +46,7 @@ module sll_m_time_propagator_pic_vm_1d2v_disgradEC_sub
      procedure :: strang_splitting => strang_splitting_pic_vm_1d2v_disgradEC !> Strang splitting propagator
 
      procedure :: init => initialize_pic_vm_1d2v_disgradEC !> Initialize the type
+     procedure :: init_from_file => initialize_file_pic_vm_1d2v_disgradEC !> Initialize the type
      procedure :: free => delete_pic_vm_1d2v_disgradEC !> Finalization
 
      procedure :: reinit_fields => reinit_fields_disgradEC_sub
@@ -122,6 +123,43 @@ contains
        bfield_dofs, &
        x_min, &
        Lx, &
+       filter) 
+    class(sll_t_time_propagator_pic_vm_1d2v_disgradEC_sub), intent(out) :: self !< time splitting object 
+    class(sll_c_maxwell_1d_base), target,          intent(in)  :: maxwell_solver      !< Maxwell solver
+    class(sll_c_particle_mesh_coupling_1d), target,          intent(in)  :: kernel_smoother_0  !< Kernel smoother
+    class(sll_c_particle_mesh_coupling_1d), target,          intent(in)  :: kernel_smoother_1  !< Kernel smoother
+    class(sll_t_particle_array), target,      intent(in)  :: particle_group !< Particle group
+    sll_real64, target,                            intent(in)  :: efield_dofs(:,:) !< array for the coefficients of the efields 
+    sll_real64, target,                            intent(in)  :: bfield_dofs(:) !< array for the coefficients of the bfield
+    sll_real64,                                     intent(in)  :: x_min !< Lower bound of x domain
+    sll_real64,                                     intent(in)  :: Lx !< Length of the domain in x direction.
+    type(sll_t_binomial_filter), target,            intent(in) :: filter
+
+
+    call self%helper%init( maxwell_solver, &
+         kernel_smoother_0, &
+         kernel_smoother_1, &
+         particle_group, &
+         efield_dofs, &
+         bfield_dofs, &
+         x_min, &
+         Lx, &
+         filter) 
+
+  end subroutine initialize_pic_vm_1d2v_disgradEC
+
+  !---------------------------------------------------------------------------!
+  !> Constructor.
+  subroutine initialize_file_pic_vm_1d2v_disgradEC(&
+       self, &
+       maxwell_solver, &
+       kernel_smoother_0, &
+       kernel_smoother_1, &
+       particle_group, &
+       efield_dofs, &
+       bfield_dofs, &
+       x_min, &
+       Lx, &
        filter, &
        filename) 
     class(sll_t_time_propagator_pic_vm_1d2v_disgradEC_sub), intent(out) :: self !< time splitting object 
@@ -137,7 +175,7 @@ contains
     character(len=*), intent(in) :: filename !< name of nml-file
 
 
-    call self%helper%init( maxwell_solver, &
+    call self%helper%init_from_file( maxwell_solver, &
          kernel_smoother_0, &
          kernel_smoother_1, &
          particle_group, &
@@ -148,7 +186,7 @@ contains
          filter, &
          filename) 
 
-  end subroutine initialize_pic_vm_1d2v_disgradEC
+  end subroutine initialize_file_pic_vm_1d2v_disgradEC
 
 
   subroutine delete_pic_vm_1d2v_disgradEC(self)
@@ -167,4 +205,4 @@ contains
   end subroutine reinit_fields_disgradEC_sub
 
 
-end module
+end module sll_m_time_propagator_pic_vm_1d2v_disgradEC_sub
