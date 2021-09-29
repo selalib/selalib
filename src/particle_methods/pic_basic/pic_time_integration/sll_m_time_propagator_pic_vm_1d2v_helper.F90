@@ -1063,7 +1063,7 @@ contains
     SLL_ALLOCATE(self%efield_filter(self%n_dofs0,2), ierr)
     SLL_ALLOCATE(self%bfield_filter(self%n_dofs1), ierr)
     SLL_ALLOCATE(self%efield_to_val(self%n_dofs0,2), ierr)
-    SLL_ALLOCATE(self%bfield_to_val(self%n_dofs0), ierr)
+    SLL_ALLOCATE(self%bfield_to_val(self%n_dofs1), ierr)
 
     self%i_weight = 1
     if (present(i_weight)) self%i_weight = i_weight
