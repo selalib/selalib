@@ -343,7 +343,6 @@ contains
 
     residual = 1.0_f64
     niter = 0
-
     !print*, 'Iteration', self%iter_counter+1
     do while ( (residual > self%iter_tolerance) .and. niter < self%max_iter )
        niter = niter + 1
@@ -367,7 +366,7 @@ contains
              xi = self%particle_group%group(i_sp)%get_x(i_part)
 
              ! Get charge for accumulation of j
-             wi = self%particle_group%group(i_sp)%get_charge(i_part)
+             wi = self%particle_group%group(i_sp)%get_charge(i_part, self%i_weight)
 
              vbar = 0.5_f64 * (self%vnew(i_sp,:, i_part)+vi(1:2))
              xnew(1) = xi(1) + dt * vbar(1)
@@ -525,7 +524,7 @@ contains
           xi = self%particle_group%group(i_sp)%get_x(i_part)
 
           ! Get charge for accumulation of j
-          wi = self%particle_group%group(i_sp)%get_charge(i_part)
+          wi = self%particle_group%group(i_sp)%get_charge(i_part, self%i_weight)
 
           vbar = 0.5_f64 * (self%vnew(i_sp,:, i_part)+vi(1:2))
 
@@ -962,7 +961,7 @@ contains
     if (present(boundary_particles) )  then
        self%boundary_particles = boundary_particles
     end if
-    
+
     if (present(solver_tolerance) )  then
        self%solver_tolerance = solver_tolerance
     end if
@@ -1018,7 +1017,7 @@ contains
     if( self%n_cells+self%spline_degree == self%maxwell_solver%n_dofs0   ) then
        self%boundary = .true.
     end if
-       
+
     if ( self%maxwell_solver%s_deg_0 > -1 .and. build_particle_mass_loc .eqv. .true. ) then
        allocate( self%mass_line_0( self%maxwell_solver%s_deg_0 +1) )
        allocate( self%mass_line_1( self%maxwell_solver%s_deg_0 ) )
