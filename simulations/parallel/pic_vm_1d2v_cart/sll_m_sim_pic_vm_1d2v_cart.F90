@@ -921,7 +921,7 @@ contains
           call qptrafo%init_from_file( sim%maxwell_solver, &
                sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
                sim%efield_dofs, sim%bfield_dofs, &
-               sim%domain(1), sim%domain(3), sim%map, trim(filename), sim%boundary_particles, force_sign=sim%force_sign, electrostatic=electrostatic, jmean=jmean  )!,betar=sim%plasma_betar(1:2))
+               sim%domain(1), sim%domain(3), sim%map, trim(filename), sim%boundary_particles, force_sign=sim%force_sign, electrostatic=electrostatic, jmean=jmean, rhob = sim%rhob  )!,betar=sim%plasma_betar(1:2))
           sim%efield_dofs_n => qptrafo%helper%efield_dofs
        end select
     elseif  (sim%splitting_case == sll_p_splitting_zigsub) then

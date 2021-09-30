@@ -18,6 +18,7 @@ program sim_pic_vm_1d2v_cart
    character(len=256)                               :: filename
    integer                                          :: rank, size
    logical                                          :: passed
+   logical                                          :: ctest
 
    call sll_s_boot_collective()
    size = sll_f_get_collective_size(sll_v_world_collective)
@@ -31,6 +32,7 @@ program sim_pic_vm_1d2v_cart
 
    if (rank == 0) then
       passed = sim%ctest_passed
+      ctest  = sim%make_ctest
    end if
 
    call sim%delete()
@@ -38,10 +40,12 @@ program sim_pic_vm_1d2v_cart
    call sll_s_halt_collective()
 
    if (rank == 0) then
-      if (passed .eqv. .true.) then
-         print *, 'PASSED.'
-      else
-         print *, 'FAILED.'
+      if( ctest) then
+         if (passed .eqv. .true.) then
+            print *, 'PASSED.'
+         else
+            print *, 'FAILED.'
+         end if
       end if
    end if
 
