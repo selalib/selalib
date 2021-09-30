@@ -96,7 +96,7 @@ module sll_m_time_propagator_pic_vm_1d2v_helper
      sll_int32  :: n_dofs1 !< number of Dofs for 1form
 
 
-     sll_int32 :: boundary_particles = 0 !< particle boundary conditions
+     sll_int32 :: boundary_particles = 100 !< particle boundary conditions
      sll_int32 :: counter_left = 0 !< boundary counter
      sll_int32 :: counter_right = 0 !< boundary counter
      logical :: boundary = .false. !< true for non periodic boundary conditions
@@ -140,7 +140,7 @@ module sll_m_time_propagator_pic_vm_1d2v_helper
      sll_real64 :: iter_tolerance_sub = 1D-10
      sll_int32 :: n_failed = 0
 
-     sll_real64 :: betar(2) !< reciprocal of plasma beta
+     sll_real64 :: betar(2) = 1.0_f64 !< reciprocal of plasma beta
      sll_real64 :: force_sign = 1._f64 !< sign of particle force
      logical    :: jmean = .false. !< logical for mean value of current
      sll_real64 :: solver_tolerance = 1D-12 !< solver tolerance
@@ -406,8 +406,9 @@ contains
 
                 select case(self%boundary_particles)
                 case(sll_p_boundary_particles_reflection)
-                   vi(1) = -vi(1)
                    xnew(1) = 2._f64*xbar-xnew(1)
+                   vi(1) = -vi(1)
+                   vbar(1) = -vbar(1)
                 case(sll_p_boundary_particles_absorption)
                 case( sll_p_boundary_particles_periodic)
                    xnew(1) = self%x_min + modulo(xnew(1)-self%x_min, self%Lx)
@@ -464,7 +465,7 @@ contains
        ! Update d_n
        self%j_dofs = 0.0_f64
        ! MPI to sum up contributions from each processor
-       call sll_o_collective_allreduce( sll_v_world_collective, self%j_dofs_local(:,1), &
+       call sll_o_collective_allreduce( sll_v_world_collective, self%j_dofs_local(1:self%n_dofs1,1), &
             self%n_dofs1, MPI_SUM, self%j_dofs(1:self%n_dofs1,1) )
        call sll_o_collective_allreduce( sll_v_world_collective, self%j_dofs_local(:,2), &
             self%n_dofs0, MPI_SUM, self%j_dofs(:,2) )
@@ -538,7 +539,7 @@ contains
 
     self%j_dofs = 0.0_f64
     ! MPI to sum up contributions from each processor
-    call sll_o_collective_allreduce( sll_v_world_collective, self%j_dofs_local(:,1), &
+    call sll_o_collective_allreduce( sll_v_world_collective, self%j_dofs_local(1:self%n_dofs1,1), &
          self%n_dofs1, MPI_SUM, self%j_dofs(1:self%n_dofs1,1) )
     call sll_o_collective_allreduce( sll_v_world_collective, self%j_dofs_local(:,2), &
          self%n_dofs0, MPI_SUM, self%j_dofs(:,2) )
@@ -609,8 +610,9 @@ contains
 
        select case(self%boundary_particles)
        case(sll_p_boundary_particles_reflection)
-          vi(1) = -vi(1)
           xnew(1) = 2._f64*xbar-xnew(1)
+          vi(1) = -vi(1)
+          vbar(1) = -vbar(1)
        case(sll_p_boundary_particles_absorption)
        case( sll_p_boundary_particles_periodic)
           xnew(1) = self%x_min + modulo(xnew(1)-self%x_min, self%Lx)
@@ -957,10 +959,12 @@ contains
     sll_int32 :: n_span_particle_mass
     logical :: build_particle_mass_loc = .true.
 
+    if (present(boundary_particles) )  then
+       self%boundary_particles = boundary_particles
+    end if
+    
     if (present(solver_tolerance) )  then
        self%solver_tolerance = solver_tolerance
-    else
-       self%solver_tolerance = 1d-12
     end if
 
     if (present(iter_tolerance) )  then
@@ -977,8 +981,6 @@ contains
 
     if (present(betar)) then
        self%betar = betar!32.89_f64
-    else
-       self%betar = 1.0_f64
     end if
 
     if (present(jmean)) then
@@ -1013,6 +1015,10 @@ contains
     SLL_ALLOCATE( self%j_dofs_local(self%n_dofs0,2), ierr )
     SLL_ALLOCATE(self%residual(self%n_dofs0*2), ierr)
 
+    if( self%n_cells+self%spline_degree == self%maxwell_solver%n_dofs0   ) then
+       self%boundary = .true.
+    end if
+       
     if ( self%maxwell_solver%s_deg_0 > -1 .and. build_particle_mass_loc .eqv. .true. ) then
        allocate( self%mass_line_0( self%maxwell_solver%s_deg_0 +1) )
        allocate( self%mass_line_1( self%maxwell_solver%s_deg_0 ) )
