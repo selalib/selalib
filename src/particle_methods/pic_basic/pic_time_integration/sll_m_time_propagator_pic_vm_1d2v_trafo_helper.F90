@@ -591,7 +591,7 @@ contains
 
           ! Get charge for accumulation of j
           wi = self%particle_group%group(i_sp)%get_charge(i_part)
-          
+
           vbar = 0.5_f64 * (self%vnew(i_sp,:, i_part)+vi(1:2))
           xnew(1) = self%xnew(i_sp, i_part)
 
@@ -724,15 +724,15 @@ contains
                (xi(1), self%efield_dofs_work(:,2), efield(2) )
           efield(2) = efield(2)*dt
        end if
-        jmatrix = self%map%jacobian_matrix_inverse_transposed( [xnew(1), 0._f64, 0._f64] )
-        do j = 1, 2
-           vi(j) = vi(j) + qoverm *0.5_f64*((jmatrix(j,1)+jmat(j,1))*efield(1) + (jmatrix(j,2)+jmat(j,2))*efield(2))
-        end do
+       jmatrix = self%map%jacobian_matrix_inverse_transposed( [xnew(1), 0._f64, 0._f64] )
+       do j = 1, 2
+          vi(j) = vi(j) + qoverm *0.5_f64*((jmatrix(j,1)+jmat(j,1))*efield(1) + (jmatrix(j,2)+jmat(j,2))*efield(2))
+       end do
     end if
-    
+
   end subroutine compute_particle_boundary_current_evaluate
 
-  
+
   !---------------------------------------------------------------------------!
   !> Constructor.
   subroutine initialize_pic_vm_1d2v_trafo(&
@@ -774,8 +774,6 @@ contains
 
     if (present(boundary_particles) )  then
        self%boundary_particles = boundary_particles
-    else
-       self%boundary_particles = 100
     end if
 
     if (present(solver_tolerance) )  then
@@ -793,7 +791,7 @@ contains
     if (present(iter_tolerance) )  then
        self%iter_tolerance = iter_tolerance
     end if
-    
+
     if (present(max_iter) )  then
        self%max_iter = max_iter
     end if

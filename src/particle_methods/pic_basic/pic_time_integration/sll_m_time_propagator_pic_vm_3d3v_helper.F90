@@ -104,7 +104,7 @@ module sll_m_time_propagator_pic_vm_3d3v_helper
      sll_int32 :: n_total0 !< total number of Dofs for 0form
      sll_int32 :: n_total1 !< total number of Dofs for 1form
      sll_int32 :: nspan(3) !< Number of intervals where spline tensor product is non zero 
-     sll_real64 :: betar(2) !< reciprocal of plasma beta
+     sll_real64 :: betar(2) = 1._f64 !< reciprocal of plasma beta
 
      sll_real64, pointer     :: phi_dofs(:) !< DoFs describing the scalar potential
      sll_real64, pointer     :: efield_dofs(:) !< DoFs describing the three components of the electric field
@@ -115,9 +115,9 @@ module sll_m_time_propagator_pic_vm_3d3v_helper
      sll_real64, allocatable :: particle_mass_2_local(:,:) !< MPI-processor local part of one component of \a particle_mass
      sll_real64, allocatable :: particle_mass_3_local(:,:) !< MPI-processor local part of one component of \a particle_mass
 
-     sll_real64 :: solver_tolerance !< solver tolerance
-     sll_real64 :: iter_tolerance  !< iteration tolerance 
-     sll_int32  :: max_iter !< maximal amount of iterations
+     sll_real64 :: solver_tolerance = 1d-12 !< solver tolerance
+     sll_real64 :: iter_tolerance = 1d-10 !< iteration tolerance 
+     sll_int32  :: max_iter = 10!< maximal amount of iterations
 
      sll_int32 :: boundary_particles = 100 !< particle boundary conditions
      sll_int32 :: counter_left = 0 !< boundary counter
@@ -540,7 +540,7 @@ contains
     end do
 
     niter = 0
-    residual = self%iter_tolerance + 1.0_f64
+    residual = 1.0_f64
     do while ( (residual(1) > self%iter_tolerance) .and. niter < self%max_iter )
        niter = niter+1
 
@@ -907,16 +907,11 @@ contains
 
     if (present(solver_tolerance) )  then
        self%solver_tolerance = solver_tolerance
-    else
-       self%solver_tolerance = 1d-12
     end if
 
     if (present(iter_tolerance) )  then
        self%iter_tolerance = iter_tolerance
        self%max_iter = max_iter
-    else
-       self%iter_tolerance = 1d-10
-       self%max_iter = 20
     end if
 
     if( present(force_sign) )then
@@ -1023,8 +1018,6 @@ contains
 
     if (present(betar)) then
        self%betar = betar
-    else
-       self%betar = 1.0_f64
     end if
 
 

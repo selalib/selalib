@@ -120,7 +120,7 @@ module sll_m_time_propagator_pic_vm_3d3v_trafo_helper
      sll_int32 :: n_total1 !< total number of Dofs for 1form
      sll_int32 :: nspan_1(3), nspan_2(3) !< Number of intervals where spline tensor product is non zero 
 
-     sll_real64 :: betar(2) !< reciprocal of plasma beta
+     sll_real64 :: betar(2) = 1._f64 !< reciprocal of plasma beta
 
      sll_real64, allocatable :: vec1(:) !< scratch data
      sll_real64, allocatable :: vec2(:) !< scratch data
@@ -140,8 +140,9 @@ module sll_m_time_propagator_pic_vm_3d3v_trafo_helper
      sll_real64, allocatable :: particle_mass_31_local(:,:) !< MPI-processor local part of one component of \a particle_mass
      sll_real64, allocatable :: particle_mass_13_local(:,:) !< MPI-processor local part of one component of \a particle_mass
 
-     sll_real64 :: solver_tolerance, iter_tolerance !< solver and iteration tolerance
-     sll_int32 :: max_iter !< maximal amount of iterations
+     sll_real64 :: solver_tolerance = 1d-12
+     sll_real64 :: iter_tolerance = 1d-10 !< solver and iteration tolerance
+     sll_int32 :: max_iter = 10 !< maximal amount of iterations
 
      sll_int32 :: boundary_particles = 100 !< particle boundary conditions
      sll_int32 :: counter_left = 0 !< boundary counter
@@ -1009,16 +1010,14 @@ contains
 
     if (present(solver_tolerance) )  then
        self%solver_tolerance = solver_tolerance
-    else
-       self%solver_tolerance = 1d-12
     end if
 
     if (present(iter_tolerance) )  then
        self%iter_tolerance = iter_tolerance
+    end if
+
+    if (present(max_iter) )  then
        self%max_iter = max_iter
-    else
-       self%iter_tolerance = 1d-10
-       self%max_iter = 20
     end if
 
     if( present(force_sign) )then
