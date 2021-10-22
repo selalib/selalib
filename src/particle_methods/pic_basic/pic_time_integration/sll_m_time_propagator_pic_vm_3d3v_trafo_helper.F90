@@ -657,11 +657,11 @@ contains
     sll_real64,                                           intent( in    ) :: dt   !< time step
     ! local variables
     sll_int32 :: i_part, i_sp, j
-    sll_real64 :: vi(3), vh(3), xi(3), xs(3), wi(1), xnew(3), vbar(3)
+    sll_real64 :: vi(3), vh(3), xi(3), xs(3), wi(1), mi(1), xnew(3), vbar(3)
     sll_real64 :: sign, wall(3)
     sll_real64 :: jmat(3,3), jmatrix(3,3)
     sll_int32 :: niter
-    sll_real64 :: residual(1), residual_local(1)
+    sll_real64 :: residual(8), residual_local(8)
     sll_real64 :: xmid(3), xt(3), xbar, dx
     sll_real64 :: efield(3)
 
@@ -675,13 +675,13 @@ contains
     end do
 
     niter = 0
-    residual = self%iter_tolerance + 1.0_f64
-
-    do while ( (residual(1) > self%iter_tolerance) .and. niter < self%max_iter )
+    residual = 1.0_f64
+    
+    do while ( (maxval(residual(1:7)) > self%iter_tolerance) .and. niter < self%max_iter )
        niter = niter+1
        self%efield_dofs_work = 0.5_f64*( self%efield_dofs + self%efield_dofs_new )
        self%j_dofs_local = 0.0_f64
-
+       residual_local = 0._f64
        ! Particle loop
        do i_sp = 1, self%particle_group%n_species
           sign = dt*self%particle_group%group(i_sp)%species%q_over_m();
@@ -691,6 +691,7 @@ contains
 
              ! Get charge for accumulation of j
              wi = self%particle_group%group(i_sp)%get_charge(i_part, self%i_weight)
+             mi = self%particle_group%group(i_sp)%get_mass(i_part, self%i_weight)
              vbar = 0.5_f64 * (self%vnew(i_sp,:, i_part)+vi)
              xnew = self%xnew(i_sp,:, i_part)
 
@@ -783,6 +784,16 @@ contains
                 end do
              end if
 
+             residual_local(1) = residual_local(1) + (xnew(1)-self%xnew(i_sp,1,i_part))**2*abs(wi(1))
+             residual_local(2) = residual_local(2) + (xnew(2)-self%xnew(i_sp,2,i_part))**2*abs(wi(1))
+             residual_local(3) = residual_local(3) + (xnew(3)-self%xnew(i_sp,3,i_part))**2*abs(wi(1))
+
+             residual_local(4) = residual_local(4) + (vi(1)-self%vnew(i_sp,1,i_part))**2*abs(wi(1))
+             residual_local(5) = residual_local(5) + (vi(2)-self%vnew(i_sp,2,i_part))**2*abs(wi(1))
+             residual_local(6) = residual_local(6) + (vi(3)-self%vnew(i_sp,3,i_part))**2*abs(wi(1))
+
+             residual_local(7) = residual_local(7) + mi(1)*0.5_f64*( vi(1)**2 + vi(2)**2 + vi(3)**2-self%vnew(i_sp,1,i_part)**2  -self%vnew(i_sp,2,i_part)**2  -self%vnew(i_sp,3,i_part)**2 )  
+                          
              self%xnew(i_sp, :, i_part) = xnew
              self%vnew(i_sp, :, i_part) = vi
           end do
@@ -797,24 +808,29 @@ contains
           self%phi_dofs_work = self%phi_dofs
           call self%maxwell_solver%compute_phi_from_j( self%j_dofs, self%phi_dofs_work, self%efield_dofs_work )
 
-          ! Compute residual based on phi
-          residual_local = (sum((self%phi_dofs_work-self%phi_dofs_new)**2))*product(self%particle_mesh_coupling%delta_x)
-          call sll_o_collective_allreduce( sll_v_world_collective, residual_local, 1, MPI_MAX, residual )
-          residual = sqrt(residual)
+          ! Compute residuals based on phi
+          residual_local(8) = residual_local(8) + 0.5_f64*(self%maxwell_solver%inner_product( self%phi_dofs_work, self%phi_dofs_work, 0 ) - self%maxwell_solver%inner_product( self%phi_dofs_new, self%phi_dofs_new, 0 ) )
+          
+          residual_local(7) = (sum((self%phi_dofs_work-self%phi_dofs_new)**2))*product(self%particle_mesh_coupling%delta_x)
        else
           self%efield_dofs_work = self%efield_dofs
           call self%maxwell_solver%compute_E_from_j( self%betar(2)*self%j_dofs, self%efield_dofs_work )
 
-          ! Compute residual based on e
-          residual_local = (sum((self%efield_dofs_work-self%efield_dofs_new)**2))*product(self%particle_mesh_coupling%delta_x)
-          call sll_o_collective_allreduce( sll_v_world_collective, residual_local, 1, MPI_MAX, residual )
-          residual = sqrt(residual)
+          ! Compute residuals based on e
+          residual_local(8) = residual_local(8) + 0.5_f64*(self%maxwell_solver%inner_product( self%efield_dofs_work, self%efield_dofs_work, 1 ) - self%maxwell_solver%inner_product( self%efield_dofs_new, self%efield_dofs_new, 1 ) )
+          
+          residual_local(7) = (sum((self%efield_dofs_work-self%efield_dofs_new)**2))*product(self%particle_mesh_coupling%delta_x)
        end if
+
+       call sll_o_collective_allreduce( sll_v_world_collective, residual_local, 8, MPI_MAX, residual )
+       residual(1:7) = sqrt(residual(1:7))
+       residual(8) = abs(residual(8))
+       
        self%phi_dofs_new = self%phi_dofs_work
        self%efield_dofs_new = self%efield_dofs_work
     end do
 
-    if ( residual(1) > self%iter_tolerance ) then
+    if ( maxval(residual(1:7)) > self%iter_tolerance ) then
        print*, 'Warning: Iteration no.', self%iter_counter+1 ,'did not converge.', residual, niter
        self%n_failed = self%n_failed+1
     end if
