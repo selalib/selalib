@@ -1871,7 +1871,7 @@ contains
        if( sim%adiabatic_electrons) then
           phival = sim%maxwell_solver%l2norm_squared( sim%phi_dofs, 0, 0 ) 
           write(file_id,'(f12.5,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16)' ) &
-               time, 0.5_f64*potential_energy, 0.5_f64*phival, diagnostics(1:3), &
+               time, 0.5_f64*phival, 0.5_f64*potential_energy, diagnostics(1:3), &
                sum(diagnostics(1:3)) + 0.5_f64*phival, diagnostics(4:6), &
                diagnostics_local(4:6), error_gauss 
        else
