@@ -71,17 +71,17 @@ contains
     ! ...
 
     ! ...
-    call self % initialize(linear_operator)  
+    call self%initialize(linear_operator)  
     ! ...
 
     ! ...
-    allocate(self % x_0(self % n_total_rows))
-    self % x_0 = 0.0_f64
+    allocate(self%x_0(self%n_total_rows))
+    self%x_0 = 0.0_f64
     ! ...
 
     ! ...
     if (present(filename)) then
-       call self % read_from_file(filename)
+       call self%read_from_file(filename)
     end if
     ! ...
 
@@ -103,16 +103,16 @@ contains
 
     ! ...
     if (present(x_0)) then
-       self % x_0 = x_0
+       self%x_0 = x_0
     end if
     ! ...
 
     ! ... linear solver abstract initialization
-    call self % initialize_abstract(linear_operator)  
+    call self%initialize_abstract(linear_operator)  
     ! ...
 
     ! ... iterative linear solver abstract initialization
-    call self % set_linear_operator(linear_operator)  
+    call self%set_linear_operator(linear_operator)  
     ! ...
 
   end subroutine initialize_linear_solver_cg
@@ -128,7 +128,7 @@ contains
     class(sll_t_linear_solver_cg), intent(inout) :: self 
     sll_real64,dimension(:), intent(in) :: x_0
 
-    self % x_0 = x_0
+    self%x_0 = x_0
 
   end subroutine set_guess_linear_solver_cg
   ! ..................................................
@@ -152,9 +152,9 @@ contains
     sll_real64, dimension(:),     optional, intent(in)     :: arr_err 
 
     ! ... 
-    if (self % verbose) then
+    if (self%verbose) then
        if (present(r_err)) then
-          if (i_iteration <= self % n_maxiter) then
+          if (i_iteration <= self%n_maxiter) then
              print*, '* cg:  convergence after', i_iteration, ' iterations. Error ', r_err
           else
              print *, '* cg: Warning - max iterations achieved without convergence. Error', r_err
@@ -194,21 +194,21 @@ contains
     ! ... 
 
     ! ...  
-    self % n_maxiter        = int_maxiter
-    self % atol             = real_atol
+    self%n_maxiter        = int_maxiter
+    self%atol             = real_atol
     ! ... 
 
     ! ... 
-    self % null_space       = .false. 
+    self%null_space       = .false. 
     if (int_null_space == 1) then
-       self % null_space     = .true. 
+       self%null_space     = .true. 
     end if
     ! ... 
 
     ! ... 
-    self % verbose       = .false. 
+    self%verbose       = .false. 
     if (int_verbose == 1) then
-       self % verbose     = .true. 
+       self%verbose     = .true. 
     end if
     ! ... 
 
@@ -238,13 +238,13 @@ contains
     logical :: flag
 
     ! ...
-    allocate(l_rhs(self % n_total_rows)) 
+    allocate(l_rhs(self%n_total_rows)) 
     l_rhs = rhs
     ! ...
 
 
     ! ...
-    unknown = self % x_0
+    unknown = self%x_0
     ! ...
 
     ! ...
@@ -256,7 +256,7 @@ contains
     ! ...
 
     ! ...
-    call self % check_convergence( i_iteration=itr_used, &
+    call self%check_convergence( i_iteration=itr_used, &
          & flag=flag, &
          & r_err=res)
     ! ...
@@ -275,9 +275,9 @@ contains
   subroutine cg_linear_solver(self, x, b, niterx, res)
     implicit none
 
-    class(sll_t_linear_solver_cg), intent(in)  :: self 
+    class(sll_t_linear_solver_cg), intent(in)  :: self
+    sll_real64, dimension (:),   intent(inout) :: x
     sll_real64, dimension (:),   intent(in)  :: b
-    sll_real64, dimension (:),   intent(out) :: x
     sll_int32,                   intent(out) :: niterx
     sll_real64,                  intent(out) :: res
     ! local
@@ -288,24 +288,24 @@ contains
     sll_real64 :: lambda
     sll_real64 :: alpha
     sll_real64 :: w1
-    sll_real64, dimension (self % n_total_rows) :: p
-    sll_real64, dimension (self % n_total_rows) :: r
-    sll_real64, dimension (self % n_total_rows) :: v
-    sll_real64, dimension (self % n_total_rows) :: z
+    sll_real64, dimension (self%n_total_rows) :: p
+    sll_real64, dimension (self%n_total_rows) :: r
+    sll_real64, dimension (self%n_total_rows) :: v
+    sll_real64, dimension (self%n_total_rows) :: z
 
     ! ...
-    niterxmax = self % n_maxiter
-    nb        = self % n_total_rows
-    epsx      = self % atol
+    niterxmax = self%n_maxiter
+    nb        = self%n_total_rows
+    epsx      = self%atol
     ! ...
 
     v = 0.0_f64
-    call self % ptr_linear_operator % dot (x, v)
+    call self%ptr_linear_operator%dot (x, v)
     !r_0=b-A x_0
     r = b - v
     !p_0=M^{-1}r_0
     if( associated( self%ptr_pc_left) )then
-       call self % ptr_pc_left % solve(r, p)
+       call self%ptr_pc_left%solve(r, p)
     else
        p = r
     end if
@@ -317,7 +317,7 @@ contains
 
        v = 0.0_f64
        !v_j=A p_j
-       call self % ptr_linear_operator % dot (p, v)
+       call self%ptr_linear_operator%dot (p, v)
 
        !lambda_j=<r_j,z_j>/<A p_j,p_j>
        lambda = alpha / (sum(p*v)+1.d-25)
@@ -332,10 +332,10 @@ contains
        end do
 
        res=sqrt(w1/real(nb,f64))
-       if (res <=epsx) exit
+       if (res <= epsx) exit
        if( associated( self%ptr_pc_left) )then
           !z_j+1=M^{-1}r_j+1
-          call self % ptr_pc_left % solve(r, z)
+          call self%ptr_pc_left%solve(r, z)
           !beta_j= <r_j+1,z_j+1>/<r_j,z_j>
           w1 = sum(r*z)
        else
@@ -363,7 +363,7 @@ contains
     logical                   , intent(in) :: verbose
 
     ! ...
-    call self % set_verbose_abstract(verbose)
+    call self%set_verbose_abstract(verbose)
     ! ...
 
   end subroutine set_verbose_linear_solver_cg
@@ -379,10 +379,10 @@ contains
     ! local
 
     print *, ">>>> linear_solver_cg"
-    print *, "* verbose    : ", self % verbose 
-    print *, "* atol       : ", self % atol 
-    print *, "* null_space : ", self % null_space 
-    print *, "* n_maxiter  : ", self % n_maxiter 
+    print *, "* verbose    : ", self%verbose 
+    print *, "* atol       : ", self%atol 
+    print *, "* null_space : ", self%null_space 
+    print *, "* n_maxiter  : ", self%n_maxiter 
     print *, "<<<< "
 
   end subroutine print_info_linear_solver_cg
@@ -396,7 +396,7 @@ contains
     implicit none
     class(sll_t_linear_solver_cg), intent(inout) :: self 
 
-    deallocate (self % x_0)
+    deallocate (self%x_0)
 
   end subroutine free_linear_solver_cg
   ! ..................................................

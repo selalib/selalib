@@ -27,6 +27,7 @@ module sll_m_initial_distribution
        sll_t_params_cos_gaussian, &
        sll_s_initial_distribution_new, &
        sll_t_params_cos_gaussian_screwpinch, &
+       sll_t_params_noise_gaussian, &
        sll_s_initial_distribution_file_new, &
        sll_s_initial_distribution_new_descriptor
 
@@ -82,9 +83,10 @@ type, extends(sll_c_distribution_params) :: sll_t_params_noise_gaussian
 
    ! For the white noise in space
    sll_real64 :: alpha !< strength of the noise
-   sll_int32 :: n_boxes !< number of boxes for randomization
-   sll_real64 :: rdx !< reciprocal of delta_x
-   sll_real64, allocatable :: noise_vector(:)
+   sll_int32 :: n_boxes(3) !< number of boxes for randomization
+   sll_real64 :: rdx(3) !< reciprocal of delta_x
+   sll_real64, allocatable :: noise_vector(:,:,:)
+   type(sll_t_profile_functions) :: profile
    
  contains
    procedure :: eval_xv_density => sll_f_noise_gaussian !< Evaluate the distribution function
@@ -241,15 +243,21 @@ function sll_f_noise( self, x, v ) result(fval)
   sll_real64, optional :: v(:)
   sll_real64 :: fval
   !local variables
-  sll_int32 :: box
-  sll_real64 :: xbox
+  sll_int32 :: box(3)
+  sll_real64 :: xbox(3)
 
-  xbox = x(1)* self%rdx
-  box = floor(xbox)
-  xbox = xbox - real(box,f64)
+  xbox = x* self%rdx
+  box = floor(xbox)+1
 
-  fval = (1.0_f64-xbox) * self%noise_vector(box+2) + xbox* self%noise_vector(box+1)
-  
+  if(self%dims(1) == 1 ) then
+     xbox = xbox - real(box-1,f64)
+     fval = (1.0_f64-xbox(1)) * self%noise_vector(box(1)+1,1,1) + xbox(1)* self%noise_vector(box(1),1,1)
+  else if (self%dims(1) == 3 ) then
+     fval = self%noise_vector(box(1), box(2), box(3) )
+  else
+     print*, 'wrong dimension in eval_x_noise'
+  end if
+    
 end function sll_f_noise
 
 function sll_f_noise_gaussian( self, x, v, m ) result( fval )
@@ -259,7 +267,7 @@ function sll_f_noise_gaussian( self, x, v, m ) result( fval )
  sll_real64, optional :: m
  sll_real64 :: fval
  
- fval = self%eval_x_density( x ) * self%eval_x_density( v )
+ fval = self%eval_x_density( x ) * self%eval_v_density( v )
  
 end function sll_f_noise_gaussian
 
@@ -340,18 +348,35 @@ subroutine free_noise_gaussian( self )
  
 end subroutine free_noise_gaussian
 
-subroutine noise_gaussian_init( self, n_gaussians, dims, file_id )
+subroutine noise_gaussian_init( self, n_gaussians, dims, file_id, profile )
   class( sll_t_params_noise_gaussian ), intent( out ) :: self
   sll_int32, intent( in    ) :: n_gaussians !< descriptor of the test case
   sll_int32, intent( in    ) :: dims(2) !< number of spatial and velocity dimensions
   sll_int32, intent( in    ) :: file_id    !< nml-file with parameters in unified format
+  type(sll_t_profile_functions), optional :: profile
 
+  if( present(profile) ) then
+     self%profile = profile
+  end if
+  self%dims = dims
+  self%n_gaussians = n_gaussians
+  select case( self%dims(1) )
+  case (1)
+     call noise_gaussian_init_1d2v( self, file_id )
+  case(3)
+     call noise_gaussian_init_3d3v( self, file_id )
+  end select
+end subroutine noise_gaussian_init
+
+subroutine noise_gaussian_init_1d2v( self, file_id )
+  class( sll_t_params_noise_gaussian ), intent( inout ) :: self
+  sll_int32, intent( in    ) :: file_id    !< nml-file with parameters in unified format
   sll_real64 :: alpha
-  sll_real64 :: v_thermal_1(n_gaussians)
-  sll_real64 :: v_mean_1(n_gaussians)
-  sll_real64 :: v_thermal_2(n_gaussians)
-  sll_real64 :: v_mean_2(n_gaussians)
-  sll_real64 :: delta(n_gaussians)
+  sll_real64 :: v_thermal_1(self%n_gaussians)
+  sll_real64 :: v_mean_1(self%n_gaussians)
+  sll_real64 :: v_thermal_2(self%n_gaussians)
+  sll_real64 :: v_mean_2(self%n_gaussians)
+  sll_real64 :: delta(self%n_gaussians)
   sll_int32 :: n_boxes
   sll_real64 :: domain   !< domain length (to set delta x)
   sll_int32 :: i, j
@@ -361,17 +386,17 @@ subroutine noise_gaussian_init( self, n_gaussians, dims, file_id )
   
   namelist /noise_multigaussian/ alpha, n_boxes, v_thermal_1, v_mean_1, v_thermal_2, v_mean_2, delta, domain
 
-  self%dims = dims
-  self%n_gaussians = n_gaussians
+  
 
   read(file_id, noise_multigaussian)
 
-  allocate( self%noise_vector(1:n_boxes+1) )
+  allocate( self%noise_vector(1:n_boxes+1,1,1) )
   allocate( self%v_thermal(1:self%dims(2), 1:self%n_gaussians) )
   allocate( self%v_mean(1:self%dims(2), 1:self%n_gaussians) )
   allocate( self%normal(1:self%n_gaussians) )
   allocate( self%delta(1:self%n_gaussians) )
 
+  
  
   self%alpha = alpha
   self%v_thermal(1,:) = v_thermal_1
@@ -395,20 +420,88 @@ subroutine noise_gaussian_init( self, n_gaussians, dims, file_id )
   call random_seed(put=rnd_seed)
   do i=1,n_boxes
      call random_number( rnd )
-     call sll_s_normal_cdf_inv( rnd, 1.0_f64, alpha, self%noise_vector(i) )
+     call sll_s_normal_cdf_inv( rnd, 1.0_f64, alpha, self%noise_vector(i,1,1) )
   end do
 
   ! Make sure the function integrates up to one
-  rnd = sum(self%noise_vector(1:n_boxes))/real(n_boxes, f64)
+  rnd = sum(self%noise_vector(1:n_boxes,1,1))/real(n_boxes, f64)
   rnd = rnd - 1.0_f64
-  self%noise_vector(1:n_boxes) = self%noise_vector(1:n_boxes) - rnd
+  self%noise_vector(1:n_boxes,1,1) = self%noise_vector(1:n_boxes,1,1) - rnd
   
   ! Periodic boundary conditions
-  self%noise_vector(n_boxes+1) = self%noise_vector(1)
+  self%noise_vector(n_boxes+1,1,1) = self%noise_vector(1,1,1)
 
   self%rdx = real( self%n_boxes, f64 ) / domain
 
-end subroutine noise_gaussian_init
+end subroutine noise_gaussian_init_1d2v
+
+subroutine noise_gaussian_init_3d3v( self, file_id )
+  class( sll_t_params_noise_gaussian ), intent( inout ) :: self
+  sll_int32, intent( in    ) :: file_id    !< nml-file with parameters in unified format
+  sll_real64 :: alpha
+  sll_real64 :: v_thermal(3,self%n_gaussians)
+  sll_real64 :: v_mean(3,self%n_gaussians)
+  sll_real64 :: delta(self%n_gaussians)
+  sll_int32 :: n_boxes(3)
+  sll_real64 :: domain(3)   !< domain length (to set delta x)
+  sll_int32 :: i, j, k
+  sll_int32 :: rnd_seed_size
+  sll_int32, allocatable :: rnd_seed(:)
+  sll_real64 :: rnd
+  
+  namelist /noise_multigaussian/ alpha, n_boxes, v_thermal, v_mean, delta, domain
+
+  read(file_id, noise_multigaussian)
+
+  allocate( self%noise_vector(1:n_boxes(1)+1, 1:n_boxes(2)+1, 1:n_boxes(3)+1) )
+  allocate( self%v_thermal(1:self%dims(2), 1:self%n_gaussians) )
+  allocate( self%v_mean(1:self%dims(2), 1:self%n_gaussians) )
+  allocate( self%normal(1:self%n_gaussians) )
+  allocate( self%delta(1:self%n_gaussians) )
+
+  
+ 
+  self%alpha = alpha
+  self%v_thermal = v_thermal
+  self%v_mean = v_mean
+  self%delta = delta
+  self%n_boxes = n_boxes
+  
+  do j=1,self%n_gaussians
+     self%normal(j) = 1.0_f64/(sll_p_twopi**(0.5_f64*real(self%dims(2),f64))*&
+          product(self%v_thermal(:,j)))   
+  end do
+
+  ! Set random seed: Same on all processes
+  call random_seed(size=rnd_seed_size)
+  allocate( rnd_seed(rnd_seed_size) )
+  do i=1, rnd_seed_size
+     rnd_seed(i) = 15*i
+  end do
+  call random_seed(put=rnd_seed)
+  do i=1,n_boxes(1)
+     do j = 1, n_boxes(2)
+        do k = 1, n_boxes(3)
+           call random_number( rnd )
+           call sll_s_normal_cdf_inv( rnd, 1.0_f64, alpha, self%noise_vector(i,j,k) )
+        end do
+     end do
+  end do
+
+  ! Make sure the function integrates up to one
+  do j = 1, n_boxes(2)
+     do k = 1, n_boxes(3)
+        rnd = sum(self%noise_vector(1:n_boxes(1),j,k))/real(n_boxes(1), f64)
+        rnd = rnd - 1.0_f64
+        self%noise_vector(1:n_boxes(1),j,k) = self%noise_vector(1:n_boxes(1),j,k) - rnd
+     end do
+  end do
+  ! Periodic boundary conditions
+  !self%noise_vector(n_boxes+1) = self%noise_vector(1)
+
+  self%rdx = real( self%n_boxes, f64 ) / domain
+
+end subroutine noise_gaussian_init_3d3v
 
 
 subroutine cos_gaussian_init( self, descriptor, dims, file_id, profile )
@@ -591,9 +684,11 @@ subroutine  sll_s_initial_distribution_new( distribution, dims, file_id, params,
  type is( sll_t_params_noise_gaussian )
     select case ( descriptor )
     case (sll_p_noise_multigaussian1 )
-       call params%init( 1, dims, file_id )
+       call params%init( 1, dims, file_id, profile )
     case (sll_p_noise_multigaussian11 )
-       call params%init( 11, dims, file_id )
+       call params%init( 11, dims, file_id, profile )
+    case default
+       !call params%init( descriptor, dims, file_id, profile )
     end select
  type is( sll_t_params_cos_gaussian_screwpinch )
     call params%init( descriptor, dims, file_id, profile )
@@ -676,9 +771,11 @@ subroutine  sll_s_initial_distribution_file_new( dims, nml_file, params, profile
  type is( sll_t_params_noise_gaussian )
     select case ( descriptor )
     case (sll_p_noise_multigaussian1 )
-       call params%init( 1, dims, file_id )
+       call params%init( 1, dims, file_id, profile )
     case (sll_p_noise_multigaussian11 )
-       call params%init( 11, dims, file_id )
+       call params%init( 11, dims, file_id, profile )
+    case default
+       !call params%init( descriptor, dims, file_id, profile )
     end select
  type is( sll_t_params_cos_gaussian_screwpinch )
     call params%init( descriptor, dims, file_id, profile )
@@ -690,11 +787,12 @@ end subroutine sll_s_initial_distribution_file_new
 
 
 !> Factory function for sll_c_distribution_params, parameters read form input file. Version build upon descriptors
-subroutine  sll_s_initial_distribution_new_descriptor( distribution, dims, file_id, params )
+subroutine  sll_s_initial_distribution_new_descriptor( distribution, dims, file_id, params, profile )
  sll_int32, intent( in    ) :: distribution !< descriptor of the test case
  sll_int32, intent( in    ) :: dims(2) !< number of spatial and velocity dimensions
  sll_int32, intent( in    ) :: file_id    !< nml-file with parameters in unified format
  class(sll_c_distribution_params), allocatable, intent(   out ) ::  params    !< real array specifying the parameters for the given test case in the predefined order.
+ type(sll_t_profile_functions), optional :: profile
 
 
  select case( distribution )
@@ -726,9 +824,9 @@ subroutine  sll_s_initial_distribution_new_descriptor( distribution, dims, file_
  type is( sll_t_params_noise_gaussian )
     select case ( distribution)
     case (sll_p_noise_multigaussian1 )
-       call params%init( 1, dims, file_id )
+       call params%init( 1, dims, file_id, profile )
     case (sll_p_noise_multigaussian11 )
-       call params%init( 11, dims, file_id )
+       call params%init( 11, dims, file_id, profile )
     end select
  type is( sll_t_params_cos_gaussian_screwpinch )
     call params%init( distribution, dims, file_id )
