@@ -27,7 +27,8 @@ module sll_m_time_propagator_pic_vm_3d3v_cef
        sll_p_boundary_particles_absorption
 
   use sll_m_initial_distribution, only: &
-       sll_t_params_cos_gaussian_screwpinch
+       sll_t_params_cos_gaussian_screwpinch, &
+       sll_t_params_noise_gaussian
 
   use sll_m_maxwell_3d_base, only: &
        sll_c_maxwell_3d_base
@@ -376,6 +377,10 @@ contains
                 wall(3) = wall(3) + dt* (q/p%profile%T_i(Rx(1)) * sum(efield * vnew)-&
                      efield(2)*(p%profile%drho_0(Rx(1))/p%profile%rho_0(Rx(1))+(0.5_f64*m*sum(vnew**2)/p%profile%T_i(Rx(1)) - 1.5_f64)* p%profile%dT_i(Rx(1))/p%profile%T_i(Rx(1))  ) ) *&
                      p%eval_v_density(vnew, Rx, m)/p%eval_v_density(vnew, xi, m)*product(self%Lx)
+             type is(sll_t_params_noise_gaussian)
+                Rx = xi
+                wall(3) = wall(3) + dt* (q/p%profile%T_i(Rx(1)) * sum(efield * vnew)-&
+                     efield(2)*(p%profile%drho_0(Rx(1))/p%profile%rho_0(Rx(1))+(0.5_f64*m*sum(vnew**2)/p%profile%T_i(Rx(1)) - 1.5_f64)* p%profile%dT_i(Rx(1))/p%profile%T_i(Rx(1))  ) ) *product(self%Lx)
              class default
                 wall(3) = wall(3) + dt* qoverm* sum(efield * vnew) *product(self%Lx)
              end select
