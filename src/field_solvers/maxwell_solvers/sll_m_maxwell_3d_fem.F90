@@ -74,7 +74,15 @@ module sll_m_maxwell_3d_fem
 
   use sll_m_spline_fem_utilities_sparse, only : &
        sll_s_spline_fem_mass1d, &
-       sll_s_spline_fem_mixedmass1d      
+       sll_s_spline_fem_mixedmass1d
+
+  use sll_m_linear_operator_curl_3d
+
+  use sll_m_linear_operator_GTM
+
+  use sll_m_linear_operator_MG
+
+  use sll_m_uzawa_iterator
 
 
   implicit none
