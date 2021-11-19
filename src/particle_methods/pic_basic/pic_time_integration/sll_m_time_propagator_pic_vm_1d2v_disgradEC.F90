@@ -228,6 +228,7 @@ contains
          kernel_smoother_0, &
          kernel_smoother_1, &
          particle_group, &
+         phi_dofs, &
          efield_dofs, &
          bfield_dofs, &
          x_min, &
@@ -266,6 +267,7 @@ contains
     class(sll_c_particle_mesh_coupling_1d), target,          intent( in )  :: kernel_smoother_0  !< Kernel smoother
     class(sll_c_particle_mesh_coupling_1d), target,          intent( in )  :: kernel_smoother_1  !< Kernel smoother
     class(sll_t_particle_array), target,                  intent( in )  :: particle_group !< Particle group
+     sll_real64, target,                            intent(in)  :: phi_dofs(:) !< array for the coefficients of phi
     sll_real64, target,                                   intent( in )  :: efield_dofs(:,:) !< array for the coefficients of the efields 
     sll_real64, target,                                   intent( in )  :: bfield_dofs(:) !< array for the coefficients of the bfield
     sll_real64,                                           intent( in )  :: x_min !< Lower bound of x domain
@@ -316,6 +318,7 @@ contains
          kernel_smoother_0, &
          kernel_smoother_1, &
          particle_group, &
+         phi_dofs, &
          efield_dofs, &
          bfield_dofs, &
          x_min, &
