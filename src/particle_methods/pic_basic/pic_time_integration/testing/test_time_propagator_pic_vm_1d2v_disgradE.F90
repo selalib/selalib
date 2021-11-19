@@ -191,12 +191,14 @@ program test_time_propagator_pic_1d2v_vm_disgradE
 
   call filter%init( 0, 0 )
 
+  
+  
   call propagator%init( maxwell_solver, &
        kernel_smoother_0, kernel_smoother_1, particle_group, &
        phi, efield, bfield, &
-       eta_min, eta_max-eta_min, filter, solver_tolerance = 1d-14  )
+       eta_min, eta_max-eta_min, filter, solver_tolerance = 1d-14, force_sign = -1._f64  )
   
-  propagator%helper%adiabatic_electrons = .false.
+  propagator%helper%force_sign = 1._f64
    
   call propagator%helper%advect_x( delta_t )
 
