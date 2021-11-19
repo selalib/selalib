@@ -150,7 +150,8 @@ contains
        iter_tolerance, max_iter, &
        force_sign, &
        electrostatic, &
-       jmean)  
+       jmean, &
+       rhob)  
     class(sll_t_time_propagator_pic_vm_1d2v_disgradEC_trafo), intent( out ) :: self !< time propagator object 
     class(sll_c_maxwell_1d_base), target,                 intent( in )  :: maxwell_solver      !< Maxwell solver
     class(sll_c_particle_mesh_coupling_1d), target,          intent( in )  :: kernel_smoother_0  !< Kernel smoother
@@ -168,6 +169,7 @@ contains
     sll_real64, optional,                                 intent( in )  :: force_sign !< sign of particle force
     logical, optional,                                    intent( in )  :: electrostatic !< true for electrostatic simulation
     logical, optional,                                    intent( in )  :: jmean !< logical for mean value of current
+    sll_real64, optional, target,                  intent( in ) :: rhob(:)
     !local variables
     sll_int32 :: max_iter_set
     sll_int32 :: boundary_particles_set
@@ -228,7 +230,8 @@ contains
          iter_tolerance_set, &
          max_iter_set, &
          force_sign=force_sign_set,&
-         jmean=jmean_set)
+         jmean=jmean_set, &
+         rhob = rhob)
 
   end subroutine initialize_pic_vm_1d2v
 
@@ -249,7 +252,8 @@ contains
        boundary_particles, &
        force_sign, &
        electrostatic, &
-       jmean)  
+       jmean, &
+       rhob)  
     class(sll_t_time_propagator_pic_vm_1d2v_disgradEC_trafo), intent( out ) :: self !< time propagator object 
     class(sll_c_maxwell_1d_base), target,                 intent( in )  :: maxwell_solver      !< Maxwell solver
     class(sll_c_particle_mesh_coupling_1d), target,          intent( in )  :: kernel_smoother_0  !< Kernel smoother
@@ -265,6 +269,7 @@ contains
     sll_real64, optional, intent(in) :: force_sign !< sign of particle force
     logical, optional, intent(in)    :: electrostatic !< true for electrostatic simulation
     logical, optional, intent(in)    :: jmean !< logical for mean value of current
+    sll_real64, optional, target,                  intent( in ) :: rhob(:)
     !local variables
     sll_int32 :: boundary_particles_set
     sll_real64 :: force_sign_set
@@ -306,7 +311,8 @@ contains
          filename, &
          boundary_particles = boundary_particles_set, &
          force_sign=force_sign_set, &
-         jmean=jmean_set)
+         jmean=jmean_set, &
+         rhob = rhob)
 
 
   end subroutine initialize_file_pic_vm_1d2v

@@ -860,9 +860,9 @@ contains
        type is ( sll_t_time_propagator_pic_vm_1d2v_disgradEC )
           call qpdisgradEC%init_from_file( sim%maxwell_solver, &
                sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
-               sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
+               sim%efield_dofs, sim%bfield_dofs, &
                sim%domain(1), sim%domain(3), sim%filter, trim(filename), &
-               boundary_particles=sim%boundary_particles, electrostatic =electrostatic)
+               boundary_particles=sim%boundary_particles, force_sign=sim%force_sign, betar=sim%plasma_betar(1:2), electrostatic=electrostatic, jmean=jmean)
           sim%efield_dofs_n => qpdisgradEC%helper%efield_dofs
        end select
     elseif  (sim%splitting_case == sll_p_splitting_disgradEC_sub) then
@@ -921,7 +921,7 @@ contains
           call qptrafo%init_from_file( sim%maxwell_solver, &
                sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
                sim%efield_dofs, sim%bfield_dofs, &
-               sim%domain(1), sim%domain(3), sim%map, trim(filename), sim%boundary_particles, force_sign=sim%force_sign, electrostatic=electrostatic, jmean=jmean  )!,betar=sim%plasma_betar(1:2))
+               sim%domain(1), sim%domain(3), sim%map, trim(filename), sim%boundary_particles, force_sign=sim%force_sign, electrostatic=electrostatic, jmean=jmean, rhob = sim%rhob  )!,betar=sim%plasma_betar(1:2))
           sim%efield_dofs_n => qptrafo%helper%efield_dofs
        end select
     elseif  (sim%splitting_case == sll_p_splitting_zigsub) then
@@ -1275,7 +1275,7 @@ contains
     rho_ref = rho_ref -  rho_simulated
     error = maxval(rho_ref)
     print*, 'Maximum error in rho is', error, '.'
-    if (abs(error)> 1d-14) then
+    if (abs(error)> 6d-14) then
        passed = .FALSE.
     else
        passed = .TRUE.

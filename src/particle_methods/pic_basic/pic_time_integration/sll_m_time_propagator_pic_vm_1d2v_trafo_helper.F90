@@ -116,10 +116,10 @@ module sll_m_time_propagator_pic_vm_1d2v_trafo_helper
      sll_real64 :: force_sign = 1._f64 !< sign of particle force
      logical    :: jmean = .false. !< logical for mean value of current
 
-     sll_real64 :: solver_tolerance !< solver tolerance
+     sll_real64 :: solver_tolerance = 1d-12 !< solver tolerance
 
 
-     sll_int32 :: max_iter = 1 !< maximal amount of iterations, set 1 for ctest
+     sll_int32 :: max_iter = 10 !< maximal amount of iterations, set 1 for ctest
      sll_real64 :: iter_tolerance = 1d-10 !< iteration tolerance
 
      sll_int32 :: n_failed = 0 !< number of failed iterations
@@ -419,7 +419,7 @@ contains
     sll_real64,                                           intent( in    ) :: dt   !< time step
     ! local variables
     sll_int32 :: i_part, i_sp, j
-    sll_real64 :: vi(3), vh, xi(3), wi(1), xnew(3), vbar(2)
+    sll_real64 :: vi(3), xi(3), wi(1), xnew(3), vbar(2)
     sll_real64 :: qoverm
     sll_real64 :: jmat(3,3), jmatrix(3,3), efield(2)
     sll_int32 :: niter
@@ -437,7 +437,7 @@ contains
     end do
 
     niter = 0
-    residual = self%iter_tolerance + 1.0_f64
+    residual = 1.0_f64
     do while ( (residual(1) > self%iter_tolerance) .and. niter < self%max_iter )
        niter = niter+1
 
@@ -459,8 +459,8 @@ contains
 
              jmat = self%map%jacobian_matrix_inverse_transposed( [xi(1), 0._f64, 0._f64] )
              jmatrix=self%map%jacobian_matrix_inverse_transposed( [xnew(1), 0._f64, 0._f64] )
-             vh = 0.5_f64 * (jmatrix(1,1)+jmat(1,1))*vbar(1) 
-             xnew(1) = xi(1) + dt * vh
+             vbar(1) = 0.5_f64 * (jmatrix(1,1)+jmat(1,1))*vbar(1) 
+             xnew(1) = xi(1) + dt * vbar(1)
 
              if(xnew(1) < -1._f64 .or. xnew(1) > 2._f64)then
                 print*, xnew
@@ -491,6 +491,7 @@ contains
                         (xi(1), self%efield_dofs_work(:,2), efield(2) )
                    efield(2) = efield(2)*dt
                 end if
+
                 jmatrix = self%map%jacobian_matrix_inverse_transposed( [xmid(1), 0._f64, 0._f64] )
                 do j = 1, 2
                    vi(j) = vi(j) + qoverm *0.5_f64*((jmatrix(j,1)+jmat(j,1))*efield(1) + (jmatrix(j,2)+jmat(j,2))*efield(2))
@@ -500,7 +501,7 @@ contains
                 case(sll_p_boundary_particles_reflection) 
                    xnew = 2._f64*xbar-xnew
                    vi(1) = -vi(1)
-                   vbar(1) = - vbar(1)
+                   vbar(1) = -vbar(1)
                 case(sll_p_boundary_particles_absorption)
                    call self%kernel_smoother_0%add_charge(xmid, wi(1), self%rhob)
                 case( sll_p_boundary_particles_periodic)
@@ -560,7 +561,7 @@ contains
 
        self%j_dofs = 0.0_f64
        ! MPI to sum up contributions from each processor
-       call sll_o_collective_allreduce( sll_v_world_collective, self%j_dofs_local(:,1), &
+       call sll_o_collective_allreduce( sll_v_world_collective, self%j_dofs_local(1:self%n_dofs1,1), &
             self%n_dofs1, MPI_SUM, self%j_dofs(1:self%n_dofs1,1) )
        call sll_o_collective_allreduce( sll_v_world_collective, self%j_dofs_local(:,2), &
             self%n_dofs0, MPI_SUM, self%j_dofs(:,2) )
@@ -593,14 +594,14 @@ contains
 
           ! Get charge for accumulation of j
           wi = self%particle_group%group(i_sp)%get_charge(i_part)
-          
+
           vbar = 0.5_f64 * (self%vnew(i_sp,:, i_part)+vi(1:2))
           xnew(1) = self%xnew(i_sp, i_part)
 
           jmat = self%map%jacobian_matrix_inverse_transposed( [xi(1), 0._f64, 0._f64] )
           jmatrix=self%map%jacobian_matrix_inverse_transposed( [xnew(1), 0._f64, 0._f64] )
-          vh = 0.5_f64 * (jmatrix(1,1)+jmat(1,1))*vbar(1) 
-          xnew(1) = xi(1) + dt * vh
+          vbar(1) = 0.5_f64 * (jmatrix(1,1)+jmat(1,1))*vbar(1) 
+          xnew(1) = xi(1) + dt * vbar(1)
           call compute_particle_boundary_current_evaluate( self, xi, xnew, vi, vbar, wi, qoverm, dt )
 
           call self%particle_group%group(i_sp)%set_x( i_part, xnew )
@@ -610,7 +611,7 @@ contains
 
     self%j_dofs = 0.0_f64
     ! MPI to sum up contributions from each processor
-    call sll_o_collective_allreduce( sll_v_world_collective, self%j_dofs_local(:,1), &
+    call sll_o_collective_allreduce( sll_v_world_collective, self%j_dofs_local(1:self%n_dofs1,1), &
          self%n_dofs1, MPI_SUM, self%j_dofs(1:self%n_dofs1,1) )
     call sll_o_collective_allreduce( sll_v_world_collective, self%j_dofs_local(:,2), &
          self%n_dofs0, MPI_SUM, self%j_dofs(:,2) )
@@ -673,7 +674,6 @@ contains
                (xi(1), self%efield_dofs_work(:,2), efield(2) )
           efield(2) = efield(2)*dt
        end if
-
        jmatrix = self%map%jacobian_matrix_inverse_transposed( [xmid(1), 0._f64, 0._f64] )
        do j = 1, 2
           vi(j) = vi(j) + qoverm *0.5_f64*((jmatrix(j,1)+jmat(j,1))*efield(1) + (jmatrix(j,2)+jmat(j,2))*efield(2))
@@ -727,15 +727,15 @@ contains
                (xi(1), self%efield_dofs_work(:,2), efield(2) )
           efield(2) = efield(2)*dt
        end if
-        jmatrix = self%map%jacobian_matrix_inverse_transposed( [xnew(1), 0._f64, 0._f64] )
-        do j = 1, 2
-           vi(j) = vi(j) + qoverm *0.5_f64*((jmatrix(j,1)+jmat(j,1))*efield(1) + (jmatrix(j,2)+jmat(j,2))*efield(2))
-        end do
+       jmatrix = self%map%jacobian_matrix_inverse_transposed( [xnew(1), 0._f64, 0._f64] )
+       do j = 1, 2
+          vi(j) = vi(j) + qoverm *0.5_f64*((jmatrix(j,1)+jmat(j,1))*efield(1) + (jmatrix(j,2)+jmat(j,2))*efield(2))
+       end do
     end if
-    
+
   end subroutine compute_particle_boundary_current_evaluate
 
-  
+
   !---------------------------------------------------------------------------!
   !> Constructor.
   subroutine initialize_pic_vm_1d2v_trafo(&
@@ -775,11 +775,12 @@ contains
     !local variables
     sll_int32 :: ierr, j
 
+    if (present(boundary_particles) )  then
+       self%boundary_particles = boundary_particles
+    end if
 
     if (present(solver_tolerance) )  then
        self%solver_tolerance = solver_tolerance
-    else
-       self%solver_tolerance = 1d-12
     end if
 
     if( present(force_sign) )then
@@ -792,10 +793,10 @@ contains
 
     if (present(iter_tolerance) )  then
        self%iter_tolerance = iter_tolerance
+    end if
+
+    if (present(max_iter) )  then
        self%max_iter = max_iter
-    else
-       self%iter_tolerance = 1d-10
-       self%max_iter = 10
     end if
 
     self%maxwell_solver => maxwell_solver
@@ -827,7 +828,6 @@ contains
 
     if( self%n_cells+self%spline_degree == self%maxwell_solver%n_dofs0   ) then
        self%boundary = .true.
-       self%boundary_particles = boundary_particles
        allocate( sll_t_linear_operator_particle_mass_cl_1d  :: self%particle_mass_1 )
        select type ( q => self%particle_mass_1 )
        type is ( sll_t_linear_operator_particle_mass_cl_1d )
