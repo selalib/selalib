@@ -113,7 +113,7 @@ module sll_m_time_propagator_pic_vm_1d2v_helper
      sll_int32  :: n_dofs0  !< number of Dofs for 0form
      sll_int32  :: n_dofs1 !< number of Dofs for 1form
 
-     sll_real64 :: betar(2) !< reciprocal of plasma beta
+     sll_real64 :: betar(2) = 1._f64 !< reciprocal of plasma beta
 
      logical    :: smooth = .false. !< logical to store if smoothing is applied
      sll_int32  :: size_particle_mass_0 !< size particle mass
@@ -160,7 +160,7 @@ module sll_m_time_propagator_pic_vm_1d2v_helper
      character(len=256) :: output_prefix = "disgrad"
 
      sll_int32 :: n_particles_max ! Helper variable for size of temporary particle arrays
-     
+
      sll_real64, allocatable     :: efield_filter(:,:) !< DoFs describing the two components of the electric field
      sll_real64, allocatable     :: bfield_filter(:)   !< DoFs describing the magnetic field
 
@@ -392,6 +392,8 @@ contains
     end do
 
     self%j_dofs = 0.0_f64
+    self%particle_mass_0%particle_mass = 0.0_f64
+    self%particle_mass_1%particle_mass = 0.0_f64  
     ! MPI to sum up contributions from each processor
     call sll_o_collective_allreduce( sll_v_world_collective, self%j_dofs_local(1:self%n_dofs1,1), &
          self%n_dofs1, MPI_SUM, self%j_dofs(1:self%n_dofs1,1) )
@@ -482,9 +484,9 @@ contains
 
   end subroutine advect_e_pic_vm_1d2v_helper
 
-  
+
   !---------------------------------------------------------------------------!
-  !> Operator for first variant without subcycling (Picard iteration, started by AVF)
+  !> Operator for first variant without subcycling (Picard iteration, started by DISGRADE)
   subroutine advect_ex_pic_vm_1d2v_helper ( self, dt )
     class(sll_t_time_propagator_pic_vm_1d2v_helper), intent(inout) :: self !< time splitting object 
     sll_real64,                                     intent(in)    :: dt   !< time step
@@ -500,7 +502,7 @@ contains
     residuals = 0.0_f64
 
     ! Instead of a first particle loop as in the standard Picard iteration, we now
-    ! perform the advect_x and advect_e part of the AVF scheme
+    ! perform the advect_x and advect_e part of the DISGRADE scheme
     self%efield_dofs_new = self%efield_dofs
     !call disgradE_for_start ( self, dt, self%efield_dofs_new )
     do i_sp = 1, self%particle_group%n_species
@@ -514,7 +516,6 @@ contains
 
     residual = 1.0_f64
     niter = 0
-
     !print*, 'Iteration', self%iter_counter+1
     do while ( (residual > self%iter_tolerance) .and. niter < self%max_iter )
        niter = niter + 1
@@ -522,7 +523,7 @@ contains
 
        call self%filter%apply( self%efield_dofs_new(:,1), self%efield_dofs_work(:,1) )
        call self%filter%apply( self%efield_dofs_new(:,2), self%efield_dofs_work(:,2) )
-       
+
        self%efield_dofs_work = 0.5_f64*( self%efield_filter + self%efield_dofs_work )
 
        call self%maxwell_solver%transform_dofs(  self%efield_dofs_work(:,1), self%efield_to_val(:,1), 0 )    
@@ -538,11 +539,11 @@ contains
              xi = self%particle_group%group(i_sp)%get_x(i_part)
 
              ! Get charge for accumulation of j
-             wi = self%particle_group%group(i_sp)%get_charge(i_part)
+             wi = self%particle_group%group(i_sp)%get_charge(i_part, self%i_weight)
 
              vbar = 0.5_f64 * (self%vnew(i_sp,:, i_part)+vi(1:2))
              xnew(1) = xi(1) + dt * vbar(1)
-             
+
              if(xnew(1) < -self%x_max .or.  xnew(1) > 2._f64*self%x_max ) then
                 print*, xnew
                 SLL_ERROR("particle boundary", "particle out of bound")
@@ -577,8 +578,9 @@ contains
 
                 select case(self%boundary_particles)
                 case(sll_p_boundary_particles_reflection)
-                   vi(1) = -vi(1)
                    xnew(1) = 2._f64*xbar-xnew(1)
+                   vi(1) = -vi(1)
+                   vbar(1) = -vbar(1)
                 case(sll_p_boundary_particles_absorption)
                 case( sll_p_boundary_particles_periodic)
                    xnew(1) = self%x_min + modulo(xnew(1)-self%x_min, self%Lx)
@@ -635,7 +637,7 @@ contains
        ! Update d_n
        self%j_dofs = 0.0_f64
        ! MPI to sum up contributions from each processor
-       call sll_o_collective_allreduce( sll_v_world_collective, self%j_dofs_local(:,1), &
+       call sll_o_collective_allreduce( sll_v_world_collective, self%j_dofs_local(1:self%n_dofs1,1), &
             self%n_dofs1, MPI_SUM, self%j_dofs(1:self%n_dofs1,1) )
        call sll_o_collective_allreduce( sll_v_world_collective, self%j_dofs_local(:,2), &
             self%n_dofs0, MPI_SUM, self%j_dofs(:,2) )
@@ -686,7 +688,7 @@ contains
     call self%maxwell_solver%transform_dofs(  self%efield_dofs_work(:,1), self%efield_to_val(:,1), 0 )    
     call self%maxwell_solver%transform_dofs(  self%efield_dofs_work(:,2), self%efield_to_val(:,2), 1 )
     self%j_dofs_local = 0.0_f64
-    
+
     ! Particle loop
     do i_sp=1,self%particle_group%n_species
        qoverm = self%particle_group%group(i_sp)%species%q_over_m();
@@ -695,10 +697,10 @@ contains
           xi = self%particle_group%group(i_sp)%get_x(i_part)
 
           ! Get charge for accumulation of j
-          wi = self%particle_group%group(i_sp)%get_charge(i_part)
+          wi = self%particle_group%group(i_sp)%get_charge(i_part, self%i_weight)
 
           vbar = 0.5_f64 * (self%vnew(i_sp,:, i_part)+vi(1:2))
-        
+
           xnew(1) = xi(1) + dt * vbar(1)
           call compute_particle_boundary_current_evaluate( self, xi, xnew, vi, vbar, wi, qoverm, dt )
 
@@ -709,7 +711,7 @@ contains
 
     self%j_dofs = 0.0_f64
     ! MPI to sum up contributions from each processor
-    call sll_o_collective_allreduce( sll_v_world_collective, self%j_dofs_local(:,1), &
+    call sll_o_collective_allreduce( sll_v_world_collective, self%j_dofs_local(1:self%n_dofs1,1), &
          self%n_dofs1, MPI_SUM, self%j_dofs(1:self%n_dofs1,1) )
     call sll_o_collective_allreduce( sll_v_world_collective, self%j_dofs_local(:,2), &
          self%n_dofs0, MPI_SUM, self%j_dofs(:,2) )
@@ -723,14 +725,14 @@ contains
 
     call self%filter%apply( self%efield_dofs(:,1), self%efield_filter(:,1) )
     call self%filter%apply( self%efield_dofs(:,2), self%efield_filter(:,2) )
-    
+
     self%iter_counter = self%iter_counter + 1
     self%niter(self%iter_counter) = niter
 
   end subroutine advect_ex_pic_vm_1d2v_helper
 
 
-   !> Helper function for \a advect_ex
+  !> Helper function for \a advect_ex
   subroutine compute_particle_boundary_current_evaluate( self, xi, xnew, vi, vbar, wi, qoverm, dt )
     class(sll_t_time_propagator_pic_vm_1d2v_helper), intent( inout ) :: self !< time splitting object 
     sll_real64,                                           intent( in    ) :: xi(1)
@@ -777,11 +779,12 @@ contains
           efield(2) = efield(2)*dt
        end if
        vi = vi + qoverm * efield
-       
+
        select case(self%boundary_particles)
        case(sll_p_boundary_particles_reflection)
-          vi(1) = -vi(1)
           xnew(1) = 2._f64*xbar-xnew(1)
+          vi(1) = -vi(1)
+          vbar(1) = -vbar(1)
        case(sll_p_boundary_particles_absorption)
        case( sll_p_boundary_particles_periodic)
           xnew(1) = self%x_min + modulo(xnew(1)-self%x_min, self%Lx)
@@ -790,7 +793,7 @@ contains
           xnew(1) = self%x_min + modulo(xnew(1)-self%x_min, self%Lx)
           xmid = self%x_max+self%x_min-xbar
        end select
-                
+
        if ( abs(vbar(1)) > 1.0D-16 ) then
           call self%kernel_smoother_1%add_current_evaluate &
                ( xmid(1), xnew(1), wi(1), vbar(1), self%efield_to_val(1:self%n_dofs1,1), self%j_dofs_local(1:self%n_dofs1,1), &
@@ -823,7 +826,7 @@ contains
        end if
        vi = vi + qoverm * efield
     end if
-    
+
   end subroutine compute_particle_boundary_current_evaluate
 
 
@@ -856,7 +859,7 @@ contains
 
     ! Set initial value for electric field
     ! Two options to initialize the efield: either by old time step value or by value from disgradE propagator
-    
+
     !call disgradE_for_start ( self, dt, efield_dofs )
     efield_dofs = self%efield_dofs
     do i_sp = 1, self%particle_group%n_species
@@ -868,7 +871,7 @@ contains
        end do
     end do
 
-    
+
     efield_dofs_old = efield_dofs
     residual = 1.0_f64
     do while ( (residual > self%iter_tolerance) .and. niter < self%max_iter )
@@ -938,7 +941,6 @@ contains
     self%sub_iter_counter = 0
 
   end subroutine advect_e_sub_pic_vm_1d2v_helper
-
 
 
   !> Helper function for subcycle (using Picard iteration)
@@ -1135,7 +1137,7 @@ contains
     !local variables
     sll_int32 :: ierr, i_sp
     sll_int32 :: n_span_particle_mass_0,  n_span_particle_mass_1
-    
+
     if (present(solver_tolerance) )  then
        self%solver_tolerance = solver_tolerance
     else
@@ -1146,12 +1148,16 @@ contains
        self%iter_tolerance = iter_tolerance
     end if
 
-     if (present(max_iter) )  then
+    if (present(max_iter) )  then
        self%max_iter = max_iter
     end if
 
     if( present(force_sign) )then
        self%force_sign = force_sign
+    end if
+
+    if (self%force_sign == 1._f64) then
+       if( particle_group%group(1)%species%q > 0._f64) self%adiabatic_electrons = .true.
     end if
 
     if (present(betar)) then
@@ -1164,8 +1170,6 @@ contains
        self%jmean = jmean
     end if
 
-    if( particle_group%group(1)%species%q > 0._f64) self%adiabatic_electrons = .true.
-    
     self%maxwell_solver => maxwell_solver
     self%kernel_smoother_0 => kernel_smoother_0
     self%kernel_smoother_1 => kernel_smoother_1
@@ -1176,7 +1180,7 @@ contains
     ! Check that n_dofs is the same for both kernel smoothers.
     SLL_ASSERT( self%kernel_smoother_0%n_cells == self%kernel_smoother_1%n_cells )
     SLL_ASSERT( self%kernel_smoother_0%n_cells == self%maxwell_solver%n_cells )
-    
+
     self%n_cells = self%maxwell_solver%n_cells
     self%n_dofs0 = self%maxwell_solver%n_dofs0
     self%n_dofs1 = self%maxwell_solver%n_dofs1
@@ -1245,16 +1249,15 @@ contains
              end select
           end if
        end if
-    
+
        if( self%adiabatic_electrons ) then
           call self%linear_op_schur_phiv%create( self%maxwell_solver, self%particle_mass_1 )
           call self%linear_solver_schur_phiv%create( self%linear_op_schur_phiv )
           self%linear_solver_schur_phiv%atol = self%solver_tolerance
        else
-          print*, 'operator ev init'
           call self%linear_operator_1%create( self%maxwell_solver, self%particle_mass_1,  self%n_dofs1, self%maxwell_solver%s_deg_1 )
           call self%linear_solver_1%create( self%linear_operator_1 )
-          self%linear_solver_1%atol = self%solver_tolerance/Lx
+          self%linear_solver_1%atol = self%solver_tolerance
           !self%linear_solver_1%verbose = .true.
 
           call self%linear_operator_0%create( self%maxwell_solver, self%particle_mass_0,  self%n_dofs0, self%maxwell_solver%s_deg_0 )
@@ -1263,13 +1266,13 @@ contains
           !self%linear_solver_0%verbose = .true.
        end if
     end if
-       
+
     SLL_ALLOCATE( self%j_dofs(self%n_dofs0,2), ierr )
     SLL_ALLOCATE( self%j_dofs_local(self%n_dofs0,2), ierr )
     SLL_ALLOCATE(self%residual(self%n_dofs0*2), ierr)
     self%j_dofs = 0.0_f64
     self%j_dofs_local = 0.0_f64
-    
+
     self%n_particles_max = self%particle_group%group(1)%n_particles
     do i_sp = 2,self%particle_group%n_species       
        self%n_particles_max = max(self%n_particles_max, self%particle_group%group(i_sp)%n_particles )
@@ -1279,11 +1282,11 @@ contains
     SLL_ALLOCATE( self%vnew(self%particle_group%n_species,2,self%n_particles_max), ierr )
     SLL_ALLOCATE( self%efield_dofs_new(self%n_dofs0,2), ierr )
     SLL_ALLOCATE( self%efield_dofs_work(self%n_dofs0,2), ierr )
-    
+
     allocate(self%sub_iter_counter( self%particle_group%n_species ) )
     self%sub_iter_counter = 0
     allocate(self%nsubiter(self%particle_group%n_species,100000 ) )
-    
+
     ! For binomial filter
     self%filter => filter
     SLL_ALLOCATE(self%efield_filter(self%n_dofs0,2), ierr)
@@ -1308,7 +1311,7 @@ contains
 
   end subroutine initialize_pic_vm_1d2v_helper
 
-  
+
   !> Constructor.
   subroutine initialize_file_pic_vm_1d2v_helper(&
        self, &
@@ -1356,7 +1359,7 @@ contains
     sll_int32 :: max_iter, max_iter_sub, n_sub_iter(2)
     logical :: jmean_set
 
-    
+
     namelist /output/ file_prefix
     namelist /time_solver/ maxwell_tolerance
     namelist /time_iterate/ iter_tolerance, sub_iter_tolerance, max_iter, max_iter_sub, n_sub_iter
@@ -1388,13 +1391,13 @@ contains
        jmean_set = .false.
     end if
 
-        ! Read tolerance and max iter from nml file
+    ! Read tolerance and max iter from nml file
 
     open(newunit = input_file, file=filename, status='old',IOStat=io_stat)
     if (io_stat /= 0) then
        print*, 'initialize_pic_vm_1d2v_helper() failed to open nml-file.'
     else
-       
+
        close(input_file)
     end if
 
@@ -1430,7 +1433,7 @@ contains
           read(input_file, output, IOStat=io_stat0)
           read(input_file, time_solver,IOStat=io_stat)
           read(input_file, time_iterate,IOStat=io_stat1)
-          
+
           self%output_prefix = trim(file_prefix)
           self%solver_tolerance = maxwell_tolerance
           self%iter_tolerance = iter_tolerance
@@ -1521,7 +1524,7 @@ contains
           read(input_file, output, IOStat=io_stat0)
           read(input_file, time_solver,IOStat=io_stat)
           read(input_file, time_iterate,IOStat=io_stat1)
-         
+
           self%output_prefix = trim(file_prefix)
           self%solver_tolerance = maxwell_tolerance
           self%iter_tolerance = iter_tolerance
@@ -1583,7 +1586,7 @@ contains
 
 
   end subroutine initialize_file_pic_vm_1d2v_helper
-  
+
 
   !---------------------------------------------------------------------------!
   !> Destructor.
@@ -1596,7 +1599,7 @@ contains
        print*, 'left boundary', self%counter_left
        print*, 'right boundary', self%counter_right
     end if
-    
+
     open(newunit=file_id, file=trim(self%output_prefix)//"-outer-iters.dat", action='write')
     do j=1,self%iter_counter
        write(file_id,*) self%niter(j)
@@ -1629,14 +1632,14 @@ contains
 
     deallocate(self%j_dofs)
     deallocate(self%j_dofs_local)
-    
+
     self%maxwell_solver => null()
     self%kernel_smoother_0 => null()
     self%kernel_smoother_1 => null()
     self%particle_group => null()
     self%efield_dofs => null()
     self%bfield_dofs => null()
-    
+
   end subroutine delete_pic_vm_1d2v_helper
 
 
@@ -1652,7 +1655,7 @@ contains
     sll_real64 :: efield(2)
     sll_real64 :: rhs0(self%n_dofs0)
     sll_real64 :: rhs1(self%n_dofs1)
-    
+
     ! Set to zero
     self%j_dofs_local = 0.0_f64
     self%particle_mass_1_local = 0.0_f64
@@ -1713,8 +1716,8 @@ contains
     self%particle_mass_0%particle_mass = 0.0_f64
     call sll_o_collective_allreduce( sll_v_world_collective, self%particle_mass_0_local, &
          self%size_particle_mass_0, MPI_SUM, self%particle_mass_0%particle_mass)
-    
-    
+
+
     ! Compute rhs
     self%linear_operator_1%sign = -self%force_sign 
     call self%linear_operator_1%dot(self%efield_dofs(1:self%n_dofs1,1) , rhs1 )
