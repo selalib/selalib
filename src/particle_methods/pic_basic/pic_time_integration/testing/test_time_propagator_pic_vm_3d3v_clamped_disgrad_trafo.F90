@@ -285,7 +285,7 @@ program test_time_propagator_pic_3d3v_vm_clamped_disgrad_trafo
   call propagator%init( maxwell_solver, &
        particle_mesh_coupling, particle_group, &
        phi, efield, bfield, &
-       domain(:,1), domain(:,3), map=map, boundary_particles=sll_p_boundary_particles_reflection, iter_tolerance=1d-10, max_iter=5 )
+       domain(:,1), domain(:,3), map=map, boundary_particles=sll_p_boundary_particles_reflection, iter_tolerance=1d-10, max_iter=15 )
 
   call propagator%advect_x( delta_t )
 
@@ -438,8 +438,6 @@ program test_time_propagator_pic_3d3v_vm_clamped_disgrad_trafo
   call maxwell_solver%compute_E_from_rho( rho, efield)
   bfield = 0._f64
   bfield(n_total0+n_total1+1:n_total0+2*n_total1) = params(1)
-
-  propagator%max_iter=10
 
   ! Reset particle info
   ! Initialize particles from particle_info_ref
