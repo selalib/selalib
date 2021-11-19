@@ -480,20 +480,20 @@ contains
     elseif (form == 1 ) then
        deg = 1
        deg(component) = 2
-       call multiply_mass_3dkron( self, deg, coefs2, self%work(1:self%n_total) )
+       call multiply_mass_3dkron( self, deg, coefs2, self%work0 )
     elseif( form == 2) then
        deg = 2
        deg(component) = 1
-       call multiply_mass_3dkron( self, deg, coefs2, self%work(1:self%n_total) )
+       call multiply_mass_3dkron( self, deg, coefs2, self%work0 )
     elseif( form == 3) then
        deg = 2
-       call multiply_mass_3dkron( self, deg, coefs2, self%work(1:self%n_total) )
+       call multiply_mass_3dkron( self, deg, coefs2, self%work0 )
     else
        print*, 'Wrong form.'
     end if
 
 
-    r = sum(coefs1*self%work(1:self%n_total))
+    r = sum(coefs1*self%work0)
 
   end function inner_product_3d_fem
 

@@ -40,7 +40,6 @@ module sll_m_time_propagator_pic_vm_1d2v_disgradEC
 
      type(sll_t_time_propagator_pic_vm_1d2v_helper) :: helper !< helper
      logical    :: electrostatic = .false. !< true for electrostatic simulation
-
    contains
 
      procedure :: lie_splitting => lie_splitting_pic_vm_1d2v_disgradEC !> Lie splitting propagator
@@ -81,6 +80,7 @@ contains
           call self%helper%advect_eb( dt*0.5_f64 )
        end do
     end if
+
 
   end subroutine strang_splitting_pic_vm_1d2v_disgradEC
 
@@ -228,7 +228,6 @@ contains
          kernel_smoother_0, &
          kernel_smoother_1, &
          particle_group, &
-         phi_dofs, &
          efield_dofs, &
          bfield_dofs, &
          x_min, &
@@ -267,7 +266,6 @@ contains
     class(sll_c_particle_mesh_coupling_1d), target,          intent( in )  :: kernel_smoother_0  !< Kernel smoother
     class(sll_c_particle_mesh_coupling_1d), target,          intent( in )  :: kernel_smoother_1  !< Kernel smoother
     class(sll_t_particle_array), target,                  intent( in )  :: particle_group !< Particle group
-    sll_real64, target,                            intent(in)  :: phi_dofs(:) !< array for the coefficients of the scalar potential
     sll_real64, target,                                   intent( in )  :: efield_dofs(:,:) !< array for the coefficients of the efields 
     sll_real64, target,                                   intent( in )  :: bfield_dofs(:) !< array for the coefficients of the bfield
     sll_real64,                                           intent( in )  :: x_min !< Lower bound of x domain
@@ -318,7 +316,6 @@ contains
          kernel_smoother_0, &
          kernel_smoother_1, &
          particle_group, &
-         phi_dofs,&
          efield_dofs, &
          bfield_dofs, &
          x_min, &

@@ -148,6 +148,7 @@ contains
        filter, &
        boundary_particles, &
        solver_tolerance, &
+       iter_tolerance, max_iter, &
        betar, &
        force_sign, &
        electrostatic, &
@@ -166,6 +167,8 @@ contains
     class(sll_c_filter_base_3d), target :: filter !< filter
     sll_int32, optional,                           intent( in ) :: boundary_particles !< particle boundary conditions
     sll_real64, optional,                          intent( in ) :: solver_tolerance !< solver tolerance
+     sll_real64, optional,                          intent( in ) :: iter_tolerance !< iteration tolerance
+    sll_int32,  optional,                          intent( in ) :: max_iter !< maximal number of iterations
     sll_real64, optional, intent(in) :: betar(2) !< reciprocal plasma beta
     sll_real64, optional, intent(in) :: force_sign !< sign of particle force
     logical, optional, intent(in)    :: electrostatic !< true for electrostatic simulation
@@ -173,9 +176,9 @@ contains
     class(sll_t_control_variates), optional, target, intent(in) :: control_variate !< Control variate (if delta f)
     logical, optional, intent(in)    :: jmean !< logical for mean value of current
     !local variables
-    sll_real64 :: solver_tolerance_set
+    sll_real64 :: solver_tolerance_set, iter_tolerance_set
     sll_real64 :: betar_set(2), force_sign_set
-    sll_int32 :: boundary_particles_set
+    sll_int32 :: boundary_particles_set, max_iter_set
     logical :: jmean_set
 
     if( present(boundary_particles) )then
@@ -188,6 +191,18 @@ contains
        solver_tolerance_set = solver_tolerance
     else
        solver_tolerance_set = 1d-12
+    end if
+
+    if (present(iter_tolerance) )  then
+       iter_tolerance_set = iter_tolerance
+    else
+       iter_tolerance_set = 1d-10
+    end if
+
+    if (present(max_iter) )  then
+       max_iter_set = max_iter
+    else
+       max_iter_set = 10
     end if
 
     if (present(betar) )  then
@@ -224,6 +239,8 @@ contains
             filter, &
             boundary_particles=boundary_particles_set, &
             solver_tolerance=solver_tolerance_set, &
+            iter_tolerance=iter_tolerance_set, &
+            max_iter = max_iter_set, &
             betar=betar_set, &
             force_sign=force_sign_set, &
             control_variate = control_variate,&
@@ -240,6 +257,8 @@ contains
             filter, &
             boundary_particles=boundary_particles_set, &
             solver_tolerance=solver_tolerance_set, &
+            iter_tolerance=iter_tolerance_set, &
+            max_iter = max_iter_set, &
             betar=betar_set, &
             force_sign=force_sign_set, &
             jmean=jmean_set)
