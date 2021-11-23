@@ -124,8 +124,19 @@ module sll_m_maxwell_3d_fem
      type( sll_t_linear_operator_schur_eb_3d ) :: linear_op_schur_eb !< Schur complement operator for advect_eb
      type( sll_t_linear_solver_mgmres )        :: linear_solver_schur_eb !< Schur complement solver for advect_eb
 
-     logical :: adiabatic_electrons = .false. !< flag if adiabatic electrons are used
+     type(sll_t_linear_operator_curl_3d) :: curl_matrix  !< curl matrix
+     type(sll_t_linear_operator_penalized)  :: curl_operator !< curl matrix with constraint on constant vector
+     type(sll_t_linear_solver_cg)  :: curl_solver !< CG solver to invert curl matrix
+     !type(sll_t_linear_solver_mgmres)  :: curl_solver !< CG solver to invert curl matrix
+     
+     type(sll_t_linear_operator_MG) :: MG_operator
+     
+     type(sll_t_linear_operator_GTM) :: GTM_operator
+     
+     type(sll_t_uzawa_iterator) :: uzawa_iterator
 
+     logical :: adiabatic_electrons = .false. !< flag if adiabatic electrons are used
+     
    contains
      procedure :: &
           compute_E_from_B => sll_s_compute_e_from_b_3d_fem !< Solve E and B part of Amperes law with B constant in time
@@ -670,9 +681,9 @@ contains
 
     call self%poisson_matrix%create( self%mass1_operator, self%n_dofs, self%delta_x )
     ! Penalized Poisson operator
-    allocate(nullspace(1,1:self%n_total))
+    allocate(nullspace(1,1:3*self%n_total))
     nullspace(1,:) = 1.0_f64
-    call self%poisson_operator%create( linear_operator=self%poisson_matrix, vecs=nullspace, n_dim_nullspace=1 )
+    call self%poisson_operator%create( linear_operator=self%poisson_matrix, vecs=nullspace(:,1:self%n_total), n_dim_nullspace=1 )
     ! Poisson solver
     call self%poisson_solver%create( self%poisson_operator )
     self%poisson_solver%null_space = .true.
@@ -688,6 +699,16 @@ contains
     self%linear_solver_schur_eb%rtol = self%solver_tolerance
     !self%linear_solver_schur_eb%verbose = .true.
 
+      call self%curl_matrix%create( self%mass1_operator, self%mass2_operator, self%n_dofs, self%delta_x   )
+    call self%curl_operator%create( linear_operator=self%curl_matrix, vecs=nullspace, n_dim_nullspace=1 )
+    call self%curl_solver%create( self%curl_matrix )!operator )
+    !self%curl_solver%null_space = .true.
+    self%curl_solver%atol = self%solver_tolerance
+    self%curl_solver%verbose = .true.
+
+    call self%MG_operator%create( self%mass1_operator, self%n_dofs, self%delta_x )
+    call self%GTM_operator%create( self%mass1_operator, self%n_dofs, self%delta_x )
+    call self%uzawa_iterator%create( self%curl_solver, self%MG_operator, self%GTM_operator )
   contains
     function profile_m0( x, component)
       sll_real64 :: profile_m0

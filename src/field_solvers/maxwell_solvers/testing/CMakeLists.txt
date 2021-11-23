@@ -118,3 +118,8 @@ SET_TESTS_PROPERTIES(maxwell_3d_fem PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" 
 
  ADD_TEST(NAME maxwell_clamped_3d_trafo COMMAND test_maxwell_clamped_3d_trafo)
  SET_TESTS_PROPERTIES(maxwell_clamped_3d_trafo PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 120)
+
+ ADD_EXECUTABLE(test_curl_curl_part test_curl_curl_part.F90)
+ TARGET_LINK_LIBRARIES(test_curl_curl_part sll_maxwell_solvers)
+
+ 

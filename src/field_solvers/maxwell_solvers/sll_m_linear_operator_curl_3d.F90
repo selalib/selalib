@@ -35,18 +35,17 @@ module sll_m_linear_operator_curl_3d
 
 contains
 
-  subroutine create_linear_operator_curl_3d( self, mass1, mass2, n_total, n_dofs, delta_x )
+  subroutine create_linear_operator_curl_3d( self, mass1, mass2, n_dofs, delta_x )
     class(sll_t_linear_operator_curl_3d), intent( inout ) :: self !< Linear operator object
     type(sll_t_linear_operator_block), target :: mass1   !< block mass matrix
     type(sll_t_linear_operator_block), target :: mass2   !< block mass matrix
-    sll_int32  :: n_total !< product of number of degrees of freedom
     sll_int32  :: n_dofs(3) !< number of degrees of freedom
     sll_real64 :: delta_x(3) !< cell size
 
     self%mass1 => mass1
     self%mass2 => mass2
 
-    self%n_total = n_total
+    self%n_total = product(n_dofs)
     self%n_dofs = n_dofs
     self%delta_x = delta_x
 
@@ -82,22 +81,22 @@ contains
 
     ! Compute C^T M2 C x
     call sll_s_multiply_ct( self%n_dofs, self%delta_x, scratch2, y )
+!!$
+    ! Compute M1 x
+    call self%mass1%dot( x, scratch1 )
 
-!!$    ! Compute M1 x
-!!$    call self%mass1%dot( x, scratch1 )
-!!$
-!!$    ! Compute G^T M1 x
-!!$    call sll_s_multiply_gt( self%n_dofs, self%delta_x, scratch1, scratch2(1:self%n_total) )
-!!$
-!!$     ! Compute G G^T M1 x
-!!$    call sll_s_multiply_g( self%n_dofs, self%delta_x, scratch2(1:self%n_total), scratch1 )
-!!$
-!!$    ! Compute M1 G G^T M_1 x
-!!$    call self%mass1%dot( scratch1, scratch2 )
+    ! Compute G^T M1 x
+    call sll_s_multiply_gt( self%n_dofs, self%delta_x, scratch1, scratch2(1:self%n_total) )
+
+     ! Compute G G^T M1 x
+    call sll_s_multiply_g( self%n_dofs, self%delta_x, scratch2(1:self%n_total), scratch1 )
+
+    ! Compute M1 G G^T M_1 x
+    call self%mass1%dot( scratch1, scratch2 )
 
     ! Sum up the two parts
-    !y = y + scratch2
-
+    y = y + scratch2
+    
   end subroutine dot_curl_3d
 
 

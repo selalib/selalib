@@ -74,17 +74,17 @@ contains
     sll_real64, intent(   out ) :: unknown(:) !< Outputvariable
     !local variables
     sll_real64 :: rhs1(3*self%n_total)
-    sll_real64 :: x2(self%n_total)
+    sll_real64 :: x0(self%n_total)
     sll_int32  :: itr_used
     sll_real64 :: res
     logical :: flag
     
-    x2 = self%x_0
-    call self%operator_b%dot(x2, rhs1)
+    x0 = self%x_0
+    call self%operator_b%dot(x0, rhs1)
     rhs1 = rhs - rhs1
     call self%solver_a%solve(rhs1, unknown)
     
-    call uzawa_iterator(self, unknown, x2, itr_used, res)
+    call uzawa_iterator(self, unknown, x0, itr_used, res)
 
     call self%check_convergence( i_iteration=itr_used, &
          & flag=flag, &
@@ -93,39 +93,46 @@ contains
   end subroutine solve_uzawa_iterator
 
 
-  subroutine uzawa_iterator(self, x1, x2, niterx, res) 
+  subroutine uzawa_iterator(self, x1, x0, niterx, res) 
     class(sll_t_uzawa_iterator), intent( in ) :: self !< Uzawa iterator
     sll_real64,                  intent(inout) :: x1(:)
-    sll_real64,                  intent(inout) :: x2(:)
+    sll_real64,                  intent(inout) :: x0(:)
     sll_int32,                   intent(out) :: niterx
     sll_real64,                  intent(out) :: res
     !local variables
     sll_int32 :: k
     sll_real64 :: alpha, beta
+    sll_real64 :: a0(self%n_total), p0(self%n_total), r0(self%n_total)
     sll_real64 :: a1(3*self%n_total), p1(3*self%n_total)
-    sll_real64 :: a2(self%n_total), p2(self%n_total), r2(self%n_total)
+  
 
-    call self%operator_bt%dot(x1, r2)
-    p2=r2
+    call self%operator_bt%dot(x1, r0)
+    p0=r0
     
     do k = 1, self%n_maxiter
        niterx    = k
        
-       call self%operator_b%dot(p2, a1)
+       call self%operator_b%dot(p0, a1)
        call self%solver_a%solve(a1, p1)
-       call self%operator_bt%dot(p1, a2)
+       call self%operator_bt%dot(p1, a0)
        
-       alpha = sum(p2*a2)/sum(p2*r2)
+       alpha = sum(p0*a0)/sum(p0*r0)
        
-       x2 = x2 + alpha * p2
-       r2 = r2 - alpha * a2
+       x0 = x0 + alpha * p0
+       r0 = r0 - alpha * a0
        x1 = x1 - alpha * p1
        
-       res = sqrt(sum(r2*r2)/self%n_total)
+       res = sqrt(sum(r0*r0)/self%n_total)
        if( res <= self%atol ) exit
 
-       beta = sum(r2*a2)/sum(p2*a2)
-       p2 = r2 - beta*p2
+       if(sqrt(sum(p0*p0)/self%n_total)<= self%atol) then
+          print*, 'error uzawa iterator: krylov subspace exhausted, set p0 to new value'
+          p0 = r0
+       else
+          beta = sum(r0*a0)/sum(p0*a0)
+          p0 = r0 - beta*p0
+       end if
+       
 
     end do
     
