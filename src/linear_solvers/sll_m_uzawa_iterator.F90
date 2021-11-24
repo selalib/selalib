@@ -86,6 +86,8 @@ contains
     
     call uzawa_iterator(self, unknown, x0, itr_used, res)
 
+    self%x_0 = x0
+
     call self%check_convergence( i_iteration=itr_used, &
          & flag=flag, &
          & r_err=res)

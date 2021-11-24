@@ -22,6 +22,7 @@ module sll_m_linear_operator_curl_3d
      type(sll_t_linear_operator_block), pointer :: mass2   !< block mass matrix
      sll_int32 :: n_dofs(3) !< number of degrees of freedom
      sll_real64 :: delta_x(3) !< cell size
+     sll_real64 :: epsilon = 1._f64
      sll_int32 :: n_total !< product of number of degrees of freedom
 
    contains
@@ -94,8 +95,8 @@ contains
     ! Compute M1 G G^T M_1 x
     call self%mass1%dot( scratch1, scratch2 )
 
-    ! Sum up the two parts
-    y = y + scratch2
+    ! y = (C^T M2 C + epsilon M1 G G^T M_1) x
+    y = y + self%epsilon*scratch2
     
   end subroutine dot_curl_3d
 
