@@ -456,6 +456,8 @@ contains
     call sll_s_compute_rhs_fem( self, form,  component, self%work(1:self%n_total), func1 )
 
     select case( form )
+    case( 0 )
+       call self%mass0_solver%solve( self%work(1:self%n_total), coefs_dofs )
     case( 1 )
        call self%mass_1_solver(component)%solve( self%work(1:self%n_total), coefs_dofs )
     case( 2 )

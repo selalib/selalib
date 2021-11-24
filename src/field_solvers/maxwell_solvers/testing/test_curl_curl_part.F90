@@ -73,7 +73,7 @@ program test_curl_curl_part
 
   ! Define computational domain
   eta1_min = .0_f64; eta1_max = 2.0_f64*sll_p_pi
-  nc_eta = [16, 8, 32]
+  nc_eta = [32, 16, 32]
   nc_total = product(nc_eta)
   Lx(1) = eta1_max-eta1_min
   Lx(2) = Lx(1); Lx(3) = Lx(2)
@@ -82,7 +82,7 @@ program test_curl_curl_part
   domain(2,:) = [eta1_min, eta1_max]
   domain(3,:) = [eta1_min, eta1_max]
   ! Set spline degree of 0-forms
-  deg = [2,2,3]
+  deg =3! [2,2,3]
   ! Time loop
   delta_t = 0.01_f64
   nsteps = 3
@@ -118,45 +118,51 @@ program test_curl_curl_part
 
 
   current = 0._f64
-  call maxwell_3d%compute_rhs_from_function( 1, 1, current(1:nc_total), cos_k )
-  call maxwell_3d%compute_rhs_from_function( 1, 3, current(nc_total*2+1:nc_total*3), cos_k )
-  current(1:nc_total) = 3._f64* current(1:nc_total)
-  current(nc_total*2+1:nc_total*3) = -3._f64*current(nc_total*2+1:nc_total*3)
-!!$  call maxwell_3d%compute_rhs_from_function( 1, 1, current(1:nc_total), jx )
-!!$  call maxwell_3d%compute_rhs_from_function( 1, 2, current(nc_total+1:nc_total*2), jy )
-!!$  call maxwell_3d%compute_rhs_from_function( 1, 3, current(nc_total*2+1:nc_total*3), jz )
+!!$  call maxwell_3d%compute_rhs_from_function( 1, 1, current(1:nc_total), cos_k )
+!!$  call maxwell_3d%compute_rhs_from_function( 1, 3, current(nc_total*2+1:nc_total*3), cos_k )
+!!$  current(1:nc_total) = 3._f64* current(1:nc_total)
+!!$  current(nc_total*2+1:nc_total*3) = -3._f64*current(nc_total*2+1:nc_total*3)
+  call maxwell_3d%compute_rhs_from_function( 1, 1, current(1:nc_total), jx )
+  call maxwell_3d%compute_rhs_from_function( 1, 2, current(nc_total+1:nc_total*2), jy )
+  call maxwell_3d%compute_rhs_from_function( 1, 3, current(nc_total*2+1:nc_total*3), jz )
 !!$  call random_number( efield )
 !!$  call maxwell_3d%multiply_ct( efield, current )
-  call random_number( current )
+  !call random_number( current )
   rho = 0._f64
   call maxwell_3d%multiply_gt( current, rho )
   print*, 'rhs divergence', maxval(abs(rho))
 
+ ! maxwell_3d%curl_matrix%epsilon = delta_t
   !call maxwell_3d%curl_solver%solve( current, efield )
   call maxwell_3d%uzawa_iterator%solve( current, efield )
-  
+
   efield_ref = 0._f64
-  call maxwell_3d%L2projection( 1, 1, efield_ref(1:nc_total), cos_k )
-  call maxwell_3d%L2projection( 1, 3, efield_ref(nc_total*2+1:nc_total*3), cos_k )
-  efield_ref(nc_total*2+1:nc_total*3) = -efield_ref(nc_total*2+1:nc_total*3)
-!!$
-!!$  call maxwell_3d%L2projection( 1, 1, efield_ref(1:nc_total), ax )
-!!$  call maxwell_3d%L2projection( 1, 2, efield_ref(nc_total+1:nc_total*2), ay )
-!!$  call maxwell_3d%L2projection( 1, 3, efield_ref(nc_total*2+1:nc_total*3), az )
+!!$  call maxwell_3d%L2projection( 1, 1, efield_ref(1:nc_total), cos_k )
+!!$  call maxwell_3d%L2projection( 1, 3, efield_ref(nc_total*2+1:nc_total*3), cos_k )
+!!$  efield_ref(nc_total*2+1:nc_total*3) = -efield_ref(nc_total*2+1:nc_total*3)
+
+  call maxwell_3d%L2projection( 1, 1, efield_ref(1:nc_total), ax )
+  call maxwell_3d%L2projection( 1, 2, efield_ref(nc_total+1:nc_total*2), ay )
+  call maxwell_3d%L2projection( 1, 3, efield_ref(nc_total*2+1:nc_total*3), az )
   
   rho = 0._f64
   call maxwell_3d%compute_rho_from_E( efield_ref, rho )
   print*, 'lhs divergence', maxval(abs(rho))
 
+  call maxwell_3d%L2projection( 0, 1, rho_ref, cos_k )
+   
   call maxwell_3d%curl_operator%dot(efield_ref, efield_val )
+  call maxwell_3d%MG_operator%dot(rho_ref, bfield_val )
 
+  efield_val = efield_val + bfield_val
+  
   print*, 'error operator', maxval(abs(efield_val(1:nc_total) - current(1:nc_total) ) ), maxval(abs(efield_val(nc_total+1:nc_total*2) - current(nc_total+1:nc_total*2) ) ), maxval(abs(efield_val(nc_total*2+1:nc_total*3) - current(nc_total*2+1:nc_total*3) ) )
 
 !!$  call sll_s_plot_two_fields_1d('currentx',nc_total,efield_val(1:nc_total),current(1:nc_total),istep,time)
 !!$  call sll_s_plot_two_fields_1d('currenty',nc_total,efield_val(nc_total+1:nc_total*2),current(nc_total+1:nc_total*2),istep,time)
 !!$  call sll_s_plot_two_fields_1d('currentz',nc_total,efield_val(nc_total*2+1:nc_total*3),current(nc_total*2+1:nc_total*3),istep,time)
 
-  print*, 'error solver', maxval(abs(efield(1:nc_total) -efield_ref(1:nc_total) ) ), maxval(abs(efield(nc_total+1:nc_total*2) -efield_ref(nc_total+1:nc_total*2) ) ), maxval(abs(efield(nc_total*2+1:nc_total*3) -efield_ref(nc_total*2+1:nc_total*3) ) )
+  print*, 'error solver', maxval(abs(efield(1:nc_total) -efield_ref(1:nc_total) ) ), maxval(abs(efield(nc_total+1:nc_total*2) -efield_ref(nc_total+1:nc_total*2) ) ), maxval(abs(efield(nc_total*2+1:nc_total*3) -efield_ref(nc_total*2+1:nc_total*3) ) ), maxval(abs(rho_ref- maxwell_3d%uzawa_iterator%x_0))
 
 
 
@@ -227,21 +233,21 @@ contains
     sll_real64             :: jx
     sll_real64, intent(in) :: x(3)
 
-    jx = 3._f64*( sin(x(1)+x(2)+x(3)) + cos(x(1)+x(2)+x(3)) )
+    jx = 3._f64*( sin(x(1)+x(2)+x(3)) + cos(x(1)+x(2)+x(3)) ) -sin(x(1)+x(2)+x(3))
   end function jx
 
   function jy(x)
     sll_real64             :: jy
     sll_real64, intent(in) :: x(3)
 
-    jy = -3._f64*( cos(x(1)+x(2)+x(3)) - 4._f64* cos(2._f64*(x(1)+x(2)+x(3)) ) )
+    jy = -3._f64*( cos(x(1)+x(2)+x(3)) - 4._f64* cos(2._f64*(x(1)+x(2)+x(3)) ) )  -sin(x(1)+x(2)+x(3))
   end function jy
 
   function jz(x)
     sll_real64             :: jz
     sll_real64, intent(in) :: x(3)
 
-    jz = -3._f64*( sin(x(1)+x(2)+x(3)) + 4._f64* cos(2._f64*(x(1)+x(2)+x(3)) ) )
+    jz = -3._f64*( sin(x(1)+x(2)+x(3)) + 4._f64* cos(2._f64*(x(1)+x(2)+x(3)) ) )  -sin(x(1)+x(2)+x(3))
   end function jz
 
   function ax(x)
