@@ -6,14 +6,14 @@ module sll_m_linear_operator_maxwell_eb_schur
 #include "sll_working_precision.h"
   use sll_m_linear_operator_abstract
 
+  use sll_m_linear_operator_block, only : &
+       sll_t_linear_operator_block
+  
   use sll_m_constants
 
   use sll_m_fft
   
   use sll_m_spline_fem_utilities
-  
-  use sll_m_maxwell_3d_base, only : &
-       sll_c_maxwell_3d_base
 
   implicit none
 
@@ -23,8 +23,11 @@ module sll_m_linear_operator_maxwell_eb_schur
   private
 
   type, extends(sll_t_linear_operator_abstract) :: sll_t_linear_operator_maxwell_eb_schur
-     class( sll_c_maxwell_3d_base ), pointer :: maxwell_solver => null()
-
+     type(sll_t_linear_operator_block), pointer :: mass1   !< block mass matrix
+     type(sll_t_linear_operator_block), pointer :: mass2   !< block mass matrix
+     sll_int32 :: n_total  !< product of number of degrees of freedom
+     sll_int32 :: n_dofs(3) !< number of degrees of freedom
+     sll_real64 :: delta_x(3) !< cell size
      sll_real64 :: factor
 
      ! For Fourier variant
@@ -52,12 +55,12 @@ module sll_m_linear_operator_maxwell_eb_schur
    contains
      procedure :: create => create_maxwell_eb
      procedure :: free => free_maxwell_eb
-     procedure :: dot => dot_maxwell_eb !dot_maxwell_eb_fourier
+     procedure :: dot => dot_maxwell_eb_fourier !dot_maxwell_eb !
      procedure :: print_info => print_info_maxwell_eb
      procedure :: dot_inverse => inverse_dot_maxwell_eb_fourier
-     procedure :: dot_inv_mass_1_1
-     procedure :: dot_inv_mass_1_2
-     procedure :: dot_inv_mass_1_3
+    ! procedure :: dot_inv_mass_1_1
+    ! procedure :: dot_inv_mass_1_2
+    ! procedure :: dot_inv_mass_1_3
 
      
   end type sll_t_linear_operator_maxwell_eb_schur
@@ -65,23 +68,49 @@ module sll_m_linear_operator_maxwell_eb_schur
 
 contains
 
-  subroutine create_maxwell_eb( self, maxwell_solver )
+  subroutine create_maxwell_eb( self, eig_values_mass_0_1, eig_values_mass_0_2, eig_values_mass_0_3, eig_values_mass_1_1, eig_values_mass_1_2, eig_values_mass_1_3, mass1, mass2, n_dofs, delta_x )
     class(sll_t_linear_operator_maxwell_eb_schur), intent( inout ) :: self
-    class( sll_c_maxwell_3d_base ), target, intent( in )  :: maxwell_solver
+    sll_real64 :: eig_values_mass_0_1(:)
+    sll_real64 :: eig_values_mass_0_2(:)
+    sll_real64 :: eig_values_mass_0_3(:)
+    sll_real64 :: eig_values_mass_1_1(:)
+    sll_real64 :: eig_values_mass_1_2(:)
+    sll_real64 :: eig_values_mass_1_3(:)
+    type(sll_t_linear_operator_block), target :: mass1   !< block mass matrix
+    type(sll_t_linear_operator_block), target :: mass2   !< block mass matrix
+    sll_int32  :: n_dofs(3) !< number of degrees of freedom
+    sll_real64 :: delta_x(3) !< cell size
+    !local variables
+    sll_real64 :: angle
+    sll_int32 :: j
+    sll_comp64 :: array1d_x(n_dofs(1))
+    sll_comp64 :: array1d_y(n_dofs(2))
+    sll_comp64 :: array1d_z(n_dofs(3))
 
-    sll_real64 :: angle, dx
-    sll_int32 :: j, n_dofs, ndofs(3)
-    sll_comp64 :: array1d_x(maxwell_solver%n_dofs(1))
-    sll_comp64 :: array1d_y(maxwell_solver%n_dofs(2))
-    sll_comp64 :: array1d_z(maxwell_solver%n_dofs(3))
-    sll_real64, allocatable :: mass_line_0(:)
-    sll_real64, allocatable :: mass_line_1(:)
-    sll_int32 :: degree(3)
-    self%maxwell_solver => maxwell_solver
 
-    degree = self%maxwell_solver%s_deg_0
-    self%n_rows = self%maxwell_solver%n_total*3
-    self%n_cols = self%maxwell_solver%n_total*3
+    allocate( self%eig_values_mass_0_1(n_dofs(1)) )
+    allocate( self%eig_values_mass_0_2(n_dofs(2)) )
+    allocate( self%eig_values_mass_0_3(n_dofs(3)) )
+    allocate( self%eig_values_mass_1_1(n_dofs(1)) )
+    allocate( self%eig_values_mass_1_2(n_dofs(2)) )
+    allocate( self%eig_values_mass_1_3(n_dofs(3)) )
+
+    self%eig_values_mass_0_1 = eig_values_mass_0_1
+    self%eig_values_mass_1_1 = eig_values_mass_1_1
+    self%eig_values_mass_0_2 = eig_values_mass_0_2
+    self%eig_values_mass_1_2 = eig_values_mass_1_2
+    self%eig_values_mass_0_3 = eig_values_mass_0_3
+    self%eig_values_mass_1_3 = eig_values_mass_1_3
+
+    self%mass1 => mass1
+    self%mass2 => mass2
+  
+    self%n_dofs = n_dofs
+    self%delta_x = delta_x
+    self%n_total = product(self%n_dofs)
+
+    self%n_rows = self%n_total*3
+    self%n_cols = self%n_total*3
 
     self%n_global_rows = self%n_rows
     self%n_global_cols = self%n_cols
@@ -89,104 +118,54 @@ contains
     ! Fourier product
 
     ! Eigenvalues of derivative matrices
-    dx = self%maxwell_solver%delta_x(1)
-    n_dofs = self%maxwell_solver%n_dofs(1)
-    
-    allocate( self%eig_values_d1(1:n_dofs) )
-    allocate( self%eig_values_d1t(1:n_dofs ) )
+    allocate( self%eig_values_d1(1:self%n_dofs(1)) )
+    allocate( self%eig_values_d1t(1:self%n_dofs(1) ) )
     
     self%eig_values_d1(1) = cmplx(0.0_f64, 0.0_f64, f64)
     self%eig_values_d1t(1) = cmplx(0.0_f64, 0.0_f64, f64)
-    do j=2,n_dofs
-       angle = sll_p_twopi*real(j-1,f64)/real(n_dofs, f64)
+    do j=2,self%n_dofs(1)
+       angle = sll_p_twopi*real(j-1,f64)/real(self%n_dofs(1), f64)
        
-       self%eig_values_d1(j) = cmplx((1.0_f64 - cos(angle))/dx,sin(angle)/dx, f64 )
-       self%eig_values_d1t(j) = cmplx((1.0_f64 - cos(angle))/dx,-sin(angle)/dx, f64 )
+       self%eig_values_d1(j) = cmplx((1.0_f64 - cos(angle))/self%delta_x(1),sin(angle)/self%delta_x(1), f64 )
+       self%eig_values_d1t(j) = cmplx((1.0_f64 - cos(angle))/self%delta_x(1),-sin(angle)/self%delta_x(1), f64 )
     end do
+
     
-    dx = self%maxwell_solver%delta_x(2)
-    n_dofs = self%maxwell_solver%n_dofs(2)
-    
-    allocate( self%eig_values_d2(1:n_dofs) )
-    allocate( self%eig_values_d2t(1:n_dofs ) )
+    allocate( self%eig_values_d2(1:self%n_dofs(2)) )
+    allocate( self%eig_values_d2t(1:self%n_dofs(2) ) )
     
     self%eig_values_d2(1) =  cmplx(0.0_f64, 0.0_f64, f64)
     self%eig_values_d2t(1) =  cmplx(0.0_f64, 0.0_f64, f64)
-    do j=2,n_dofs
-       angle = sll_p_twopi*real(j-1,f64)/real(n_dofs, f64)
+    do j=2,self%n_dofs(2)
+       angle = sll_p_twopi*real(j-1,f64)/real(self%n_dofs(2), f64)
        
-       self%eig_values_d2(j) = cmplx((1.0_f64 - cos(angle))/dx,sin(angle)/dx, f64 )
-       self%eig_values_d2t(j) = cmplx((1.0_f64 - cos(angle))/dx,-sin(angle)/dx, f64 )
+       self%eig_values_d2(j) = cmplx((1.0_f64 - cos(angle))/self%delta_x(2),sin(angle)/self%delta_x(2), f64 )
+       self%eig_values_d2t(j) = cmplx((1.0_f64 - cos(angle))/self%delta_x(2),-sin(angle)/self%delta_x(2), f64 )
     end do
 
-    dx = self%maxwell_solver%delta_x(3)
-    n_dofs = self%maxwell_solver%n_dofs(3)
-    
-    allocate( self%eig_values_d3(1:n_dofs) )
-    allocate( self%eig_values_d3t(1:n_dofs ) )
+    allocate( self%eig_values_d3(1:self%n_dofs(3)) )
+    allocate( self%eig_values_d3t(1:self%n_dofs(3) ) )
 
     self%eig_values_d3(1) = cmplx(0.0_f64, 0.0_f64, f64)
     self%eig_values_d3t(1) = cmplx(0.0_f64, 0.0_f64, f64)
-    do j=2,n_dofs
-       angle = sll_p_twopi*real(j-1,f64)/real(n_dofs, f64)
+    do j=2,self%n_dofs(3)
+       angle = sll_p_twopi*real(j-1,f64)/real(self%n_dofs(3), f64)
        
-       self%eig_values_d3(j) = cmplx((1.0_f64 - cos(angle))/dx,sin(angle)/dx, f64 )
-       self%eig_values_d3t(j) = cmplx((1.0_f64 - cos(angle))/dx,-sin(angle)/dx, f64 )
+       self%eig_values_d3(j) = cmplx((1.0_f64 - cos(angle))/self%delta_x(3),sin(angle)/self%delta_x(3), f64 )
+       self%eig_values_d3t(j) = cmplx((1.0_f64 - cos(angle))/self%delta_x(3),-sin(angle)/self%delta_x(3), f64 )
     end do
         
-    n_dofs = self%maxwell_solver%n_dofs(1)
-    dx = self%maxwell_solver%delta_x(1)
-    allocate( self%eig_values_mass_0_1(n_dofs) )
-    allocate( self%eig_values_mass_1_1(n_dofs) )
-    allocate( mass_line_0(degree(1)+1) )
-    allocate( mass_line_1(degree(1)) )
-    ! Eigenvalues of mass matrices
-    call sll_s_spline_fem_mass_line( degree(1), mass_line_0 )
-    call sll_s_spline_fem_mass_line( degree(1)-1, mass_line_1 )
-    call sll_s_spline_fem_compute_mass_eig( n_dofs, degree(1),  mass_line_0*dx, self%eig_values_mass_0_1 )
-    call sll_s_spline_fem_compute_mass_eig( n_dofs, degree(1)-1, mass_line_1*dx, self%eig_values_mass_1_1 )
-    deallocate( mass_line_0 )
-    deallocate( mass_line_1 )
-    
-    n_dofs = self%maxwell_solver%n_dofs(2)
-    dx = self%maxwell_solver%delta_x(2)
-    allocate( self%eig_values_mass_0_2(n_dofs) )
-    allocate( self%eig_values_mass_1_2(n_dofs) )
-    allocate( mass_line_0(degree(2)+1) )
-    allocate( mass_line_1(degree(2)) )
-    ! Eigenvalues of mass matrices
-    call sll_s_spline_fem_mass_line( degree(2), mass_line_0 )
-    call sll_s_spline_fem_mass_line( degree(2)-1, mass_line_1 )
-    call sll_s_spline_fem_compute_mass_eig( n_dofs, degree(2), mass_line_0*dx, self%eig_values_mass_0_2 )
-    call sll_s_spline_fem_compute_mass_eig( n_dofs, degree(2)-1, mass_line_1*dx, self%eig_values_mass_1_2 )
-    deallocate( mass_line_0 )
-    deallocate( mass_line_1 )
-    
-    n_dofs = self%maxwell_solver%n_dofs(3)
-    dx = self%maxwell_solver%delta_x(3)
-    allocate( self%eig_values_mass_0_3(n_dofs) )
-    allocate( self%eig_values_mass_1_3(n_dofs) )
-    allocate( mass_line_0(degree(3)+1) )
-    allocate( mass_line_1(degree(3)) )
-    ! Eigenvalues of mass matrices
-    call sll_s_spline_fem_mass_line( degree(3), mass_line_0 )
-    call sll_s_spline_fem_mass_line( degree(3)-1, mass_line_1 )
-    call sll_s_spline_fem_compute_mass_eig( n_dofs, degree(3), mass_line_0*dx, self%eig_values_mass_0_3 )
-    call sll_s_spline_fem_compute_mass_eig( n_dofs, degree(3)-1, mass_line_1*dx, self%eig_values_mass_1_3 )  
-    deallocate( mass_line_0 )
-    deallocate( mass_line_1 )
     
 
     ! Initialize fft
-    ndofs = self%maxwell_solver%n_dofs
-    call sll_s_fft_init_c2c_1d( self%fft1, ndofs(1), array1d_x, array1d_x, sll_p_fft_forward)
-    call sll_s_fft_init_c2c_1d( self%fft2, ndofs(2), array1d_y, array1d_y, sll_p_fft_forward)
-    call sll_s_fft_init_c2c_1d( self%fft3, ndofs(3), array1d_z, array1d_z, sll_p_fft_forward)
-    call sll_s_fft_init_c2c_1d( self%ifft1, ndofs(1), array1d_x, array1d_x, &
+    call sll_s_fft_init_c2c_1d( self%fft1, self%n_dofs(1), array1d_x, array1d_x, sll_p_fft_forward)
+    call sll_s_fft_init_c2c_1d( self%fft2, self%n_dofs(2), array1d_y, array1d_y, sll_p_fft_forward)
+    call sll_s_fft_init_c2c_1d( self%fft3, self%n_dofs(3), array1d_z, array1d_z, sll_p_fft_forward)
+    call sll_s_fft_init_c2c_1d( self%ifft1, self%n_dofs(1), array1d_x, array1d_x, &
          sll_p_fft_backward, normalized=.true.)
-    call sll_s_fft_init_c2c_1d( self%ifft2, ndofs(2), array1d_y, array1d_y, &
+    call sll_s_fft_init_c2c_1d( self%ifft2, self%n_dofs(2), array1d_y, array1d_y, &
          sll_p_fft_backward, normalized=.true.)
-    call sll_s_fft_init_c2c_1d( self%ifft3, ndofs(3), array1d_z, array1d_z, &
+    call sll_s_fft_init_c2c_1d( self%ifft3, self%n_dofs(3), array1d_z, array1d_z, &
          sll_p_fft_backward, normalized=.true.)
     
     
@@ -195,64 +174,33 @@ contains
   subroutine free_maxwell_eb( self )
     class( sll_t_linear_operator_maxwell_eb_schur), intent( inout ) :: self
 
-    self%maxwell_solver => null()
+    self%mass1=> null()
+    self%mass2=> null()
     
   end subroutine free_maxwell_eb
 
   
-   subroutine dot_c( self, x, y )
-    class(sll_t_linear_operator_maxwell_eb_schur), intent( in ) :: self
-    sll_real64, intent( in ) :: x(:)
-    sll_real64, intent( inout ) :: y(:)
-
-    call self%maxwell_solver%multiply_c( x, y )
-    
-  end subroutine dot_c
-
   subroutine dot_maxwell_eb( self, x, y )
     class(sll_t_linear_operator_maxwell_eb_schur), intent( in ) :: self
-    sll_real64, intent( in ) :: x(:)
-    sll_real64, intent( out ) :: y(:)
-
-    sll_int32 :: ndofs, comp, istart, iend, j
-    sll_int32 :: deg(3)
-    sll_real64 :: scratch(self%maxwell_solver%n_total*3)
-    
-
-    ndofs = self%maxwell_solver%n_total
+    sll_real64, intent( in    ) :: x(:)
+    sll_real64, intent(   out ) :: y(:)
+    !local variables    
+    sll_real64 :: scratch(self%n_total*3)
 
     ! Compute C x
-    call self%maxwell_solver%multiply_c( x, scratch )!y(ndofs*3+1:ndofs*6) )
+    call sll_s_multiply_c( self%n_dofs, self%delta_x, x, scratch )
 
     ! Compute M2 C x
-    do comp=1,3
-       istart = 1+(comp-1)*ndofs
-       iend =  comp*ndofs
-       deg = 2
-       deg(comp) = 1
-       call self%maxwell_solver%multiply_mass(  deg, scratch(istart:iend), y(istart:iend) )
-      
-    end do
+    call self%mass2%dot( scratch, y )
 
     ! Compute C^T M2 C x
-    call self%maxwell_solver%multiply_ct( y, scratch )
+    call sll_s_multiply_ct( self%n_dofs, self%delta_x, y, scratch )
 
     ! Compute M1 x
-    do comp=1,3
-       istart = 1+(comp-1)*ndofs
-       iend =  comp*ndofs
-       deg = 1
-       deg(comp) = 2
-       call self%maxwell_solver%multiply_mass(  deg, x(istart:iend), y(istart:iend) )
-      
-    end do
+    call self%mass1%dot( x, y )
 
     ! Sum up the two parts
-    do j=1,ndofs*3
-       y(j) = y(j) + self%factor * scratch(j)
-    end do
-    
-
+    y = y + self%factor * scratch
     
   end subroutine dot_maxwell_eb
 
@@ -266,7 +214,7 @@ contains
     sll_int32, intent( in ) :: inde
     sll_real64, intent( in ) :: x(:)
     sll_comp64, intent( out ) :: scratch1(:,:,:,:)
-
+    !local variables
     sll_int32 :: ind, i,j,k
     
     
@@ -318,7 +266,7 @@ contains
     sll_int32, intent( in ) :: inde
     sll_real64, intent( out ) :: y(:)
     sll_comp64, intent( inout ) :: scratch(:,:,:,:)
-
+    !local variables
     sll_int32 :: ind, i,j,k
     
     
@@ -365,33 +313,28 @@ contains
 
     subroutine dot_maxwell_eb_fourier( self, x, y )
     class(sll_t_linear_operator_maxwell_eb_schur), intent( in ) :: self
-    sll_real64, intent( in ) :: x(:)
-    sll_real64, intent( inout ) :: y(:)
-
-    sll_int32 :: ndofs, n_dofs(3)
-    sll_comp64 :: scratch1(self%maxwell_solver%n_dofs(1),self%maxwell_solver%n_dofs(2), self%maxwell_solver%n_dofs(3),3)
-    sll_comp64 :: scratch2(self%maxwell_solver%n_dofs(1),self%maxwell_solver%n_dofs(2), self%maxwell_solver%n_dofs(3),3)
+    sll_real64, intent( in    ) :: x(:)
+    sll_real64, intent(   out ) :: y(:)
+    !local variables
+    sll_comp64 :: scratch1(self%n_dofs(1),self%n_dofs(2), self%n_dofs(3),3)
+    sll_comp64 :: scratch2(self%n_dofs(1),self%n_dofs(2), self%n_dofs(3),3)
     sll_comp64 :: mat(3,3)
-    sll_comp64 :: array1d_x(self%maxwell_solver%n_dofs(1))
-    sll_comp64 :: array1d_y(self%maxwell_solver%n_dofs(2))
-    sll_comp64 :: array1d_z(self%maxwell_solver%n_dofs(3))
+    sll_comp64 :: array1d_x(self%n_dofs(1))
+    sll_comp64 :: array1d_y(self%n_dofs(2))
+    sll_comp64 :: array1d_z(self%n_dofs(3))
     sll_int32 :: i,j,k
     
-
-    ndofs = self%maxwell_solver%n_total
-    n_dofs = self%maxwell_solver%n_dofs
-
     
     ! Compute Fourier transform of input
-    call fft3d( self, array1d_x, array1d_y, array1d_z, n_dofs, 1, x(1:ndofs), scratch1 )
-    call fft3d( self, array1d_x, array1d_y, array1d_z, n_dofs, 2, x(1+ndofs:2*ndofs), scratch1 )
-    call fft3d( self, array1d_x, array1d_y, array1d_z, n_dofs, 3, x(1+2*ndofs:3*ndofs), scratch1 )
+    call fft3d( self, array1d_x, array1d_y, array1d_z, self%n_dofs, 1, x(1:self%n_total), scratch1 )
+    call fft3d( self, array1d_x, array1d_y, array1d_z, self%n_dofs, 2, x(1+self%n_total:2*self%n_total), scratch1 )
+    call fft3d( self, array1d_x, array1d_y, array1d_z, self%n_dofs, 3, x(1+2*self%n_total:3*self%n_total), scratch1 )
 
              
     ! Apply eigenvalues to Fourier coefficient
-    do k=1,n_dofs(3)
-       do j=1,n_dofs(2)
-          do i=1,n_dofs(1)
+    do k=1,self%n_dofs(3)
+       do j=1,self%n_dofs(2)
+          do i=1,self%n_dofs(1)
 
              mat(1,1) = cmplx(self%eig_values_mass_1_1(i)*self%eig_values_mass_0_2(j)*&
                   self%eig_values_mass_0_3(k),kind=f64) + &
@@ -457,9 +400,9 @@ contains
     !scratch2 = scratch1
              
     ! Compute inverse Fourier transform of result
-    call ifft3d( self, array1d_x, array1d_y, array1d_z, n_dofs, 1, scratch2, y(1:ndofs) )
-    call ifft3d( self, array1d_x, array1d_y, array1d_z, n_dofs, 2, scratch2, y(1+ndofs:2*ndofs) )
-    call ifft3d( self, array1d_x, array1d_y, array1d_z, n_dofs, 3, scratch2, y(1+2*ndofs:3*ndofs) )
+    call ifft3d( self, array1d_x, array1d_y, array1d_z, self%n_dofs, 1, scratch2, y(1:self%n_total) )
+    call ifft3d( self, array1d_x, array1d_y, array1d_z, self%n_dofs, 2, scratch2, y(1+self%n_total:2*self%n_total) )
+    call ifft3d( self, array1d_x, array1d_y, array1d_z, self%n_dofs, 3, scratch2, y(1+2*self%n_total:3*self%n_total) )
 
     
   end subroutine dot_maxwell_eb_fourier
@@ -469,33 +412,29 @@ contains
 
   subroutine inverse_dot_maxwell_eb_fourier( self, x, y )
     class(sll_t_linear_operator_maxwell_eb_schur), intent( in ) :: self
-    sll_real64, intent( in ) :: x(:)
-    sll_real64, intent( inout ) :: y(:)
-
-    sll_int32 :: ndofs, n_dofs(3)
-    sll_comp64 :: scratch1(self%maxwell_solver%n_dofs(1),self%maxwell_solver%n_dofs(2), self%maxwell_solver%n_dofs(3),3)
-    sll_comp64 :: scratch2(self%maxwell_solver%n_dofs(1),self%maxwell_solver%n_dofs(2), self%maxwell_solver%n_dofs(3),3)
+    sll_real64, intent( in    ) :: x(:)
+    sll_real64, intent(   out ) :: y(:)
+    !local variables
+    sll_comp64 :: scratch1(self%n_dofs(1),self%n_dofs(2), self%n_dofs(3),3)
+    sll_comp64 :: scratch2(self%n_dofs(1),self%n_dofs(2), self%n_dofs(3),3)
     sll_comp64 :: mat(3,3), imat(3,3)
-    sll_comp64 :: array1d_x(self%maxwell_solver%n_dofs(1))
-    sll_comp64 :: array1d_y(self%maxwell_solver%n_dofs(2))
-    sll_comp64 :: array1d_z(self%maxwell_solver%n_dofs(3))
+    sll_comp64 :: array1d_x(self%n_dofs(1))
+    sll_comp64 :: array1d_y(self%n_dofs(2))
+    sll_comp64 :: array1d_z(self%n_dofs(3))
     sll_int32 :: i,j,k
-    
-
-    ndofs = self%maxwell_solver%n_total
-    n_dofs = self%maxwell_solver%n_dofs
+ 
 
     
     ! Compute Fourier transform of input
-    call fft3d( self, array1d_x, array1d_y, array1d_z, n_dofs, 1, x(1:ndofs), scratch1 )
-    call fft3d( self, array1d_x, array1d_y, array1d_z, n_dofs, 2, x(1+ndofs:2*ndofs), scratch1 )
-    call fft3d( self, array1d_x, array1d_y, array1d_z, n_dofs, 3, x(1+2*ndofs:3*ndofs), scratch1 )
+    call fft3d( self, array1d_x, array1d_y, array1d_z, self%n_dofs, 1, x(1:self%n_total), scratch1 )
+    call fft3d( self, array1d_x, array1d_y, array1d_z, self%n_dofs, 2, x(1+self%n_total:2*self%n_total), scratch1 )
+    call fft3d( self, array1d_x, array1d_y, array1d_z, self%n_dofs, 3, x(1+2*self%n_total:3*self%n_total), scratch1 )
 
              
     ! Apply eigenvalues to Fourier coefficient
-    do k=1,n_dofs(3)
-       do j=1,n_dofs(2)
-          do i=1,n_dofs(1)
+    do k=1,self%n_dofs(3)
+       do j=1,self%n_dofs(2)
+          do i=1,self%n_dofs(1)
 
              mat(1,1) = cmplx(self%eig_values_mass_1_1(i)*self%eig_values_mass_0_2(j)*&
                   self%eig_values_mass_0_3(k),kind=f64) + &
@@ -566,79 +505,74 @@ contains
     !scratch2 = scratch1
              
     ! Compute inverse Fourier transform of result
-    call ifft3d( self, array1d_x, array1d_y, array1d_z, n_dofs, 1, scratch2, y(1:ndofs) )
-    call ifft3d( self, array1d_x, array1d_y, array1d_z, n_dofs, 2, scratch2, y(1+ndofs:2*ndofs) )
-    call ifft3d( self, array1d_x, array1d_y, array1d_z, n_dofs, 3, scratch2, y(1+2*ndofs:3*ndofs) )
+    call ifft3d( self, array1d_x, array1d_y, array1d_z, self%n_dofs, 1, scratch2, y(1:self%n_total) )
+    call ifft3d( self, array1d_x, array1d_y, array1d_z, self%n_dofs, 2, scratch2, y(1+self%n_total:2*self%n_total) )
+    call ifft3d( self, array1d_x, array1d_y, array1d_z, self%n_dofs, 3, scratch2, y(1+2*self%n_total:3*self%n_total) )
 
     
   end subroutine inverse_dot_maxwell_eb_fourier
 
-  subroutine dot_c_fourier( self, x, y )
-    class(sll_t_linear_operator_maxwell_eb_schur), intent( in ) :: self
-    sll_real64, intent( in ) :: x(:)
-    sll_real64, intent( inout ) :: y(:)
-
-    sll_int32 :: ndofs,  n_dofs(3)
-    sll_comp64 :: scratch1(self%maxwell_solver%n_dofs(1),self%maxwell_solver%n_dofs(2), self%maxwell_solver%n_dofs(3),3)
-    sll_comp64 :: scratch2(self%maxwell_solver%n_dofs(1),self%maxwell_solver%n_dofs(2), self%maxwell_solver%n_dofs(3),3)
-    sll_comp64 :: mat(3,3)
-    sll_comp64 :: array1d_x(self%maxwell_solver%n_dofs(1))
-    sll_comp64 :: array1d_y(self%maxwell_solver%n_dofs(2))
-    sll_comp64 :: array1d_z(self%maxwell_solver%n_dofs(3))
-    sll_int32 :: i,j,k
-    
-
-    ndofs = self%maxwell_solver%n_total
-    n_dofs = self%maxwell_solver%n_dofs
-
-    
-    ! Compute Fourier transform of input
-    call fft3d( self, array1d_x, array1d_y, array1d_z, n_dofs, 1, x(1:ndofs), scratch1 )
-    call fft3d( self, array1d_x, array1d_y, array1d_z, n_dofs, 2, x(1+ndofs:2*ndofs), scratch1 )
-    call fft3d( self, array1d_x, array1d_y, array1d_z, n_dofs, 3, x(1+2*ndofs:3*ndofs), scratch1 )
-
-    write(71,*) real(scratch1)
-    write(72,*) aimag(scratch1)
-
-    mat = cmplx(0.0_f64, 0.0_f64, f64)
-             
-    ! Apply eigenvalues to Fourier coefficient
-    do k=1,n_dofs(3)
-       do j=1,n_dofs(2)
-          do i=1,n_dofs(1)
-
-             mat(1,1) =  cmplx(0.0_f64, 0.0_f64, f64)
-             mat(1,2) = -self%eig_values_d3(k)
-             mat(1,3) = self%eig_values_d2(j)
-             
-             mat(2,2) = cmplx(0.0_f64, 0.0_f64, f64)
-             mat(2,1) = self%eig_values_d3(k)
-             mat(2,3) = -self%eig_values_d1(i)
-             
-             mat(3,3) = cmplx(0.0_f64, 0.0_f64, f64)
-             mat(3,2) = self%eig_values_d1(i)
-             mat(3,1) = - self%eig_values_d2(j)
-
-             scratch2(i,j,k,1) = mat(1,1)*scratch1(i,j,k,1) + mat(1,2)*scratch1(i,j,k,2) + &
-                  mat(1,3)*scratch1(i,j,k,3)
-             scratch2(i,j,k,2) = mat(2,1)*scratch1(i,j,k,1) + mat(2,2)*scratch1(i,j,k,2) + &
-                  mat(2,3)*scratch1(i,j,k,3)
-             scratch2(i,j,k,3) = mat(3,1)*scratch1(i,j,k,1) + mat(3,2)*scratch1(i,j,k,2) + &
-                  mat(3,3)*scratch1(i,j,k,3)
-
-          end do
-       end do
-    end do
-    !scratch2 = scratch1
-             
-    ! Compute inverse Fourier transform of result
-    call ifft3d( self, array1d_x, array1d_y, array1d_z, n_dofs, 1, scratch2, y(1:ndofs) )
-    call ifft3d( self, array1d_x, array1d_y, array1d_z, n_dofs, 2, scratch2, y(1+ndofs:2*ndofs) )
-    call ifft3d( self, array1d_x, array1d_y, array1d_z, n_dofs, 3, scratch2, y(1+2*ndofs:3*ndofs) )
-
-    
-
-  end subroutine dot_c_fourier
+!!$  subroutine dot_c_fourier( self, x, y )
+!!$    class(sll_t_linear_operator_maxwell_eb_schur), intent( in ) :: self
+!!$    sll_real64, intent( in ) :: x(:)
+!!$    sll_real64, intent( inout ) :: y(:)
+!!$    !local variables
+!!$    sll_comp64 :: scratch1(self%n_dofs(1),self%n_dofs(2), self%n_dofs(3),3)
+!!$    sll_comp64 :: scratch2(self%n_dofs(1),self%n_dofs(2), self%n_dofs(3),3)
+!!$    sll_comp64 :: mat(3,3)
+!!$    sll_comp64 :: array1d_x(self%n_dofs(1))
+!!$    sll_comp64 :: array1d_y(self%n_dofs(2))
+!!$    sll_comp64 :: array1d_z(self%n_dofs(3))
+!!$    sll_int32 :: i,j,k
+!!$
+!!$    
+!!$    ! Compute Fourier transform of input
+!!$    call fft3d( self, array1d_x, array1d_y, array1d_z, self%n_dofs, 1, x(1:self%n_total), scratch1 )
+!!$    call fft3d( self, array1d_x, array1d_y, array1d_z, self%n_dofs, 2, x(1+self%n_total:2*self%n_total), scratch1 )
+!!$    call fft3d( self, array1d_x, array1d_y, array1d_z, self%n_dofs, 3, x(1+2*self%n_total:3*self%n_total), scratch1 )
+!!$
+!!$    write(71,*) real(scratch1)
+!!$    write(72,*) aimag(scratch1)
+!!$
+!!$    mat = cmplx(0.0_f64, 0.0_f64, f64)
+!!$             
+!!$    ! Apply eigenvalues to Fourier coefficient
+!!$    do k=1,self%n_dofs(3)
+!!$       do j=1,self%n_dofs(2)
+!!$          do i=1,self%n_dofs(1)
+!!$
+!!$             mat(1,1) =  cmplx(0.0_f64, 0.0_f64, f64)
+!!$             mat(1,2) = -self%eig_values_d3(k)
+!!$             mat(1,3) = self%eig_values_d2(j)
+!!$             
+!!$             mat(2,2) = cmplx(0.0_f64, 0.0_f64, f64)
+!!$             mat(2,1) = self%eig_values_d3(k)
+!!$             mat(2,3) = -self%eig_values_d1(i)
+!!$             
+!!$             mat(3,3) = cmplx(0.0_f64, 0.0_f64, f64)
+!!$             mat(3,2) = self%eig_values_d1(i)
+!!$             mat(3,1) = - self%eig_values_d2(j)
+!!$
+!!$             scratch2(i,j,k,1) = mat(1,1)*scratch1(i,j,k,1) + mat(1,2)*scratch1(i,j,k,2) + &
+!!$                  mat(1,3)*scratch1(i,j,k,3)
+!!$             scratch2(i,j,k,2) = mat(2,1)*scratch1(i,j,k,1) + mat(2,2)*scratch1(i,j,k,2) + &
+!!$                  mat(2,3)*scratch1(i,j,k,3)
+!!$             scratch2(i,j,k,3) = mat(3,1)*scratch1(i,j,k,1) + mat(3,2)*scratch1(i,j,k,2) + &
+!!$                  mat(3,3)*scratch1(i,j,k,3)
+!!$
+!!$          end do
+!!$       end do
+!!$    end do
+!!$    !scratch2 = scratch1
+!!$             
+!!$    ! Compute inverse Fourier transform of result
+!!$    call ifft3d( self, array1d_x, array1d_y, array1d_z, self%n_dofs, 1, scratch2, y(1:self%n_total) )
+!!$    call ifft3d( self, array1d_x, array1d_y, array1d_z, self%n_dofs, 2, scratch2, y(1+self%n_total:2*self%n_total) )
+!!$    call ifft3d( self, array1d_x, array1d_y, array1d_z, self%n_dofs, 3, scratch2, y(1+2*self%n_total:3*self%n_total) )
+!!$
+!!$    
+!!$
+!!$  end subroutine dot_c_fourier
   
   
   subroutine print_info_maxwell_eb( self )
@@ -674,126 +608,113 @@ contains
   end subroutine invert3d
 
 
-
-  !> Product of inverse(M_1,1)
-  subroutine dot_inv_mass_1_1( self, x, y )
-    class(sll_t_linear_operator_maxwell_eb_schur), intent( in ) :: self
-    sll_real64, intent( in ) :: x(:)
-    sll_real64, intent( inout ) :: y(:)
-
-    sll_int32 :: ndofs, n_dofs(3)
-    sll_comp64 :: scratch(self%maxwell_solver%n_dofs(1),self%maxwell_solver%n_dofs(2), self%maxwell_solver%n_dofs(3),1)
-    sll_comp64 :: array1d_x(self%maxwell_solver%n_dofs(1))
-    sll_comp64 :: array1d_y(self%maxwell_solver%n_dofs(2))
-    sll_comp64 :: array1d_z(self%maxwell_solver%n_dofs(3))
-    sll_int32 :: i,j,k
-    
-
-    ndofs = self%maxwell_solver%n_total
-    n_dofs = self%maxwell_solver%n_dofs
-
-    
-    ! Compute Fourier transform of input
-    call fft3d( self, array1d_x, array1d_y, array1d_z, n_dofs, 1, x(1:ndofs), scratch )
-             
-    ! Apply eigenvalues to Fourier coefficient
-    do k=1,n_dofs(3)
-       do j=1,n_dofs(2)
-          do i=1,n_dofs(1)
-
-             scratch(i,j,k,1) = scratch(i,j,k,1)/ &
-                  cmplx(self%eig_values_mass_1_1(i)* &
-                  self%eig_values_mass_0_2(j)* &
-                  self%eig_values_mass_0_3(k),kind=f64 )
-
-          end do
-       end do
-    end do
-             
-    ! Compute inverse Fourier transform of result
-    call ifft3d( self, array1d_x, array1d_y, array1d_z, n_dofs, 1, scratch, y(1:ndofs) )
-
-  end subroutine dot_inv_mass_1_1
-
-    !> Product of inverse(M_1,2)
-  subroutine dot_inv_mass_1_2( self, x, y )
-    class(sll_t_linear_operator_maxwell_eb_schur), intent( in ) :: self
-    sll_real64, intent( in ) :: x(:)
-    sll_real64, intent( inout ) :: y(:)
-
-    sll_int32 :: ndofs, n_dofs(3)
-    sll_comp64 :: scratch(self%maxwell_solver%n_dofs(1),self%maxwell_solver%n_dofs(2), self%maxwell_solver%n_dofs(3),1)
-    sll_comp64 :: array1d_x(self%maxwell_solver%n_dofs(1))
-    sll_comp64 :: array1d_y(self%maxwell_solver%n_dofs(2))
-    sll_comp64 :: array1d_z(self%maxwell_solver%n_dofs(3))
-    sll_int32 :: i,j,k
-    
-
-    ndofs = self%maxwell_solver%n_total
-    n_dofs = self%maxwell_solver%n_dofs
-
-    
-    ! Compute Fourier transform of input
-    call fft3d( self, array1d_x, array1d_y, array1d_z, n_dofs, 1, x(1:ndofs), scratch )
-             
-    ! Apply eigenvalues to Fourier coefficient
-    do k=1,n_dofs(3)
-       do j=1,n_dofs(2)
-          do i=1,n_dofs(1)
-
-             scratch(i,j,k,1) = scratch(i,j,k,1)/ &
-                  cmplx(self%eig_values_mass_0_1(i)* &
-                  self%eig_values_mass_1_2(j)* &
-                  self%eig_values_mass_0_3(k), kind=f64 )
-
-          end do
-       end do
-    end do
-             
-    ! Compute inverse Fourier transform of result
-    call ifft3d( self, array1d_x, array1d_y, array1d_z, n_dofs, 1, scratch, y(1:ndofs) )
-
-  end subroutine dot_inv_mass_1_2
-
-    !> Product of inverse(M_1,3)
-  subroutine dot_inv_mass_1_3( self, x, y )
-    class(sll_t_linear_operator_maxwell_eb_schur), intent( in ) :: self
-    sll_real64, intent( in ) :: x(:)
-    sll_real64, intent( inout ) :: y(:)
-
-    sll_int32 :: ndofs, n_dofs(3)
-    sll_comp64 :: scratch(self%maxwell_solver%n_dofs(1),self%maxwell_solver%n_dofs(2), self%maxwell_solver%n_dofs(3),1)
-    sll_comp64 :: array1d_x(self%maxwell_solver%n_dofs(1))
-    sll_comp64 :: array1d_y(self%maxwell_solver%n_dofs(2))
-    sll_comp64 :: array1d_z(self%maxwell_solver%n_dofs(3))
-    sll_int32 :: i,j,k
-    
-
-    ndofs = self%maxwell_solver%n_total
-    n_dofs = self%maxwell_solver%n_dofs
-
-    
-    ! Compute Fourier transform of input
-    call fft3d( self, array1d_x, array1d_y, array1d_z, n_dofs, 1, x(1:ndofs), scratch )
-             
-    ! Apply eigenvalues to Fourier coefficient
-    do k=1,n_dofs(3)
-       do j=1,n_dofs(2)
-          do i=1,n_dofs(1)
-
-             scratch(i,j,k,1) = scratch(i,j,k,1)/ &
-                  cmplx(self%eig_values_mass_0_1(i)* &
-                  self%eig_values_mass_0_2(j)* &
-                  self%eig_values_mass_1_3(k) , kind=f64 )
-
-          end do
-       end do
-    end do
-             
-    ! Compute inverse Fourier transform of result
-    call ifft3d( self, array1d_x, array1d_y, array1d_z, n_dofs, 1, scratch, y(1:ndofs) )
-
-  end subroutine dot_inv_mass_1_3
+!!$
+!!$  !> Product of inverse(M_1,1)
+!!$  subroutine dot_inv_mass_1_1( self, x, y )
+!!$    class(sll_t_linear_operator_maxwell_eb_schur), intent( in ) :: self
+!!$    sll_real64, intent( in ) :: x(:)
+!!$    sll_real64, intent( inout ) :: y(:)
+!!$    !local variables
+!!$    sll_comp64 :: scratch(self%n_dofs(1),self%n_dofs(2), self%n_dofs(3),1)
+!!$    sll_comp64 :: array1d_x(self%n_dofs(1))
+!!$    sll_comp64 :: array1d_y(self%n_dofs(2))
+!!$    sll_comp64 :: array1d_z(self%n_dofs(3))
+!!$    sll_int32 :: i,j,k
+!!$    
+!!$
+!!$    
+!!$    ! Compute Fourier transform of input
+!!$    call fft3d( self, array1d_x, array1d_y, array1d_z, self%n_dofs, 1, x(1:self%n_total), scratch )
+!!$             
+!!$    ! Apply eigenvalues to Fourier coefficient
+!!$    do k=1,self%n_dofs(3)
+!!$       do j=1,self%n_dofs(2)
+!!$          do i=1,self%n_dofs(1)
+!!$
+!!$             scratch(i,j,k,1) = scratch(i,j,k,1)/ &
+!!$                  cmplx(self%eig_values_mass_1_1(i)* &
+!!$                  self%eig_values_mass_0_2(j)* &
+!!$                  self%eig_values_mass_0_3(k),kind=f64 )
+!!$
+!!$          end do
+!!$       end do
+!!$    end do
+!!$             
+!!$    ! Compute inverse Fourier transform of result
+!!$    call ifft3d( self, array1d_x, array1d_y, array1d_z, self%n_dofs, 1, scratch, y(1:self%n_total) )
+!!$
+!!$  end subroutine dot_inv_mass_1_1
+!!$
+!!$    !> Product of inverse(M_1,2)
+!!$  subroutine dot_inv_mass_1_2( self, x, y )
+!!$    class(sll_t_linear_operator_maxwell_eb_schur), intent( in ) :: self
+!!$    sll_real64, intent( in ) :: x(:)
+!!$    sll_real64, intent( inout ) :: y(:)
+!!$    !local variables
+!!$    sll_comp64 :: scratch(self%n_dofs(1),self%n_dofs(2), self%n_dofs(3),1)
+!!$    sll_comp64 :: array1d_x(self%n_dofs(1))
+!!$    sll_comp64 :: array1d_y(self%n_dofs(2))
+!!$    sll_comp64 :: array1d_z(self%n_dofs(3))
+!!$    sll_int32 :: i,j,k
+!!$    
+!!$    
+!!$    ! Compute Fourier transform of input
+!!$    call fft3d( self, array1d_x, array1d_y, array1d_z, self%n_dofs, 1, x(1:self%n_total), scratch )
+!!$             
+!!$    ! Apply eigenvalues to Fourier coefficient
+!!$    do k=1,self%n_dofs(3)
+!!$       do j=1,self%n_dofs(2)
+!!$          do i=1,self%n_dofs(1)
+!!$
+!!$             scratch(i,j,k,1) = scratch(i,j,k,1)/ &
+!!$                  cmplx(self%eig_values_mass_0_1(i)* &
+!!$                  self%eig_values_mass_1_2(j)* &
+!!$                  self%eig_values_mass_0_3(k), kind=f64 )
+!!$
+!!$          end do
+!!$       end do
+!!$    end do
+!!$             
+!!$    ! Compute inverse Fourier transform of result
+!!$    call ifft3d( self, array1d_x, array1d_y, array1d_z, self%n_dofs, 1, scratch, y(1:self%n_total) )
+!!$
+!!$  end subroutine dot_inv_mass_1_2
+!!$
+!!$    !> Product of inverse(M_1,3)
+!!$  subroutine dot_inv_mass_1_3( self, x, y )
+!!$    class(sll_t_linear_operator_maxwell_eb_schur), intent( in ) :: self
+!!$    sll_real64, intent( in ) :: x(:)
+!!$    sll_real64, intent( inout ) :: y(:)
+!!$    !local variables
+!!$    sll_comp64 :: scratch(self%n_dofs(1),self%n_dofs(2), self%n_dofs(3),1)
+!!$    sll_comp64 :: array1d_x(self%n_dofs(1))
+!!$    sll_comp64 :: array1d_y(self%n_dofs(2))
+!!$    sll_comp64 :: array1d_z(self%n_dofs(3))
+!!$    sll_int32 :: i,j,k
+!!$  
+!!$
+!!$    
+!!$    ! Compute Fourier transform of input
+!!$    call fft3d( self, array1d_x, array1d_y, array1d_z, self%n_dofs, 1, x(1:self%n_total), scratch )
+!!$             
+!!$    ! Apply eigenvalues to Fourier coefficient
+!!$    do k=1,self%n_dofs(3)
+!!$       do j=1,self%n_dofs(2)
+!!$          do i=1,self%n_dofs(1)
+!!$
+!!$             scratch(i,j,k,1) = scratch(i,j,k,1)/ &
+!!$                  cmplx(self%eig_values_mass_0_1(i)* &
+!!$                  self%eig_values_mass_0_2(j)* &
+!!$                  self%eig_values_mass_1_3(k) , kind=f64 )
+!!$
+!!$          end do
+!!$       end do
+!!$    end do
+!!$             
+!!$    ! Compute inverse Fourier transform of result
+!!$    call ifft3d( self, array1d_x, array1d_y, array1d_z, self%n_dofs, 1, scratch, y(1:self%n_total) )
+!!$
+!!$  end subroutine dot_inv_mass_1_3
 
   
 end module sll_m_linear_operator_maxwell_eb_schur
