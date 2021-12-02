@@ -23,15 +23,19 @@ program test_curl_curl_part
        sll_s_eval_uniform_periodic_spline_curve_with_zero
 
   use sll_m_constants, only: &
-       sll_p_pi
+       sll_p_pi, sll_p_twopi
 
   use sll_m_maxwell_3d_fem, only: &
        sll_t_maxwell_3d_fem
+
+  use sll_m_maxwell_clamped_3d_fem
 
   use sll_m_maxwell_1d_base, only: &
        sll_s_plot_two_fields_1d
 
   use sll_m_constants, only: sll_p_pi, sll_p_twopi
+
+  use sll_m_splines_pp
 
   use sll_m_timer, only: &
        sll_s_set_time_mark, &
@@ -47,33 +51,30 @@ program test_curl_curl_part
   sll_real64 :: eta1_max, eta1_min
   sll_real64 :: delta_eta(3)
 
-  sll_int32  :: nc_eta(3), nc_total
+  sll_int32  :: nc_eta(3), nc_total, nc_total0, nc_total1
 
   type(sll_t_maxwell_3d_fem)  :: maxwell_3d
+  !type(sll_t_maxwell_clamped_3d_fem)  :: maxwell_3d
   sll_real64, allocatable :: x(:,:,:), y(:,:,:), z(:,:,:)
-  sll_real64, allocatable :: efield(:), bfield(:)
-  sll_real64, allocatable :: efield_ref(:), bfield_ref(:)
-  sll_real64, allocatable :: efield_val(:), bfield_val(:)
+  sll_real64, allocatable :: afield(:)
+  sll_real64, allocatable :: afield_ref(:)
+  sll_real64, allocatable :: afield_val(:), scratch(:)
   sll_real64, allocatable :: rho(:), rho_ref(:), current(:)
 
-  sll_int32                               :: i, j, k, istep, nsteps, ind
-  sll_real64                                :: w1, w2
-  sll_real64                                :: time
+  sll_int32                               :: i, j, k, ind
   sll_real64                                :: delta_t
 
   sll_real64                              :: Lx(3)
   sll_real64, dimension(3,2)              :: domain
-  sll_int32                               :: deg(3)
+  sll_int32                               :: deg(3), boundary(3)
 
-  sll_real64                              :: error(6)
-  sll_real64                              :: energy(2)
   type(sll_t_time_mark) :: start, end
 
   call sll_s_set_time_mark( start )
 
   ! Define computational domain
   eta1_min = .0_f64; eta1_max = 2.0_f64*sll_p_pi
-  nc_eta = [32, 16, 32]
+  nc_eta = 16![8, 16, 32]
   nc_total = product(nc_eta)
   Lx(1) = eta1_max-eta1_min
   Lx(2) = Lx(1); Lx(3) = Lx(2)
@@ -82,29 +83,37 @@ program test_curl_curl_part
   domain(2,:) = [eta1_min, eta1_max]
   domain(3,:) = [eta1_min, eta1_max]
   ! Set spline degree of 0-forms
-  deg =3! [2,2,3]
+  deg = 3![2,2,3]
   ! Time loop
   delta_t = 0.01_f64
-  nsteps = 3
-  w1 = sqrt(3.0_f64)
-  w2 = + sqrt(3.0_f64)
-  time = 0.0_f64
+
+
+  if( deg(1) == 2 ) then
+     boundary = [ sll_p_boundary_clamped_square, sll_p_boundary_periodic, sll_p_boundary_periodic]
+  else if( deg(1) == 3 ) then
+     boundary = [ sll_p_boundary_clamped_cubic, sll_p_boundary_periodic, sll_p_boundary_periodic]
+  else
+     boundary = [ sll_p_boundary_clamped, sll_p_boundary_periodic, sll_p_boundary_periodic]
+  end if
+
   ! Initialise maxwell FEM object
   call maxwell_3d%init(domain, nc_eta, deg)
+  !call maxwell_3d%init(domain, nc_eta, deg, boundary)
 
+  nc_total0 = maxwell_3d%n_total0
+  nc_total1 = maxwell_3d%n_total1
 
   allocate(x(1:nc_eta(1)+1,1:nc_eta(2)+1,1:nc_eta(3)+1) )
   allocate(y(1:nc_eta(1)+1,1:nc_eta(2)+1,1:nc_eta(3)+1) )
   allocate(z(1:nc_eta(1)+1,1:nc_eta(2)+1,1:nc_eta(3)+1) )
-  allocate(efield(1:nc_total*3))
-  allocate(bfield(1:nc_total*3))
-  allocate(efield_ref(1:nc_total*3))
-  allocate(bfield_ref(1:nc_total*3))
-  allocate(efield_val(1:nc_total*3))
-  allocate(bfield_val(1:nc_total*3))
-  allocate( rho(1:nc_total) )
-  allocate( rho_ref( 1:nc_total) )
-  allocate(current(1:nc_total*3))
+  allocate( afield(1:nc_total1+nc_total0*2) )
+  allocate( afield_ref(1:nc_total1+nc_total0*2) )
+  allocate( afield_val(1:nc_total1+nc_total0*2) )
+  allocate( scratch(1:nc_total1+nc_total0*2) )
+
+  allocate( rho( nc_total0 ) )
+  allocate( rho_ref( nc_total0 ) )
+  allocate( current(1:nc_total1+nc_total0*2) )
 
   do k = 1, nc_eta(3)+1
      do j = 1, nc_eta(2)+1
@@ -118,75 +127,81 @@ program test_curl_curl_part
 
 
   current = 0._f64
-!!$  call maxwell_3d%compute_rhs_from_function( 1, 1, current(1:nc_total), cos_k )
-!!$  call maxwell_3d%compute_rhs_from_function( 1, 3, current(nc_total*2+1:nc_total*3), cos_k )
-!!$  current(1:nc_total) = 3._f64* current(1:nc_total)
-!!$  current(nc_total*2+1:nc_total*3) = -3._f64*current(nc_total*2+1:nc_total*3)
-  call maxwell_3d%compute_rhs_from_function( 1, 1, current(1:nc_total), jx )
-  call maxwell_3d%compute_rhs_from_function( 1, 2, current(nc_total+1:nc_total*2), jy )
-  call maxwell_3d%compute_rhs_from_function( 1, 3, current(nc_total*2+1:nc_total*3), jz )
-!!$  call random_number( efield )
-!!$  call maxwell_3d%multiply_ct( efield, current )
+  call maxwell_3d%compute_rhs_from_function( 1, 1, current(1:nc_total1), cos_k )
+  call maxwell_3d%compute_rhs_from_function( 1, 3, current(nc_total1+nc_total0+1:nc_total1+nc_total0*2), cos_k )
+  current(1:nc_total1) = 3._f64* current(1:nc_total1)
+  current(nc_total1+nc_total0+1:nc_total1+nc_total0*2) = -3._f64*current(nc_total1+nc_total0+1:nc_total1+nc_total0*2)
+!!$  call maxwell_3d%compute_rhs_from_function( 1, 1, current(1:nc_total1), jx )
+!!$  call maxwell_3d%compute_rhs_from_function( 1, 2, current(nc_total1+1:nc_total1+nc_total0), jy )
+!!$  call maxwell_3d%compute_rhs_from_function( 1, 3, current(nc_total1+nc_total0+1:nc_total1+nc_total0*2), jz )
+!!$  call random_number( afield )
+!!$  call maxwell_3d%multiply_ct( afield, current )
   !call random_number( current )
-  rho = 0._f64
+  !write(*,*) current
+!!$  rho = 0._f64
   call maxwell_3d%multiply_gt( current, rho )
   print*, 'rhs divergence', maxval(abs(rho))
 
- ! maxwell_3d%curl_matrix%epsilon = delta_t
-  !call maxwell_3d%curl_solver%solve( current, efield )
-  call maxwell_3d%uzawa_iterator%solve( current, efield )
+ ! maxwell_3d%curl_matrix%epsilon = 6.0_f64!1d-0
+  !call maxwell_3d%curl_solver%solve( current, afield )
+  call maxwell_3d%uzawa_iterator%solve( current, afield )
 
-  efield_ref = 0._f64
-!!$  call maxwell_3d%L2projection( 1, 1, efield_ref(1:nc_total), cos_k )
-!!$  call maxwell_3d%L2projection( 1, 3, efield_ref(nc_total*2+1:nc_total*3), cos_k )
-!!$  efield_ref(nc_total*2+1:nc_total*3) = -efield_ref(nc_total*2+1:nc_total*3)
+  !print*, 'afield', afield
 
-  call maxwell_3d%L2projection( 1, 1, efield_ref(1:nc_total), ax )
-  call maxwell_3d%L2projection( 1, 2, efield_ref(nc_total+1:nc_total*2), ay )
-  call maxwell_3d%L2projection( 1, 3, efield_ref(nc_total*2+1:nc_total*3), az )
-  
-  rho = 0._f64
-  call maxwell_3d%compute_rho_from_E( efield_ref, rho )
-  print*, 'lhs divergence', maxval(abs(rho))
+  !print*, 'p',maxwell_3d%uzawa_iterator%x_0
 
-  call maxwell_3d%L2projection( 0, 1, rho_ref, cos_k )
-   
-  call maxwell_3d%curl_operator%dot(efield_ref, efield_val )
-  call maxwell_3d%MG_operator%dot(rho_ref, bfield_val )
+  afield_ref = 0._f64
+  call maxwell_3d%L2projection( 1, 1, afield_ref(1:nc_total1), cos_k )
+  call maxwell_3d%L2projection( 1, 3, afield_ref(nc_total1+nc_total0+1:nc_total1+nc_total0*2), cos_k )
+  afield_ref(nc_total1+nc_total0+1:nc_total1+nc_total0*2) = -afield_ref(nc_total1+nc_total0+1:nc_total1+nc_total0*2)
 
-  efield_val = efield_val + bfield_val
-  
-  print*, 'error operator', maxval(abs(efield_val(1:nc_total) - current(1:nc_total) ) ), maxval(abs(efield_val(nc_total+1:nc_total*2) - current(nc_total+1:nc_total*2) ) ), maxval(abs(efield_val(nc_total*2+1:nc_total*3) - current(nc_total*2+1:nc_total*3) ) )
-
-!!$  call sll_s_plot_two_fields_1d('currentx',nc_total,efield_val(1:nc_total),current(1:nc_total),istep,time)
-!!$  call sll_s_plot_two_fields_1d('currenty',nc_total,efield_val(nc_total+1:nc_total*2),current(nc_total+1:nc_total*2),istep,time)
-!!$  call sll_s_plot_two_fields_1d('currentz',nc_total,efield_val(nc_total*2+1:nc_total*3),current(nc_total*2+1:nc_total*3),istep,time)
-
-  print*, 'error solver', maxval(abs(efield(1:nc_total) -efield_ref(1:nc_total) ) ), maxval(abs(efield(nc_total+1:nc_total*2) -efield_ref(nc_total+1:nc_total*2) ) ), maxval(abs(efield(nc_total*2+1:nc_total*3) -efield_ref(nc_total*2+1:nc_total*3) ) ), maxval(abs(rho_ref- maxwell_3d%uzawa_iterator%x_0))
-
-
-
-
-
-!!$  call maxwell_3d%L2projection( 1, 1, efield(1:nc_total), cos_k )
-!!$  call maxwell_3d%L2projection( 1, 2, efield(nc_total+1:nc_total*2), cos_k )
-!!$  call maxwell_3d%L2projection( 1, 3, efield(nc_total*2+1:nc_total*3), cos_k )
-!!$  efield(nc_total+1:nc_total*2) = - 2.0_f64 *  efield(nc_total+1:nc_total*2)
+!!$  call maxwell_3d%L2projection( 1, 1, afield_ref(1:nc_total1), ax )
+!!$  call maxwell_3d%L2projection( 1, 2, afield_ref(nc_total1+1:nc_total1+nc_total0), ay )
+!!$  call maxwell_3d%L2projection( 1, 3, afield_ref(nc_total1+nc_total0+1:nc_total1+nc_total0*2), az )
+!!$  
+!!$  rho = 0._f64
+!!$  call maxwell_3d%compute_rho_from_E( afield_ref, rho )
+!!$  print*, 'lhs divergence', maxval(abs(rho))
 !!$
-!!$  call  evaluate_spline_3d ( nc_eta, [deg(1)-1,deg(2),deg(3)], efield(1:nc_total), efield_val(1:nc_total) )
-!!$  call  evaluate_spline_3d ( nc_eta, [deg(1),deg(2)-1,deg(3)], efield(1+nc_total:2*nc_total), efield_val(1+nc_total:2*nc_total) )
-!!$  call  evaluate_spline_3d ( nc_eta, [deg(1),deg(2),deg(3)-1], efield(1+nc_total*2:3*nc_total), efield_val(1+nc_total*2:3*nc_total) )
+  rho_ref = 0._f64
+  !call maxwell_3d%L2projection( 0, 1, rho_ref, cos_k )
+  maxwell_3d%curl_matrix%epsilon = 0._f64
+  !call maxwell_3d%curl_operator%dot(afield, afield_val )
+  call maxwell_3d%curl_matrix%dot(afield, afield_val )
+  call maxwell_3d%MG_operator%dot(maxwell_3d%uzawa_iterator%x_0, scratch )
+
+  afield_val = afield_val + scratch
+  
+  print*, 'error operator', maxval(abs(afield_val(1:nc_total1) - current(1:nc_total1) ) ), maxval(abs(afield_val(nc_total1+1:nc_total1+nc_total0) - current(nc_total1+1:nc_total1+nc_total0) ) ), maxval(abs(afield_val(nc_total1+nc_total0+1:nc_total0+nc_total*2) - current(nc_total1+nc_total0+1:nc_total0+nc_total*2) ) )
+
+!!$  call sll_s_plot_two_fields_1d('currentx',nc_total,afield_val(1:nc_total),current(1:nc_total),0._f64,0._f64)
+!!$  call sll_s_plot_two_fields_1d('currenty',nc_total,afield_val(nc_total+1:nc_total*2),current(nc_total+1:nc_total*2),0._f64,0._f64)
+!!$  call sll_s_plot_two_fields_1d('currentz',nc_total,afield_val(nc_total*2+1:nc_total*3),current(nc_total*2+1:nc_total*3),0._f64,0._f64)
+
+  print*, 'error solver', maxval(abs(afield(1:nc_total1) -afield_ref(1:nc_total1) ) ), maxval(abs(afield(nc_total1+1:nc_total1+nc_total0) -afield_ref(nc_total1+1:nc_total1+nc_total0) ) ), maxval(abs(afield(nc_total1+nc_total0+1:nc_total0+nc_total*2) -afield_ref(nc_total1+nc_total0+1:nc_total0+nc_total*2) ) ), maxval(abs(rho_ref- maxwell_3d%uzawa_iterator%x_0))
+
+
+
+
+
+!!$  call maxwell_3d%L2projection( 1, 1, afield(1:nc_total), cos_k )
+!!$  call maxwell_3d%L2projection( 1, 2, afield(nc_total+1:nc_total*2), cos_k )
+!!$  call maxwell_3d%L2projection( 1, 3, afield(nc_total*2+1:nc_total*3), cos_k )
+!!$  afield(nc_total+1:nc_total*2) = - 2.0_f64 *  afield(nc_total+1:nc_total*2)
+!!$
+!!$  call  evaluate_spline_3d ( nc_eta, [deg(1)-1,deg(2),deg(3)], afield(1:nc_total), afield_val(1:nc_total) )
+!!$  call  evaluate_spline_3d ( nc_eta, [deg(1),deg(2)-1,deg(3)], afield(1+nc_total:2*nc_total), afield_val(1+nc_total:2*nc_total) )
+!!$  call  evaluate_spline_3d ( nc_eta, [deg(1),deg(2),deg(3)-1], afield(1+nc_total*2:3*nc_total), afield_val(1+nc_total*2:3*nc_total) )
 !!$
 !!$
 !!$  ! Reference solutions
-!!$  time = real(nsteps,f64)*delta_t
 !!$  ind = 1
 !!$  do k = 1, nc_eta(3)
 !!$     do j = 1, nc_eta(2)
 !!$        do i = 1, nc_eta(1)
-!!$           efield_ref(ind) = cos_k([x(i,j,k), y(i,j,k), z(i,j,k)])
-!!$           efield_ref(ind+nc_total) = -2.0_f64*efield_ref(ind)
-!!$           efield_ref(ind+nc_total*2) = efield_ref(ind)
+!!$           afield_ref(ind) = cos_k([x(i,j,k), y(i,j,k), z(i,j,k)])
+!!$           afield_ref(ind+nc_total) = -2.0_f64*afield_ref(ind)
+!!$           afield_ref(ind+nc_total*2) = afield_ref(ind)
 !!$           ind = ind+1
 !!$        end do
 !!$     end do
@@ -198,12 +213,10 @@ program test_curl_curl_part
   deallocate(x)
   deallocate(y)
   deallocate(z)
-  deallocate(efield)
-  deallocate(bfield)
-  deallocate(efield_ref)
-  deallocate(bfield_ref)
-  deallocate(efield_val)
-  deallocate(bfield_val)
+  deallocate(afield)
+  deallocate(afield_ref)
+  deallocate(afield_val)
+  deallocate(scratch)
   deallocate( rho )
   deallocate( rho_ref )
 
@@ -218,7 +231,7 @@ contains
     sll_real64             :: cos_k
     sll_real64, intent(in) :: x(3)
 
-    cos_k = cos((x(1)+x(2)+x(3))-w1*time) 
+    cos_k = cos((x(1)+x(2)+x(3))) 
   end function cos_k
 
 
@@ -226,7 +239,7 @@ contains
     sll_real64             :: sin_k
     sll_real64, intent(in) :: x(3)
 
-    sin_k = sin((x(1)+x(2)+x(3))-w1*time) 
+    sin_k = sin((x(1)+x(2)+x(3))) 
   end function sin_k
 
   function jx(x)

@@ -239,12 +239,13 @@ contains
 
     ! Invert Schur complement matrix
     self%linear_op_schur_eb%factor = delta_t**2*factor*0.25_f64
-    call self%linear_solver_schur_eb%set_guess( efield )
-    call self%linear_solver_schur_eb%solve( self%work, efield)
+    !call self%linear_solver_schur_eb%set_guess( efield )
+    !call self%linear_solver_schur_eb%solve( self%work, efield )
+    call self%linear_op_schur_eb%dot_inverse( self%work, efield )
 
     ! Update B field
     self%work2 = self%work2 + efield
-    call self%compute_b_from_e( delta_t*0.5_f64, self%work2, bfield)
+    call self%compute_b_from_e( delta_t*0.5_f64, self%work2, bfield )
 
   end subroutine sll_s_compute_curl_part_3d_fem_fft
 
@@ -737,12 +738,12 @@ contains
     call self%preconditioner_fft%init( self%Lx, n_dofs, s_deg_0 )
 
 
-    call self%linear_op_schur_eb%create( self )
+    call self%linear_op_schur_eb%create( eig_values_mass_0_1, eig_values_mass_0_2, eig_values_mass_0_3, eig_values_mass_1_1, eig_values_mass_1_2, eig_values_mass_1_3, self%mass1_operator, self%mass2_operator, self%n_dofs, self%delta_x )
     ! call self%linear_op_schur_eb%create( self%mass1_operator, self%mass2_operator, self%n_total, self%n_dofs, self%delta_x   )
     call self%linear_solver_schur_eb%create( self%linear_op_schur_eb, self%preconditioner_fft%inverse_mass1_3d )
     self%linear_solver_schur_eb%atol = self%solver_tolerance
     self%linear_solver_schur_eb%rtol = self%solver_tolerance
-    !self%linear_solver_schur_eb%verbose = .true.
+    self%linear_solver_schur_eb%verbose = .true.
 
     if(self%adiabatic_electrons) then
        call sll_s_spline_fem_mass3d( self%n_dofs, s_deg_0, -1, self%mass0, profile_m0 )

@@ -19,7 +19,8 @@ module sll_m_uzawa_iterator
      class(sll_t_linear_solver_abstract), pointer :: solver_a
      class(sll_t_linear_operator_abstract), pointer :: operator_b
      class(sll_t_linear_operator_abstract), pointer :: operator_bt
-     sll_int32 :: n_total !< product of number of degrees of freedom
+     sll_int32 :: n_total0 !< product of number of degrees of freedom
+     sll_int32 :: n_total1 !< product of number of degrees of freedom
  
 
    contains
@@ -47,12 +48,13 @@ contains
     self%operator_b => operator_b
     self%operator_bt => operator_bt
   
-    self%n_total = operator_b%n_global_cols
+    self%n_total0 = operator_b%n_global_cols
+    self%n_total1 = operator_b%n_global_rows
 
     self%n_rows = solver_a%n_rows
     self%n_cols = solver_a%n_cols
 
-    allocate(self%x_0(self%n_total))
+    allocate(self%x_0(self%n_total0))
     self%x_0 = 0.0_f64
     
   end subroutine create_uzawa_iterator
@@ -73,8 +75,8 @@ contains
     sll_real64, intent( in    ) :: rhs(:) !< Inputvariable
     sll_real64, intent(   out ) :: unknown(:) !< Outputvariable
     !local variables
-    sll_real64 :: rhs1(3*self%n_total)
-    sll_real64 :: x0(self%n_total)
+    sll_real64 :: rhs1(self%n_total1)
+    sll_real64 :: x0(self%n_total0)
     sll_int32  :: itr_used
     sll_real64 :: res
     logical :: flag
@@ -84,7 +86,7 @@ contains
     rhs1 = rhs - rhs1
     call self%solver_a%solve(rhs1, unknown)
     
-    call uzawa_iterator(self, unknown, x0, itr_used, res)
+    call uzawa_iterator2(self, unknown, x0, itr_used, res)
 
     self%x_0 = x0
 
@@ -104,15 +106,15 @@ contains
     !local variables
     sll_int32 :: k
     sll_real64 :: alpha, beta
-    sll_real64 :: a0(self%n_total), p0(self%n_total), r0(self%n_total)
-    sll_real64 :: a1(3*self%n_total), p1(3*self%n_total)
+    sll_real64 :: a0(self%n_total0), p0(self%n_total0), r0(self%n_total0)
+    sll_real64 :: a1(self%n_total1), p1(self%n_total1)
   
 
     call self%operator_bt%dot(x1, r0)
     p0=r0
-    
+    niterx = 1
     do k = 1, self%n_maxiter
-       niterx    = k
+       
        
        call self%operator_b%dot(p0, a1)
        call self%solver_a%solve(a1, p1)
@@ -124,24 +126,72 @@ contains
        r0 = r0 - alpha * a0
        x1 = x1 - alpha * p1
        
-       res = sqrt(sum(r0*r0)/self%n_total)
+       res = sqrt(sum(r0*r0)/real(self%n_total0,f64))
+       !print*, 'residuum', res
        if( res <= self%atol ) exit
 
-       if(sqrt(sum(p0*p0)/self%n_total)<= self%atol) then
-          print*, 'error uzawa iterator: krylov subspace exhausted, set p0 to new value'
-          p0 = r0
+       if(sqrt(sum(p0*p0)/real(self%n_total0,f64))<= self%atol) then
+          print*, 'error uzawa iterator: krylov subspace exhausted'
+          exit
+          !p0 = r0
        else
           beta = sum(r0*a0)/sum(p0*a0)
           p0 = r0 - beta*p0
        end if
        
-
+       niterx = k + 1
     end do
     
     return
     
   end subroutine uzawa_iterator
+
+  subroutine uzawa_iterator2(self, x1, x0, niterx, res) 
+    class(sll_t_uzawa_iterator), intent( in ) :: self !< Uzawa iterator
+    sll_real64,                  intent(inout) :: x1(:)
+    sll_real64,                  intent(inout) :: x0(:)
+    sll_int32,                   intent(out) :: niterx
+    sll_real64,                  intent(out) :: res
+    !local variables
+    sll_int32 :: k
+    sll_real64 :: alpha, beta
+    sll_real64 :: a0(self%n_total0), q0(self%n_total0), r0(self%n_total0), d0(self%n_total0)
+    sll_real64 :: a1(self%n_total1), q1(self%n_total1)
   
+
+    call self%operator_bt%dot(x1, q0)
+    niterx = 1
+    do k = 1, self%n_maxiter
+       call self%operator_bt%dot(x1, d0)
+       
+       call self%operator_b%dot(q0, a1)
+       call self%solver_a%solve(a1, q1)
+       call self%operator_bt%dot(q1, a0)
+       
+       alpha = sum(d0*d0)/sum(d0*a0)
+       
+       x0 = x0 + alpha * q0
+       x1 = x1 + alpha * q1
+
+       call self%operator_bt%dot(x1, r0)
+       res = sqrt(sum(r0*r0)/real(self%n_total0,f64))
+       print*, 'residuum', res
+       if( res <= self%atol ) exit
+
+       if(sqrt(sum(q0*q0)/real(self%n_total0,f64))<= self%atol) then
+          print*, 'error uzawa iterator: krylov subspace exhausted'
+          exit
+       else
+          beta = sum(r0*r0)/sum(d0*d0)
+          q0 = r0 + beta*q0
+       end if
+       
+       niterx = k + 1
+    end do
+    
+    return
+    
+  end subroutine uzawa_iterator2
 
   
   subroutine print_info_uzawa_iterator( self )
@@ -176,9 +226,9 @@ contains
     if (self%verbose) then
        if (present(r_err)) then
           if (i_iteration <= self%n_maxiter) then
-             print*, '* uzawa_iterator:  convergence after', i_iteration, ' iterations. Error ', r_err
+             print*, '* uzawa_iterator:  convergence after', i_iteration, 'iterations. Error ', r_err
           else
-             print *, '* uzawa_iterator: Warning - max iterations achieved without convergence. Error', r_err
+             print *, '* uzawa_iterator: Warning - max iterations', self%n_maxiter, 'achieved without convergence. Error', r_err
           end if
        end if
     end if
