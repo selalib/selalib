@@ -86,7 +86,7 @@ contains
     rhs1 = rhs - rhs1
     call self%solver_a%solve(rhs1, unknown)
     
-    call uzawa_iterator2(self, unknown, x0, itr_used, res)
+    call uzawa_iterator(self, unknown, x0, itr_used, res)
 
     self%x_0 = x0
 

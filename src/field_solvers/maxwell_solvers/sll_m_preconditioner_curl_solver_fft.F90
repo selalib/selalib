@@ -170,6 +170,11 @@ contains
     deallocate( mass_line_1 )
 
 
+    print*, 'eigvalues', self%eig_values_mass_1_1, self%eig_values_mass_0_1, self%eig_values_mass_1_2, self%eig_values_mass_0_2, self%eig_values_mass_1_3, self%eig_values_mass_0_3
+
+
+    print*, 'deriviave', self%eig_values_d1, self%eig_values_d2, self%eig_values_d3, self%eig_values_d1t, self%eig_values_d2t, self%eig_values_d3t
+    
     ! Initialize fft
     call sll_s_fft_init_c2c_1d( self%fft1, self%n_dofs(1), array1d_x, array1d_x, sll_p_fft_forward)
     call sll_s_fft_init_c2c_1d( self%fft2, self%n_dofs(2), array1d_y, array1d_y, sll_p_fft_forward)
@@ -249,6 +254,9 @@ contains
                   cmplx(self%eig_values_mass_1_1(i)*self%eig_values_mass_0_2(j)*&
                   self%eig_values_mass_1_3(k),kind=f64))
 
+
+             print*, 'mat', mat
+             
              call invert3d( mat, imat )
 
              scratch2(i,j,k,1) = imat(1,1)*scratch1(i,j,k,1) + &
