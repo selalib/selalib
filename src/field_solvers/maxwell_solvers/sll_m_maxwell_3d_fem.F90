@@ -765,14 +765,14 @@ contains
     self%linear_solver_schur_eb%rtol = self%solver_tolerance
     !self%linear_solver_schur_eb%verbose = .true.
 
-    call self%preconditioner_curl_fft%create( self%n_dofs, self%delta_x, self%s_deg_0 )
+    !call self%preconditioner_curl_fft%create( self%n_dofs, self%delta_x, self%s_deg_0 )
 
     call self%curl_matrix%create( self%mass1_operator, self%mass2_operator, self%n_dofs, self%delta_x   )
     call self%curl_operator%create( linear_operator=self%curl_matrix, vecs=nullspace, n_dim_nullspace=1 )
-    call self%curl_solver%create( self%curl_operator, self%preconditioner_curl_fft )
+    call self%curl_solver%create( self%curl_operator )!, self%preconditioner_curl_fft )
     self%curl_solver%null_space = .true.
     self%curl_solver%atol = self%solver_tolerance
-    !self%curl_solver%verbose = .true.
+    self%curl_solver%verbose = .true.
     !self%curl_solver%n_maxiter=1000
 
     call self%MG_operator%create( self%mass1_operator, self%n_dofs, self%delta_x )

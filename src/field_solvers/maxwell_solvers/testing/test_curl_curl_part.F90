@@ -74,7 +74,7 @@ program test_curl_curl_part
 
   ! Define computational domain
   eta1_min = .0_f64; eta1_max = 2.0_f64*sll_p_pi
-  nc_eta = 16![8, 16, 32]
+  nc_eta = 8![8, 16, 32]
   nc_total = product(nc_eta)
   Lx(1) = eta1_max-eta1_min
   Lx(2) = Lx(1); Lx(3) = Lx(2)
@@ -131,12 +131,12 @@ program test_curl_curl_part
   call maxwell_3d%compute_rhs_from_function( 1, 3, current(nc_total1+nc_total0+1:nc_total1+nc_total0*2), cos_k )
   current(1:nc_total1) = 3._f64* current(1:nc_total1)
   current(nc_total1+nc_total0+1:nc_total1+nc_total0*2) = -3._f64*current(nc_total1+nc_total0+1:nc_total1+nc_total0*2)
-!!$  call maxwell_3d%compute_rhs_from_function( 1, 1, current(1:nc_total1), jx )
-!!$  call maxwell_3d%compute_rhs_from_function( 1, 2, current(nc_total1+1:nc_total1+nc_total0), jy )
-!!$  call maxwell_3d%compute_rhs_from_function( 1, 3, current(nc_total1+nc_total0+1:nc_total1+nc_total0*2), jz )
+  call maxwell_3d%compute_rhs_from_function( 1, 1, current(1:nc_total1), jx )
+  call maxwell_3d%compute_rhs_from_function( 1, 2, current(nc_total1+1:nc_total1+nc_total0), jy )
+  call maxwell_3d%compute_rhs_from_function( 1, 3, current(nc_total1+nc_total0+1:nc_total1+nc_total0*2), jz )
 !!$  call random_number( afield )
 !!$  call maxwell_3d%multiply_ct( afield, current )
-  !call random_number( current )
+  call random_number( current )
   !write(*,*) current
 !!$  rho = 0._f64
   call maxwell_3d%multiply_gt( current, rho )
@@ -155,12 +155,12 @@ program test_curl_curl_part
   call maxwell_3d%L2projection( 1, 3, afield_ref(nc_total1+nc_total0+1:nc_total1+nc_total0*2), cos_k )
   afield_ref(nc_total1+nc_total0+1:nc_total1+nc_total0*2) = -afield_ref(nc_total1+nc_total0+1:nc_total1+nc_total0*2)
 
-!!$  call maxwell_3d%L2projection( 1, 1, afield_ref(1:nc_total1), ax )
-!!$  call maxwell_3d%L2projection( 1, 2, afield_ref(nc_total1+1:nc_total1+nc_total0), ay )
-!!$  call maxwell_3d%L2projection( 1, 3, afield_ref(nc_total1+nc_total0+1:nc_total1+nc_total0*2), az )
-!!$  
-!!$  rho = 0._f64
-!!$  call maxwell_3d%compute_rho_from_E( afield_ref, rho )
+  call maxwell_3d%L2projection( 1, 1, afield_ref(1:nc_total1), ax )
+  call maxwell_3d%L2projection( 1, 2, afield_ref(nc_total1+1:nc_total1+nc_total0), ay )
+  call maxwell_3d%L2projection( 1, 3, afield_ref(nc_total1+nc_total0+1:nc_total1+nc_total0*2), az )
+  
+  rho = 0._f64
+  call maxwell_3d%compute_rho_from_E( afield_ref, rho )
 !!$  print*, 'lhs divergence', maxval(abs(rho))
 !!$
   rho_ref = 0._f64
