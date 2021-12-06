@@ -24,9 +24,6 @@ module sll_m_maxwell_3d_fem_fft
   use sll_m_gauss_legendre_integration, only: &
        sll_f_gauss_legendre_points_and_weights
 
-  use sll_m_linear_operator_block, only : &
-       sll_t_linear_operator_block
-
   use sll_m_linear_operator_kron, only : &
        sll_t_linear_operator_kron
 
@@ -54,9 +51,6 @@ module sll_m_maxwell_3d_fem_fft
 
   use sll_m_poisson_3d_fem_fft, only : &
        sll_t_poisson_3d_fem_fft
-
-  use sll_m_preconditioner_fft, only : &
-       sll_t_preconditioner_fft
 
   use sll_m_profile_functions, only: &
        sll_t_profile_functions
@@ -116,13 +110,9 @@ module sll_m_maxwell_3d_fem_fft
      type(sll_t_matrix_csr)  :: mass1d(3,3) !< 1D mass matrices 
      type(sll_t_linear_operator_kron)  :: mass1(3) !< Tensorproduct 1-form mass matrix
      type(sll_t_linear_operator_kron)  :: mass2(3) !< Tensorproduct 2-form mass matrix
-     type(sll_t_linear_operator_block) :: mass1_operator   !< block mass matrix
-     type(sll_t_linear_operator_block) :: mass2_operator   !< block mass matrix
      type(sll_t_linear_solver_cg) :: mass0_solver     !< mass matrix solver
-     type(sll_t_preconditioner_fft) :: preconditioner_fft !< preconditioner for mass matrices
      type( sll_t_linear_operator_maxwell_eb_schur ) :: linear_op_schur_eb !< Schur complement operator for advect_eb
-     type( sll_t_linear_solver_mgmres )        :: linear_solver_schur_eb !< Schur complement solver for advect_eb
-
+    
    contains
      procedure :: &
           compute_E_from_B => sll_s_compute_e_from_b_3d_fem_fft !< Solve E and B part of Amperes law with B constant in time
@@ -227,7 +217,7 @@ contains
     end if
 
     ! Compute C^T M2 b
-    call self%mass2_operator%dot( bfield, self%work )
+    call multiply_mass_2form( self, bfield, self%work )
     call self%multiply_ct( self%work, self%work2 ) 
 
     self%linear_op_schur_eb%factor = -delta_t**2*factor*0.25_f64
@@ -239,8 +229,6 @@ contains
 
     ! Invert Schur complement matrix
     self%linear_op_schur_eb%factor = delta_t**2*factor*0.25_f64
-    !call self%linear_solver_schur_eb%set_guess( efield )
-    !call self%linear_solver_schur_eb%solve( self%work, efield )
     call self%linear_op_schur_eb%dot_inverse( self%work, efield )
 
     ! Update B field
@@ -729,22 +717,9 @@ contains
          linop_b=self%mass1d(2,2), &
          linop_c=self%mass1d(2,1))
 
-    call self%mass1_operator%create( 3, 3 )
-    call self%mass2_operator%create( 3, 3 )
-    do j= 1, 3
-       call self%mass1_operator%set( j, j, self%mass1(j) )
-       call self%mass2_operator%set( j, j, self%mass2(j) )
-    end do
-    call self%preconditioner_fft%init( self%Lx, n_dofs, s_deg_0 )
-
-
-    call self%linear_op_schur_eb%create( eig_values_mass_0_1, eig_values_mass_0_2, eig_values_mass_0_3, eig_values_mass_1_1, eig_values_mass_1_2, eig_values_mass_1_3, self%mass1_operator, self%mass2_operator, self%n_dofs, self%delta_x )
-    ! call self%linear_op_schur_eb%create( self%mass1_operator, self%mass2_operator, self%n_total, self%n_dofs, self%delta_x   )
-    call self%linear_solver_schur_eb%create( self%linear_op_schur_eb, self%preconditioner_fft%inverse_mass1_3d )
-    self%linear_solver_schur_eb%atol = self%solver_tolerance
-    self%linear_solver_schur_eb%rtol = self%solver_tolerance
-    self%linear_solver_schur_eb%verbose = .true.
-
+ 
+    call self%linear_op_schur_eb%create( eig_values_mass_0_1, eig_values_mass_0_2, eig_values_mass_0_3, eig_values_mass_1_1, eig_values_mass_1_2, eig_values_mass_1_3, self%n_dofs, self%delta_x )
+   
     if(self%adiabatic_electrons) then
        call sll_s_spline_fem_mass3d( self%n_dofs, s_deg_0, -1, self%mass0, profile_m0 )
        call self%mass0_solver%create( self%mass0 )

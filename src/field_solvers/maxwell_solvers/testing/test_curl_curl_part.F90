@@ -74,7 +74,7 @@ program test_curl_curl_part
 
   ! Define computational domain
   eta1_min = .0_f64; eta1_max = 2.0_f64*sll_p_pi
-  nc_eta = 8![8, 16, 32]
+  nc_eta = 4![8, 16, 32]
   nc_total = product(nc_eta)
   Lx(1) = eta1_max-eta1_min
   Lx(2) = Lx(1); Lx(3) = Lx(2)
@@ -83,7 +83,7 @@ program test_curl_curl_part
   domain(2,:) = [eta1_min, eta1_max]
   domain(3,:) = [eta1_min, eta1_max]
   ! Set spline degree of 0-forms
-  deg = 3![2,2,3]
+  deg = 2![2,2,3]
   ! Time loop
   delta_t = 0.01_f64
 
@@ -127,16 +127,16 @@ program test_curl_curl_part
 
 
   current = 0._f64
-  call maxwell_3d%compute_rhs_from_function( 1, 1, current(1:nc_total1), cos_k )
-  call maxwell_3d%compute_rhs_from_function( 1, 3, current(nc_total1+nc_total0+1:nc_total1+nc_total0*2), cos_k )
-  current(1:nc_total1) = 3._f64* current(1:nc_total1)
-  current(nc_total1+nc_total0+1:nc_total1+nc_total0*2) = -3._f64*current(nc_total1+nc_total0+1:nc_total1+nc_total0*2)
+!!$  call maxwell_3d%compute_rhs_from_function( 1, 1, current(1:nc_total1), cos_k )
+!!$  call maxwell_3d%compute_rhs_from_function( 1, 3, current(nc_total1+nc_total0+1:nc_total1+nc_total0*2), cos_k )
+!!$  current(1:nc_total1) = 3._f64* current(1:nc_total1)
+!!$  current(nc_total1+nc_total0+1:nc_total1+nc_total0*2) = -3._f64*current(nc_total1+nc_total0+1:nc_total1+nc_total0*2)
   call maxwell_3d%compute_rhs_from_function( 1, 1, current(1:nc_total1), jx )
   call maxwell_3d%compute_rhs_from_function( 1, 2, current(nc_total1+1:nc_total1+nc_total0), jy )
   call maxwell_3d%compute_rhs_from_function( 1, 3, current(nc_total1+nc_total0+1:nc_total1+nc_total0*2), jz )
 !!$  call random_number( afield )
 !!$  call maxwell_3d%multiply_ct( afield, current )
-  call random_number( current )
+  !call random_number( current )
   !write(*,*) current
 !!$  rho = 0._f64
   call maxwell_3d%multiply_gt( current, rho )
@@ -144,16 +144,17 @@ program test_curl_curl_part
 
  ! maxwell_3d%curl_matrix%epsilon = 6.0_f64!1d-0
   !call maxwell_3d%curl_solver%solve( current, afield )
-  call maxwell_3d%uzawa_iterator%solve( current, afield )
+  call maxwell_3d%preconditioner_curl_fft%solve( current, afield )
+  !call maxwell_3d%uzawa_iterator%solve( current, afield )
 
   !print*, 'afield', afield
 
   !print*, 'p',maxwell_3d%uzawa_iterator%x_0
 
   afield_ref = 0._f64
-  call maxwell_3d%L2projection( 1, 1, afield_ref(1:nc_total1), cos_k )
-  call maxwell_3d%L2projection( 1, 3, afield_ref(nc_total1+nc_total0+1:nc_total1+nc_total0*2), cos_k )
-  afield_ref(nc_total1+nc_total0+1:nc_total1+nc_total0*2) = -afield_ref(nc_total1+nc_total0+1:nc_total1+nc_total0*2)
+!!$  call maxwell_3d%L2projection( 1, 1, afield_ref(1:nc_total1), cos_k )
+!!$  call maxwell_3d%L2projection( 1, 3, afield_ref(nc_total1+nc_total0+1:nc_total1+nc_total0*2), cos_k )
+!!$  afield_ref(nc_total1+nc_total0+1:nc_total1+nc_total0*2) = -afield_ref(nc_total1+nc_total0+1:nc_total1+nc_total0*2)
 
   call maxwell_3d%L2projection( 1, 1, afield_ref(1:nc_total1), ax )
   call maxwell_3d%L2projection( 1, 2, afield_ref(nc_total1+1:nc_total1+nc_total0), ay )
@@ -170,7 +171,7 @@ program test_curl_curl_part
   call maxwell_3d%curl_matrix%dot(afield, afield_val )
   call maxwell_3d%MG_operator%dot(maxwell_3d%uzawa_iterator%x_0, scratch )
 
-  afield_val = afield_val + scratch
+  !afield_val = afield_val + scratch
   
   print*, 'error operator', maxval(abs(afield_val(1:nc_total1) - current(1:nc_total1) ) ), maxval(abs(afield_val(nc_total1+1:nc_total1+nc_total0) - current(nc_total1+1:nc_total1+nc_total0) ) ), maxval(abs(afield_val(nc_total1+nc_total0+1:nc_total0+nc_total*2) - current(nc_total1+nc_total0+1:nc_total0+nc_total*2) ) )
 
@@ -246,21 +247,21 @@ contains
     sll_real64             :: jx
     sll_real64, intent(in) :: x(3)
 
-    jx = 3._f64*( sin(x(1)+x(2)+x(3)) + cos(x(1)+x(2)+x(3)) ) -sin(x(1)+x(2)+x(3))
+    jx = 3._f64*( sin(x(1)+x(2)+x(3)) + cos(x(1)+x(2)+x(3)) ) !-sin(x(1)+x(2)+x(3))
   end function jx
 
   function jy(x)
     sll_real64             :: jy
     sll_real64, intent(in) :: x(3)
 
-    jy = -3._f64*( cos(x(1)+x(2)+x(3)) - 4._f64* cos(2._f64*(x(1)+x(2)+x(3)) ) )  -sin(x(1)+x(2)+x(3))
+    jy = -3._f64*( cos(x(1)+x(2)+x(3)) - 4._f64* cos(2._f64*(x(1)+x(2)+x(3)) ) )  !-sin(x(1)+x(2)+x(3))
   end function jy
 
   function jz(x)
     sll_real64             :: jz
     sll_real64, intent(in) :: x(3)
 
-    jz = -3._f64*( sin(x(1)+x(2)+x(3)) + 4._f64* cos(2._f64*(x(1)+x(2)+x(3)) ) )  -sin(x(1)+x(2)+x(3))
+    jz = -3._f64*( sin(x(1)+x(2)+x(3)) + 4._f64* cos(2._f64*(x(1)+x(2)+x(3)) ) )  !-sin(x(1)+x(2)+x(3))
   end function jz
 
   function ax(x)
