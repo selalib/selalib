@@ -234,6 +234,7 @@ contains
          x_min, &
          Lx, &
          filter,&
+         .false., &
          boundary_particles, &
          solver_tolerance_set, &
          betar=betar_set, &
@@ -325,6 +326,7 @@ contains
          Lx, &
          filter,&
          filename, &
+         .false., &
          boundary_particles = boundary_particles_set, &
          betar=betar_set, &
          force_sign=force_sign_set, &
