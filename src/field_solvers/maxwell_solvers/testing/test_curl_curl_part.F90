@@ -74,7 +74,7 @@ program test_curl_curl_part
 
   ! Define computational domain
   eta1_min = .0_f64; eta1_max = 2.0_f64*sll_p_pi
-  nc_eta = 4![8, 16, 32]
+  nc_eta = 16![8, 16, 32]
   nc_total = product(nc_eta)
   Lx(1) = eta1_max-eta1_min
   Lx(2) = Lx(1); Lx(3) = Lx(2)
@@ -83,7 +83,7 @@ program test_curl_curl_part
   domain(2,:) = [eta1_min, eta1_max]
   domain(3,:) = [eta1_min, eta1_max]
   ! Set spline degree of 0-forms
-  deg = 2![2,2,3]
+  deg = 3![2,2,3]
   ! Time loop
   delta_t = 0.01_f64
 
