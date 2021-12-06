@@ -169,12 +169,6 @@ contains
     deallocate( mass_line_0 )
     deallocate( mass_line_1 )
 
-
-    print*, 'eigvalues', self%eig_values_mass_1_1, self%eig_values_mass_0_1, self%eig_values_mass_1_2, self%eig_values_mass_0_2, self%eig_values_mass_1_3, self%eig_values_mass_0_3
-
-
-    print*, 'deriviave', self%eig_values_d1, self%eig_values_d2, self%eig_values_d3, self%eig_values_d1t, self%eig_values_d2t, self%eig_values_d3t
-    
     ! Initialize fft
     call sll_s_fft_init_c2c_1d( self%fft1, self%n_dofs(1), array1d_x, array1d_x, sll_p_fft_forward)
     call sll_s_fft_init_c2c_1d( self%fft2, self%n_dofs(2), array1d_y, array1d_y, sll_p_fft_forward)
@@ -214,61 +208,63 @@ contains
     do k=1,self%n_dofs(3)
        do j=1,self%n_dofs(2)
           do i=1,self%n_dofs(1)
+             if ( i == 1 .or. j==1 .or. k == 1 ) then
+                scratch2(i,j,k,1) = cmplx(0.0_f64, 0.0_f64, f64)
+                scratch2(i,j,k,2) = cmplx(0.0_f64, 0.0_f64, f64)
+                scratch2(i,j,k,3) = cmplx(0.0_f64, 0.0_f64, f64)
+             else
+                mat(1,1) =  (self%eig_values_d3t(k)*self%eig_values_d3(k)*&
+                     cmplx(self%eig_values_mass_1_1(i)*self%eig_values_mass_0_2(j)*&
+                     self%eig_values_mass_1_3(k),kind=f64) + &
+                     self%eig_values_d2t(j)*self%eig_values_d2(j)*&
+                     cmplx(self%eig_values_mass_1_1(i)*self%eig_values_mass_1_2(j)*&
+                     self%eig_values_mass_0_3(k),kind=f64))
+                mat(1,2) = - ( self%eig_values_d2t(j)*self%eig_values_d1(i)* &
+                     cmplx(self%eig_values_mass_1_1(i)*self%eig_values_mass_1_2(j)*&
+                     self%eig_values_mass_0_3(k),kind=f64))
+                mat(1,3) = - ( self%eig_values_d3t(k)*self%eig_values_d1(i)* &
+                     cmplx(self%eig_values_mass_1_1(i)*self%eig_values_mass_0_2(j)*&
+                     self%eig_values_mass_1_3(k),kind=f64))
 
-             mat(1,1) =  (self%eig_values_d3t(k)*self%eig_values_d3(k)*&
-                  cmplx(self%eig_values_mass_1_1(i)*self%eig_values_mass_0_2(j)*&
-                  self%eig_values_mass_1_3(k),kind=f64) + &
-                  self%eig_values_d2t(j)*self%eig_values_d2(j)*&
-                  cmplx(self%eig_values_mass_1_1(i)*self%eig_values_mass_1_2(j)*&
-                  self%eig_values_mass_0_3(k),kind=f64))
-             mat(1,2) = - ( self%eig_values_d2t(j)*self%eig_values_d1(i)* &
-                  cmplx(self%eig_values_mass_1_1(i)*self%eig_values_mass_1_2(j)*&
-                  self%eig_values_mass_0_3(k),kind=f64))
-             mat(1,3) = - ( self%eig_values_d3t(k)*self%eig_values_d1(i)* &
-                  cmplx(self%eig_values_mass_1_1(i)*self%eig_values_mass_0_2(j)*&
-                  self%eig_values_mass_1_3(k),kind=f64))
+                mat(2,2) = (self%eig_values_d3t(k)*self%eig_values_d3(k)*&
+                     cmplx(self%eig_values_mass_0_1(i)*self%eig_values_mass_1_2(j)*&
+                     self%eig_values_mass_1_3(k),kind=f64) + &
+                     self%eig_values_d1t(i)*self%eig_values_d1(i)*&
+                     cmplx(self%eig_values_mass_1_1(i)*self%eig_values_mass_1_2(j)*&
+                     self%eig_values_mass_0_3(k),kind=f64))
+                mat(2,1) = - ( self%eig_values_d1t(i)*self%eig_values_d2(j)* &
+                     cmplx(self%eig_values_mass_1_1(i)*self%eig_values_mass_1_2(j)*&
+                     self%eig_values_mass_0_3(k),kind=f64))
+                mat(2,3) = - ( self%eig_values_d3t(k)*self%eig_values_d2(j)* &
+                     cmplx(self%eig_values_mass_0_1(i)*self%eig_values_mass_1_2(j)*&
+                     self%eig_values_mass_1_3(k),kind=f64))
 
-             mat(2,2) = (self%eig_values_d3t(k)*self%eig_values_d3(k)*&
-                  cmplx(self%eig_values_mass_0_1(i)*self%eig_values_mass_1_2(j)*&
-                  self%eig_values_mass_1_3(k),kind=f64) + &
-                  self%eig_values_d1t(i)*self%eig_values_d1(i)*&
-                  cmplx(self%eig_values_mass_1_1(i)*self%eig_values_mass_1_2(j)*&
-                  self%eig_values_mass_0_3(k),kind=f64))
-             mat(2,1) = - ( self%eig_values_d1t(i)*self%eig_values_d2(j)* &
-                  cmplx(self%eig_values_mass_1_1(i)*self%eig_values_mass_1_2(j)*&
-                  self%eig_values_mass_0_3(k),kind=f64))
-             mat(2,3) = - ( self%eig_values_d3t(k)*self%eig_values_d2(j)* &
-                  cmplx(self%eig_values_mass_0_1(i)*self%eig_values_mass_1_2(j)*&
-                  self%eig_values_mass_1_3(k),kind=f64))
+                mat(3,3) = (self%eig_values_d1t(i)*self%eig_values_d1(i)*&
+                     cmplx(self%eig_values_mass_1_1(i)*self%eig_values_mass_0_2(j)*&
+                     self%eig_values_mass_1_3(k),kind=f64) + &
+                     self%eig_values_d2t(j)*self%eig_values_d2(j)*&
+                     cmplx(self%eig_values_mass_0_1(i)*self%eig_values_mass_1_2(j)*&
+                     self%eig_values_mass_1_3(k),kind=f64))
+                mat(3,2) = - ( self%eig_values_d2t(j)*self%eig_values_d3(k)* &
+                     cmplx(self%eig_values_mass_0_1(i)*self%eig_values_mass_1_2(j)*&
+                     self%eig_values_mass_1_3(k),kind=f64))
+                mat(3,1) = - ( self%eig_values_d1t(i)*self%eig_values_d3(k)* &
+                     cmplx(self%eig_values_mass_1_1(i)*self%eig_values_mass_0_2(j)*&
+                     self%eig_values_mass_1_3(k),kind=f64))
 
-             mat(3,3) = (self%eig_values_d1t(i)*self%eig_values_d1(i)*&
-                  cmplx(self%eig_values_mass_1_1(i)*self%eig_values_mass_0_2(j)*&
-                  self%eig_values_mass_1_3(k),kind=f64) + &
-                  self%eig_values_d2t(j)*self%eig_values_d2(j)*&
-                  cmplx(self%eig_values_mass_0_1(i)*self%eig_values_mass_1_2(j)*&
-                  self%eig_values_mass_1_3(k),kind=f64))
-             mat(3,2) = - ( self%eig_values_d2t(j)*self%eig_values_d3(k)* &
-                  cmplx(self%eig_values_mass_0_1(i)*self%eig_values_mass_1_2(j)*&
-                  self%eig_values_mass_1_3(k),kind=f64))
-             mat(3,1) = - ( self%eig_values_d1t(i)*self%eig_values_d3(k)* &
-                  cmplx(self%eig_values_mass_1_1(i)*self%eig_values_mass_0_2(j)*&
-                  self%eig_values_mass_1_3(k),kind=f64))
+                print*, 'ijk', i,j,k
+                call invert3d( mat, imat )
 
-
-             print*, 'mat', mat
-             
-             call invert3d( mat, imat )
-
-             scratch2(i,j,k,1) = imat(1,1)*scratch1(i,j,k,1) + &
-                  imat(1,2)*scratch1(i,j,k,2) + &
-                  imat(1,3)*scratch1(i,j,k,3)
-             scratch2(i,j,k,2) = imat(2,1)*scratch1(i,j,k,1) + &
-                  imat(2,2)*scratch1(i,j,k,2) + &
-                  imat(2,3)*scratch1(i,j,k,3)
-             scratch2(i,j,k,3) = imat(3,1)*scratch1(i,j,k,1) + &
-                  imat(3,2)*scratch1(i,j,k,2) + &
-                  imat(3,3)*scratch1(i,j,k,3)
-
+                scratch2(i,j,k,1) = imat(1,1)*scratch1(i,j,k,1) + &
+                     imat(1,2)*scratch1(i,j,k,2) + &
+                     imat(1,3)*scratch1(i,j,k,3)
+                scratch2(i,j,k,2) = imat(2,1)*scratch1(i,j,k,1) + &
+                     imat(2,2)*scratch1(i,j,k,2) + &
+                     imat(2,3)*scratch1(i,j,k,3)
+                scratch2(i,j,k,3) = imat(3,1)*scratch1(i,j,k,1) + &
+                     imat(3,2)*scratch1(i,j,k,2) + &
+                     imat(3,3)*scratch1(i,j,k,3)
+             end if
           end do
        end do
     end do
@@ -396,6 +392,8 @@ contains
 
     det = mat(1,1)*mat(2,2)*mat(3,3) + mat(1,2)*mat(2,3)*mat(3,1) + mat(1,3)*mat(2,1)*mat(3,2) - mat(1,3)*mat(2,2)*mat(3,1) - mat(3,3)*mat(1,2)*mat(2,1) - mat(1,1)*mat(2,3)*mat(3,2)
 
+    print*, 'det', mat(1,1)*mat(2,2)*mat(3,3), mat(1,2)*mat(2,3)*mat(3,1), mat(1,3)*mat(2,1)*mat(3,2), - mat(1,3)*mat(2,2)*mat(3,1), - mat(3,3)*mat(1,2)*mat(2,1), - mat(1,1)*mat(2,3)*mat(3,2)
+    print*, det
     mat_inv(1,1) = mat(2,2)*mat(3,3) - mat(2,3)*mat(3,2)
     mat_inv(1,2) = mat(1,3)*mat(3,2) - mat(1,2)*mat(3,3)
     mat_inv(1,3) = mat(1,2)*mat(2,3) - mat(1,3)*mat(2,2)
