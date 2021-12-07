@@ -308,9 +308,8 @@ contains
     call self%linear_op_schur_eb%create( self%mass1_operator, self%mass2_operator, self%n_total, self%n_dofs, self%delta_x   )
     call self%linear_solver_schur_eb%create( self%linear_op_schur_eb, self%preconditioner_fft%inverse_mass1_3d)
     self%linear_solver_schur_eb%atol = self%solver_tolerance/maxval(self%Lx)
-    self%linear_solver_schur_eb%rtol = self%solver_tolerance/maxval(self%Lx)
     !self%linear_solver_schur_eb%verbose = .true.
-    self%linear_solver_schur_eb%n_maxiter = 10000
+    !self%linear_solver_schur_eb%n_maxiter = 2000
 
   contains
     function profile_m0( x, component)
