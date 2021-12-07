@@ -774,8 +774,9 @@ contains
     call self%MG_operator%create( self%mass1_operator, self%n_dofs, self%delta_x )
     call self%GTM_operator%create( self%mass1_operator, self%n_dofs, self%delta_x )
     call self%uzawa_iterator%create( self%curl_solver, self%MG_operator, self%GTM_operator )
+    !call self%uzawa_iterator%create( self%preconditioner_curl_fft, self%MG_operator, self%GTM_operator )
     self%uzawa_iterator%verbose = .true.
-    self%uzawa_iterator%atol = 1.0d-10
+    self%uzawa_iterator%atol = 1.0d-9
     !self%uzawa_iterator%n_maxiter=5000
   contains
     function profile_m0( x, component)
