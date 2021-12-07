@@ -314,7 +314,6 @@ contains
 
     niterx = 1
     do k = 1, niterxmax
-       
 
        v = 0.0_f64
        !v_j=A p_j
@@ -347,6 +346,7 @@ contains
        alpha = w1
 
        niterx = k + 1
+
     end do
 
     return
