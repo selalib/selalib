@@ -6,11 +6,7 @@
 !> 
 !> @author
 !> Katharina Kormann
-
-
 ! TODO: Write FFT-based mass solver: There is such a solver already defined as linear_solver_mass1 in particle_methods. Reuse? Can we put the parallelization in this solver?
-! Remove all parts that belong the PLF
-! Add also solver for combined e and b (first step for AVF-based algorithm)
 
 
 module sll_m_maxwell_3d_fem_fft
@@ -24,20 +20,11 @@ module sll_m_maxwell_3d_fem_fft
   use sll_m_gauss_legendre_integration, only: &
        sll_f_gauss_legendre_points_and_weights
 
-  use sll_m_linear_operator_block, only : &
-       sll_t_linear_operator_block
-
   use sll_m_linear_operator_kron, only : &
        sll_t_linear_operator_kron
 
   use sll_m_linear_operator_maxwell_eb_schur, only : &
        sll_t_linear_operator_maxwell_eb_schur
-
-  use sll_m_linear_solver_cg, only : &
-       sll_t_linear_solver_cg
-
-  use sll_m_linear_solver_mgmres, only : &
-       sll_t_linear_solver_mgmres
 
   use sll_m_linear_solver_spline_mass_fft, only : &
        sll_t_linear_solver_spline_mass_fft
@@ -54,9 +41,6 @@ module sll_m_maxwell_3d_fem_fft
 
   use sll_m_poisson_3d_fem_fft, only : &
        sll_t_poisson_3d_fem_fft
-
-  use sll_m_preconditioner_fft, only : &
-       sll_t_preconditioner_fft
 
   use sll_m_profile_functions, only: &
        sll_t_profile_functions
@@ -116,13 +100,8 @@ module sll_m_maxwell_3d_fem_fft
      type(sll_t_matrix_csr)  :: mass1d(3,3) !< 1D mass matrices 
      type(sll_t_linear_operator_kron)  :: mass1(3) !< Tensorproduct 1-form mass matrix
      type(sll_t_linear_operator_kron)  :: mass2(3) !< Tensorproduct 2-form mass matrix
-     type(sll_t_linear_operator_block) :: mass1_operator   !< block mass matrix
-     type(sll_t_linear_operator_block) :: mass2_operator   !< block mass matrix
-     type(sll_t_linear_solver_cg) :: mass0_solver     !< mass matrix solver
-     type(sll_t_preconditioner_fft) :: preconditioner_fft !< preconditioner for mass matrices
      type( sll_t_linear_operator_maxwell_eb_schur ) :: linear_op_schur_eb !< Schur complement operator for advect_eb
-     type( sll_t_linear_solver_mgmres )        :: linear_solver_schur_eb !< Schur complement solver for advect_eb
-
+    
    contains
      procedure :: &
           compute_E_from_B => sll_s_compute_e_from_b_3d_fem_fft !< Solve E and B part of Amperes law with B constant in time
@@ -227,7 +206,7 @@ contains
     end if
 
     ! Compute C^T M2 b
-    call self%mass2_operator%dot( bfield, self%work )
+    call multiply_mass_2form( self, bfield, self%work )
     call self%multiply_ct( self%work, self%work2 ) 
 
     self%linear_op_schur_eb%factor = -delta_t**2*factor*0.25_f64
@@ -239,12 +218,11 @@ contains
 
     ! Invert Schur complement matrix
     self%linear_op_schur_eb%factor = delta_t**2*factor*0.25_f64
-    call self%linear_solver_schur_eb%set_guess( efield )
-    call self%linear_solver_schur_eb%solve( self%work, efield)
+    call self%linear_op_schur_eb%dot_inverse( self%work, efield )
 
     ! Update B field
     self%work2 = self%work2 + efield
-    call self%compute_b_from_e( delta_t*0.5_f64, self%work2, bfield)
+    call self%compute_b_from_e( delta_t*0.5_f64, self%work2, bfield )
 
   end subroutine sll_s_compute_curl_part_3d_fem_fft
 
@@ -301,7 +279,7 @@ contains
     sll_real64, intent( inout )           :: field_out(:) !< phi
     sll_real64, intent(   out )           :: efield_dofs(:) !< E
 
-    call self%mass0_solver%solve( field_in, field_out )
+    call self%inverse_mass_0%solve( field_in, field_out )
     call self%multiply_g( field_out, efield_dofs )
     efield_dofs = -efield_dofs
 
@@ -316,7 +294,7 @@ contains
     sll_real64, intent(   out )           :: efield_dofs(:) !< E
 
     call self%multiply_gt( field_in, self%work(1:self%n_total) ) 
-    call self%mass0_solver%solve( self%work(1:self%n_total), self%work2(1:self%n_total) )
+    call self%inverse_mass_0%solve( self%work(1:self%n_total), self%work2(1:self%n_total) )
     field_out = field_out + self%work2(1:self%n_total)
 
     call self%multiply_g( field_out, efield_dofs )
@@ -553,6 +531,7 @@ contains
     sll_real64, allocatable :: inv_eig_values_mass_1_1(:)
     sll_real64, allocatable :: inv_eig_values_mass_1_2(:)
     sll_real64, allocatable :: inv_eig_values_mass_1_3(:)
+    sll_real64 :: factor
 
     self%n_cells = n_dofs
     self%n_dofs = n_dofs
@@ -683,8 +662,12 @@ contains
        inv_eig_values_mass_1_3(n_dofs(3)+2-j) = 1._f64/eig_values_mass_1_3(n_dofs(3)+2-j)
     end do
 
-
-    call self%inverse_mass_0%create( n_dofs, inv_eig_values_mass_0_1, inv_eig_values_mass_0_2, inv_eig_values_mass_0_3 )
+    if(self%adiabatic_electrons) then
+       factor = self%profile%T_e( 0._f64 )/self%profile%rho_0( 0._f64 )
+       call self%inverse_mass_0%create( n_dofs, inv_eig_values_mass_0_1*factor, inv_eig_values_mass_0_2*factor, inv_eig_values_mass_0_3*factor )
+    else
+       call self%inverse_mass_0%create( n_dofs, inv_eig_values_mass_0_1, inv_eig_values_mass_0_2, inv_eig_values_mass_0_3 )
+    end if
 
     call self%inverse_mass_1(1)%create( n_dofs, inv_eig_values_mass_1_1, inv_eig_values_mass_0_2, inv_eig_values_mass_0_3 )
     call self%inverse_mass_1(2)%create( n_dofs, inv_eig_values_mass_0_1, inv_eig_values_mass_1_2, inv_eig_values_mass_0_3 )
@@ -728,48 +711,8 @@ contains
          linop_b=self%mass1d(2,2), &
          linop_c=self%mass1d(2,1))
 
-    call self%mass1_operator%create( 3, 3 )
-    call self%mass2_operator%create( 3, 3 )
-    do j= 1, 3
-       call self%mass1_operator%set( j, j, self%mass1(j) )
-       call self%mass2_operator%set( j, j, self%mass2(j) )
-    end do
-    call self%preconditioner_fft%init( self%Lx, n_dofs, s_deg_0 )
-
-
-    call self%linear_op_schur_eb%create( self )
-    ! call self%linear_op_schur_eb%create( self%mass1_operator, self%mass2_operator, self%n_total, self%n_dofs, self%delta_x   )
-    call self%linear_solver_schur_eb%create( self%linear_op_schur_eb, self%preconditioner_fft%inverse_mass1_3d )
-    self%linear_solver_schur_eb%atol = self%solver_tolerance
-    self%linear_solver_schur_eb%rtol = self%solver_tolerance
-    !self%linear_solver_schur_eb%verbose = .true.
-
-    if(self%adiabatic_electrons) then
-       call sll_s_spline_fem_mass3d( self%n_dofs, s_deg_0, -1, self%mass0, profile_m0 )
-       call self%mass0_solver%create( self%mass0 )
-       self%mass0_solver%atol = self%mass_solver_tolerance
-       !self%mass0_solver%verbose = .true.
-    end if
-
-  contains
-    function profile_m0( x, component)
-      sll_real64 :: profile_m0
-      sll_real64, intent(in) :: x(3)
-      sll_int32, optional, intent(in)  :: component(:)
-
-      profile_m0 = product(self%Lx) * self%profile%rho_0( x(1) )/ self%profile%T_e( x(1) )
-
-    end function profile_m0
-
-    function profile_0( x, component)
-      sll_real64 :: profile_0
-      sll_real64, intent(in) :: x(3)
-      sll_int32, optional, intent(in)  :: component(:)
-
-      profile_0 = product(self%Lx) 
-
-    end function profile_0
-
+ 
+    call self%linear_op_schur_eb%create( eig_values_mass_0_1, eig_values_mass_0_2, eig_values_mass_0_3, eig_values_mass_1_1, eig_values_mass_1_2, eig_values_mass_1_3, self%n_dofs, self%delta_x )
 
   end subroutine init_3d_fem_fft
 
