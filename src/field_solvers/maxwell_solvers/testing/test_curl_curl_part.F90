@@ -59,11 +59,11 @@ program test_curl_curl_part
   sll_real64, allocatable :: afield(:)
   sll_real64, allocatable :: afield_ref(:)
   sll_real64, allocatable :: afield_val(:), scratch(:)
-  sll_real64, allocatable :: rho(:), rho_ref(:), current(:)
+  sll_real64, allocatable :: rho(:), rho_ref(:), current(:), noise(:)
 
   sll_int32                               :: i, j, k, ind
   sll_real64                                :: delta_t
-
+  sll_real64                              :: eps
   sll_real64                              :: Lx(3)
   sll_real64, dimension(3,2)              :: domain
   sll_int32                               :: deg(3), boundary(3)
@@ -114,6 +114,7 @@ program test_curl_curl_part
   allocate( rho( nc_total0 ) )
   allocate( rho_ref( nc_total0 ) )
   allocate( current(1:nc_total1+nc_total0*2) )
+  allocate( noise(1:nc_total1+nc_total0*2) )
 
   do k = 1, nc_eta(3)+1
      do j = 1, nc_eta(2)+1
@@ -135,17 +136,18 @@ program test_curl_curl_part
   call maxwell_3d%compute_rhs_from_function( 1, 2, current(nc_total1+1:nc_total1+nc_total0), jy )
   call maxwell_3d%compute_rhs_from_function( 1, 3, current(nc_total1+nc_total0+1:nc_total1+nc_total0*2), jz )
 !!$  call random_number( afield )
-!!$  call maxwell_3d%multiply_ct( afield, current )
-  !call random_number( current )
-  !write(*,*) current
+!!$  call maxwell_3d%multiply_ct( afield, noise )
+  call random_number( noise )
+  eps = 1d-6
+  current = (1._f64-eps) * current +  eps* noise
 !!$  rho = 0._f64
   call maxwell_3d%multiply_gt( current, rho )
   print*, 'rhs divergence', maxval(abs(rho))
 
  ! maxwell_3d%curl_matrix%epsilon = 6.0_f64!1d-0
   !call maxwell_3d%curl_solver%solve( current, afield )
-  call maxwell_3d%preconditioner_curl_fft%solve( current, afield )
-  !call maxwell_3d%uzawa_iterator%solve( current, afield )
+  !call maxwell_3d%preconditioner_curl_fft%solve( current, afield )
+  call maxwell_3d%uzawa_iterator%solve( current, afield )
 
   !print*, 'afield', afield
 
@@ -165,13 +167,12 @@ program test_curl_curl_part
 !!$  print*, 'lhs divergence', maxval(abs(rho))
 !!$
   rho_ref = 0._f64
-  !call maxwell_3d%L2projection( 0, 1, rho_ref, cos_k )
+  call maxwell_3d%L2projection( 0, 1, rho_ref, cos_k )
   maxwell_3d%curl_matrix%epsilon = 0._f64
-  !call maxwell_3d%curl_operator%dot(afield, afield_val )
   call maxwell_3d%curl_matrix%dot(afield, afield_val )
   call maxwell_3d%MG_operator%dot(maxwell_3d%uzawa_iterator%x_0, scratch )
 
-  !afield_val = afield_val + scratch
+  afield_val = afield_val + scratch
   
   print*, 'error operator', maxval(abs(afield_val(1:nc_total1) - current(1:nc_total1) ) ), maxval(abs(afield_val(nc_total1+1:nc_total1+nc_total0) - current(nc_total1+1:nc_total1+nc_total0) ) ), maxval(abs(afield_val(nc_total1+nc_total0+1:nc_total0+nc_total*2) - current(nc_total1+nc_total0+1:nc_total0+nc_total*2) ) )
 
@@ -247,21 +248,21 @@ contains
     sll_real64             :: jx
     sll_real64, intent(in) :: x(3)
 
-    jx = 3._f64*( sin(x(1)+x(2)+x(3)) + cos(x(1)+x(2)+x(3)) ) !-sin(x(1)+x(2)+x(3))
+    jx = 3._f64*( sin(x(1)+x(2)+x(3)) + cos(x(1)+x(2)+x(3)) ) -sin(x(1)+x(2)+x(3))
   end function jx
 
   function jy(x)
     sll_real64             :: jy
     sll_real64, intent(in) :: x(3)
 
-    jy = -3._f64*( cos(x(1)+x(2)+x(3)) - 4._f64* cos(2._f64*(x(1)+x(2)+x(3)) ) )  !-sin(x(1)+x(2)+x(3))
+    jy = -3._f64*( cos(x(1)+x(2)+x(3)) - 4._f64* cos(2._f64*(x(1)+x(2)+x(3)) ) )  -sin(x(1)+x(2)+x(3))
   end function jy
 
   function jz(x)
     sll_real64             :: jz
     sll_real64, intent(in) :: x(3)
 
-    jz = -3._f64*( sin(x(1)+x(2)+x(3)) + 4._f64* cos(2._f64*(x(1)+x(2)+x(3)) ) )  !-sin(x(1)+x(2)+x(3))
+    jz = -3._f64*( sin(x(1)+x(2)+x(3)) + 4._f64* cos(2._f64*(x(1)+x(2)+x(3)) ) )  -sin(x(1)+x(2)+x(3))
   end function jz
 
   function ax(x)
