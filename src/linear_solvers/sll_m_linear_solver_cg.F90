@@ -155,9 +155,9 @@ contains
     if (self%verbose) then
        if (present(r_err)) then
           if (i_iteration <= self%n_maxiter) then
-             print*, '* cg:  convergence after', i_iteration, ' iterations. Error ', r_err
+             print*, '* cg:  convergence after', i_iteration, 'iterations. Error ', r_err
           else
-             print *, '* cg: Warning - max iterations achieved without convergence. Error', r_err
+             print *, '* cg: Warning - max iterations', i_iteration, 'achieved without convergence. Error', r_err
           end if
        end if
     end if
@@ -312,9 +312,9 @@ contains
     !alpha_0= <r_0,p_0>
     alpha = sum(r*p)
 
+    niterx = 1
     do k = 1, niterxmax
-       niterx    = k
-
+       
        v = 0.0_f64
        !v_j=A p_j
        call self%ptr_linear_operator%dot (p, v)
@@ -344,6 +344,8 @@ contains
        !p_j+1=z_j+1+beta_j p_j
        p = z + w1/alpha * p
        alpha = w1
+
+       niterx    = k +1
 
     end do
 

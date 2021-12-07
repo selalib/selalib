@@ -160,9 +160,9 @@ contains
     if (self%verbose) then
        if (present(r_err)) then
           if (i_iteration <= self%n_maxiter) then
-             print*, '* mgmres:  convegence after', i_iteration, ' iterations. Error ', r_err
+             print*, '* mgmres:  convegence after', i_iteration, 'iterations. Error ', r_err
           else
-             print *, '* mgmres: Warning - max iterations achieved without convergence. Error', r_err
+             print *, '* mgmres: Warning - max iterations', i_iteration, 'achieved without convergence. Error', r_err
           end if
        end if
     end if
