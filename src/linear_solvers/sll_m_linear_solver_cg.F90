@@ -157,7 +157,7 @@ contains
           if (i_iteration <= self%n_maxiter) then
              print*, '* cg:  convergence after', i_iteration, 'iterations. Error ', r_err
           else
-             print *, '* cg: Warning - max iterations', i_iteration, 'achieved without convergence. Error', r_err
+             print *, '* cg: Warning - max iterations', self%n_maxiter, 'achieved without convergence. Error', r_err
           end if
        end if
     end if
