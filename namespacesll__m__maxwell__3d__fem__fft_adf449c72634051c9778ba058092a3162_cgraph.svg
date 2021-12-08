@@ -55,75 +55,75 @@ var sectionId = 'dynsection-16';
 <g id="viewport">
 <title>multiply_mass_3d_fem_fft</title>
 <polygon fill="#ffffff" stroke="transparent" points="-4,4 -4,-135.99 711,-135.99 711,4 -4,4"/>
-<!-- Node61 -->
+<!-- Node53 -->
 <g id="node1" class="node">
-<title>Node61</title>
+<title>Node53</title>
 <polygon fill="#bfbfbf" stroke="#000000" points="0,-79.5 0,-98.5 146,-98.5 146,-79.5 0,-79.5"/>
 <text text-anchor="middle" x="73" y="-86.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">multiply_mass_3d_fem_fft</text>
 </g>
-<!-- Node62 -->
+<!-- Node54 -->
 <g id="node2" class="node">
-<title>Node62</title>
+<title>Node54</title>
 <g id="a_node2"><a xlink:href="namespacesll__m__maxwell__3d__fem__fft.html#af661de8498b97c6bb3b0549168a27a7e" target="_top" xlink:title="Multiply by the mass matrix. ">
 <polygon fill="#ffffff" stroke="#000000" points="351.5,-98.5 351.5,-117.5 479.5,-117.5 479.5,-98.5 351.5,-98.5"/>
 <text text-anchor="middle" x="415.5" y="-105.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">multiply_mass_3dkron</text>
 </a>
 </g>
 </g>
-<!-- Node61&#45;&gt;Node62 -->
+<!-- Node53&#45;&gt;Node54 -->
 <g id="edge1" class="edge">
-<title>Node61&#45;&gt;Node62</title>
+<title>Node53&#45;&gt;Node54</title>
 <path fill="none" stroke="#191970" d="M93.748,-98.5899C115.2771,-107.9724 150.1874,-121.6137 182,-127 244.0178,-137.5005 316.3201,-128.3801 363.8476,-119.5129"/>
 <polygon fill="#191970" stroke="#191970" points="364.7405,-122.9053 373.8956,-117.573 363.4135,-116.0322 364.7405,-122.9053"/>
 </g>
-<!-- Node64 -->
+<!-- Node56 -->
 <g id="node4" class="node">
-<title>Node64</title>
+<title>Node56</title>
 <g id="a_node4"><a xlink:href="namespacesll__m__maxwell__3d__fem__fft.html#ae07f9ed77d53f2f362a890d1023c22cf" target="_top" xlink:title="Helper function for multiply_mass. ">
 <polygon fill="#ffffff" stroke="#000000" points="182,-98.5 182,-117.5 305,-117.5 305,-98.5 182,-98.5"/>
 <text text-anchor="middle" x="243.5" y="-105.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">multiply_mass_1form</text>
 </a>
 </g>
 </g>
-<!-- Node61&#45;&gt;Node64 -->
+<!-- Node53&#45;&gt;Node56 -->
 <g id="edge3" class="edge">
-<title>Node61&#45;&gt;Node64</title>
+<title>Node53&#45;&gt;Node56</title>
 <path fill="none" stroke="#191970" d="M146.2968,-97.168C154.7027,-98.1047 163.2667,-99.059 171.6532,-99.9936"/>
 <polygon fill="#191970" stroke="#191970" points="171.4462,-103.4921 181.7723,-101.1213 172.2215,-96.5352 171.4462,-103.4921"/>
 </g>
-<!-- Node65 -->
+<!-- Node57 -->
 <g id="node5" class="node">
-<title>Node65</title>
+<title>Node57</title>
 <g id="a_node5"><a xlink:href="namespacesll__m__maxwell__3d__fem__fft.html#a13ab31c6639d576f0086381c07ea33f5" target="_top" xlink:title="Helper function for multiply_mass. ">
 <polygon fill="#ffffff" stroke="#000000" points="182,-60.5 182,-79.5 305,-79.5 305,-60.5 182,-60.5"/>
 <text text-anchor="middle" x="243.5" y="-67.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">multiply_mass_2form</text>
 </a>
 </g>
 </g>
-<!-- Node61&#45;&gt;Node65 -->
+<!-- Node53&#45;&gt;Node57 -->
 <g id="edge5" class="edge">
-<title>Node61&#45;&gt;Node65</title>
+<title>Node53&#45;&gt;Node57</title>
 <path fill="none" stroke="#191970" d="M146.2968,-80.832C154.7027,-79.8953 163.2667,-78.941 171.6532,-78.0064"/>
 <polygon fill="#191970" stroke="#191970" points="172.2215,-81.4648 181.7723,-76.8787 171.4462,-74.5079 172.2215,-81.4648"/>
 </g>
-<!-- Node66 -->
+<!-- Node58 -->
 <g id="node6" class="node">
-<title>Node66</title>
+<title>Node58</title>
 <g id="a_node6"><a xlink:href="namespacesll__m__maxwell__3d__fem__fft.html#adfe47ed1031ee66fcc5fd98c5a939447" target="_top" xlink:title="Multiply by the mass matrix. ">
 <polygon fill="#ffffff" stroke="#000000" points="190.5,-22.5 190.5,-41.5 296.5,-41.5 296.5,-22.5 190.5,-22.5"/>
 <text text-anchor="middle" x="243.5" y="-29.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">multiply_mass_all</text>
 </a>
 </g>
 </g>
-<!-- Node61&#45;&gt;Node66 -->
+<!-- Node53&#45;&gt;Node58 -->
 <g id="edge7" class="edge">
-<title>Node61&#45;&gt;Node66</title>
+<title>Node53&#45;&gt;Node58</title>
 <path fill="none" stroke="#191970" d="M99.7857,-79.3616C121.7945,-71.5146 153.8227,-60.2609 182,-51 188.4909,-48.8667 195.3893,-46.6686 202.1303,-44.5584"/>
 <polygon fill="#191970" stroke="#191970" points="203.3159,-47.8552 211.8283,-41.5473 201.2402,-41.17 203.3159,-47.8552"/>
 </g>
-<!-- Node63 -->
+<!-- Node55 -->
 <g id="node3" class="node">
-<title>Node63</title>
+<title>Node55</title>
 <g id="a_node3"><a xlink:href="namespacesll__m__spline__fem__utilities.html#a528fc7241e39fd979bd521f0c2d7b350" target="_top" xlink:title="Multiply the vector invec with the spline FEM mass matrix with mass line mass. ">
 <polygon fill="#ffffff" stroke="#000000" points="526,-74 526,-104 707,-104 707,-74 526,-74"/>
 <text text-anchor="start" x="534" y="-92" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_spline_fem_utilities</text>
@@ -131,33 +131,33 @@ var sectionId = 'dynsection-16';
 </a>
 </g>
 </g>
-<!-- Node62&#45;&gt;Node63 -->
+<!-- Node54&#45;&gt;Node55 -->
 <g id="edge2" class="edge">
-<title>Node62&#45;&gt;Node63</title>
+<title>Node54&#45;&gt;Node55</title>
 <path fill="none" stroke="#191970" d="M479.6503,-101.936C491.1394,-100.85 503.3609,-99.6947 515.5906,-98.5387"/>
 <polygon fill="#191970" stroke="#191970" points="516.2232,-101.9946 525.8494,-97.569 515.5644,-95.0257 516.2232,-101.9946"/>
 </g>
-<!-- Node64&#45;&gt;Node62 -->
+<!-- Node56&#45;&gt;Node54 -->
 <g id="edge4" class="edge">
-<title>Node64&#45;&gt;Node62</title>
+<title>Node56&#45;&gt;Node54</title>
 <path fill="none" stroke="#191970" d="M305.1101,-108C316.8581,-108 329.2681,-108 341.3592,-108"/>
 <polygon fill="#191970" stroke="#191970" points="341.4192,-111.5001 351.4192,-108 341.4191,-104.5001 341.4192,-111.5001"/>
 </g>
-<!-- Node65&#45;&gt;Node62 -->
+<!-- Node57&#45;&gt;Node54 -->
 <g id="edge6" class="edge">
-<title>Node65&#45;&gt;Node62</title>
+<title>Node57&#45;&gt;Node54</title>
 <path fill="none" stroke="#191970" d="M286.9029,-79.589C309.9068,-84.6713 338.3509,-90.9554 362.6342,-96.3203"/>
 <polygon fill="#191970" stroke="#191970" points="361.8896,-99.7402 372.4092,-98.4799 363.3998,-92.905 361.8896,-99.7402"/>
 </g>
-<!-- Node66&#45;&gt;Node63 -->
+<!-- Node58&#45;&gt;Node55 -->
 <g id="edge8" class="edge">
-<title>Node66&#45;&gt;Node63</title>
+<title>Node58&#45;&gt;Node55</title>
 <path fill="none" stroke="#191970" d="M289.5306,-41.5136C305.7612,-44.7238 324.1582,-48.1997 341,-51 398.7211,-60.5973 463.533,-69.6239 515.7866,-76.4693"/>
 <polygon fill="#191970" stroke="#191970" points="515.3593,-79.9432 525.7279,-77.7653 516.2643,-73.0019 515.3593,-79.9432"/>
 </g>
-<!-- Node67 -->
+<!-- Node59 -->
 <g id="node7" class="node">
-<title>Node67</title>
+<title>Node59</title>
 <g id="a_node7"><a xlink:href="namespacesll__m__spline__fem__utilities.html#a3f3677fa99a937bfa78c0b087d694df1" target="_top" xlink:title="Multiplication of the mix mass matrix given by a mass line mass. ">
 <polygon fill="#ffffff" stroke="#000000" points="341,-.5 341,-41.5 490,-41.5 490,-.5 341,-.5"/>
 <text text-anchor="start" x="349" y="-29.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_spline_fem_utilities</text>
@@ -166,9 +166,9 @@ var sectionId = 'dynsection-16';
 </a>
 </g>
 </g>
-<!-- Node66&#45;&gt;Node67 -->
+<!-- Node58&#45;&gt;Node59 -->
 <g id="edge9" class="edge">
-<title>Node66&#45;&gt;Node67</title>
+<title>Node58&#45;&gt;Node59</title>
 <path fill="none" stroke="#191970" d="M296.5091,-28.6099C307.3499,-27.9166 319.015,-27.1706 330.652,-26.4263"/>
 <polygon fill="#191970" stroke="#191970" points="331.0935,-29.9053 340.8497,-25.7741 330.6467,-22.9196 331.0935,-29.9053"/>
 </g>

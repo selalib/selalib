@@ -55,45 +55,45 @@ var sectionId = 'dynsection-3';
 <g id="viewport">
 <title>l2norm_squared_3d_fem_fft</title>
 <polygon fill="#ffffff" stroke="transparent" points="-4,4 -4,-35 715,-35 715,4 -4,4"/>
-<!-- Node25 -->
+<!-- Node16 -->
 <g id="node1" class="node">
-<title>Node25</title>
+<title>Node16</title>
 <polygon fill="#bfbfbf" stroke="#000000" points="0,-6 0,-25 153,-25 153,-6 0,-6"/>
 <text text-anchor="middle" x="76.5" y="-13" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">l2norm_squared_3d_fem_fft</text>
 </g>
-<!-- Node26 -->
+<!-- Node17 -->
 <g id="node2" class="node">
-<title>Node26</title>
+<title>Node17</title>
 <g id="a_node2"><a xlink:href="namespacesll__m__maxwell__3d__fem__fft.html#adea1bfe8cb9efebd4413b03e46082a41" target="_top" xlink:title="Compute inner product. ">
 <polygon fill="#ffffff" stroke="#000000" points="189,-6 189,-25 330,-25 330,-6 189,-6"/>
 <text text-anchor="middle" x="259.5" y="-13" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">inner_product_3d_fem_fft</text>
 </a>
 </g>
 </g>
-<!-- Node25&#45;&gt;Node26 -->
+<!-- Node16&#45;&gt;Node17 -->
 <g id="edge1" class="edge">
-<title>Node25&#45;&gt;Node26</title>
+<title>Node16&#45;&gt;Node17</title>
 <path fill="none" stroke="#191970" d="M153.0481,-15.5C161.4735,-15.5 170.0727,-15.5 178.5496,-15.5"/>
 <polygon fill="#191970" stroke="#191970" points="178.8088,-19.0001 188.8088,-15.5 178.8088,-12.0001 178.8088,-19.0001"/>
 </g>
-<!-- Node27 -->
+<!-- Node18 -->
 <g id="node3" class="node">
-<title>Node27</title>
+<title>Node18</title>
 <g id="a_node3"><a xlink:href="namespacesll__m__maxwell__3d__fem__fft.html#af661de8498b97c6bb3b0549168a27a7e" target="_top" xlink:title="Multiply by the mass matrix. ">
 <polygon fill="#ffffff" stroke="#000000" points="366,-6 366,-25 494,-25 494,-6 366,-6"/>
 <text text-anchor="middle" x="430" y="-13" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">multiply_mass_3dkron</text>
 </a>
 </g>
 </g>
-<!-- Node26&#45;&gt;Node27 -->
+<!-- Node17&#45;&gt;Node18 -->
 <g id="edge2" class="edge">
-<title>Node26&#45;&gt;Node27</title>
+<title>Node17&#45;&gt;Node18</title>
 <path fill="none" stroke="#191970" d="M330.3261,-15.5C338.7171,-15.5 347.3,-15.5 355.737,-15.5"/>
 <polygon fill="#191970" stroke="#191970" points="355.9332,-19.0001 365.9331,-15.5 355.9331,-12.0001 355.9332,-19.0001"/>
 </g>
-<!-- Node28 -->
+<!-- Node19 -->
 <g id="node4" class="node">
-<title>Node28</title>
+<title>Node19</title>
 <g id="a_node4"><a xlink:href="namespacesll__m__spline__fem__utilities.html#a528fc7241e39fd979bd521f0c2d7b350" target="_top" xlink:title="Multiply the vector invec with the spline FEM mass matrix with mass line mass. ">
 <polygon fill="#ffffff" stroke="#000000" points="530,-.5 530,-30.5 711,-30.5 711,-.5 530,-.5"/>
 <text text-anchor="start" x="538" y="-18.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_spline_fem_utilities</text>
@@ -101,9 +101,9 @@ var sectionId = 'dynsection-3';
 </a>
 </g>
 </g>
-<!-- Node27&#45;&gt;Node28 -->
+<!-- Node18&#45;&gt;Node19 -->
 <g id="edge3" class="edge">
-<title>Node27&#45;&gt;Node28</title>
+<title>Node18&#45;&gt;Node19</title>
 <path fill="none" stroke="#191970" d="M494.229,-15.5C502.4585,-15.5 511.0348,-15.5 519.6724,-15.5"/>
 <polygon fill="#191970" stroke="#191970" points="519.8234,-19.0001 529.8234,-15.5 519.8233,-12.0001 519.8234,-19.0001"/>
 </g>

@@ -1,8 +1,4 @@
 <map id="ifft3d" name="ifft3d">
 <area shape="rect" id="node2" href="$namespacesll__m__linear__operator__maxwell__eb__schur.html#a7d719dc1fb1e417c14c31c6aeb7182ae" title="dot_maxwell_eb_fourier" alt="" coords="109,5,288,32"/>
 <area shape="rect" id="node3" href="$namespacesll__m__linear__operator__maxwell__eb__schur.html#aa1b697c27e52c7bcc6d7fef2efbace8b" title="inverse_dot_maxwell\l_eb_fourier" alt="" coords="118,57,279,98"/>
-<area shape="rect" id="node4" href="$namespacesll__m__linear__operator__maxwell__eb__schur.html#a5a0da8708e7ae424c6db32add879b46c" title="dot_c_fourier" alt="" coords="145,123,252,149"/>
-<area shape="rect" id="node5" href="$namespacesll__m__linear__operator__maxwell__eb__schur.html#af322c39e1d91d8326fce285236a7dc16" title="Product of inverse(M_1,1) " alt="" coords="127,173,270,200"/>
-<area shape="rect" id="node6" href="$namespacesll__m__linear__operator__maxwell__eb__schur.html#ac12a5871feb3f658a9af274a7d9d5640" title="Product of inverse(M_1,2) " alt="" coords="127,224,270,251"/>
-<area shape="rect" id="node7" href="$namespacesll__m__linear__operator__maxwell__eb__schur.html#af9bc3daa6cc36f74d5a931b6ce96be7e" title="Product of inverse(M_1,3) " alt="" coords="127,275,270,301"/>
 </map>

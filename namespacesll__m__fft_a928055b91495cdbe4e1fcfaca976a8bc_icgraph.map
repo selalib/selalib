@@ -5,7 +5,6 @@
 <area shape="rect" id="node5" href="$namespacesll__m__qn__solver__2d__polar__par.html#a469531318563d910cd216334ff4a1828" title="Initialize the solver. " alt="" coords="203,217,391,273"/>
 <area shape="rect" id="node7" href="$namespacesll__m__periodic__interp.html#abc80c95f808db2e9ff4e176e86d5d241" title="sll_m_periodic_interp\l::sll_s_periodic_interp_init" alt="" coords="201,297,392,339"/>
 <area shape="rect" id="node12" href="$namespacesll__m__fft__filter__1d.html#a6e052c5b11799e73750562e334da44ed" title="sll_m_fft_filter_1d\l::init_fft_1d" alt="" coords="227,363,366,404"/>
-<area shape="rect" id="node13" href="$namespacesll__m__time__propagator__pic__vm__1d2v__helper.html#abf74b4c925df98cb4ecd1b2734fb7be2" title="Constructor. " alt="" coords="211,428,383,499"/>
 <area shape="rect" id="node6" href="$namespacesll__m__qn__solver__3d__polar__par.html#a2e6d1e5238b003c9d2a5bf33a11644d0" title="Initialize the 3D (wrapper) solver. " alt="" coords="464,217,652,273"/>
 <area shape="rect" id="node8" href="$namespacesll__m__periodic__interpolator__1d.html#a137a06d731f848d2844a08ecd61f0ce5" title="initialize periodic interpolator " alt="" coords="440,297,676,339"/>
 <area shape="rect" id="node10" href="$namespacesll__m__advection__1d__periodic.html#abcf0ae4a5833355e3bf2f6c582130c82" title="sll_m_advection_1d\l_periodic::initialize\l_periodic_1d_advector" alt="" coords="474,363,642,419"/>

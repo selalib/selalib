@@ -55,15 +55,15 @@ var sectionId = 'dynsection-14';
 <g id="viewport">
 <title>sll_s_fft_init_c2c_1d</title>
 <polygon fill="#ffffff" stroke="transparent" points="-4,4 -4,-534 530,-534 530,4 -4,4"/>
-<!-- Node242 -->
+<!-- Node238 -->
 <g id="node1" class="node">
-<title>Node242</title>
+<title>Node238</title>
 <polygon fill="#bfbfbf" stroke="#000000" points="0,-260 0,-279 114,-279 114,-260 0,-260"/>
 <text text-anchor="middle" x="57" y="-267" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_fft_init_c2c_1d</text>
 </g>
-<!-- Node243 -->
+<!-- Node239 -->
 <g id="node2" class="node">
-<title>Node243</title>
+<title>Node239</title>
 <g id="a_node2"><a xlink:href="namespacesll__m__sparse__grid__interpolator.html#aba310a580506ebd76f00591da61f21f6" target="_top" xlink:title="sll_m_sparse_grid_interpolator\l::fft_initialize">
 <polygon fill="#ffffff" stroke="#000000" points="153,-499.5 153,-529.5 320,-529.5 320,-499.5 153,-499.5"/>
 <text text-anchor="start" x="161" y="-517.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_sparse_grid_interpolator</text>
@@ -71,15 +71,15 @@ var sectionId = 'dynsection-14';
 </a>
 </g>
 </g>
-<!-- Node242&#45;&gt;Node243 -->
+<!-- Node238&#45;&gt;Node239 -->
 <g id="edge1" class="edge">
-<title>Node242&#45;&gt;Node243</title>
+<title>Node238&#45;&gt;Node239</title>
 <path fill="none" stroke="#191970" d="M59.5811,-289.0857C66.2815,-331.9583 88.233,-434.6558 150,-489.5 154.325,-493.3402 159.2067,-496.5926 164.3938,-499.3469"/>
 <polygon fill="#191970" stroke="#191970" points="63.0323,-288.496 58.1327,-279.1022 56.1048,-289.5011 63.0323,-288.496"/>
 </g>
-<!-- Node245 -->
+<!-- Node241 -->
 <g id="node4" class="node">
-<title>Node245</title>
+<title>Node241</title>
 <g id="a_node4"><a xlink:href="namespacesll__m__linear__solver__spline__mass__2d__fft.html#aee0b3256b5e372ac879a51020f51f4fe" target="_top" xlink:title="sll_m_linear_solver\l_spline_mass_2d_fft\l::create_mass1">
 <polygon fill="#ffffff" stroke="#000000" points="178.5,-439 178.5,-480 294.5,-480 294.5,-439 178.5,-439"/>
 <text text-anchor="start" x="186.5" y="-468" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_linear_solver</text>
@@ -88,15 +88,15 @@ var sectionId = 'dynsection-14';
 </a>
 </g>
 </g>
-<!-- Node242&#45;&gt;Node245 -->
+<!-- Node238&#45;&gt;Node241 -->
 <g id="edge3" class="edge">
-<title>Node242&#45;&gt;Node245</title>
+<title>Node238&#45;&gt;Node241</title>
 <path fill="none" stroke="#191970" d="M63.2209,-288.9258C74.8992,-322.3795 103.2319,-390.9745 150,-429.5 158.2198,-436.2711 168.0621,-441.5529 178.1144,-445.6611"/>
 <polygon fill="#191970" stroke="#191970" points="66.5164,-287.7449 60.0121,-279.3816 59.8814,-289.9757 66.5164,-287.7449"/>
 </g>
-<!-- Node246 -->
+<!-- Node242 -->
 <g id="node5" class="node">
-<title>Node246</title>
+<title>Node242</title>
 <g id="a_node5"><a xlink:href="namespacesll__m__linear__solver__spline__mass__fft.html#a3b4678815ed23c7388aac13af80834ba" target="_top" xlink:title="sll_m_linear_solver\l_spline_mass_fft::create_mass1">
 <polygon fill="#ffffff" stroke="#000000" points="150,-389.5 150,-419.5 323,-419.5 323,-389.5 150,-389.5"/>
 <text text-anchor="start" x="158" y="-407.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_linear_solver</text>
@@ -104,16 +104,16 @@ var sectionId = 'dynsection-14';
 </a>
 </g>
 </g>
-<!-- Node242&#45;&gt;Node246 -->
+<!-- Node238&#45;&gt;Node242 -->
 <g id="edge4" class="edge">
-<title>Node242&#45;&gt;Node246</title>
+<title>Node238&#45;&gt;Node242</title>
 <path fill="none" stroke="#191970" d="M67.6044,-287.7637C82.7678,-312.2691 112.9495,-355.4818 150,-379.5 155.9026,-383.3264 162.4029,-386.5801 169.1083,-389.3442"/>
 <polygon fill="#191970" stroke="#191970" points="70.5347,-285.8451 62.3788,-279.0825 64.5374,-289.4552 70.5347,-285.8451"/>
 </g>
-<!-- Node247 -->
+<!-- Node243 -->
 <g id="node6" class="node">
-<title>Node247</title>
-<g id="a_node6"><a xlink:href="namespacesll__m__linear__operator__maxwell__eb__schur.html#a882dfa71ff30684d429743ff68485bd1" target="_top" xlink:title="sll_m_linear_operator\l_maxwell_eb_schur::create\l_maxwell_eb">
+<title>Node243</title>
+<g id="a_node6"><a xlink:href="namespacesll__m__linear__operator__maxwell__eb__schur.html#a4ad1ec2fb4345ad2c31847350dbba318" target="_top" xlink:title="sll_m_linear_operator\l_maxwell_eb_schur::create\l_maxwell_eb">
 <polygon fill="#ffffff" stroke="#000000" points="162,-329 162,-370 311,-370 311,-329 162,-329"/>
 <text text-anchor="start" x="170" y="-358" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_linear_operator</text>
 <text text-anchor="start" x="170" y="-347" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">_maxwell_eb_schur::create</text>
@@ -121,15 +121,15 @@ var sectionId = 'dynsection-14';
 </a>
 </g>
 </g>
-<!-- Node242&#45;&gt;Node247 -->
+<!-- Node238&#45;&gt;Node243 -->
 <g id="edge5" class="edge">
-<title>Node242&#45;&gt;Node247</title>
+<title>Node238&#45;&gt;Node243</title>
 <path fill="none" stroke="#191970" d="M81.7182,-284.1896C100.1541,-294.7975 126.1627,-309.0382 150,-319.5 157.423,-322.7578 165.3214,-325.9082 173.2112,-328.8647"/>
 <polygon fill="#191970" stroke="#191970" points="83.4735,-281.1615 73.0694,-279.1598 79.9543,-287.2127 83.4735,-281.1615"/>
 </g>
-<!-- Node248 -->
+<!-- Node244 -->
 <g id="node7" class="node">
-<title>Node248</title>
+<title>Node244</title>
 <g id="a_node7"><a xlink:href="namespacesll__m__poisson__2d__fem__fft.html#a199a25f8041eeff03305f97d0a00f1ab" target="_top" xlink:title="sll_m_poisson_2d_fem\l_fft::init_fft">
 <polygon fill="#ffffff" stroke="#000000" points="172.5,-279.5 172.5,-309.5 300.5,-309.5 300.5,-279.5 172.5,-279.5"/>
 <text text-anchor="start" x="180.5" y="-297.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_poisson_2d_fem</text>
@@ -137,15 +137,15 @@ var sectionId = 'dynsection-14';
 </a>
 </g>
 </g>
-<!-- Node242&#45;&gt;Node248 -->
+<!-- Node238&#45;&gt;Node244 -->
 <g id="edge6" class="edge">
-<title>Node242&#45;&gt;Node248</title>
+<title>Node238&#45;&gt;Node244</title>
 <path fill="none" stroke="#191970" d="M124.4274,-278.891C140.102,-281.0741 156.7466,-283.3923 172.2786,-285.5555"/>
 <polygon fill="#191970" stroke="#191970" points="124.6757,-275.3919 114.2884,-277.4789 123.71,-282.325 124.6757,-275.3919"/>
 </g>
-<!-- Node249 -->
+<!-- Node245 -->
 <g id="node8" class="node">
-<title>Node249</title>
+<title>Node245</title>
 <g id="a_node8"><a xlink:href="namespacesll__m__poisson__3d__fem__fft.html#aa2a85fbbb889d7b8a70ead2138f48816" target="_top" xlink:title="sll_m_poisson_3d_fem\l_fft::init_fft">
 <polygon fill="#ffffff" stroke="#000000" points="172.5,-230.5 172.5,-260.5 300.5,-260.5 300.5,-230.5 172.5,-230.5"/>
 <text text-anchor="start" x="180.5" y="-248.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_poisson_3d_fem</text>
@@ -153,15 +153,15 @@ var sectionId = 'dynsection-14';
 </a>
 </g>
 </g>
-<!-- Node242&#45;&gt;Node249 -->
+<!-- Node238&#45;&gt;Node245 -->
 <g id="edge7" class="edge">
-<title>Node242&#45;&gt;Node249</title>
+<title>Node238&#45;&gt;Node245</title>
 <path fill="none" stroke="#191970" d="M124.4274,-260.4846C140.102,-258.3889 156.7466,-256.1634 172.2786,-254.0867"/>
 <polygon fill="#191970" stroke="#191970" points="123.7364,-257.0458 114.2884,-261.8403 124.6641,-263.9841 123.7364,-257.0458"/>
 </g>
-<!-- Node250 -->
+<!-- Node246 -->
 <g id="node9" class="node">
-<title>Node250</title>
+<title>Node246</title>
 <g id="a_node9"><a xlink:href="namespacesll__m__poisson__2d__periodic__par.html#ad41fe715bd84e1d002bbb219f4d68b46" target="_top" xlink:title="Presently, this function receives the geometric information as individual arguments. We should consider passing the &#39;simple geometry&#39; object that we have for the cartesian cases. ">
 <polygon fill="#ffffff" stroke="#000000" points="163,-170 163,-211 310,-211 310,-170 163,-170"/>
 <text text-anchor="start" x="171" y="-199" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_poisson_2d_periodic</text>
@@ -170,15 +170,15 @@ var sectionId = 'dynsection-14';
 </a>
 </g>
 </g>
-<!-- Node242&#45;&gt;Node250 -->
+<!-- Node238&#45;&gt;Node246 -->
 <g id="edge8" class="edge">
-<title>Node242&#45;&gt;Node250</title>
+<title>Node238&#45;&gt;Node246</title>
 <path fill="none" stroke="#191970" d="M82.7479,-255.0408C101.1728,-244.9849 126.7311,-231.6215 150,-221.5 158.192,-217.9366 166.9392,-214.4488 175.6066,-211.174"/>
 <polygon fill="#191970" stroke="#191970" points="80.8829,-252.0722 73.813,-259.9632 84.2607,-258.2033 80.8829,-252.0722"/>
 </g>
-<!-- Node251 -->
+<!-- Node247 -->
 <g id="node10" class="node">
-<title>Node251</title>
+<title>Node247</title>
 <g id="a_node10"><a xlink:href="namespacesll__m__poisson__2d__periodic__par.html#aee4e39c0cd0cf732b793a92c368019bb" target="_top" xlink:title="Presently, this function receives the geometric information as individual arguments. We should consider passing the &#39;simple geometry&#39; object that we have for the cartesian cases. The &#39;alt&#39; version does not consider the last point in the problem, the arrays involved and the layout that represents them should also not include this last point. ">
 <polygon fill="#ffffff" stroke="#000000" points="163,-110 163,-151 310,-151 310,-110 163,-110"/>
 <text text-anchor="start" x="171" y="-139" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_poisson_2d_periodic</text>
@@ -187,15 +187,15 @@ var sectionId = 'dynsection-14';
 </a>
 </g>
 </g>
-<!-- Node242&#45;&gt;Node251 -->
+<!-- Node238&#45;&gt;Node247 -->
 <g id="edge9" class="edge">
-<title>Node242&#45;&gt;Node251</title>
+<title>Node238&#45;&gt;Node247</title>
 <path fill="none" stroke="#191970" d="M68.0621,-251.3213C83.5567,-227.2967 113.9106,-185.1446 150,-160.5 155.1193,-157.0042 160.6863,-153.8772 166.4459,-151.0879"/>
 <polygon fill="#191970" stroke="#191970" points="65.061,-249.5188 62.6985,-259.8469 70.9861,-253.2463 65.061,-249.5188"/>
 </g>
-<!-- Node252 -->
+<!-- Node248 -->
 <g id="node11" class="node">
-<title>Node252</title>
+<title>Node248</title>
 <g id="a_node11"><a xlink:href="namespacesll__m__poisson__3d__periodic__par.html#a709ec42fd1d3c83d3c036b4be76eadab" target="_top" xlink:title="Allocate the structure for the 3d parallel Poisson solver. ">
 <polygon fill="#ffffff" stroke="#000000" points="163,-50 163,-91 310,-91 310,-50 163,-50"/>
 <text text-anchor="start" x="171" y="-79" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_poisson_3d_periodic</text>
@@ -204,15 +204,15 @@ var sectionId = 'dynsection-14';
 </a>
 </g>
 </g>
-<!-- Node242&#45;&gt;Node252 -->
+<!-- Node238&#45;&gt;Node248 -->
 <g id="edge10" class="edge">
-<title>Node242&#45;&gt;Node252</title>
+<title>Node238&#45;&gt;Node248</title>
 <path fill="none" stroke="#191970" d="M62.5907,-249.9922C73.5796,-215.0524 101.2643,-141.6148 150,-100.5 154.1307,-97.0152 158.6899,-93.9269 163.4911,-91.1913"/>
 <polygon fill="#191970" stroke="#191970" points="59.1411,-249.309 59.604,-259.8937 65.8428,-251.3305 59.1411,-249.309"/>
 </g>
-<!-- Node253 -->
+<!-- Node249 -->
 <g id="node12" class="node">
-<title>Node253</title>
+<title>Node249</title>
 <g id="a_node12"><a xlink:href="namespacesll__m__fft__filter__3d.html#ab4abe2b5bebe87a4adbc54c7ba690262" target="_top" xlink:title="sll_m_fft_filter_3d\l::init_fft_3d">
 <polygon fill="#ffffff" stroke="#000000" points="184.5,-.5 184.5,-30.5 288.5,-30.5 288.5,-.5 184.5,-.5"/>
 <text text-anchor="start" x="192.5" y="-18.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_fft_filter_3d</text>
@@ -220,15 +220,15 @@ var sectionId = 'dynsection-14';
 </a>
 </g>
 </g>
-<!-- Node242&#45;&gt;Node253 -->
+<!-- Node238&#45;&gt;Node249 -->
 <g id="edge11" class="edge">
-<title>Node242&#45;&gt;Node253</title>
+<title>Node238&#45;&gt;Node249</title>
 <path fill="none" stroke="#191970" d="M59.2001,-250.0243C65.2254,-205.9822 86.0584,-98.091 150,-40.5 159.5245,-31.9215 171.8223,-26.2736 184.1395,-22.559"/>
 <polygon fill="#191970" stroke="#191970" points="55.7209,-249.6402 57.9445,-259.999 62.6661,-250.5144 55.7209,-249.6402"/>
 </g>
-<!-- Node244 -->
+<!-- Node240 -->
 <g id="node3" class="node">
-<title>Node244</title>
+<title>Node240</title>
 <g id="a_node3"><a xlink:href="namespacesll__m__sparse__grid__interpolator.html#a3fb5a2dabbb9b367be8955e16118eebc" target="_top" xlink:title="sll_m_sparse_grid_interpolator\l::initialize_sg">
 <polygon fill="#ffffff" stroke="#000000" points="359,-499.5 359,-529.5 526,-529.5 526,-499.5 359,-499.5"/>
 <text text-anchor="start" x="367" y="-517.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_sparse_grid_interpolator</text>
@@ -236,9 +236,9 @@ var sectionId = 'dynsection-14';
 </a>
 </g>
 </g>
-<!-- Node243&#45;&gt;Node244 -->
+<!-- Node239&#45;&gt;Node240 -->
 <g id="edge2" class="edge">
-<title>Node243&#45;&gt;Node244</title>
+<title>Node239&#45;&gt;Node240</title>
 <path fill="none" stroke="#191970" d="M330.4776,-514.5C339.9188,-514.5 349.4618,-514.5 358.7862,-514.5"/>
 <polygon fill="#191970" stroke="#191970" points="330.2881,-511.0001 320.2881,-514.5 330.2881,-518.0001 330.2881,-511.0001"/>
 </g>

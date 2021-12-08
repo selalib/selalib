@@ -1,8 +1,7 @@
 <map id="sll_s_spline_fem_compute_mass_eig" name="sll_s_spline_fem_compute_mass_eig">
-<area shape="rect" id="node2" href="$namespacesll__m__linear__operator__maxwell__eb__schur.html#a882dfa71ff30684d429743ff68485bd1" title="sll_m_linear_operator\l_maxwell_eb_schur::create\l_maxwell_eb" alt="" coords="248,5,447,61"/>
-<area shape="rect" id="node3" href="$namespacesll__m__maxwell__2d__fem__fft.html#ac36dd5f7c1676c2e3c92ddca3021af44" title="sll_m_maxwell_2d_fem\l_fft::init_2d_fem" alt="" coords="259,86,435,127"/>
-<area shape="rect" id="node4" href="$namespacesll__m__maxwell__3d__fem__fft.html#a8a58004064950f3f15cada7e7c4fb56b" title="Initialization. " alt="" coords="259,151,435,193"/>
-<area shape="rect" id="node5" href="$namespacesll__m__preconditioner__fft.html#a356c74657f0e63a3ea3351c2f2967d06" title="sll_m_preconditioner\l_fft::init_3d_trafo" alt="" coords="268,217,427,258"/>
-<area shape="rect" id="node6" href="$namespacesll__m__poisson__2d__fem__fft.html#a199a25f8041eeff03305f97d0a00f1ab" title="sll_m_poisson_2d_fem\l_fft::init_fft" alt="" coords="262,282,433,323"/>
-<area shape="rect" id="node7" href="$namespacesll__m__poisson__3d__fem__fft.html#aa2a85fbbb889d7b8a70ead2138f48816" title="sll_m_poisson_3d_fem\l_fft::init_fft" alt="" coords="262,347,433,389"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__2d__fem__fft.html#ac36dd5f7c1676c2e3c92ddca3021af44" title="sll_m_maxwell_2d_fem\l_fft::init_2d_fem" alt="" coords="248,5,424,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__3d__fem__fft.html#a8a58004064950f3f15cada7e7c4fb56b" title="Initialization. " alt="" coords="248,71,424,112"/>
+<area shape="rect" id="node4" href="$namespacesll__m__preconditioner__fft.html#a356c74657f0e63a3ea3351c2f2967d06" title="sll_m_preconditioner\l_fft::init_3d_trafo" alt="" coords="257,136,415,177"/>
+<area shape="rect" id="node5" href="$namespacesll__m__poisson__2d__fem__fft.html#a199a25f8041eeff03305f97d0a00f1ab" title="sll_m_poisson_2d_fem\l_fft::init_fft" alt="" coords="251,201,421,243"/>
+<area shape="rect" id="node6" href="$namespacesll__m__poisson__3d__fem__fft.html#aa2a85fbbb889d7b8a70ead2138f48816" title="sll_m_poisson_3d_fem\l_fft::init_fft" alt="" coords="251,267,421,308"/>
 </map>

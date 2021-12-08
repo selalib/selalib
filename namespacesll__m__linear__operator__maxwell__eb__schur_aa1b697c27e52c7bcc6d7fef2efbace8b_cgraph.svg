@@ -9,61 +9,61 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 100)">
 <title>inverse_dot_maxwell_eb_fourier</title>
 <polygon fill="#ffffff" stroke="transparent" points="-4,4 -4,-100 356,-100 356,4 -4,4"/>
-<!-- Node55 -->
+<!-- Node20 -->
 <g id="node1" class="node">
-<title>Node55</title>
+<title>Node20</title>
 <polygon fill="#bfbfbf" stroke="#000000" points="0,-33 0,-63 121,-63 121,-33 0,-33"/>
 <text text-anchor="start" x="8" y="-51" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">inverse_dot_maxwell</text>
 <text text-anchor="middle" x="60.5" y="-40" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">_eb_fourier</text>
 </g>
-<!-- Node56 -->
+<!-- Node21 -->
 <g id="node2" class="node">
-<title>Node56</title>
+<title>Node21</title>
 <g id="a_node2"><a xlink:href="namespacesll__m__linear__operator__maxwell__eb__schur.html#a4bf122119c2ace522a97caa9b7281ff8" target="_top" xlink:title="Helper function. ">
 <polygon fill="#ffffff" stroke="#000000" points="166,-76.5 166,-95.5 205,-95.5 205,-76.5 166,-76.5"/>
 <text text-anchor="middle" x="185.5" y="-83.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">fft3d</text>
 </a>
 </g>
 </g>
-<!-- Node55&#45;&gt;Node56 -->
+<!-- Node20&#45;&gt;Node21 -->
 <g id="edge1" class="edge">
-<title>Node55&#45;&gt;Node56</title>
+<title>Node20&#45;&gt;Node21</title>
 <path fill="none" stroke="#191970" d="M109.9033,-63.0186C125.456,-67.7466 142.1415,-72.819 155.8697,-76.9924"/>
 <polygon fill="#191970" stroke="#191970" points="155.1379,-80.428 165.7236,-79.988 157.1739,-73.7306 155.1379,-80.428"/>
 </g>
-<!-- Node58 -->
+<!-- Node23 -->
 <g id="node4" class="node">
-<title>Node58</title>
+<title>Node23</title>
 <g id="a_node4"><a xlink:href="namespacesll__m__linear__operator__maxwell__eb__schur.html#ad8dce34bc099f4fcfb07bd071a34834f" target="_top" xlink:title="Helper function to invert 3x3 matrix. ">
 <polygon fill="#ffffff" stroke="#000000" points="157,-38.5 157,-57.5 214,-57.5 214,-38.5 157,-38.5"/>
 <text text-anchor="middle" x="185.5" y="-45.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">invert3d</text>
 </a>
 </g>
 </g>
-<!-- Node55&#45;&gt;Node58 -->
+<!-- Node20&#45;&gt;Node23 -->
 <g id="edge3" class="edge">
-<title>Node55&#45;&gt;Node58</title>
+<title>Node20&#45;&gt;Node23</title>
 <path fill="none" stroke="#191970" d="M121.1692,-48C129.8194,-48 138.5163,-48 146.5966,-48"/>
 <polygon fill="#191970" stroke="#191970" points="146.8078,-51.5001 156.8078,-48 146.8077,-44.5001 146.8078,-51.5001"/>
 </g>
-<!-- Node59 -->
+<!-- Node24 -->
 <g id="node5" class="node">
-<title>Node59</title>
+<title>Node24</title>
 <g id="a_node5"><a xlink:href="namespacesll__m__linear__operator__maxwell__eb__schur.html#aa4fb4b97759bab4e9cfd6bc5a3c6a2d0" target="_top" xlink:title="Helper function. ">
 <polygon fill="#ffffff" stroke="#000000" points="164.5,-.5 164.5,-19.5 206.5,-19.5 206.5,-.5 164.5,-.5"/>
 <text text-anchor="middle" x="185.5" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">ifft3d</text>
 </a>
 </g>
 </g>
-<!-- Node55&#45;&gt;Node59 -->
+<!-- Node20&#45;&gt;Node24 -->
 <g id="edge4" class="edge">
-<title>Node55&#45;&gt;Node59</title>
+<title>Node20&#45;&gt;Node24</title>
 <path fill="none" stroke="#191970" d="M109.9033,-32.9814C125.0209,-28.3856 141.2089,-23.4645 154.7108,-19.3599"/>
 <polygon fill="#191970" stroke="#191970" points="155.9004,-22.6565 164.45,-16.3992 153.8643,-15.9591 155.9004,-22.6565"/>
 </g>
-<!-- Node57 -->
+<!-- Node22 -->
 <g id="node3" class="node">
-<title>Node57</title>
+<title>Node22</title>
 <g id="a_node3"><a xlink:href="namespacesll__m__fft.html#a98e3ba2b5431c58a3f5100ac171616a5" target="_top" xlink:title="Compute fast Fourier transform in complex to complex mode. ">
 <polygon fill="#ffffff" stroke="#000000" points="250,-33 250,-63 352,-63 352,-33 250,-33"/>
 <text text-anchor="start" x="258" y="-51" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_fft::sll_s_fft</text>
@@ -71,15 +71,15 @@
 </a>
 </g>
 </g>
-<!-- Node56&#45;&gt;Node57 -->
+<!-- Node21&#45;&gt;Node22 -->
 <g id="edge2" class="edge">
-<title>Node56&#45;&gt;Node57</title>
+<title>Node21&#45;&gt;Node22</title>
 <path fill="none" stroke="#191970" d="M205.093,-79.5538C216.3913,-75.8366 231.2165,-70.9591 245.8219,-66.1538"/>
 <polygon fill="#191970" stroke="#191970" points="246.9435,-69.4695 255.3488,-63.0195 244.7558,-62.8201 246.9435,-69.4695"/>
 </g>
-<!-- Node59&#45;&gt;Node57 -->
+<!-- Node24&#45;&gt;Node22 -->
 <g id="edge5" class="edge">
-<title>Node59&#45;&gt;Node57</title>
+<title>Node24&#45;&gt;Node22</title>
 <path fill="none" stroke="#191970" d="M206.6845,-16.9698C217.6906,-20.5908 231.7067,-25.2022 245.5467,-29.7556"/>
 <polygon fill="#191970" stroke="#191970" points="244.468,-33.0852 255.061,-32.8859 246.6557,-26.4359 244.468,-33.0852"/>
 </g>

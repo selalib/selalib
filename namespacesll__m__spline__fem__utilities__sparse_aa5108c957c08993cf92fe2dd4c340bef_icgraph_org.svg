@@ -9,16 +9,16 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 133)">
 <title>sll_s_spline_fem_sparsity_mass_clamped</title>
 <polygon fill="#ffffff" stroke="transparent" points="-4,4 -4,-133 522,-133 522,4 -4,4"/>
-<!-- Node132 -->
+<!-- Node131 -->
 <g id="node1" class="node">
-<title>Node132</title>
+<title>Node131</title>
 <polygon fill="#bfbfbf" stroke="#000000" points="0,-24.5 0,-54.5 142,-54.5 142,-24.5 0,-24.5"/>
 <text text-anchor="start" x="8" y="-42.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_spline_fem_sparsity</text>
 <text text-anchor="middle" x="71" y="-31.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">_mass_clamped</text>
 </g>
-<!-- Node133 -->
+<!-- Node132 -->
 <g id="node2" class="node">
-<title>Node133</title>
+<title>Node132</title>
 <g id="a_node2"><a xlink:href="namespacesll__m__spline__fem__utilities__sparse.html#aeca2e29e9f4de346cf146f50e54cd7ee" target="_top" xlink:title="Set up 1d mass matrix (sparsity pattern and values) ">
 <polygon fill="#ffffff" stroke="#000000" points="178,-49.5 178,-79.5 319,-79.5 319,-49.5 178,-49.5"/>
 <text text-anchor="start" x="186" y="-67.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_spline_fem_mass1d</text>
@@ -26,15 +26,15 @@
 </a>
 </g>
 </g>
-<!-- Node132&#45;&gt;Node133 -->
+<!-- Node131&#45;&gt;Node132 -->
 <g id="edge1" class="edge">
-<title>Node132&#45;&gt;Node133</title>
+<title>Node131&#45;&gt;Node132</title>
 <path fill="none" stroke="#191970" d="M152.184,-50.9344C160.7653,-52.143 169.4417,-53.365 177.8891,-54.5548"/>
 <polygon fill="#191970" stroke="#191970" points="152.5637,-47.4534 142.1733,-49.5244 151.5874,-54.385 152.5637,-47.4534"/>
 </g>
-<!-- Node136 -->
+<!-- Node135 -->
 <g id="node5" class="node">
-<title>Node136</title>
+<title>Node135</title>
 <g id="a_node5"><a xlink:href="namespacesll__m__spline__fem__utilities__sparse.html#a3fcb7d2b9d5aadd6a42eb295cc25b3b6" target="_top" xlink:title="Set up 1d mass matrix for specific spline degree and profile function. ">
 <polygon fill="#ffffff" stroke="#000000" points="178,-.5 178,-30.5 319,-30.5 319,-.5 178,-.5"/>
 <text text-anchor="start" x="186" y="-18.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_spline_fem_mass1d</text>
@@ -42,15 +42,15 @@
 </a>
 </g>
 </g>
-<!-- Node132&#45;&gt;Node136 -->
+<!-- Node131&#45;&gt;Node135 -->
 <g id="edge4" class="edge">
-<title>Node132&#45;&gt;Node136</title>
+<title>Node131&#45;&gt;Node135</title>
 <path fill="none" stroke="#191970" d="M152.184,-28.523C160.7653,-27.3627 169.4417,-26.1896 177.8891,-25.0474"/>
 <polygon fill="#191970" stroke="#191970" points="151.6141,-25.0681 142.1733,-29.8766 152.5521,-32.005 151.6141,-25.0681"/>
 </g>
-<!-- Node134 -->
+<!-- Node133 -->
 <g id="node3" class="node">
-<title>Node134</title>
+<title>Node133</title>
 <g id="a_node3"><a xlink:href="namespacesll__m__maxwell__clamped__1d__fem__sm.html#a400fe28b25203e207ad0786874c32912" target="_top" xlink:title="Initialization. ">
 <polygon fill="#ffffff" stroke="#000000" points="355,-98.5 355,-128.5 518,-128.5 518,-98.5 355,-98.5"/>
 <text text-anchor="start" x="363" y="-116.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_clamped</text>
@@ -58,15 +58,15 @@
 </a>
 </g>
 </g>
-<!-- Node133&#45;&gt;Node134 -->
+<!-- Node132&#45;&gt;Node133 -->
 <g id="edge2" class="edge">
-<title>Node133&#45;&gt;Node134</title>
+<title>Node132&#45;&gt;Node133</title>
 <path fill="none" stroke="#191970" d="M316.1143,-82.1229C336.6824,-87.4837 359.0844,-93.3225 378.9252,-98.4938"/>
 <polygon fill="#191970" stroke="#191970" points="316.7433,-78.67 306.1838,-79.5346 314.9778,-85.4437 316.7433,-78.67"/>
 </g>
-<!-- Node135 -->
+<!-- Node134 -->
 <g id="node4" class="node">
-<title>Node135</title>
+<title>Node134</title>
 <g id="a_node4"><a xlink:href="namespacesll__m__maxwell__clamped__3d__fem.html#afadba212d3f01a688b12c751068d1707" target="_top" xlink:title="Initialization. ">
 <polygon fill="#ffffff" stroke="#000000" points="368,-49.5 368,-79.5 505,-79.5 505,-49.5 368,-49.5"/>
 <text text-anchor="start" x="376" y="-67.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_clamped</text>
@@ -74,15 +74,15 @@
 </a>
 </g>
 </g>
-<!-- Node133&#45;&gt;Node135 -->
+<!-- Node132&#45;&gt;Node134 -->
 <g id="edge3" class="edge">
-<title>Node133&#45;&gt;Node135</title>
+<title>Node132&#45;&gt;Node134</title>
 <path fill="none" stroke="#191970" d="M329.2366,-64.5C342.0651,-64.5 355.23,-64.5 367.7496,-64.5"/>
 <polygon fill="#191970" stroke="#191970" points="329.0392,-61.0001 319.0391,-64.5 329.0391,-68.0001 329.0392,-61.0001"/>
 </g>
-<!-- Node137 -->
+<!-- Node136 -->
 <g id="node6" class="node">
-<title>Node137</title>
+<title>Node136</title>
 <g id="a_node6"><a xlink:href="namespacesll__m__maxwell__clamped__1d__trafo.html#a800127433401043caf9d2b00dfa7e79f" target="_top" xlink:title="Initialization. ">
 <polygon fill="#ffffff" stroke="#000000" points="368,-.5 368,-30.5 505,-30.5 505,-.5 368,-.5"/>
 <text text-anchor="start" x="376" y="-18.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_clamped</text>
@@ -90,9 +90,9 @@
 </a>
 </g>
 </g>
-<!-- Node136&#45;&gt;Node137 -->
+<!-- Node135&#45;&gt;Node136 -->
 <g id="edge5" class="edge">
-<title>Node136&#45;&gt;Node137</title>
+<title>Node135&#45;&gt;Node136</title>
 <path fill="none" stroke="#191970" d="M329.2366,-15.5C342.0651,-15.5 355.23,-15.5 367.7496,-15.5"/>
 <polygon fill="#191970" stroke="#191970" points="329.0392,-12.0001 319.0391,-15.5 329.0391,-19.0001 329.0392,-12.0001"/>
 </g>

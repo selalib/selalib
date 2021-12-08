@@ -1,25 +1,24 @@
 <map id="sll_t_maxwell_3d_trafo" name="sll_t_maxwell_3d_trafo">
-<area shape="rect" id="node2" href="$structsll__m__maxwell__3d__base_1_1sll__c__maxwell__3d__base.html" title="sll_c_maxwell_3d_base" alt="" coords="956,228,1131,255"/>
-<area shape="rect" id="node3" href="$structsll__m__profile__functions_1_1sll__t__profile__functions.html" title="sll_t_profile_functions" alt="" coords="585,188,749,215"/>
-<area shape="rect" id="node6" href="$structsll__m__linear__operator__block_1_1sll__t__linear__operator__block.html" title="class for a linear operator_block " alt="" coords="775,495,930,537"/>
-<area shape="rect" id="node11" href="$structsll__m__mapping__3d_1_1sll__t__mapping__3d.html" title="type collecting functions for analytical coordinate mapping " alt="" coords="1172,1980,1308,2007"/>
-<area shape="rect" id="node14" href="$structsll__m__splines__pp_1_1sll__t__spline__pp__3d.html" title="arbitrary degree 3d spline " alt="" coords="782,1953,923,1980"/>
-<area shape="rect" id="node15" href="$structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html" title="arbitrary degree 1d spline " alt="" coords="412,2012,553,2039"/>
-<area shape="rect" id="node16" href="$structsll__m__linear__operator__schur__eb__3d_1_1sll__t__linear__operator__schur__eb__3d.html" title="sll_t_linear_operator\l_schur_eb_3d" alt="" coords="1163,749,1317,790"/>
-<area shape="rect" id="node17" href="$structsll__m__linear__operator__poisson__3d_1_1sll__t__linear__operator__poisson__3d.html" title="sll_t_linear_operator\l_poisson_3d" alt="" coords="1163,554,1317,595"/>
-<area shape="rect" id="node19" href="$structsll__m__linear__solver__iter__abstract_1_1sll__t__linear__solver__iter__abstract.html" title="class for abstract iterative linear solver " alt="" coords="783,1079,923,1121"/>
-<area shape="rect" id="node25" href="$structsll__m__linear__operator__penalized_1_1sll__t__linear__operator__penalized.html" title="class for a linear operator_penalized " alt="" coords="775,286,930,327"/>
-<area shape="rect" id="node26" href="$structsll__m__linear__solver__mgmres_1_1sll__t__linear__solver__mgmres.html" title="class for a sequential gmres linear solver " alt="" coords="1170,951,1310,993"/>
-<area shape="rect" id="node28" href="$structsll__m__linear__solver__block_1_1sll__t__linear__solver__block.html" title="class for a linear solver_block " alt="" coords="783,1693,923,1734"/>
-<area shape="rect" id="node30" href="$structsll__m__linear__solver__spline__mass__fft_1_1sll__t__linear__solver__spline__mass__fft.html" title="Linear solver for FFT&#45;based inversion of 3d tensor product of circulant matrices (extending the abstr..." alt="" coords="783,1449,923,1490"/>
-<area shape="rect" id="node7" href="$structsll__m__linear__operator__abstract_1_1sll__t__linear__operator__abstract.html" title="class for abstract linear operator " alt="" coords="405,663,560,705"/>
-<area shape="rect" id="node20" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver " alt="" coords="413,1682,553,1723"/>
-<area shape="rect" id="node23" href="$structsll__m__matrix__csr_1_1sll__t__matrix__csr.html" title="class for a csr matrix " alt="" coords="1177,2031,1303,2057"/>
-<area shape="rect" id="node31" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib. " alt="" coords="447,1631,518,1657"/>
-<area shape="rect" id="node24" href="$structsll__m__matrix__abstract_1_1sll__t__matrix__abstract.html" title="abstract class for matrix " alt="" coords="773,908,932,935"/>
-<area shape="rect" id="node9" href="$structsll__m__linear__operator__block_1_1jrk__t__linear__operator__pointer.html" title="class that contains a pointer to a linear operator " alt="" coords="404,355,561,397"/>
-<area shape="rect" id="node12" href="$structsll__m__mapping__3d_1_1matrix__element.html" title="matrix_element" alt="" coords="789,2055,916,2081"/>
-<area shape="rect" id="node18" href="$structsll__m__linear__solver__cg_1_1sll__t__linear__solver__cg.html" title="class for the cg linear solver " alt="" coords="1159,1072,1321,1099"/>
-<area shape="rect" id="node29" href="$structsll__m__linear__solver__block_1_1jrk__t__linear__solver__pointer.html" title="class that contains a pointer to a linear solver " alt="" coords="411,2114,554,2155"/>
-<area shape="rect" id="node27" href="$structsll__m__preconditioner__fft_1_1sll__t__preconditioner__fft.html" title="sll_t_preconditioner_fft" alt="" coords="1155,1456,1325,1483"/>
+<area shape="rect" id="node2" href="$structsll__m__maxwell__3d__base_1_1sll__c__maxwell__3d__base.html" title="sll_c_maxwell_3d_base" alt="" coords="956,191,1131,217"/>
+<area shape="rect" id="node3" href="$structsll__m__profile__functions_1_1sll__t__profile__functions.html" title="sll_t_profile_functions" alt="" coords="585,141,749,168"/>
+<area shape="rect" id="node6" href="$structsll__m__linear__operator__block_1_1sll__t__linear__operator__block.html" title="class for a linear operator_block " alt="" coords="775,1085,930,1126"/>
+<area shape="rect" id="node11" href="$structsll__m__mapping__3d_1_1sll__t__mapping__3d.html" title="type collecting functions for analytical coordinate mapping " alt="" coords="1172,536,1308,563"/>
+<area shape="rect" id="node14" href="$structsll__m__splines__pp_1_1sll__t__spline__pp__3d.html" title="arbitrary degree 3d spline " alt="" coords="782,345,923,372"/>
+<area shape="rect" id="node15" href="$structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html" title="arbitrary degree 1d spline " alt="" coords="412,457,553,484"/>
+<area shape="rect" id="node16" href="$structsll__m__linear__operator__schur__eb__3d_1_1sll__t__linear__operator__schur__eb__3d.html" title="sll_t_linear_operator\l_schur_eb_3d" alt="" coords="1163,966,1317,1007"/>
+<area shape="rect" id="node17" href="$structsll__m__linear__operator__poisson__3d_1_1sll__t__linear__operator__poisson__3d.html" title="sll_t_linear_operator\l_poisson_3d" alt="" coords="1163,1085,1317,1126"/>
+<area shape="rect" id="node19" href="$structsll__m__linear__solver__iter__abstract_1_1sll__t__linear__solver__iter__abstract.html" title="class for abstract iterative linear solver " alt="" coords="783,2057,923,2098"/>
+<area shape="rect" id="node25" href="$structsll__m__linear__operator__penalized_1_1sll__t__linear__operator__penalized.html" title="class for a linear operator_penalized " alt="" coords="775,1267,930,1309"/>
+<area shape="rect" id="node27" href="$structsll__m__linear__solver__block_1_1sll__t__linear__solver__block.html" title="class for a linear solver_block " alt="" coords="783,1682,923,1723"/>
+<area shape="rect" id="node29" href="$structsll__m__linear__solver__spline__mass__fft_1_1sll__t__linear__solver__spline__mass__fft.html" title="Linear solver for FFT&#45;based inversion of 3d tensor product of circulant matrices (extending the abstr..." alt="" coords="783,1462,923,1503"/>
+<area shape="rect" id="node7" href="$structsll__m__linear__operator__abstract_1_1sll__t__linear__operator__abstract.html" title="class for abstract linear operator " alt="" coords="405,1170,560,1211"/>
+<area shape="rect" id="node20" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver " alt="" coords="413,1829,553,1870"/>
+<area shape="rect" id="node23" href="$structsll__m__matrix__csr_1_1sll__t__matrix__csr.html" title="class for a csr matrix " alt="" coords="1177,1504,1303,1531"/>
+<area shape="rect" id="node30" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib. " alt="" coords="447,1593,518,1620"/>
+<area shape="rect" id="node24" href="$structsll__m__matrix__abstract_1_1sll__t__matrix__abstract.html" title="abstract class for matrix " alt="" coords="773,1372,932,1399"/>
+<area shape="rect" id="node9" href="$structsll__m__linear__operator__block_1_1jrk__t__linear__operator__pointer.html" title="class that contains a pointer to a linear operator " alt="" coords="404,1105,561,1146"/>
+<area shape="rect" id="node12" href="$structsll__m__mapping__3d_1_1matrix__element.html" title="matrix_element" alt="" coords="789,396,916,423"/>
+<area shape="rect" id="node18" href="$structsll__m__linear__solver__cg_1_1sll__t__linear__solver__cg.html" title="class for the cg linear solver " alt="" coords="1159,1923,1321,1949"/>
+<area shape="rect" id="node28" href="$structsll__m__linear__solver__block_1_1jrk__t__linear__solver__pointer.html" title="class that contains a pointer to a linear solver " alt="" coords="411,1958,554,1999"/>
+<area shape="rect" id="node26" href="$structsll__m__preconditioner__fft_1_1sll__t__preconditioner__fft.html" title="sll_t_preconditioner_fft" alt="" coords="1155,1453,1325,1480"/>
 </map>

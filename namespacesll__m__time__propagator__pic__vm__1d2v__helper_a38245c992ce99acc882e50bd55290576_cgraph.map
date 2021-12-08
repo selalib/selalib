@@ -1,6 +1,3 @@
 <map id="advect_e_sub_pic_vm_1d2v_helper" name="advect_e_sub_pic_vm_1d2v_helper">
-<area shape="rect" id="node2" href="$namespacesll__m__time__propagator__pic__vm__1d2v__helper.html#af5ccef8124aa85795dad8249efede451" title="AVF as first guess. " alt="" coords="219,31,324,57"/>
-<area shape="rect" id="node5" href="$namespacesll__m__time__propagator__pic__vm__1d2v__helper.html#a1f2e3edda5d2fc8b44b8d7e6e84beb64" title="Helper function for subcycle (using Picard iteration) " alt="" coords="220,81,323,108"/>
-<area shape="rect" id="node3" href="$namespacesll__m__time__propagator__pic__vm__1d2v__helper.html#a887aa18892490499166e96030d3a9db4" title="assemble_schur" alt="" coords="400,5,527,32"/>
-<area shape="rect" id="node4" href="$namespacesll__m__time__propagator__pic__vm__1d2v__helper.html#a81c8b1ebf87712ec824988f49127c8f0" title="assemble_schur_smooth" alt="" coords="372,56,555,83"/>
+<area shape="rect" id="node2" href="$namespacesll__m__time__propagator__pic__vm__1d2v__helper.html#a1f2e3edda5d2fc8b44b8d7e6e84beb64" title="Helper function for subcycle (using Picard iteration) " alt="" coords="219,13,321,39"/>
 </map>

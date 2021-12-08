@@ -101,24 +101,9 @@ Functions/Subroutines</h2></td></tr>
 <tr class="memitem:a3d0105ed07ec18602d365a7da9354e6c"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__time__propagator__pic__vm__1d2v__disgrade.html#a3d0105ed07ec18602d365a7da9354e6c">lie_splitting_back_pic_vm_1d2v_disgrade</a> (self, dt, number_steps)</td></tr>
 <tr class="memdesc:a3d0105ed07ec18602d365a7da9354e6c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Lie splitting.  <a href="#a3d0105ed07ec18602d365a7da9354e6c">More...</a><br /></td></tr>
 <tr class="separator:a3d0105ed07ec18602d365a7da9354e6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7b7a0670941b2622e6bdb67077c62539"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__time__propagator__pic__vm__1d2v__disgrade.html#a7b7a0670941b2622e6bdb67077c62539">advect_x_pic_vm_1d2v_disgrade</a> (self, dt)</td></tr>
-<tr class="memdesc:a7b7a0670941b2622e6bdb67077c62539"><td class="mdescLeft">&#160;</td><td class="mdescRight">advect_x: Equations to be solved $X_1^{n+1}=X_1^n+ { t}{2} V_1^n$  <a href="#a7b7a0670941b2622e6bdb67077c62539">More...</a><br /></td></tr>
-<tr class="separator:a7b7a0670941b2622e6bdb67077c62539"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a16f15649c9162d5d2850dbc2717c7011"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__time__propagator__pic__vm__1d2v__disgrade.html#a16f15649c9162d5d2850dbc2717c7011">compute_particle_boundary</a> (self, xold, xnew, vi)</td></tr>
-<tr class="memdesc:a16f15649c9162d5d2850dbc2717c7011"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper function for advect_x.  <a href="#a16f15649c9162d5d2850dbc2717c7011">More...</a><br /></td></tr>
-<tr class="separator:a16f15649c9162d5d2850dbc2717c7011"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1354f1518694b608d007d4d78d2c6528"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__time__propagator__pic__vm__1d2v__disgrade.html#a1354f1518694b608d007d4d78d2c6528">advect_vb_pic_vm_1d2v_disgrade</a> (self, dt)</td></tr>
-<tr class="memdesc:a1354f1518694b608d007d4d78d2c6528"><td class="mdescLeft">&#160;</td><td class="mdescRight">advect_vb: Equations to be solved $V_{1,2}^{n+1}= ((B_3)&amp;(B) \ -(B) &amp;(B) ) V_{1,2}^n  <a href="#a1354f1518694b608d007d4d78d2c6528">More...</a><br /></td></tr>
-<tr class="separator:a1354f1518694b608d007d4d78d2c6528"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a38ccc7f35e9988a419b53ef5a22b064a"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__time__propagator__pic__vm__1d2v__disgrade.html#a38ccc7f35e9988a419b53ef5a22b064a">advect_eb_pic_vm_1d2v_disgrade</a> (self, dt)</td></tr>
-<tr class="memdesc:a38ccc7f35e9988a419b53ef5a22b064a"><td class="mdescLeft">&#160;</td><td class="mdescRight">advect_eb: Equations to be solved Solution with Schur complement: $ S=M_1+{ t^2}{4} D^ M_2 D $ $ e_2^{n+1}=S^{-1}( (M_1-{ t^2}{4} D^ M_2 D)e_2^n+ t D^ M_2 b_3^n) $ $ b_3^{n+1}=b_3^n-{ t}{2} C(e_2^n+e_2^{n+1}) $  <a href="#a38ccc7f35e9988a419b53ef5a22b064a">More...</a><br /></td></tr>
-<tr class="separator:a38ccc7f35e9988a419b53ef5a22b064a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8951f9e06bc1d227a27ddd10e1d6d175"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__time__propagator__pic__vm__1d2v__disgrade.html#a8951f9e06bc1d227a27ddd10e1d6d175">advect_e_pic_vm_1d2v_disgrade</a> (self, dt)</td></tr>
-<tr class="memdesc:a8951f9e06bc1d227a27ddd10e1d6d175"><td class="mdescLeft">&#160;</td><td class="mdescRight">Solution with Schur complement: $ S_{+}=M_1+{ t^2 q^2}{4 m} ({}^1)^T {}^1 $ $e^{n+1}=S_{+}^{-1}(S_{-}e^n- t ({}^1)^ {W}_q V^n )$ $V^{n+1}=V^n+{ t}{2} {W}_{{q}{m}} {}^1(e^{n+1}+e^n)$.  <a href="#a8951f9e06bc1d227a27ddd10e1d6d175">More...</a><br /></td></tr>
-<tr class="separator:a8951f9e06bc1d227a27ddd10e1d6d175"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:add7ed4f720911f976d09720789236731"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__time__propagator__pic__vm__1d2v__disgrade.html#add7ed4f720911f976d09720789236731">initialize_pic_vm_1d2v_disgrade</a> (self, maxwell_solver, kernel_smoother_0, kernel_smoother_1, particle_group, phi_dofs, efield_dofs, bfield_dofs, x_min, Lx, filter, boundary_particles, solver_tolerance, force_sign, <a class="el" href="sll__pif__general_8_f90.html#a941ae850bee4632949945fc4f6ea0c16">control_variate</a>, i_weight, betar, electrostatic, jmean, adiabatic_electrons)</td></tr>
-<tr class="memdesc:add7ed4f720911f976d09720789236731"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor.  <a href="#add7ed4f720911f976d09720789236731">More...</a><br /></td></tr>
-<tr class="separator:add7ed4f720911f976d09720789236731"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad9d188d5038e03265559fd50374a2a1f"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__time__propagator__pic__vm__1d2v__disgrade.html#ad9d188d5038e03265559fd50374a2a1f">initialize_pic_vm_1d2v_disgrade</a> (self, maxwell_solver, kernel_smoother_0, kernel_smoother_1, particle_group, phi_dofs, efield_dofs, bfield_dofs, x_min, Lx, filter, boundary_particles, solver_tolerance, force_sign, <a class="el" href="sll__pif__general_8_f90.html#a941ae850bee4632949945fc4f6ea0c16">control_variate</a>, i_weight, betar, electrostatic, jmean)</td></tr>
+<tr class="memdesc:ad9d188d5038e03265559fd50374a2a1f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor.  <a href="#ad9d188d5038e03265559fd50374a2a1f">More...</a><br /></td></tr>
+<tr class="separator:ad9d188d5038e03265559fd50374a2a1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a167b30aff4e5b0692b1d6754501b9fa1"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__time__propagator__pic__vm__1d2v__disgrade.html#a167b30aff4e5b0692b1d6754501b9fa1">initialize_file_pic_vm_1d2v_disgrade</a> (self, maxwell_solver, kernel_smoother_0, kernel_smoother_1, particle_group, phi_dofs, efield_dofs, bfield_dofs, x_min, Lx, filter, filename, boundary_particles, force_sign, <a class="el" href="sll__pif__general_8_f90.html#a941ae850bee4632949945fc4f6ea0c16">control_variate</a>, i_weight, betar, electrostatic, jmean)</td></tr>
 <tr class="memdesc:a167b30aff4e5b0692b1d6754501b9fa1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor.  <a href="#a167b30aff4e5b0692b1d6754501b9fa1">More...</a><br /></td></tr>
 <tr class="separator:a167b30aff4e5b0692b1d6754501b9fa1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -127,264 +112,6 @@ Functions/Subroutines</h2></td></tr>
 <tr class="separator:a3924dd7f355270fafd770386e969bcd1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="a8951f9e06bc1d227a27ddd10e1d6d175"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8951f9e06bc1d227a27ddd10e1d6d175">&#9670;&nbsp;</a></span>advect_e_pic_vm_1d2v_disgrade()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">subroutine sll_m_time_propagator_pic_vm_1d2v_disgrade::advect_e_pic_vm_1d2v_disgrade </td>
-          <td>(</td>
-          <td class="paramtype">class(<a class="el" href="structsll__m__time__propagator__pic__vm__1d2v__disgrade_1_1sll__t__time__propagator__pic__vm__1d2v__disgrade.html">sll_t_time_propagator_pic_vm_1d2v_disgrade</a>), intent(inout)&#160;</td>
-          <td class="paramname"><em>self</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
-          <td class="paramname"><em>dt</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Solution with Schur complement: $ S_{+}=M_1+{ t^2 q^2}{4 m} ({}^1)^T {}^1 $ $e^{n+1}=S_{+}^{-1}(S_{-}e^n- t ({}^1)^ {W}_q V^n )$ $V^{n+1}=V^n+{ t}{2} {W}_{{q}{m}} {}^1(e^{n+1}+e^n)$. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>time propagator object</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dt</td><td>time step </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p class="definition">Definition at line <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html#l00395">395</a> of file <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html">sll_m_time_propagator_pic_vm_1d2v_disgradE.F90</a>.</p>
-
-</div>
-</div>
-<a id="a38ccc7f35e9988a419b53ef5a22b064a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a38ccc7f35e9988a419b53ef5a22b064a">&#9670;&nbsp;</a></span>advect_eb_pic_vm_1d2v_disgrade()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">subroutine sll_m_time_propagator_pic_vm_1d2v_disgrade::advect_eb_pic_vm_1d2v_disgrade </td>
-          <td>(</td>
-          <td class="paramtype">class(<a class="el" href="structsll__m__time__propagator__pic__vm__1d2v__disgrade_1_1sll__t__time__propagator__pic__vm__1d2v__disgrade.html">sll_t_time_propagator_pic_vm_1d2v_disgrade</a>), intent(inout)&#160;</td>
-          <td class="paramname"><em>self</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
-          <td class="paramname"><em>dt</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>advect_eb: Equations to be solved Solution with Schur complement: $ S=M_1+{ t^2}{4} D^ M_2 D $ $ e_2^{n+1}=S^{-1}( (M_1-{ t^2}{4} D^ M_2 D)e_2^n+ t D^ M_2 b_3^n) $ $ b_3^{n+1}=b_3^n-{ t}{2} C(e_2^n+e_2^{n+1}) $ </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>time propagator object</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dt</td><td>time step </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p class="definition">Definition at line <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html#l00379">379</a> of file <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html">sll_m_time_propagator_pic_vm_1d2v_disgradE.F90</a>.</p>
-
-</div>
-</div>
-<a id="a1354f1518694b608d007d4d78d2c6528"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1354f1518694b608d007d4d78d2c6528">&#9670;&nbsp;</a></span>advect_vb_pic_vm_1d2v_disgrade()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">subroutine sll_m_time_propagator_pic_vm_1d2v_disgrade::advect_vb_pic_vm_1d2v_disgrade </td>
-          <td>(</td>
-          <td class="paramtype">class(<a class="el" href="structsll__m__time__propagator__pic__vm__1d2v__disgrade_1_1sll__t__time__propagator__pic__vm__1d2v__disgrade.html">sll_t_time_propagator_pic_vm_1d2v_disgrade</a>), intent(inout)&#160;</td>
-          <td class="paramname"><em>self</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
-          <td class="paramname"><em>dt</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>advect_vb: Equations to be solved $V_{1,2}^{n+1}= ((B_3)&amp;(B) \ -(B) &amp;(B) ) V_{1,2}^n </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>time propagator object</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dt</td><td>time step </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p class="definition">Definition at line <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html#l00333">333</a> of file <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html">sll_m_time_propagator_pic_vm_1d2v_disgradE.F90</a>.</p>
-
-</div>
-</div>
-<a id="a7b7a0670941b2622e6bdb67077c62539"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7b7a0670941b2622e6bdb67077c62539">&#9670;&nbsp;</a></span>advect_x_pic_vm_1d2v_disgrade()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">subroutine sll_m_time_propagator_pic_vm_1d2v_disgrade::advect_x_pic_vm_1d2v_disgrade </td>
-          <td>(</td>
-          <td class="paramtype">class(<a class="el" href="structsll__m__time__propagator__pic__vm__1d2v__disgrade_1_1sll__t__time__propagator__pic__vm__1d2v__disgrade.html">sll_t_time_propagator_pic_vm_1d2v_disgrade</a>), intent(inout)&#160;</td>
-          <td class="paramname"><em>self</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real(kind=f64), intent(in)&#160;</td>
-          <td class="paramname"><em>dt</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>advect_x: Equations to be solved $X_1^{n+1}=X_1^n+ { t}{2} V_1^n$ </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>time propagator object</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dt</td><td>time step </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p class="definition">Definition at line <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html#l00264">264</a> of file <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html">sll_m_time_propagator_pic_vm_1d2v_disgradE.F90</a>.</p>
-<div class="dynheader">
-Here is the call graph for this function:</div>
-<div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__time__propagator__pic__vm__1d2v__disgrade_a7b7a0670941b2622e6bdb67077c62539_cgraph.svg" width="436" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
-</div>
-</div>
-
-</div>
-</div>
-<a id="a16f15649c9162d5d2850dbc2717c7011"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a16f15649c9162d5d2850dbc2717c7011">&#9670;&nbsp;</a></span>compute_particle_boundary()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">subroutine sll_m_time_propagator_pic_vm_1d2v_disgrade::compute_particle_boundary </td>
-          <td>(</td>
-          <td class="paramtype">class(<a class="el" href="structsll__m__time__propagator__pic__vm__1d2v__disgrade_1_1sll__t__time__propagator__pic__vm__1d2v__disgrade.html">sll_t_time_propagator_pic_vm_1d2v_disgrade</a>), intent(inout)&#160;</td>
-          <td class="paramname"><em>self</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real(kind=f64), intent(inout)&#160;</td>
-          <td class="paramname"><em>xold</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real(kind=f64), intent(inout)&#160;</td>
-          <td class="paramname"><em>xnew</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real(kind=f64), intent(inout)&#160;</td>
-          <td class="paramname"><em>vi</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Helper function for advect_x. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">self</td><td>time propagator object </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p class="definition">Definition at line <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html#l00295">295</a> of file <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html">sll_m_time_propagator_pic_vm_1d2v_disgradE.F90</a>.</p>
-<div class="dynheader">
-Here is the caller graph for this function:</div>
-<div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__time__propagator__pic__vm__1d2v__disgrade_a16f15649c9162d5d2850dbc2717c7011_icgraph.svg" width="436" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
-</div>
-</div>
-
-</div>
-</div>
 <a id="a3924dd7f355270fafd770386e969bcd1"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a3924dd7f355270fafd770386e969bcd1">&#9670;&nbsp;</a></span>delete_pic_vm_1d2v_disgrade()</h2>
 
@@ -417,7 +144,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html#l01018">1018</a> of file <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html">sll_m_time_propagator_pic_vm_1d2v_disgradE.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html#l00391">391</a> of file <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html">sll_m_time_propagator_pic_vm_1d2v_disgradE.F90</a>.</p>
 
 </div>
 </div>
@@ -581,18 +308,12 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html#l00772">772</a> of file <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html">sll_m_time_propagator_pic_vm_1d2v_disgradE.F90</a>.</p>
-<div class="dynheader">
-Here is the call graph for this function:</div>
-<div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__time__propagator__pic__vm__1d2v__disgrade_a167b30aff4e5b0692b1d6754501b9fa1_cgraph.svg" width="590" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
-</div>
-</div>
+<p class="definition">Definition at line <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html#l00293">293</a> of file <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html">sll_m_time_propagator_pic_vm_1d2v_disgradE.F90</a>.</p>
 
 </div>
 </div>
-<a id="add7ed4f720911f976d09720789236731"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#add7ed4f720911f976d09720789236731">&#9670;&nbsp;</a></span>initialize_pic_vm_1d2v_disgrade()</h2>
+<a id="ad9d188d5038e03265559fd50374a2a1f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad9d188d5038e03265559fd50374a2a1f">&#9670;&nbsp;</a></span>initialize_pic_vm_1d2v_disgrade()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -712,13 +433,7 @@ Here is the call graph for this function:</div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">logical, intent(in), optional&#160;</td>
-          <td class="paramname"><em>jmean</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">logical, optional&#160;</td>
-          <td class="paramname"><em>adiabatic_electrons</em>&#160;</td>
+          <td class="paramname"><em>jmean</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -753,13 +468,12 @@ Here is the call graph for this function:</div>
     <tr><td class="paramdir">[in]</td><td class="paramname">i_weight</td><td>Index of weight to be used by propagator</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">betar</td><td>reciprocal plasma beta</td></tr>
     <tr><td class="paramdir"></td><td class="paramname">electrostatic</td><td>true for electrostatic simulation</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">jmean</td><td>logical for mean value of current</td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">adiabatic_electrons</td><td>true for simulation with adiabatic electrons </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">jmean</td><td>logical for mean value of current </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html#l00571">571</a> of file <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html">sll_m_time_propagator_pic_vm_1d2v_disgradE.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html#l00174">174</a> of file <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html">sll_m_time_propagator_pic_vm_1d2v_disgradE.F90</a>.</p>
 
 </div>
 </div>
@@ -813,7 +527,7 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html#l00236">236</a> of file <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html">sll_m_time_propagator_pic_vm_1d2v_disgradE.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html#l00128">128</a> of file <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html">sll_m_time_propagator_pic_vm_1d2v_disgradE.F90</a>.</p>
 
 </div>
 </div>
@@ -867,7 +581,7 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html#l00210">210</a> of file <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html">sll_m_time_propagator_pic_vm_1d2v_disgradE.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html#l00102">102</a> of file <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html">sll_m_time_propagator_pic_vm_1d2v_disgradE.F90</a>.</p>
 
 </div>
 </div>
@@ -903,7 +617,7 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html#l00168">168</a> of file <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html">sll_m_time_propagator_pic_vm_1d2v_disgradE.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html#l00062">62</a> of file <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html">sll_m_time_propagator_pic_vm_1d2v_disgradE.F90</a>.</p>
 
 </div>
 </div>
@@ -957,7 +671,7 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html#l00179">179</a> of file <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html">sll_m_time_propagator_pic_vm_1d2v_disgradE.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html#l00071">71</a> of file <a class="el" href="sll__m__time__propagator__pic__vm__1d2v__disgrad_e_8_f90_source.html">sll_m_time_propagator_pic_vm_1d2v_disgradE.F90</a>.</p>
 
 </div>
 </div>
@@ -968,7 +682,7 @@ Here is the call graph for this function:</div>
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Fri Sep 17 2021 15:35:35 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Dec 8 2021 14:16:22 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>
