@@ -562,13 +562,8 @@ contains
        sim%no_weights = 3
        allocate(sim%control_variate)
        allocate(sim%control_variate%cv(1))
-       if( sim%adiabatic_electrons ) then
-          call sim%control_variate%cv(1)%init( control_variate_xi, &
-               distribution_params=sim%init_distrib_params )
-       else
-          call sim%control_variate%cv(1)%init( control_variate_equi, &
-               distribution_params=sim%init_distrib_params )
-       end if
+       call sim%control_variate%cv(1)%init( control_variate_equi, &
+            distribution_params=sim%init_distrib_params )
     else
        sim%no_weights = 1
     end if
@@ -1291,19 +1286,6 @@ contains
 
   end function control_variate_equi
 
-
-  !> As a control variate, we use the equilibrium (v part of the initial distribution)
-  function control_variate_xi( this, xi, vi, time) result(sll_f_control_variate)
-    class(sll_t_control_variate) :: this !> control variate
-    sll_real64, optional,  intent( in ) :: xi(:) !< particle position
-    sll_real64, optional,  intent( in ) :: vi(:) !< particle velocity
-    sll_real64, optional,  intent( in ) :: time  !< current time
-    sll_real64               :: sll_f_control_variate
-
-    sll_f_control_variate = &
-         this%control_variate_distribution_params%eval_v_density( vi, xi, m=1._f64  )
-
-  end function control_variate_xi
 
 
   !> Add background charge
