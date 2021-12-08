@@ -73,22 +73,22 @@ contains
 
     ! ...
     if (present(pc_left)) then
-       self % ptr_pc_left => pc_left 
+       self%ptr_pc_left => pc_left 
     end if
     ! ...
 
     ! ...
-    call self % initialize(linear_operator)  
+    call self%initialize(linear_operator)  
     ! ...
 
     ! ...
-    allocate(self % x_0(self % n_total_rows))
-    self % x_0 = 0.0_f64
+    allocate(self%x_0(self%n_total_rows))
+    self%x_0 = 0.0_f64
     ! ...
 
     ! ...
     if (present(filename)) then
-       call self % read_from_file(filename)
+       call self%read_from_file(filename)
     end if
     ! ...
 
@@ -109,16 +109,16 @@ contains
 
     ! ...
     if (present(x_0)) then
-       self % x_0 = x_0
+       self%x_0 = x_0
     end if
     ! ...
 
     ! ... linear solver abstract initialization
-    call self % initialize_abstract(linear_operator)  
+    call self%initialize_abstract(linear_operator)  
     ! ...
 
     ! ... iterative linear solver abstract initialization
-    call self % set_linear_operator(linear_operator)  
+    call self%set_linear_operator(linear_operator)  
     ! ...
 
   end subroutine initialize_linear_solver_mgmres
@@ -134,7 +134,7 @@ contains
     class(sll_t_linear_solver_mgmres), intent(inout) :: self 
     sll_real64,dimension(:), intent(in) :: x_0
 
-    self % x_0 = x_0
+    self%x_0 = x_0
 
   end subroutine set_guess_linear_solver_mgmres
   ! ..................................................
@@ -157,12 +157,12 @@ contains
     sll_real64, dimension(:),     optional, intent(in)     :: arr_err 
 
     ! ... 
-    if (self % verbose) then
+    if (self%verbose) then
        if (present(r_err)) then
-          if (i_iteration <= self % n_maxiter) then
-             print*, '* mgmres:  convegence after', i_iteration, ' iterations. Error ', r_err
+          if (i_iteration <= self%n_maxiter) then
+             print*, '* mgmres:  convegence after', i_iteration, 'iterations. Error ', r_err
           else
-             print *, '* mgmres: Warning - max iterations achieved without convergence. Error', r_err
+             print *, '* mgmres: Warning - max iterations', self%n_maxiter, 'achieved without convergence. Error', r_err
           end if
        end if
     end if
@@ -204,23 +204,23 @@ contains
     ! ... 
 
     ! ...  
-    self % n_maxiter        = int_maxiter
-    self % n_mr             = int_restart
-    self % rtol             = real_rtol
-    self % atol             = real_atol
+    self%n_maxiter        = int_maxiter
+    self%n_mr             = int_restart
+    self%rtol             = real_rtol
+    self%atol             = real_atol
     ! ... 
 
     ! ... 
-    self % null_space       = .false. 
+    self%null_space       = .false. 
     if (int_null_space == 1) then
-       self % null_space     = .true. 
+       self%null_space     = .true. 
     end if
     ! ... 
 
     ! ... 
-    self % verbose       = .false. 
+    self%verbose       = .false. 
     if (int_verbose == 1) then
-       self % verbose     = .true. 
+       self%verbose     = .true. 
     end if
     ! ... 
 
@@ -242,7 +242,7 @@ contains
     logical                   , intent(in) :: verbose
 
     ! ...
-    call self % set_verbose_abstract(verbose)
+    call self%set_verbose_abstract(verbose)
     ! ...
 
   end subroutine set_verbose_linear_solver_mgmres
@@ -266,24 +266,24 @@ contains
     logical :: flag
 
     ! ...
-    allocate(l_rhs(self % n_total_rows)) 
+    allocate(l_rhs(self%n_total_rows)) 
     l_rhs = rhs
     ! ...
 
     ! ...
-    if (associated(self % ptr_pc_left)) then
-       call self % ptr_pc_left % solve(rhs, l_rhs) 
+    if (associated(self%ptr_pc_left)) then
+       call self%ptr_pc_left % solve(rhs, l_rhs) 
     end if
     ! ...
 
     ! ...
-    unknown = self % x_0
+    unknown = self%x_0
     ! ...
 
     ! ...
     call mgmres_linear_solver ( self, unknown, l_rhs, &
-         & self % n_maxiter, self % n_mr, & 
-         & self % atol, self % rtol, &
+         & self%n_maxiter, self%n_mr, & 
+         & self%atol, self%rtol, &
          & itr_used, res)
     ! ...
 
@@ -292,7 +292,7 @@ contains
     ! ...
 
     ! ...
-    call self % check_convergence( i_iteration=itr_used, &
+    call self%check_convergence( i_iteration=itr_used, &
          & flag=flag, &
          & r_err=res)
     ! ...
@@ -408,26 +408,26 @@ contains
     sll_int32 :: k
     sll_int32 :: k_copy
     sll_real64 :: mu
-    sll_real64 :: r(1:self % n_total_rows)
-    sll_real64 :: p(1:self % n_total_rows)
+    sll_real64 :: r(1:self%n_total_rows)
+    sll_real64 :: p(1:self%n_total_rows)
     sll_real64 :: rho
     sll_real64 :: rho_tol
-    sll_real64 :: rhs(1:self % n_total_rows)
+    sll_real64 :: rhs(1:self%n_total_rows)
     sll_real64 :: s(1:mr)
     sll_real64 :: tol_abs
     sll_real64 :: tol_rel
-    sll_real64 :: v(1:self % n_total_rows,1:mr+1)
+    sll_real64 :: v(1:self%n_total_rows,1:mr+1)
     ! logical, parameter :: verbose = .false.
-    sll_real64 :: x(1:self % n_total_rows)
+    sll_real64 :: x(1:self%n_total_rows)
     sll_real64 :: y(1:mr+1)
 
     itr_used = 0
 
-    if ( self % verbose .and. ( self % n_total_rows < mr ) ) then
+    if ( self%verbose .and. ( self%n_total_rows < mr ) ) then
        write ( *, '(a)' ) ' '
        write ( *, '(a)' ) 'mgmres_csr - fatal error!'
        write ( *, '(a)' ) '  n < mr.'
-       write ( *, '(a,i8)' ) '  n = ', self % n_total_rows
+       write ( *, '(a,i8)' ) '  n = ', self%n_total_rows
        write ( *, '(a,i8)' ) '  mr = ', mr
        stop
     end if
@@ -436,20 +436,20 @@ contains
 
     do itr = 1, itr_max
 
-       call self % ptr_linear_operator % dot(x, r)
+       call self%ptr_linear_operator % dot(x, r)
 
        ! ...
-       if (associated(self % ptr_pc_left)) then
-          call self % ptr_pc_left % solve(r, p)
+       if (associated(self%ptr_pc_left)) then
+          call self%ptr_pc_left % solve(r, p)
           r=p
        end if
        ! ...
 
-       r(1:self % n_total_rows) = rhs(1:self % n_total_rows) - r(1:self % n_total_rows)
+       r(1:self%n_total_rows) = rhs(1:self%n_total_rows) - r(1:self%n_total_rows)
 
-       rho = sqrt ( dot_product ( r(1:self % n_total_rows), r(1:self % n_total_rows) ) )
+       rho = sqrt ( dot_product ( r(1:self%n_total_rows), r(1:self%n_total_rows) ) )
 
-       !      if ( self % verbose ) then
+       !      if ( self%verbose ) then
        !        write ( *, '(a,i8,a,g14.6)' ) '  itr = ', itr, '  residual = ', rho
        !      end if
 
@@ -460,7 +460,7 @@ contains
        if ( rho <= rho_tol .or. rho <= tol_abs ) then
           exit
        end if
-       v(1:self % n_total_rows,1) = r(1:self % n_total_rows) / rho
+       v(1:self%n_total_rows,1) = r(1:self%n_total_rows) / rho
 
 
        g(1) = rho
@@ -472,39 +472,39 @@ contains
 
           k_copy = k
 
-          call self % ptr_linear_operator % dot(v(1:self % n_total_rows,k), v(1:self % n_total_rows,k+1))  
+          call self%ptr_linear_operator % dot(v(1:self%n_total_rows,k), v(1:self%n_total_rows,k+1))  
 
           ! ...
-          if (associated(self % ptr_pc_left)) then
-             call self % ptr_pc_left % solve(v(1:self % n_total_rows,k+1), p)
-             v(1:self % n_total_rows,k+1) = p
+          if (associated(self%ptr_pc_left)) then
+             call self%ptr_pc_left % solve(v(1:self%n_total_rows,k+1), p)
+             v(1:self%n_total_rows,k+1) = p
           end if
           ! ...
 
-          av = sqrt ( dot_product ( v(1:self % n_total_rows,k+1), v(1:self % n_total_rows,k+1) ) )
+          av = sqrt ( dot_product ( v(1:self%n_total_rows,k+1), v(1:self%n_total_rows,k+1) ) )
 
 
           do j = 1, k
-             h(j,k) = dot_product ( v(1:self % n_total_rows,k+1), v(1:self % n_total_rows,j) )
-             v(1:self % n_total_rows,k+1) = v(1:self % n_total_rows,k+1) - h(j,k) * v(1:self % n_total_rows,j)
+             h(j,k) = dot_product ( v(1:self%n_total_rows,k+1), v(1:self%n_total_rows,j) )
+             v(1:self%n_total_rows,k+1) = v(1:self%n_total_rows,k+1) - h(j,k) * v(1:self%n_total_rows,j)
           end do
 
-          h(k+1,k) = sqrt ( dot_product ( v(1:self % n_total_rows,k+1), v(1:self % n_total_rows,k+1) ) )
+          h(k+1,k) = sqrt ( dot_product ( v(1:self%n_total_rows,k+1), v(1:self%n_total_rows,k+1) ) )
 
           if ( av + delta * h(k+1,k) == av ) then
 
              do j = 1, k
-                htmp = dot_product ( v(1:self % n_total_rows,k+1), v(1:self % n_total_rows,j) )
+                htmp = dot_product ( v(1:self%n_total_rows,k+1), v(1:self%n_total_rows,j) )
                 h(j,k) = h(j,k) + htmp
-                v(1:self % n_total_rows,k+1) = v(1:self % n_total_rows,k+1) - htmp * v(1:self % n_total_rows,j)
+                v(1:self%n_total_rows,k+1) = v(1:self%n_total_rows,k+1) - htmp * v(1:self%n_total_rows,j)
              end do
 
-             h(k+1,k) = sqrt ( dot_product ( v(1:self % n_total_rows,k+1), v(1:self % n_total_rows,k+1) ) )
+             h(k+1,k) = sqrt ( dot_product ( v(1:self%n_total_rows,k+1), v(1:self%n_total_rows,k+1) ) )
 
           end if
 
           if ( h(k+1,k) /= 0.0d+00 ) then
-             v(1:self % n_total_rows,k+1) = v(1:self % n_total_rows,k+1) / h(k+1,k)
+             v(1:self%n_total_rows,k+1) = v(1:self%n_total_rows,k+1) / h(k+1,k)
           end if
 
           if ( 1 < k ) then
@@ -529,7 +529,7 @@ contains
 
           itr_used = itr_used + 1
 
-          !        if ( self % verbose ) then
+          !        if ( self%verbose ) then
           !          write ( *, '(a,i8,a,g14.6)' ) '  k =   ', k, '  residual = ', rho
           !        end if
 
@@ -547,7 +547,7 @@ contains
           y(i) = ( g(i) - dot_product ( h(i,i+1:k+1), y(i+1:k+1) ) ) / h(i,i)
        end do
 
-       do i = 1, self % n_total_rows 
+       do i = 1, self%n_total_rows 
           x(i) = x(i) + dot_product ( v(i,1:k+1), y(1:k+1) )
        end do
 
@@ -557,7 +557,7 @@ contains
 
     end do
 
-    if ( self % verbose ) then
+    if ( self%verbose ) then
        write ( *, '(a)'       ) ' '
        write ( *, '(a)'       ) 'mgmres_csr:'
        write ( *, '(a,i8)'    ) '  iterations = ', itr_used
@@ -657,12 +657,12 @@ contains
     ! local
 
     print *, ">>>> linear_solver_mgmres"
-    print *, "* verbose    : ", self % verbose 
-    print *, "* n_mr       : ", self % n_mr 
-    print *, "* rtol       : ", self % rtol 
-    print *, "* atol       : ", self % atol 
-    print *, "* null_space : ", self % null_space 
-    print *, "* n_maxiter  : ", self % n_maxiter 
+    print *, "* verbose    : ", self%verbose 
+    print *, "* n_mr       : ", self%n_mr 
+    print *, "* rtol       : ", self%rtol 
+    print *, "* atol       : ", self%atol 
+    print *, "* null_space : ", self%null_space 
+    print *, "* n_maxiter  : ", self%n_maxiter 
     print *, "<<<< "
 
   end subroutine print_info_linear_solver_mgmres
@@ -676,7 +676,7 @@ contains
     implicit none
     class(sll_t_linear_solver_mgmres), intent(inout) :: self 
 
-    deallocate (self % x_0)
+    deallocate (self%x_0)
 
   end subroutine free_linear_solver_mgmres
   ! ..................................................

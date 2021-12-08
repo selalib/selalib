@@ -104,7 +104,7 @@ module sll_m_time_propagator_pic_vm_3d3v_helper
      sll_int32 :: n_total0 !< total number of Dofs for 0form
      sll_int32 :: n_total1 !< total number of Dofs for 1form
      sll_int32 :: nspan(3) !< Number of intervals where spline tensor product is non zero 
-     sll_real64 :: betar(2) !< reciprocal of plasma beta
+     sll_real64 :: betar(2) = 1._f64 !< reciprocal of plasma beta
 
      sll_real64, pointer     :: phi_dofs(:) !< DoFs describing the scalar potential
      sll_real64, pointer     :: efield_dofs(:) !< DoFs describing the three components of the electric field
@@ -115,9 +115,9 @@ module sll_m_time_propagator_pic_vm_3d3v_helper
      sll_real64, allocatable :: particle_mass_2_local(:,:) !< MPI-processor local part of one component of \a particle_mass
      sll_real64, allocatable :: particle_mass_3_local(:,:) !< MPI-processor local part of one component of \a particle_mass
 
-     sll_real64 :: solver_tolerance !< solver tolerance
-     sll_real64 :: iter_tolerance  !< iteration tolerance 
-     sll_int32  :: max_iter !< maximal amount of iterations
+     sll_real64 :: solver_tolerance = 1d-12 !< solver tolerance
+     sll_real64 :: iter_tolerance = 1d-10 !< iteration tolerance 
+     sll_int32  :: max_iter = 10!< maximal amount of iterations
 
      sll_int32 :: boundary_particles = 100 !< particle boundary conditions
      sll_int32 :: counter_left = 0 !< boundary counter
@@ -151,12 +151,12 @@ module sll_m_time_propagator_pic_vm_3d3v_helper
      class(sll_c_filter_base_3d), pointer :: filter !< filter
 
    contains
-     procedure :: advect_x => advect_x_pic_vm_3d3v_avf !> Advect x-part
-     procedure :: advect_eb => advect_eb_schur_pic_vm_3d3v_avf !> Solve Faraday and B-part of Ampere using Schur complement
-     procedure :: advect_vb => advect_vb_pic_vm_3d3v_avf !> Push v, vxB-part only
-     procedure :: advect_e => advect_e_pic_vm_3d3v_avf !> Advect ev-part
-     procedure :: advect_e_trunc => advect_e_pic_vm_3d3v_avf_trunc !> Advect ev-part with truncated particle mass
-     procedure :: advect_ex !> Advect ev-part together with x-part in nonlinear iteration
+     procedure :: advect_x => advect_x_pic_vm_3d3v !> Advect x-part
+     procedure :: advect_eb => advect_eb_schur_pic_vm_3d3v !> Solve Faraday and B-part of Ampere using Schur complement
+     procedure :: advect_vb => advect_vb_pic_vm_3d3v !> Push v, vxB-part only
+     procedure :: advect_e => advect_e_pic_vm_3d3v !> Advect ev-part
+     procedure :: advect_e_trunc => advect_e_pic_vm_3d3v_trunc !> Advect ev-part with truncated particle mass
+     procedure :: advect_ex  => advect_ex_pic_vm_3d3v !> Advect ev-part together with x-part in nonlinear iteration
 
      procedure :: init => initialize_pic_vm_3d3v !> Initialize the type
      procedure :: init_from_file => initialize_file_pic_vm_3d3v !> Initialize the type
@@ -170,7 +170,7 @@ contains
   !---------------------------------------------------------------------------!
   !> advect_x: Equations to be solved
   !> $X^{n+1}=X^n + \Delta t V^n
-  subroutine advect_x_pic_vm_3d3v_avf ( self, dt )
+  subroutine advect_x_pic_vm_3d3v ( self, dt )
     class(sll_t_time_propagator_pic_vm_3d3v_helper), intent(inout) :: self !< time propagator object 
     sll_real64,                                     intent(in)    :: dt   !< time step
     !local variables
@@ -198,7 +198,7 @@ contains
        end do
     end do
 
-  end subroutine advect_x_pic_vm_3d3v_avf
+  end subroutine advect_x_pic_vm_3d3v
 
 
   !> Helper function for \a advect_x
@@ -241,7 +241,7 @@ contains
   !---------------------------------------------------------------------------!
   !> advect_vb: Equations to be solved
   !> $(\mathbb{I}-\Delta \frac{\Delta t q}{2 m}  \mathbb{B}(X^n,b^n) V^{n+1}=(\mathbb{I}+ \frac{\Delta t q}{2 m} \mathbb{B}(X^n,b^n) V^n$
-  subroutine advect_vb_pic_vm_3d3v_avf ( self, dt )
+  subroutine advect_vb_pic_vm_3d3v ( self, dt )
     class(sll_t_time_propagator_pic_vm_3d3v_helper), intent(inout) :: self !< time propagator object 
     sll_real64,                                     intent(in)    :: dt   !< time step
     !local variables
@@ -294,7 +294,7 @@ contains
        end do
     end do
 
-  end subroutine advect_vb_pic_vm_3d3v_avf
+  end subroutine advect_vb_pic_vm_3d3v
 
 
   !---------------------------------------------------------------------------!
@@ -302,13 +302,13 @@ contains
   !> Solution with Schur complement: $ S=M_1+\frac{\Delta t^2}{4} C^\top M_2 C $
   !> $ e^{n+1}=S^{-1}( (M_1-\frac{\Delta t^2}{4} C^\top M_2 C)e^n+\Delta t C^\top M_2 b^n) $
   !> $ b^{n+1}=b^n-\frac{\Delta t}{2} C(e^n+e^{n+1}) $
-  subroutine advect_eb_schur_pic_vm_3d3v_avf ( self, dt )
+  subroutine advect_eb_schur_pic_vm_3d3v ( self, dt )
     class(sll_t_time_propagator_pic_vm_3d3v_helper), intent(inout) :: self !< time propagator object 
     sll_real64,                                     intent(in)    :: dt   !< time step
 
     call self%maxwell_solver%compute_curl_part( dt, self%efield_dofs, self%bfield_dofs, self%betar(1) )
 
-  end subroutine advect_eb_schur_pic_vm_3d3v_avf
+  end subroutine advect_eb_schur_pic_vm_3d3v
 
 
   !---------------------------------------------------------------------------!
@@ -317,7 +317,7 @@ contains
   !> $e^{n+1}=S_{+}^{-1}\left(S_{-}e^n-\Delta t (\mathbb{\Lambda}^1)^\top \mathbb{W}_q V^n \right)$
   !> $V^{n+1}=V^n+\frac{\Delta t}{2} \mathbb{W}_{\frac{q}{m}} \mathbb{\Lambda}^1(e^{n+1}+e^n)$
   ! TODO: Here we need to merge at least the steps for the particle mass to improve the scaling
-  subroutine advect_e_pic_vm_3d3v_avf( self, dt )
+  subroutine advect_e_pic_vm_3d3v( self, dt )
     class(sll_t_time_propagator_pic_vm_3d3v_helper), intent(inout) :: self !< time propagator object 
     sll_real64,                                     intent(in)    :: dt   !< time step
     ! local variables
@@ -510,7 +510,7 @@ contains
        end do
     end do
 
-  end subroutine advect_e_pic_vm_3d3v_avf
+  end subroutine advect_e_pic_vm_3d3v
 
 
   !---------------------------------------------------------------------------!
@@ -519,16 +519,16 @@ contains
   !> $\frac{V^{n+1}-V^n}{\Delta t}=\mathbb{W}_{\frac{q}{m}} \frac{1}{\Delta t}\int_{t^n}^{t^{n+1}} \mathbb{\Lambda}^1(X(\tau))  d\tau \frac{e^{n+1}+e^n}{2}$
   !> $\frac{M_1 e^{n+1}-M_1 e^n}{\Delta t} = - \frac{1}{\Delta t} \int_{t^n}^{t^{n+1}} \mathbb{\Lambda}^1(X(\tau))^\top  d\tau \mathbb{W}_q\frac{V^{n+1}+V^n}{2}$
   ! TODO: Here we need to merge at least the steps for the particle mass to improve the scaling
-  subroutine advect_ex( self, dt )
+  subroutine advect_ex_pic_vm_3d3v( self, dt )
     class(sll_t_time_propagator_pic_vm_3d3v_helper), intent(inout) :: self !< time propagator object 
     sll_real64,                                     intent(in)    :: dt   !< time step
     ! local variables
     sll_int32 :: i_part, i_sp
-    sll_real64 :: vi(3), xi(3), wi(1), xnew(3), vbar(3), vh(3), xmid(3), xbar, dx
+    sll_real64 :: vi(3), xi(3), wi(1), mi(1), xnew(3), vbar(3), vh(3), xmid(3), xbar, dx
     sll_real64 :: sign, wall(3) 
     sll_real64 :: efield(3)
     sll_int32 :: niter
-    sll_real64 :: residual(1), residual_local(1)
+    sll_real64 :: residual(8), residual_local(8)
 
     self%efield_dofs_new = self%efield_dofs
     self%phi_dofs_new = self%phi_dofs
@@ -540,13 +540,14 @@ contains
     end do
 
     niter = 0
-    residual = self%iter_tolerance + 1.0_f64
-    do while ( (residual(1) > self%iter_tolerance) .and. niter < self%max_iter )
+    residual = 1.0_f64
+   
+    do while ( (residual(7) > self%iter_tolerance) .and. niter < self%max_iter )
        niter = niter+1
 
        self%efield_dofs_work = 0.5_f64*( self%efield_dofs + self%efield_dofs_new )
        self%j_dofs_local = 0.0_f64
-
+       residual_local = 0._f64
        ! Particle loop
        do i_sp=1,self%particle_group%n_species
           sign = dt*self%particle_group%group(i_sp)%species%q_over_m();
@@ -556,6 +557,7 @@ contains
 
              ! Get charge for accumulation of j
              wi = self%particle_group%group(i_sp)%get_charge(i_part, self%i_weight)
+             mi = self%particle_group%group(i_sp)%get_mass(i_part, self%i_weight)
 
              vbar = 0.5_f64*(vi+self%vnew(i_sp,:, i_part))
 
@@ -605,7 +607,18 @@ contains
                      self%j_dofs_local, efield )
                 vi = vi + sign * efield
              end if
+             xnew(2:3) = self%x_min(2:3) + modulo(xnew(2:3)-self%x_min(2:3), self%Lx(2:3))
 
+             residual_local(1) = residual_local(1) + (xnew(1)/self%Lx(1)-self%xnew(i_sp,1,i_part)/self%Lx(1))**2*abs(wi(1))
+             residual_local(2) = residual_local(2) + (xnew(2)/self%Lx(2)-self%xnew(i_sp,2,i_part)/self%Lx(2))**2*abs(wi(1))
+             residual_local(3) = residual_local(3) + (xnew(3)/self%Lx(3)-self%xnew(i_sp,3,i_part)/self%Lx(3))**2*abs(wi(1))
+
+             residual_local(4) = residual_local(4) + (vi(1)-self%vnew(i_sp,1,i_part))**2*abs(wi(1))
+             residual_local(5) = residual_local(5) + (vi(2)-self%vnew(i_sp,2,i_part))**2*abs(wi(1))
+             residual_local(6) = residual_local(6) + (vi(3)-self%vnew(i_sp,3,i_part))**2*abs(wi(1))
+
+             residual_local(8) = residual_local(8) + mi(1)*0.5_f64*( vi(1)**2 + vi(2)**2 + vi(3)**2-self%vnew(i_sp,1,i_part)**2  -self%vnew(i_sp,2,i_part)**2  -self%vnew(i_sp,3,i_part)**2 )  
+             
              self%xnew(i_sp, :, i_part) = xnew
              self%vnew(i_sp, :, i_part) = vi
           end do
@@ -620,25 +633,29 @@ contains
           self%phi_dofs_work = self%phi_dofs
           call self%maxwell_solver%compute_phi_from_j( self%j_dofs, self%phi_dofs_work, self%efield_dofs_work )
 
-          ! Compute residual based on phi
-          residual_local = (sum((self%phi_dofs_work-self%phi_dofs_new)**2))*product(self%particle_mesh_coupling%delta_x)
-          call sll_o_collective_allreduce( sll_v_world_collective, residual_local, 1, MPI_MAX, residual )
-          residual = sqrt(residual)
+          ! Compute residuals based on phi
+          residual_local(8) = residual_local(8) + 0.5_f64*(self%maxwell_solver%inner_product( self%phi_dofs_work, self%phi_dofs_work, 0 ) - self%maxwell_solver%inner_product( self%phi_dofs_new, self%phi_dofs_new, 0 ) )
+          residual_local(7) = (sum((self%phi_dofs_work-self%phi_dofs_new)**2))*product(self%particle_mesh_coupling%delta_x)
        else
           self%efield_dofs_work = self%efield_dofs
           self%j_dofs=self%j_dofs*self%betar(2)
           call self%maxwell_solver%compute_E_from_j( self%j_dofs, self%efield_dofs_work )
 
-          ! Compute residual based on e
-          residual_local = (sum((self%efield_dofs_work-self%efield_dofs_new)**2))*product(self%particle_mesh_coupling%delta_x)
-          call sll_o_collective_allreduce( sll_v_world_collective, residual_local, 1, MPI_MAX, residual )
-          residual = sqrt(residual)
+          ! Compute residuals based on e
+          residual_local(8) = residual_local(8) + 0.5_f64*(self%maxwell_solver%L2norm_squared( self%efield_dofs_work(1:self%n_total1), 1, 1 ) + self%maxwell_solver%L2norm_squared( self%efield_dofs_work(1+self%n_total1:self%n_total1+self%n_total0), 1, 2 ) +self%maxwell_solver%L2norm_squared( self%efield_dofs_work(1+self%n_total1 +self%n_total0:self%n_total1+2*self%n_total0), 1, 3 ) - self%maxwell_solver%L2norm_squared( self%efield_dofs_work(1:self%n_total1), 1, 1 ) + self%maxwell_solver%L2norm_squared( self%efield_dofs_new(1+self%n_total1:self%n_total1+self%n_total0), 1, 2 ) + self%maxwell_solver%L2norm_squared( self%efield_dofs_new(1+self%n_total1 +self%n_total0:self%n_total1+2*self%n_total0), 1, 3 ) ) 
+          
+          residual_local(7) = (sum((self%efield_dofs_work-self%efield_dofs_new)**2))*product(self%particle_mesh_coupling%delta_x)
        end if
+       
+       call sll_o_collective_allreduce( sll_v_world_collective, residual_local, 8, MPI_MAX, residual )
+       residual(1:7) = sqrt(residual(1:7))
+       residual(8) = abs(residual(8))
        self%phi_dofs_new = self%phi_dofs_work
        self%efield_dofs_new = self%efield_dofs_work
     end do
 
-    if ( residual(1) > self%iter_tolerance ) then
+    if ( residual(7) > self%iter_tolerance ) then
+       !maxval(residual(1:7))
        print*, 'Warning: Iteration no.', self%iter_counter+1 ,'did not converge.', residual, niter
        self%n_failed = self%n_failed+1
     end if
@@ -687,7 +704,7 @@ contains
     self%iter_counter = self%iter_counter + 1
     self%niter(self%iter_counter) = niter
 
-  end subroutine advect_ex
+  end subroutine advect_ex_pic_vm_3d3v
 
 
   !> Helper function for \a advect_ex
@@ -752,7 +769,7 @@ contains
   !---------------------------------------------------------------------------!
   !> advect_e_trunc: This is a version of advect_e where the Particle Mass is
   !> approximated by the mass matrix
-  subroutine advect_e_pic_vm_3d3v_avf_trunc( self, dt )
+  subroutine advect_e_pic_vm_3d3v_trunc( self, dt )
     class(sll_t_time_propagator_pic_vm_3d3v_helper), intent(inout) :: self !< time propagator object 
     sll_real64,                                     intent(in)    :: dt   !< time step
     ! local variables
@@ -855,7 +872,7 @@ contains
        end do
     end do
 
-  end subroutine advect_e_pic_vm_3d3v_avf_trunc
+  end subroutine advect_e_pic_vm_3d3v_trunc
 
 
   !---------------------------------------------------------------------------!
@@ -907,16 +924,11 @@ contains
 
     if (present(solver_tolerance) )  then
        self%solver_tolerance = solver_tolerance
-    else
-       self%solver_tolerance = 1d-12
     end if
 
     if (present(iter_tolerance) )  then
        self%iter_tolerance = iter_tolerance
        self%max_iter = max_iter
-    else
-       self%iter_tolerance = 1d-10
-       self%max_iter = 20
     end if
 
     if( present(force_sign) )then
@@ -984,7 +996,7 @@ contains
        allocate( sll_t_linear_operator_particle_mass_3d_diag  :: self%particle_mass_2 )
        allocate( sll_t_linear_operator_particle_mass_3d_diag  :: self%particle_mass_3 )
     end if
-
+  
     call self%particle_mass_1%create( self%particle_mesh_coupling%n_cells, [self%spline_degree(1)-1, self%spline_degree(2), self%spline_degree(3)] )
     call self%particle_mass_2%create( self%particle_mesh_coupling%n_cells, [self%spline_degree(1), self%spline_degree(2)-1, self%spline_degree(3)] )
     call self%particle_mass_3%create( self%particle_mesh_coupling%n_cells, [self%spline_degree(1), self%spline_degree(2), self%spline_degree(3)-1]  )
@@ -1023,8 +1035,6 @@ contains
 
     if (present(betar)) then
        self%betar = betar
-    else
-       self%betar = 1.0_f64
     end if
 
 

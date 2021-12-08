@@ -41,9 +41,6 @@ module sll_m_maxwell_3d_fem
   use sll_m_linear_solver_kron, only : &
        sll_t_linear_solver_kron
 
-  use sll_m_linear_solver_mgmres, only : &
-       sll_t_linear_solver_mgmres
-
   use sll_m_low_level_bsplines, only: &
        sll_s_uniform_bsplines_eval_basis
 
@@ -114,7 +111,7 @@ module sll_m_maxwell_3d_fem
      type(sll_t_linear_operator_penalized)  :: poisson_operator !< Poisson matrix with constraint on constant vector
      type(sll_t_linear_solver_cg)  :: poisson_solver !< CG solver to invert Poisson matrix
      type( sll_t_linear_operator_schur_eb_3d ) :: linear_op_schur_eb !< Schur complement operator for advect_eb
-     type( sll_t_linear_solver_mgmres )        :: linear_solver_schur_eb !< Schur complement solver for advect_eb
+     type( sll_t_linear_solver_cg )        :: linear_solver_schur_eb !< Schur complement solver for advect_eb
 
      logical :: adiabatic_electrons = .false. !< flag if adiabatic electrons are used
 
@@ -437,6 +434,8 @@ contains
     call sll_s_compute_rhs_fem( self, form,  component, self%work(1:self%n_total), func1 )
 
     select case( form )
+    case( 0 )
+       call self%mass0_solver%solve( self%work(1:self%n_total), coefs_dofs )
     case( 1 )
        call self%mass_1_solver(component)%solve( self%work(1:self%n_total), coefs_dofs )
     case( 2 )
@@ -480,20 +479,20 @@ contains
     elseif (form == 1 ) then
        deg = 1
        deg(component) = 2
-       call multiply_mass_3dkron( self, deg, coefs2, self%work(1:self%n_total) )
+       call multiply_mass_3dkron( self, deg, coefs2, self%work0 )
     elseif( form == 2) then
        deg = 2
        deg(component) = 1
-       call multiply_mass_3dkron( self, deg, coefs2, self%work(1:self%n_total) )
+       call multiply_mass_3dkron( self, deg, coefs2, self%work0 )
     elseif( form == 3) then
        deg = 2
-       call multiply_mass_3dkron( self, deg, coefs2, self%work(1:self%n_total) )
+       call multiply_mass_3dkron( self, deg, coefs2, self%work0 )
     else
        print*, 'Wrong form.'
     end if
 
 
-    r = sum(coefs1*self%work(1:self%n_total))
+    r = sum(coefs1*self%work0)
 
   end function inner_product_3d_fem
 
@@ -677,7 +676,6 @@ contains
     call self%linear_op_schur_eb%create( self%mass1_operator, self%mass2_operator, self%n_total, self%n_dofs, self%delta_x   )
     call self%linear_solver_schur_eb%create( self%linear_op_schur_eb, self%preconditioner_fft%inverse_mass1_3d )
     self%linear_solver_schur_eb%atol = self%solver_tolerance
-    self%linear_solver_schur_eb%rtol = self%solver_tolerance
     !self%linear_solver_schur_eb%verbose = .true.
 
   contains

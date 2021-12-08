@@ -305,7 +305,7 @@ contains
     xw_gauss = sll_f_gauss_legendre_points_and_weights(degree+1, 0.0_f64, 1.0_f64)
     ! Compute bsplines at gauss_points
     do k=1,degree+1
-       call sll_s_uniform_bsplines_eval_basis(degree,xw_gauss(1,k), bspl(k,:))
+       call sll_s_uniform_bsplines_eval_basis(degree,xw_gauss(1,k), bspl(:,k))
     end do
 
     if( degree == self%s_deg_0 ) then
@@ -318,7 +318,7 @@ contains
              do k=1, degree+1
                 c = self%delta_x * (xw_gauss(1,k) + real(i + j - 2 - ((i + j - 2)/self%n_cells) * self%n_cells,f64))
                 jacobian= self%map%jacobian( [[c, 0.0_f64, 0._f64]])
-                coef = coef + xw_gauss(2,k)*func(self%map%get_x1( [c, 0._f64, 0._f64])) * bspl(k,degree+2-j)*abs(jacobian)
+                coef = coef + xw_gauss(2,k)*func(self%map%get_x1( [c, 0._f64, 0._f64])) * bspl(degree+2-j,k)*abs(jacobian)
              enddo
           enddo
           ! rescale by cell size
@@ -333,7 +333,7 @@ contains
              ! loop over Gauss points
              do k=1, degree+1
                 c = self%delta_x * (xw_gauss(1,k) + real(i + j - 2 - ((i + j - 2)/self%n_cells) * self%n_cells,f64))
-                coef = coef + xw_gauss(2,k)*func(self%map%get_x1( [c, 0._f64, 0._f64])) * bspl(k,degree+2-j)* sign( 1._f64, self%map%jacobian( [c, 0._f64, 0._f64] ) )
+                coef = coef + xw_gauss(2,k)*func(self%map%get_x1( [c, 0._f64, 0._f64])) * bspl(degree+2-j,k)* sign( 1._f64, self%map%jacobian( [c, 0._f64, 0._f64] ) )
              enddo
           enddo
           ! rescale by cell size
@@ -610,7 +610,6 @@ contains
           call self%init( domain, n_dofs, s_deg_0, map, mass_tolerance, poisson_tolerance )
        else
           if (rank == 0 ) then
-             print*, 'filename', trim(file_prefix)
              open(newunit=file_id, file=trim(file_prefix)//'_parameters_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
              write(file_id, *) 'mass solver tolerance:', mass_tolerance
              write(file_id, *) 'poisson solver tolerance:', poisson_tolerance

@@ -979,11 +979,11 @@ contains
        end if
     end if
 
-    ! Print particle array to file
-    if ( sim%output_particles ) then
-       call sll_s_int2string( sim%rank, crank )
-       call sim%particle_group%group(1)%print(trim(sim%file_prefix)//'_particles_start_'//crank//'.dat')
-    end if
+!!$    ! Print particle array to file
+!!$    if ( sim%output_particles ) then
+!!$       call sll_s_int2string( sim%rank, crank )
+!!$       call sim%particle_group%group(1)%print(trim(sim%file_prefix)//'_particles_start_'//crank//'.dat')
+!!$    end if
 
     ! Set the initial fields
     SLL_ALLOCATE(rho_local(1:sim%n_totaldofs0), ierr)
@@ -1059,28 +1059,6 @@ contains
           ! Diagnostics
           call sll_s_time_history_diagnostics_pic_vm_3d3v( &
                sim, sim%delta_t*real(j,f64), th_diag_id, rho, scratch)
-
-          if( sim%output_particles ) then
-             if( modulo(j, 100) == 0 ) then
-                call sll_s_int2string( sim%rank, crank )
-                call sll_s_int2string( j, step )
-                call sim%particle_group%group(1)%print(trim(sim%file_prefix)//step//'_particles_'//crank//'.dat')
-             end if
-          end if
-
-          if (sim%rank == 0 ) then     
-             if ( sim%output_fields ) then
-                if( modulo(j, 100) == 0 ) then
-                   call sll_s_int2string( j, step )
-                   open(newunit=file_id, file=trim(sim%file_prefix)//step//'_efield.dat')
-                   write(file_id, *) sim%efield_dofs
-                   close(file_id)
-                   open(newunit=file_id, file=trim(sim%file_prefix)//step//'_bfield.dat')
-                   write(file_id, *) sim%bfield_dofs
-                   close(file_id)
-                end if
-             end if
-          end if
        end do
     case(sll_p_splitting_fourth)
        do j=1+sim%restart_steps, sim%n_time_steps+sim%restart_steps
@@ -1116,6 +1094,28 @@ contains
           ! Diagnostics
           call sll_s_time_history_diagnostics_pic_vm_3d3v( &
                sim, sim%delta_t*real(j,f64), th_diag_id, rho, scratch)
+
+          if( sim%output_particles ) then
+             if( modulo(j, 100) == 0 ) then
+                call sll_s_int2string( sim%rank, crank )
+                call sll_s_int2string( j, step )
+                call sim%particle_group%group(1)%print(trim(sim%file_prefix)//step//'_particles_'//crank//'.dat')
+             end if
+          end if
+
+          if (sim%rank == 0 ) then     
+             if ( sim%output_fields ) then
+                if( modulo(j, 100) == 0 ) then
+                   call sll_s_int2string( j, step )
+                   open(newunit=file_id, file=trim(sim%file_prefix)//step//'_efield.dat')
+                   write(file_id, *) sim%efield_dofs
+                   close(file_id)
+                   open(newunit=file_id, file=trim(sim%file_prefix)//step//'_bfield.dat')
+                   write(file_id, *) sim%bfield_dofs
+                   close(file_id)
+                end if
+             end if
+          end if
        end do
     case default
        print*, 'this splitting type is not implemented'
@@ -1871,7 +1871,7 @@ contains
        if( sim%adiabatic_electrons) then
           phival = sim%maxwell_solver%l2norm_squared( sim%phi_dofs, 0, 0 ) 
           write(file_id,'(f12.5,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16,2g24.16)' ) &
-               time, 0.5_f64*potential_energy, 0.5_f64*phival, diagnostics(1:3), &
+               time, 0.5_f64*phival, 0.5_f64*potential_energy, diagnostics(1:3), &
                sum(diagnostics(1:3)) + 0.5_f64*phival, diagnostics(4:6), &
                diagnostics_local(4:6), error_gauss 
        else
