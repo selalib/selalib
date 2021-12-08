@@ -66,7 +66,7 @@ if(BUILD_TESTING)
   set( NML_FILE ${CMAKE_CURRENT_SOURCE_DIR}/params_pic_vm_1d2v_cart_disgradEC_sub.nml )
   add_mpi_test( ${TEST_NAME_DISGRADECSUB} ${EXECUTABLE} ${PROCS} ${NML_FILE}  )
   set_tests_properties( ${TEST_NAME_DISGRADECSUB} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED"
-    TIMEOUT 50 )
+    TIMEOUT 100 )
 
   set( NML_FILE ${CMAKE_CURRENT_SOURCE_DIR}/params_pic_vm_1d2v_cart_hs_smooth.nml )
   add_mpi_test( ${TEST_NAME_hs_SMOOTH} ${EXECUTABLE} ${PROCS} ${NML_FILE}  )
