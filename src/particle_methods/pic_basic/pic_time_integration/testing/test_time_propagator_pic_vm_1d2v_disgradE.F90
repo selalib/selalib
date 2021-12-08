@@ -191,12 +191,16 @@ program test_time_propagator_pic_1d2v_vm_disgradE
 
   call filter%init( 0, 0 )
 
+  
+  
   call propagator%init( maxwell_solver, &
        kernel_smoother_0, kernel_smoother_1, particle_group, &
        phi, efield, bfield, &
-       eta_min, eta_max-eta_min, filter, solver_tolerance = 1d-14, adiabatic_electrons = .false. )
+       eta_min, eta_max-eta_min, filter, solver_tolerance = 1d-14, force_sign = -1._f64  )
+  
+  propagator%helper%force_sign = 1._f64
    
-  call propagator%advect_x( delta_t )
+  call propagator%helper%advect_x( delta_t )
 
   ! Compare to reference
   ! Particle information after advect_x application 
@@ -239,7 +243,7 @@ program test_time_propagator_pic_1d2v_vm_disgradE
   end do
 
   
-  call propagator%advect_vb( delta_t )
+  call propagator%helper%advect_vb( delta_t )
 
   ! Compare to reference
   ! Particle information after advect_vb application 
@@ -284,7 +288,7 @@ program test_time_propagator_pic_1d2v_vm_disgradE
   end do  
 
   
-  call propagator%advect_e( delta_t )
+  call propagator%helper%advect_e( delta_t )
 
   efield_ref = reshape([ 0.31627789686666_f64,       0.21472175951316_f64,  &
       -3.278822290154918_f64,       0.91934237457174_f64,   &
@@ -344,7 +348,7 @@ program test_time_propagator_pic_1d2v_vm_disgradE
      call particle_group%group(1)%set_weights(i_part, xi(1))
   end do  
   
-  call propagator%advect_eb( delta_t*5.0_f64 )
+  call propagator%helper%advect_eb( delta_t*5.0_f64 )
   
   bfield_ref = [ 0.890457153271563_f64,        1.2430359710432_f64, &
        0.5135863209832091_f64,        1.230611521372678_f64, &

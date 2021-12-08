@@ -307,7 +307,7 @@ contains
     xw_gauss = sll_f_gauss_legendre_points_and_weights(degree+1, 0.0_f64, 1.0_f64)
     ! Compute bsplines at gauss_points
     do k=1,degree+1
-       call sll_s_uniform_bsplines_eval_basis(degree,xw_gauss(1,k), bspl(k,:))
+       call sll_s_uniform_bsplines_eval_basis(degree,xw_gauss(1,k), bspl(:,k))
        !print*, 'bs', bspl(k,:)
     end do
 
@@ -318,7 +318,7 @@ contains
        do j = 1, degree+1
           ! loop over Gauss points
           do k=1, degree+1
-             coef = coef + xw_gauss(2,k)*func(self%delta_x * (xw_gauss(1,k) + real(i + j - 2 - ((i + j - 2)/self%n_cells) * self%n_cells,f64))) * bspl(k,degree+2-j)
+             coef = coef + xw_gauss(2,k)*func(self%delta_x * (xw_gauss(1,k) + real(i + j - 2 - ((i + j - 2)/self%n_cells) * self%n_cells,f64))) * bspl(degree+2-j,k)
           end do
        end do
        ! rescale by cell size

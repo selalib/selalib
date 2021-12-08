@@ -34,9 +34,6 @@ module sll_m_maxwell_3d_trafo
   use sll_m_linear_solver_cg, only : &
        sll_t_linear_solver_cg
 
-  use sll_m_linear_solver_mgmres, only : &
-       sll_t_linear_solver_mgmres
-
   use sll_m_low_level_bsplines, only: &
        sll_s_uniform_bsplines_eval_basis
 
@@ -94,7 +91,7 @@ module sll_m_maxwell_3d_trafo
      type(sll_t_linear_operator_penalized)  :: poisson_operator !< Poisson matrix with constraint on constant vector
      type(sll_t_linear_solver_cg)  :: poisson_solver        !< CG solver to invert Poisson matrix
      type( sll_t_linear_operator_schur_eb_3d ) :: linear_op_schur_eb !< Schur complement operator for advect_eb
-     type( sll_t_linear_solver_mgmres )        :: linear_solver_schur_eb !< Schur complement solver for advect_eb
+     type( sll_t_linear_solver_cg )        :: linear_solver_schur_eb !< Schur complement solver for advect_eb
      type(sll_t_mapping_3d), pointer    :: map              !< coordinate transformation
 
      logical :: adiabatic_electrons = .false. !< Set true if solver with adiabatic electrions
@@ -910,9 +907,8 @@ contains
     call self%linear_op_schur_eb%create( self%mass1_operator, self%mass2_operator, self%n_total, self%n_dofs, self%delta_x   )
     call self%linear_solver_schur_eb%create( self%linear_op_schur_eb, self%preconditioner_fft%inverse_mass1_3d)
     self%linear_solver_schur_eb%atol = self%solver_tolerance/maxval(self%Lx)
-    self%linear_solver_schur_eb%rtol = self%solver_tolerance/maxval(self%Lx)
     !self%linear_solver_schur_eb%verbose = .true.
-    self%linear_solver_schur_eb%n_maxiter = 2000
+    !self%linear_solver_schur_eb%n_maxiter = 2000
 
 
   contains

@@ -19,7 +19,8 @@ module sll_m_particle_sampling
   use sll_m_initial_distribution, only: &
        sll_c_distribution_params, &
        sll_t_params_cos_gaussian, &
-       sll_t_params_cos_gaussian_screwpinch
+       sll_t_params_cos_gaussian_screwpinch, &
+       sll_t_params_noise_gaussian
 
   use sll_m_particle_group_base, only: &
        sll_c_particle_group_base
@@ -485,6 +486,13 @@ contains
              !special perturbation in gyrocoordinates
              wi(1) = p%eval_x_density(xi(1:p%dims(1)), v(1:p%dims(2)))*&
                   p%eval_v_density(v(1:p%dims(2)), Rx(1:p%dims(1)), particle_group%species%m)/p%eval_v_density(v(1:p%dims(2)), xi(1:p%dims(1)), particle_group%species%m)  *product(Lx)
+          type is(sll_t_params_noise_gaussian)
+             if( particle_group%species%q > 0._f64) then
+                v(1:p%dims(2)) = v(1:p%dims(2)) * sqrt(p%profile%T_i(xi(1))/particle_group%species%m) + p%v_mean(:,i_gauss)
+             else
+                v(1:p%dims(2)) = v(1:p%dims(2)) * sqrt(p%profile%T_e(xi(1))/particle_group%species%m) + p%v_mean(:,i_gauss)
+             end if
+             wi(1) = p%eval_x_density(xi(1:p%dims(1))) *product(Lx)
           end select
        else
           v(1:params%dims(2)) = v(1:params%dims(2)) * params%v_thermal(:,i_gauss) + params%v_mean(:,i_gauss)

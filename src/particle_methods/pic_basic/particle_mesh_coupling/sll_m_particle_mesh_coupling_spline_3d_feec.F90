@@ -537,7 +537,7 @@ contains
     end do
 
     sigma_r = 0.0_f64
-    do while ( sigma_r < 1.0_f64 )
+    do while ( abs(sigma_r - 1.0_f64) > 1d-16 )
        ! Identify index of next intersection
        index_is = minloc(sigma_next, dim=1)
        sigma_r = sigma_next(index_is)
@@ -547,10 +547,11 @@ contains
           xbox = xold* (1.0_f64 - sigma) + xnewtilde * sigma  - real(sigma_counter*increment, f64)
           if (maxval(xbox) > 1.0_f64 ) then
              print*, xbox, sigma, sigma_counter, increment
+             print*, xold, xnewtilde, sigma_r, xnewtilde * sigma  - real(sigma_counter*increment, f64)
              SLL_ERROR( 'add_current_evaluate', 'box value too large')
           elseif (minval(xbox) < 0.0_f64 ) then
              print*, xbox, sigma, sigma_counter, increment
-             print*, xold, xnewtilde, sigma_r
+             print*, xold, xnewtilde, sigma_r, xnewtilde * sigma  - real(sigma_counter*increment, f64)
              SLL_ERROR( 'add_current_evaluate', 'box value too low')
           end if
 
@@ -711,7 +712,7 @@ contains
     end do
 
     sigma_r = 0.0_f64
-    do while ( sigma_r < 1.0_f64 )
+    do while ( abs(sigma_r - 1.0_f64) > 1d-16 )
        ! Identify index of next intersection
        index_is = minloc(sigma_next, dim=1)
        sigma_r = sigma_next(index_is)
@@ -721,9 +722,11 @@ contains
           xbox = xold* (1.0_f64 - sigma) + xnewtilde * sigma  - real(sigma_counter*increment, f64)
           if (maxval(xbox) > 1.0_f64 ) then
              print*, xbox, sigma, sigma_counter, increment
+             print*, xold, xnewtilde, sigma_r, xnewtilde * sigma  - real(sigma_counter*increment, f64)
              SLL_ERROR( 'add_current_3d', 'box value too large')
           elseif (minval(xbox) < 0.0_f64 ) then
              print*, xbox, sigma, sigma_counter, increment
+             print*, xold, xnewtilde, sigma_r, xnewtilde * sigma  - real(sigma_counter*increment, f64)
              SLL_ERROR( 'add_current_3d', 'box value too low')
           end if
 
