@@ -113,23 +113,19 @@ program test_curl_curl_part
   call maxwell_3d%compute_rhs_from_function( 1, 1, current(1:nc_total1), j2x )
   call maxwell_3d%compute_rhs_from_function( 1, 2, current(nc_total1+1:nc_total1+nc_total0), j2y )
   call maxwell_3d%compute_rhs_from_function( 1, 3, current(nc_total1+nc_total0+1:nc_total1+nc_total0*2), j2z )
-  call random_number( afield )
-  call maxwell_3d%multiply_ct( afield, noise )
-!!$  call random_number( noise )
-  eps = 1d-8 !0._f64!
+!!$  call random_number( afield )
+!!$  call maxwell_3d%multiply_ct( afield, noise )
+  call random_number( noise )
+  eps = 0._f64!1d-6 !
   current = (1._f64-eps) * current +  eps* noise
 !!$  rho = 0._f64
   call maxwell_3d%multiply_gt( current, rho )
   print*, 'rhs divergence', maxval(abs(rho))
 
- ! maxwell_3d%curl_matrix%epsilon = 6.0_f64!1d-0
- ! call maxwell_3d%curl_solver%solve( current, afield )
-  call maxwell_3d%preconditioner_curl_fft%solve( current, afield )
-  !call maxwell_3d%uzawa_iterator%solve( current, afield )
-
-  !print*, 'afield', afield
-
-  !print*, 'p',maxwell_3d%uzawa_iterator%x_0
+  !maxwell_3d%curl_matrix%epsilon = 6.0_f64!1d-0
+  !call maxwell_3d%curl_solver%solve( current, afield )
+  !call maxwell_3d%preconditioner_curl_fft%solve( current, afield )
+  call maxwell_3d%uzawa_iterator%solve( current, afield )
 
   afield_ref = 0._f64
 !!$  call maxwell_3d%L2projection( 1, 1, afield_ref(1:nc_total1), a1x )
@@ -200,42 +196,42 @@ contains
     sll_real64             :: j1x
     sll_real64, intent(in) :: x(3)
 
-    j1x = 3._f64*cos(x(1)+x(2)+x(3))  !-sin(x(1)+x(2)+x(3))
+    j1x = 3._f64*cos(x(1)+x(2)+x(3)) -sin(x(1)+x(2)+x(3))
   end function j1x
 
   function j1y(x)
     sll_real64             :: j1y
     sll_real64, intent(in) :: x(3)
 
-    j1y = 0._f64!-sin(x(1)+x(2)+x(3))
+    j1y = -sin(x(1)+x(2)+x(3))
   end function j1y
 
   function j1z(x)
     sll_real64             :: j1z
     sll_real64, intent(in) :: x(3)
 
-    j1z = -3._f64*cos(x(1)+x(2)+x(3))  !-sin(x(1)+x(2)+x(3))
+    j1z = -3._f64*cos(x(1)+x(2)+x(3))  -sin(x(1)+x(2)+x(3))
   end function j1z
 
   function j2x(x)
     sll_real64             :: j2x
     sll_real64, intent(in) :: x(3)
 
-    j2x = 3._f64*( sin(x(1)+x(2)+x(3)) + cos(x(1)+x(2)+x(3)) ) !-sin(x(1)+x(2)+x(3))
+    j2x = 3._f64*( sin(x(1)+x(2)+x(3)) + cos(x(1)+x(2)+x(3)) ) -sin(x(1)+x(2)+x(3))
   end function j2x
 
   function j2y(x)
     sll_real64             :: j2y
     sll_real64, intent(in) :: x(3)
 
-    j2y = -3._f64*( cos(x(1)+x(2)+x(3)) - 4._f64* cos(2._f64*(x(1)+x(2)+x(3)) ) )  !-sin(x(1)+x(2)+x(3))
+    j2y = -3._f64*( cos(x(1)+x(2)+x(3)) - 4._f64* cos(2._f64*(x(1)+x(2)+x(3)) ) )  -sin(x(1)+x(2)+x(3))
   end function j2y
 
   function j2z(x)
     sll_real64             :: j2z
     sll_real64, intent(in) :: x(3)
 
-    j2z = -3._f64*( sin(x(1)+x(2)+x(3)) + 4._f64* cos(2._f64*(x(1)+x(2)+x(3)) ) )  !-sin(x(1)+x(2)+x(3))
+    j2z = -3._f64*( sin(x(1)+x(2)+x(3)) + 4._f64* cos(2._f64*(x(1)+x(2)+x(3)) ) )  -sin(x(1)+x(2)+x(3))
   end function j2z
 
   function a1x(x)

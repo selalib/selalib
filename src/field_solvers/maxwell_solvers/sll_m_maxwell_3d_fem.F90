@@ -58,7 +58,7 @@ module sll_m_maxwell_3d_fem
        sll_t_preconditioner_fft
 
   use sll_m_preconditioner_jacobi, only : &
-       sll_t_preconditioner_jacob
+       sll_t_preconditioner_jacobi
 
   use sll_m_profile_functions, only: &
        sll_t_profile_functions
@@ -769,7 +769,7 @@ contains
 
     call self%curl_matrix%create( self%mass1_operator, self%mass2_operator, self%n_dofs, self%delta_x   )
     call self%curl_operator%create( linear_operator=self%curl_matrix, vecs=nullspace, n_dim_nullspace=1 )
-    call self%curl_solver%create( self%curl_operator )!, self%preconditioner_curl_fft )
+    call self%curl_solver%create( self%curl_operator, self%preconditioner_curl_fft )
     self%curl_solver%null_space = .true.
     self%curl_solver%atol = self%solver_tolerance
     self%curl_solver%verbose = .true.
@@ -785,7 +785,7 @@ contains
     !call self%uzawa_iterator%create( self%preconditioner_jacobi_curl, self%MG_operator, self%GTM_operator )
     self%uzawa_iterator%verbose = .true.
     self%uzawa_iterator%atol = 1.0d-9
-    !self%uzawa_iterator%n_maxiter=5000
+    !self%uzawa_iterator%n_maxiter=500
   contains
     function profile_m0( x, component)
       sll_real64 :: profile_m0
