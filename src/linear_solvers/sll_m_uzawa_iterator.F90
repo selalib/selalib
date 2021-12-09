@@ -127,7 +127,7 @@ contains
        x1 = x1 - alpha * p1
        
        res = sqrt(sum(r0*r0)/real(self%n_total0,f64))
-       !print*, 'residuum', res
+       print*, 'residuum', res
        if( res <= self%atol ) exit
 
        if(sqrt(sum(p0*p0)/real(self%n_total0,f64))<= self%atol) then
