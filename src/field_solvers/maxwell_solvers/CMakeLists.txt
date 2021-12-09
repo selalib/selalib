@@ -18,7 +18,8 @@ set(MAXWELL_SOLVERS_SRCS
   sll_m_maxwell_clamped_3d_trafo.F90
   sll_m_preconditioner_fft.F90
   sll_m_preconditioner_singular.F90
-   sll_m_preconditioner_curl_solver_fft.F90
+  sll_m_preconditioner_jacobi.F90
+  sll_m_preconditioner_curl_solver_fft.F90
   sll_m_linear_operator_MG.F90
   sll_m_linear_operator_GTM.F90
   sll_m_linear_operator_curl_3d.F90
