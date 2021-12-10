@@ -74,14 +74,6 @@ module sll_m_maxwell_clamped_3d_trafo
   use sll_m_preconditioner_poisson_fft, only : &
        sll_t_preconditioner_poisson_fft
 
-  use sll_m_linear_operator_curl_cl_3d
-  
-  use sll_m_linear_operator_GTM_cl
-  
-  use sll_m_linear_operator_MG_cl
-  
-  use sll_m_uzawa_iterator
-
   implicit none
 
   public :: &
@@ -120,17 +112,6 @@ module sll_m_maxwell_clamped_3d_trafo
      type(sll_t_preconditioner_singular) :: preconditioner2 !< preconditioner for mass matrices
 
      type(sll_t_preconditioner_poisson_fft ) :: poisson_preconditioner !< Fourier solver for Poisson matrix
-     
-     type(sll_t_linear_operator_curl_cl_3d) :: curl_matrix  !< curl matrix
-     !type(sll_t_linear_operator_penalized)  :: curl_operator !< curl matrix with constraint on constant vector
-     type(sll_t_linear_solver_cg)  :: curl_solver !< CG solver to invert curl matrix
-     !type(sll_t_linear_solver_mgmres)  :: curl_solver !< CG solver to invert curl matrix
-
-     type(sll_t_linear_operator_MG_cl) :: MG_operator
-
-     type(sll_t_linear_operator_GTM_cl) :: GTM_operator
-
-     type(sll_t_uzawa_iterator) :: uzawa_iterator
      logical :: adiabatic_electrons = .false.
 
    contains
@@ -1191,21 +1172,6 @@ contains
     self%linear_solver_schur_eb%atol = self%solver_tolerance
     !self%linear_solver_schur_eb%verbose = .true.
     !self%linear_solver_schur_eb%n_maxiter = 2000
-
-    call self%curl_matrix%create( self%mass1_operator, self%mass2_operator, self%n_dofs, self%delta_x, self%s_deg_0 )
-    !call self%curl_operator%create( linear_operator=self%curl_matrix, vecs=nullspace, n_dim_nullspace=1 )
-    call self%curl_solver%create( self%curl_matrix )!operator )
-    self%curl_solver%null_space = .true.
-    self%curl_solver%atol = self%solver_tolerance
-    !self%curl_solver%verbose = .true.
-    !self%curl_solver%n_maxiter=1000
-
-    call self%MG_operator%create( self%mass1_operator, self%n_dofs, self%delta_x, self%s_deg_0 )
-    call self%GTM_operator%create( self%mass1_operator, self%n_dofs, self%delta_x, self%s_deg_0 )
-    call self%uzawa_iterator%create( self%curl_solver, self%MG_operator, self%GTM_operator )
-    self%uzawa_iterator%verbose = .true.
-    self%uzawa_iterator%atol = 1.0d-10
-    !self%uzawa_iterator%n_maxiter=5000
 
   contains
     function profile_m0( x, component)

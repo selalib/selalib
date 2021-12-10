@@ -51,14 +51,8 @@ module sll_m_maxwell_3d_fem
        sll_i_function_3d_real64, &
        sll_c_maxwell_3d_base
 
-  use sll_m_preconditioner_curl_solver_fft, only : &
-       sll_t_preconditioner_curl_solver_fft
-
   use sll_m_preconditioner_fft, only : &
        sll_t_preconditioner_fft
-
-  use sll_m_preconditioner_jacobi, only : &
-       sll_t_preconditioner_jacobi
 
   use sll_m_profile_functions, only: &
        sll_t_profile_functions
@@ -79,13 +73,6 @@ module sll_m_maxwell_3d_fem
        sll_s_spline_fem_mass1d, &
        sll_s_spline_fem_mixedmass1d
 
-  use sll_m_linear_operator_curl_3d
-
-  use sll_m_linear_operator_GTM
-
-  use sll_m_linear_operator_MG
-
-  use sll_m_uzawa_iterator
 
 
   implicit none
@@ -126,20 +113,6 @@ module sll_m_maxwell_3d_fem
      type(sll_t_linear_solver_cg)  :: poisson_solver !< CG solver to invert Poisson matrix
      type( sll_t_linear_operator_schur_eb_3d ) :: linear_op_schur_eb !< Schur complement operator for advect_eb
      type( sll_t_linear_solver_cg )        :: linear_solver_schur_eb !< Schur complement solver for advect_eb
-
-     type(sll_t_linear_operator_curl_3d) :: curl_matrix  !< curl matrix
-     type(sll_t_linear_operator_penalized)  :: curl_operator !< curl matrix with constraint on constant vector
-     type( sll_t_preconditioner_curl_solver_fft ) :: preconditioner_curl_fft
-     type( sll_t_preconditioner_jacobi ) :: preconditioner_curl_jacobi
-     type(sll_t_linear_solver_cg)  :: curl_solver !< CG solver to invert curl matrix
-     !type(sll_t_linear_solver_mgmres)  :: curl_solver !< CG solver to invert curl matrix
-     
-     type(sll_t_linear_operator_MG) :: MG_operator
-     
-     type(sll_t_linear_operator_GTM) :: GTM_operator
-     
-     type(sll_t_uzawa_iterator) :: uzawa_iterator
-
      logical :: adiabatic_electrons = .false. !< flag if adiabatic electrons are used
      
    contains
@@ -765,24 +738,7 @@ contains
     self%linear_solver_schur_eb%atol = self%solver_tolerance
     !self%linear_solver_schur_eb%verbose = .true.
 
-    call self%preconditioner_curl_fft%create( self%n_dofs, self%delta_x, self%s_deg_0 )
-
-    call self%curl_matrix%create( self%mass1_operator, self%mass2_operator, self%n_dofs, self%delta_x   )
-    call self%curl_operator%create( linear_operator=self%curl_matrix, vecs=nullspace, n_dim_nullspace=1 )
-    call self%preconditioner_curl_jacobi%create( self%curl_operator )
-
-    call self%curl_solver%create( self%curl_operator, self%preconditioner_curl_fft )
-    self%curl_solver%null_space = .true.
-    self%curl_solver%atol = self%solver_tolerance
-    self%curl_solver%verbose = .true.
-    !self%curl_solver%n_maxiter=1000
-    
-    call self%MG_operator%create( self%mass1_operator, self%n_dofs, self%delta_x )
-    call self%GTM_operator%create( self%mass1_operator, self%n_dofs, self%delta_x )
-    call self%uzawa_iterator%create( self%curl_solver, self%MG_operator, self%GTM_operator )
-    self%uzawa_iterator%verbose = .true.
-    self%uzawa_iterator%atol = 1.0d-12
-    self%uzawa_iterator%n_maxiter=100
+   
   contains
     function profile_m0( x, component)
       sll_real64 :: profile_m0
