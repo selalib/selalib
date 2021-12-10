@@ -130,7 +130,7 @@ module sll_m_maxwell_3d_fem
      type(sll_t_linear_operator_curl_3d) :: curl_matrix  !< curl matrix
      type(sll_t_linear_operator_penalized)  :: curl_operator !< curl matrix with constraint on constant vector
      type( sll_t_preconditioner_curl_solver_fft ) :: preconditioner_curl_fft
-     type( sll_t_preconditioner_jacobi ) :: preconditioner_jacobi_curl
+     type( sll_t_preconditioner_jacobi ) :: preconditioner_curl_jacobi
      type(sll_t_linear_solver_cg)  :: curl_solver !< CG solver to invert curl matrix
      !type(sll_t_linear_solver_mgmres)  :: curl_solver !< CG solver to invert curl matrix
      
@@ -769,23 +769,20 @@ contains
 
     call self%curl_matrix%create( self%mass1_operator, self%mass2_operator, self%n_dofs, self%delta_x   )
     call self%curl_operator%create( linear_operator=self%curl_matrix, vecs=nullspace, n_dim_nullspace=1 )
+    call self%preconditioner_curl_jacobi%create( self%curl_operator )
+
     call self%curl_solver%create( self%curl_operator, self%preconditioner_curl_fft )
     self%curl_solver%null_space = .true.
     self%curl_solver%atol = self%solver_tolerance
     self%curl_solver%verbose = .true.
     !self%curl_solver%n_maxiter=1000
-
-    call self%preconditioner_jacobi_curl%create( self%curl_operator )
-
-       
+    
     call self%MG_operator%create( self%mass1_operator, self%n_dofs, self%delta_x )
     call self%GTM_operator%create( self%mass1_operator, self%n_dofs, self%delta_x )
     call self%uzawa_iterator%create( self%curl_solver, self%MG_operator, self%GTM_operator )
-    !call self%uzawa_iterator%create( self%preconditioner_curl_fft, self%MG_operator, self%GTM_operator )
-    !call self%uzawa_iterator%create( self%preconditioner_jacobi_curl, self%MG_operator, self%GTM_operator )
     self%uzawa_iterator%verbose = .true.
-    self%uzawa_iterator%atol = 1.0d-9
-    !self%uzawa_iterator%n_maxiter=500
+    self%uzawa_iterator%atol = 1.0d-12
+    self%uzawa_iterator%n_maxiter=100
   contains
     function profile_m0( x, component)
       sll_real64 :: profile_m0

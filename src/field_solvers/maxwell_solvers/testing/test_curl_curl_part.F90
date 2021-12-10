@@ -116,7 +116,7 @@ program test_curl_curl_part
 !!$  call random_number( afield )
 !!$  call maxwell_3d%multiply_ct( afield, noise )
   call random_number( noise )
-  eps = 0._f64!1d-6 !
+  eps = 1d-4 !0._f64!
   current = (1._f64-eps) * current +  eps* noise
 !!$  rho = 0._f64
   call maxwell_3d%multiply_gt( current, rho )
@@ -141,7 +141,7 @@ program test_curl_curl_part
 !!$  print*, 'lhs divergence', maxval(abs(rho))
 !!$
   rho_ref = 0._f64
-  !call maxwell_3d%L2projection( 0, 1, rho_ref, cos_k )
+  call maxwell_3d%L2projection( 0, 1, rho_ref, cos_k )
   maxwell_3d%curl_matrix%epsilon = 0._f64
   call maxwell_3d%curl_matrix%dot(afield, afield_val )
   call maxwell_3d%MG_operator%dot(maxwell_3d%uzawa_iterator%x_0, scratch )
