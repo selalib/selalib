@@ -71,7 +71,8 @@ module sll_m_maxwell_3d_fem
 
   use sll_m_spline_fem_utilities_sparse, only : &
        sll_s_spline_fem_mass1d, &
-       sll_s_spline_fem_mixedmass1d      
+       sll_s_spline_fem_mixedmass1d
+
 
 
   implicit none
@@ -112,9 +113,8 @@ module sll_m_maxwell_3d_fem
      type(sll_t_linear_solver_cg)  :: poisson_solver !< CG solver to invert Poisson matrix
      type( sll_t_linear_operator_schur_eb_3d ) :: linear_op_schur_eb !< Schur complement operator for advect_eb
      type( sll_t_linear_solver_cg )        :: linear_solver_schur_eb !< Schur complement solver for advect_eb
-
      logical :: adiabatic_electrons = .false. !< flag if adiabatic electrons are used
-
+     
    contains
      procedure :: &
           compute_E_from_B => sll_s_compute_e_from_b_3d_fem !< Solve E and B part of Amperes law with B constant in time
@@ -446,6 +446,66 @@ contains
 
   end subroutine L2projection_3d_fem
 
+  subroutine compute_dofs(self, form,  component, coefs_dofs, func1, func2, func3 )
+    class(sll_t_maxwell_3d_fem)                    :: self          !< Maxwell solver class
+    sll_int32,  intent( in    )                    :: form          !< Specify if the function is a0,1,2 or 3-form
+    sll_int32,  intent( in    )                    :: component     !< Specify the component of the function
+    sll_real64, intent(   out )                    :: coefs_dofs(:) !< Finite Element right-hand-side
+    procedure(sll_i_function_3d_real64)            :: func1         !< Function first component
+    procedure(sll_i_function_3d_real64), optional  :: func2         !< Function second component
+    procedure(sll_i_function_3d_real64), optional  :: func3         !< Function third component
+
+    select case( form )
+    case( 0 )
+       !call sll_compute_point_integral( self, func1, coefs_dofs )
+    case( 1 )
+       call sll_compute_edge_integral( self, func1, func2, func3, coefs_dofs )
+    case( 2 )
+       !call sll_compute_face_integral( self, func1, func2, func3, coefs_dofs )
+    case  default
+       print*, 'projection for', form, '-form not implemented.'
+    end select
+    
+  end subroutine compute_dofs
+  
+  subroutine sll_compute_edge_integral( self, func1, func2, func3, coefs_dofs )
+    class(sll_t_maxwell_3d_fem)                    :: self          !< Maxwell solver class
+    procedure(sll_i_function_3d_real64)            :: func1         !< Function first component
+    procedure(sll_i_function_3d_real64)            :: func2         !< Function second component
+    procedure(sll_i_function_3d_real64)            :: func3         !< Function third component
+    sll_real64, intent(   out )                    :: coefs_dofs(:) !< Finite Element right-hand-side
+    !local variables
+    sll_int32 :: i1, i2, i3, j, q, ind
+    sll_real64 :: c(3), e(3)
+    sll_real64, allocatable :: xw_gauss(:,:)
+
+    q = 4
+    ! rescale on [0,1] for compatibility with B-splines
+    allocate(xw_gauss(2,q))
+    xw_gauss = sll_f_gauss_legendre_points_and_weights(q, 0.0_f64, 1.0_f64)
+
+    ind = 0
+    do i3 = 1, self%n_dofs(3)
+       c(3) = self%delta_x(3)* real(i3-1,f64)
+       do i2 = 1, self%n_dofs(2)
+          c(2) = self%delta_x(2)* real(i2-1,f64)
+          do i1 = 1, self%n_dofs(1)
+             c(1) = self%delta_x(1)* real(i1-1,f64)
+             ind = ind +1 !i + (j-1)*self%n_dofs(1) + (k-1)*self%n_dofs(1)*self%n_dofs(2)
+             do j = 1, q
+                e(1) = self%delta_x(1)* (xw_gauss(1,q) + real(i1-1,f64) )
+                e(2) = self%delta_x(2)* (xw_gauss(1,q) + real(i2-1,f64) )
+                e(3) = self%delta_x(3)* (xw_gauss(1,q) + real(i3-1,f64) )
+                coefs_dofs(ind) = coefs_dofs(ind) + self%delta_x(1)*xw_gauss(2,j)*c(1)*func1([e(1),c(2),c(3)])
+                coefs_dofs(ind+self%n_total) = coefs_dofs(ind+self%n_total) + self%delta_x(2)*xw_gauss(2,j)*c(2)*func2([c(1),e(2),c(3)])
+                coefs_dofs(ind+2*self%n_total) = coefs_dofs(ind+2*self%n_total) + self%delta_x(3)*xw_gauss(2,j)*c(3)*func3([c(1),c(2),e(3)])
+             end do
+          end do
+       end do
+    end do
+
+  end subroutine sll_compute_edge_integral
+
 
   !> Compute square of the L2norm 
   function L2norm_squared_3d_fem( self, coefs, form, component) result (r)
@@ -561,7 +621,7 @@ contains
     allocate( self%work_d2_out( n_dofs(2) ) ) 
     allocate( self%work_d3_in( n_dofs(3) ) ) 
     allocate( self%work_d3_out( n_dofs(3) ) )
-
+   
     ! Sparse matrices
     ! Assemble the mass matrices
     ! First assemble a mass line for both degrees
@@ -661,9 +721,9 @@ contains
 
     call self%poisson_matrix%create( self%mass1_operator, self%n_dofs, self%delta_x )
     ! Penalized Poisson operator
-    allocate(nullspace(1,1:self%n_total))
+    allocate(nullspace(1,1:3*self%n_total))
     nullspace(1,:) = 1.0_f64
-    call self%poisson_operator%create( linear_operator=self%poisson_matrix, vecs=nullspace, n_dim_nullspace=1 )
+    call self%poisson_operator%create( linear_operator=self%poisson_matrix, vecs=nullspace(:,1:self%n_total), n_dim_nullspace=1 )
     ! Poisson solver
     call self%poisson_solver%create( self%poisson_operator )
     self%poisson_solver%null_space = .true.
@@ -673,11 +733,12 @@ contains
 
 
     ! Only for Schur complement eb solver
-    call self%linear_op_schur_eb%create( self%mass1_operator, self%mass2_operator, self%n_total, self%n_dofs, self%delta_x   )
+    call self%linear_op_schur_eb%create( self%mass1_operator, self%mass2_operator, self%n_total, self%n_dofs, self%delta_x )
     call self%linear_solver_schur_eb%create( self%linear_op_schur_eb, self%preconditioner_fft%inverse_mass1_3d )
     self%linear_solver_schur_eb%atol = self%solver_tolerance
     !self%linear_solver_schur_eb%verbose = .true.
 
+   
   contains
     function profile_m0( x, component)
       sll_real64 :: profile_m0

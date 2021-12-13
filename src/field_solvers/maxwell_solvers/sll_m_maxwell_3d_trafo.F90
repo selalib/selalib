@@ -893,9 +893,9 @@ contains
 
     call self%poisson_matrix%create( self%mass1_operator, self%n_dofs, self%delta_x )
     ! Penalized Poisson operator
-    allocate(nullspace(1,1:self%n_total))
+    allocate(nullspace(1,self%n_total))
     nullspace(1,:) = 1.0_f64
-    call self%poisson_operator%create( self%poisson_matrix, nullspace, 1 )
+    call self%poisson_operator%create( self%poisson_matrix, nullspace(:,1:self%n_total), 1 )
     ! Poisson solver
     call self%poisson_solver%create( self%poisson_operator )
     self%poisson_solver%null_space = .true.
@@ -909,8 +909,7 @@ contains
     self%linear_solver_schur_eb%atol = self%solver_tolerance/maxval(self%Lx)
     !self%linear_solver_schur_eb%verbose = .true.
     !self%linear_solver_schur_eb%n_maxiter = 2000
-
-
+    
   contains
     function profile_m0( x, component)
       sll_real64 :: profile_m0
