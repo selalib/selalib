@@ -85,7 +85,6 @@ module sll_m_maxwell_clamped_3d_fem
        sll_s_spline_pp_free_1d, &
        sll_f_spline_pp_horner_1d
 
-
   implicit none
 
 
@@ -135,7 +134,6 @@ module sll_m_maxwell_clamped_3d_fem
 
      type( sll_t_linear_operator_schur_eb_cl_3d ) :: linear_op_schur_eb !< Schur complement operator for advect_eb
      type( sll_t_linear_solver_cg )        :: linear_solver_schur_eb !< Schur complement solver for advect_eb
-
      logical :: adiabatic_electrons = .false. !< flag if adiabatic electrons are used
 
    contains

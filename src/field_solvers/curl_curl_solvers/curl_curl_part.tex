@@ -1,0 +1,399 @@
+\documentclass[12pt,a4paper,twoside]{article}
+\usepackage{graphicx}
+%\usepackage{epstopdf}
+%\usepackage{subcaption}
+%\usepackage{algorithmic}
+
+%\usepackage{geometry}	
+
+
+\usepackage{authblk}
+
+%\usepackage{ifthen}
+%\usepackage[l2tabu,orthodox]{nag}
+%\usepackage[numbers,square]{natbib}
+%\usepackage{abstract}
+%\usepackage{showlabels}
+
+\renewcommand\Affilfont{\fontsize{9}{10.8}\itshape}
+
+\DeclareRobustCommand{\katharina}[1]{ {\begingroup\sethlcolor{cyan}\hl{[Katharina: #1]}\endgroup} }
+
+\setlength{\voffset}{-28.4mm}
+\setlength{\hoffset}{-1in}
+\setlength{\topmargin}{20mm}
+\setlength{\oddsidemargin}{25mm}
+\setlength{\evensidemargin}{25mm}
+\setlength{\textwidth}{160mm}
+
+\setlength{\parindent}{0pt}
+
+\setlength{\textheight}{235mm}
+\setlength{\footskip}{20mm}
+\setlength{\headsep}{50pt}
+\setlength{\headheight}{0pt}
+\usepackage{amssymb,amsmath,amsfonts,amstext,amsthm}
+\usepackage{bbm}
+\usepackage{latexsym}
+\usepackage{multirow}
+\usepackage[english]{babel}
+\usepackage{epstopdf}
+\usepackage{subcaption}
+
+\usepackage[bbgreekl]{mathbbol}
+
+%
+\usepackage{tikz}
+\usepackage{tikz-cd}
+\usetikzlibrary{arrows,matrix,shapes,positioning}
+\usetikzlibrary{calc,patterns,shapes.geometric}
+\usetikzlibrary{decorations.markings,decorations.pathmorphing,decorations.pathreplacing}
+\usetikzlibrary{decorations.text,decorations.shapes}
+
+
+
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{soul}
+\usepackage[colorlinks=true,breaklinks=true]{hyperref}
+\usepackage{url}
+
+
+
+
+\let\divby\div
+\let\div\undefined
+\DeclareMathOperator{\div}{div}
+\DeclareMathOperator{\curl}{curl}
+\DeclareMathOperator{\grad}{grad}
+
+\DeclareMathOperator{\Id}{Id}
+\DeclareMathOperator{\diag}{diag}
+\let\L\undefined
+\newcommand{\L}{\mathrm{L}}
+\newcommand{\K}{\mathrm{K}}
+\newcommand{\du}{\,\mathrm{d}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\ab}{{\mathbf{a}}}
+\newcommand{\yb}{{\mathbf{y}}}
+\newcommand{\zb}{{\mathbf{z}}}
+\newcommand{\ub}{{\mathbf{u}}}
+\newcommand{\xb}{{\mathbf{x}}}
+\newcommand{\vb}{{\mathbf{v}}}
+\newcommand{\Xb}{{\mathbf{X}}}
+\newcommand{\Vb}{{\mathbf{V}}}
+\newcommand{\eb}{{\mathbf{e}}}
+\newcommand{\jb}{{\mathbf{j}}}
+\newcommand{\pb}{{\mathbf{p}}}
+\newcommand{\qb}{{\mathbf{q}}}
+\newcommand{\rb}{{\mathbf{r}}}
+\newcommand{\Ab}{{\mathbf{A}}}
+\newcommand{\Bb}{{\mathbf{B}}}
+\newcommand{\Db}{{\mathbf{D}}}
+\newcommand{\Eb}{{\mathbf{E}}}
+\newcommand{\Fb}{{\mathbf{F}}}
+\newcommand{\Gb}{{\mathbf{G}}}
+\newcommand{\Hb}{{\mathbf{H}}}
+\newcommand{\Rb}{{\mathbf{R}}}
+\newcommand{\Sb}{{\mathcal{S}}}
+\newcommand{\bb}{{\mathbf{b}}}
+\newcommand{\bt}{\mathbf{t}}
+\newcommand{\bn}{\mathbf{n}}
+\newcommand{\rhob}{{\boldsymbol{\rho}}}
+\newcommand{\phib}{{\boldsymbol{\phi}}}
+\newcommand{\xib}{{\boldsymbol{\xi}}}
+\newcommand{\Xib}{{\boldsymbol{\Xi}}}
+\newcommand{\tv}{{\tilde{v}}}
+\newcommand{\tV}{{\tilde{V}}}
+\newcommand{\tVb}{{\tilde{\mathbf{V}}}}
+\newcommand{\tvb}{{\tilde{\mathbf{v}}}}
+\newcommand{\hVb}{{\hat{\mathbf{V}}}}
+\newcommand{\hvb}{{\hat{\mathbf{v}}}}
+\newcommand{\hv}{{\hat{v}}}
+\newcommand{\tub}{\tilde{\mathbf{u}}}
+\newcommand{\teb}{{\tilde{\mathbf{e}}}}
+\newcommand{\te}{{\tilde{e}}}
+\newcommand{\tE}{{\tilde{E}}}
+\newcommand{\ta}{{\tilde{a}}}
+\newcommand{\tA}{{\tilde{A}}}
+\newcommand{\tjb}{{\tilde{\mathbf{j}}}}
+\newcommand{\tEb}{{\tilde{\mathbf{E}}}}
+\newcommand{\tBb}{{\tilde{\mathbf{B}}}}
+\newcommand{\tAb}{{\tilde{\mathbf{A}}}}
+\newcommand{\tPhi}{{\tilde{\Phi}}}
+\newcommand{\tphi}{{\tilde{\phi}}}
+\newcommand{\tab}{\tilde{\mathbf{a}}}
+\newcommand{\tbb}{{\tilde{\mathbf{b}}}}
+\newcommand{\tb}{{\tilde{b}}}
+\newcommand{\tB}{{\tilde{B}}}
+\newcommand{\tj}{{\tilde{j}}}
+\newcommand{\tdb}{\tilde{\mathbf{d}}}
+\newcommand{\tkb}{\tilde{\mathbf{k}}}
+\newcommand{\tlb}{\tilde{\mathbf{\ell}}}
+\newcommand{\trho}{{\tilde{\rho}}}
+\newcommand{\trhob}{{\tilde{\boldsymbol{\rho}}}}
+\newcommand{\tphib}{{\tilde{\boldsymbol{\phi}}}}
+\newcommand{\tf}{\tilde{f}}
+\newcommand{\tJb}{\tilde{\mathbf{J}}}
+\newcommand{\Jb}{\mathbf{J}}
+\newcommand{\tvpb}{\boldsymbol{\tilde{\varphi}}}
+\newcommand{\tvp}{\tilde{\varphi}}
+\newcommand{\BB}{{\ensuremath{\mathbb{B}}}}
+\newcommand{\MM}{\ensuremath{\mathbb{W}}}
+\newcommand{\WM}{\ensuremath{\mathbb{W}}}
+\newcommand{\M}{\ensuremath{\mathbb{M}}}
+\newcommand{\GM}{\ensuremath{\mathbb{G}}}
+\newcommand{\LM}{\ensuremath{\mathbb{L}}}
+\newcommand{\JJ}{\ensuremath{\mathbb{J}}}
+\newcommand{\tM}{\ensuremath{\mathsf{\tilde{M}}}}
+\newcommand{\C}{\ensuremath{\mathsf{C}}}
+\newcommand{\D}{\ensuremath{\mathsf{D}}}
+\newcommand{\G}{\ensuremath{\mathsf{G}}}
+\newcommand{\tBB}{\ensuremath\tilde{{\mathbb{B}}}}
+\newcommand{\tJJ}{\ensuremath\tilde{{\mathbb{J}}}}
+\newcommand{\NN}{\ensuremath{\mathbb{N}}}
+\newcommand{\DF}{\ensuremath{\mathbb{DF}}}
+\newcommand{\tom}{\ensuremath{\tilde{\Omega}}}
+\newcommand{\tLa}{\ensuremath{\tilde{\Lambda}}}
+\newcommand{\tLam}{\ensuremath{\tilde{\Lambda}}}
+\newcommand{\tLab}{\ensuremath{\tilde{\boldsymbol{\Lambda}}}}
+\newcommand{\tLaB}{\ensuremath{\tilde{\mathbf{\Lambda}}}}
+\newcommand{\tLaBB}{\ensuremath{\tilde{\mathbb{\Lambda}}}}
+\newcommand{\Lab}{\ensuremath{\boldsymbol{\Lambda}}}
+\newcommand{\LaB}{\ensuremath{\mathbf{\Lambda}}}
+\newcommand{\LaBB}{\ensuremath{\mathbb{\Lambda}}}
+%
+\newcommand{\Ord}{\mathcal{O}}
+
+\newcommand{\im}{\mathrm{i}}
+\newcommand{\e}{\mathrm{e}}
+\newcommand{\mb}{{\mathbf{m}}}
+\newcommand{\db}{\mathbf{d}}
+\newcommand{\kb}{\mathbf{k}}
+
+\newcommand{\tMM}{\ensuremath\tilde{{\mathbb{W}}}}
+\newcommand{\tC}{\ensuremath\tilde{{\mathbb{C}}}}
+\newcommand{\tD}{\ensuremath\tilde{{\mathbb{D}}}}
+\newcommand{\tG}{\ensuremath\tilde{{\mathbb{G}}}}
+
+
+
+\newcommand{\nr}{n_{\mathrm{ref}}}
+\newcommand{\qr}{q_{\mathrm{ref}}}
+\newcommand{\Tr}{T_{\mathrm{ref}}}
+\newcommand{\mr}{m_{\mathrm{ref}}}
+\newcommand{\Br}{B_{\mathrm{ref}}}
+\newcommand{\betar}{\beta_{\mathrm{ref}}}
+\newcommand{\Lr}{L_{\mathrm{ref}}}
+\newcommand{\vr}{v_{\mathrm{ref}}}
+\newcommand{\omr}{\omega_{\mathrm{ref}}}
+\newcommand{\rhor}{\rho_{\mathrm{ref}}}
+\newcommand{\tht}{\hat{t}}
+\newcommand{\xht}{\hat{\xb}}
+\newcommand{\vht}{\hat{\vb}}
+\newcommand{\muht}{\hat{\mu}}
+\newcommand{\vpht}{\hat{\vp}}
+\newcommand{\epsr}{\varepsilon_{\mathrm{ref}}}
+\newcommand{\phiht}{\hat{\phi}}
+\newcommand{\psigaht}{\hat{\psiga}}
+\newcommand{\Apht}{\hat A_{\parallel}}
+\newcommand{\Tsht}{\hat{T_{s}}}
+\newcommand{\fht}{\hat{f}}
+\newcommand{\qht}{\hat{q}}
+\newcommand{\mht}{\hat{m}}
+\newcommand{\Eht}{\hat{\Eb}}
+\newcommand{\Bht}{\hat{\Bb}}
+\newcommand{\rhoht}{\hat{\rho}}
+\newcommand{\jht}{\hat{\jb}}
+\newcommand{\fsht}{\hat{f_s}}
+
+\newcommand{\Edh}{\widehat{\delta \Eb}}
+\newcommand{\Bdh}{\widehat{\delta \Bb}}
+\newcommand{\fdh}{\widehat{\delta f}}
+\newcommand{\Jdh}{\widehat{\delta \Jb}}
+\newcommand{\rhodh}{\widehat{\delta \rho}}
+\newcommand{\phidh}{\widehat{\delta \Phi}}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{prop}[theorem]{Proposition}
+\newtheorem{mydef}[theorem]{Definition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{cor}[theorem]{Corrolary}
+\newtheorem{remark}[theorem]{Remark}
+
+
+\numberwithin{equation}{section}
+
+\begin{document}
+\section{Curl-Curl equation}
+\begin{align*}
+\nabla \times \nabla \times \Ab(\xb,t) + \nabla p(\xb,t) &= \Jb(\xb,t), \\
+\nabla \cdot \Ab &= 0.
+\end{align*}
+
+
+weak formulation for test functions $\phib \in H(\curl,\Omega),\psi \in H^1(\Omega)$:
+\begin{align*}
+\int \nabla \times \phib \cdot \nabla \times \Ab \du \xib + \int \phib \cdot \nabla p \du \xb &= \int \phib \cdot \Jb \du \xb, \\
+-\int \nabla \psi \cdot \Ab \du \xb &= 0,
+\end{align*}
+where $\Ab \in H(\curl,\Omega), p \in H^1(\Omega)$.
+
+Use finite element ansatz: $\Ab = \Lab^1(\xb) \ab, p = \Lambda^0(\xb) \pb$ satisfying the de Rham sequence
+\begin{align*}
+\nabla \Lambda^0 = \Lab^1 \G, \nabla \times \Lab^1 = \Lab^2 \C
+\end{align*}
+and $ \C \G \psi = 0 \forall \psi \in H^1(\Omega), \D \C \phib \forall \phib \in  H(\curl,\Omega), \C^\top \D^\top \psi \forall \psi  \in {L^2}^\star(\Omega), \G^T \C^T \phib \forall \phib \in  H^\star(\div,\Omega)$ for the derivative matrices $\G, \C, \D$ 
+ to obtain
+\begin{align*}
+\int \Lab^2 \C \cdot \Lab^2 \C \ab \du \xb + \int \Lab^1 \cdot \Lab^1 \G \pb \du \xb &= \int \Lab^1 \cdot \Jb \du \xb, \\
+\int \Lab^1 \G \cdot \Lab^1 \ab \du \xb &= 0.
+\end{align*}
+
+Introducing the mass matrices $M_1 = \int  \Lab^1 \cdot \Lab^1 \du \xb, M_2 = \int  \Lab^2 \cdot \Lab^2 \du \xb$ we get
+\begin{align*}
+\C^\top M_2 \C \ab + M_1 \G \pb &= \jb , \\
+\G^\top M_1 \ab &= 0.
+\end{align*} 
+
+For this system we use the Uzawa iteration with the operators $\K =  \C^\top M_2 \C, \L= M_1 \G , \L^\top = \G^\top M_1$:
+\begin{align*}
+\K \ab + \L \pb &= \jb, \\
+\L^\top \ab &= 0.
+\end{align*}
+
+Because of the de Rham complex the right hand side of a multiplication of the $A$ operator will alway be weakly divergence free $\G^T A\ab = 0$. However, the $L^2$ projection $M_1^{-1} \int \Lab^1 \cdot J(\xb) \du \xb$ of analytically divergence free functions may not be numerically divergence free. Therefore, we use a constraint in the solver of the $A$ operator, which is symmetric so that we can still use a CG solver
+\begin{align*}
+\K_r= \C^\top M_2 \C + r M_1 \G \G^\top M_1 
+\end{align*}
+\subsection{Uzawa algorithm}
+Initialisation: choose start value $\pb^0$
+\begin{align*}
+\ab^0 &= \K_r^{-1}(\jb-\L \pb^0), \\
+\rb_0^0 &= \L^\top \ab^0, \\
+\qb_0^0 &= \rb_0^0. 
+\end{align*}
+
+Iteration $n=0,..., N-1$ :
+\begin{align*}
+\qb_1 &= \K_r^{-1} \L \qb_0^n,\\
+\db_0 &=\L^\top \qb_1, \\
+\alpha &= \frac{\qb_0^n \cdot \db_0 }{\qb_0^n \cdot \rb_0^n}, \\
+\pb^{n+1} &= \pb^n + \alpha \qb_0^n, \\
+\rb_0^{n+1} &= \rb_0^n - \alpha \db_0, \\
+\ab^{n+1} &= \ab^n - \alpha \qb_1, \\
+\beta &= \frac{\rb_0^{n+1} \cdot \db_0}{\qb_0^n \cdot \db_0}, \\
+\qb_0^{n+1} &= \rb_0^{n+1} - \beta \qb_0^n.
+\end{align*}
+If $\|\rb_0^{n+1}\| < $ tol or $\|\qb_0^n\| < $ tol  the iterations ends.
+
+\subsection{FFT solver}
+Since the iterative solution of the inverse of $\K_r$ in the Uzawa algorithm is quite expensive, we search for a direct solver. We note that the discrete mass matrices have block-diagonal form,
+\begin{align*}
+M_1 = \begin{pmatrix}
+M_{11}& 0 &0 \\ 0&M_{12}&0 \\ 0&0&M_{13}
+\end{pmatrix}, \M_2 = \begin{pmatrix}
+M_{21}& 0 &0 \\ 0&M_{22}&0 \\ 0&0&M_{23}
+\end{pmatrix}
+\end{align*}
+and the curl and gradient matrices have the following block structure
+\begin{align*}
+\C= \begin{pmatrix}
+0& -D_3 & D_2 \\ D_3&0&-D_1 \\ -D_2&D_1&0
+\end{pmatrix}, \G= \begin{pmatrix}
+D_1 \\ D_2 \\ D_3
+\end{pmatrix},
+\end{align*}
+where $D_i, i=1,2,3$ denotes the derivative matrix along direction i. So we can compute
+\begin{align*}
+\C^T M_2 \C &= \begin{pmatrix}
+D_3^\top M_{22} D_3 + D_2^\top M_{23} D_2 & -D_2^\top M_{23}D_1& -D_3^\top M_{22}D_1
+\\
+-D_1^\top M_{23}D_2 &D_3^\top M_{21} D_3 + D_1^\top M_{23} D_1 & -D_3^\top M_{21}D_2 
+ \\
+-D_1^\top M_{22}D_3 & -D_2^\top M_{21}D_3&D_2^\top M_{21} D_2 + D_1^\top M_{22} D_1
+\end{pmatrix},\\
+M_1 \G \G^\top M_1 &= \begin{pmatrix}
+M_{11}D_1 D_1^\top M_{11} & M_{11}D_1 D_2^\top M_{12} &M_{11}D_1 D_3^\top M_{13} 
+\\
+M_{12}D_2 D_1^\top M_{11} & M_{12}D_2 D_2^\top M_{12} & M_{12}D_2 D_3^\top M_{13} 
+\\
+M_{13}D_3 D_1^\top M_{11} & M_{13}D_3 D_2^\top M_{12} & M_{13}D_3 D_3^\top M_{13}
+\end{pmatrix}. 
+\end{align*}
+
+These operators can be inverted directly in Fourier space. The eigenvalues of the derivative matrices $D_i,i=1,2,3$ and the circulant mass matrices $M_{ij}, i=1,2,j=1,2,3$ are given by
+\begin{itemize}
+\item $D: \lambda_k^+=\frac{1}{\Delta x}\left(1-\exp\left(-\frac{2\pi i k}{N} \right) \right), k = 0, ...,N-1$. 
+\item $D^\top: \lambda_k^-=\frac{1}{\Delta x}\left(1-\exp\left(\frac{2\pi i k}{N} \right) \right), k = 0, ...,N-1$.
+\item $M$ with row $( c_p,...,c_0,...,c_p)$ and splines of order $p$: $\lambda_k^{(p)}= c_0 + \sum_{j=1}^p 2 c_j \cos\left(\frac{2 \pi k j}{N}\right) $.
+\end{itemize}
+After Fourier transformation, we have a $3 \times 3$ system for each Fourier mode, which can be solved explicitly. When we have a non-periodic system with clamped boundary conditions and a metric in the mass matrices, we can still use the Fourier solver as a preconditioner for a CG solver.
+
+\subsection{Jacobi solver}
+Another option for a direct solver would be a Jacobi solver, where we use just the main diagonal of the curl matrix $\K_r$. We have to check how exact the inversion of the $\K_r$ matrix has to be in order to lead to a convergence of the Uzawa algorithm.
+
+\subsection{Self-manufactured solution}
+
+First option:
+\begin{align*}
+\Ab(\xb)&=\begin{pmatrix} \cos(x_1+x_2+x_3)\\
+0 \\-\cos(x_1+x_2+x_3)
+\end{pmatrix},\\
+\nabla \times \nabla \times \Ab(\xb)&=\begin{pmatrix} 3 \cos(x_1+x_2+x_3)\\
+0\\ -3 \cos(x_1+x_2+x_3)
+\end{pmatrix}, \\
+p(x) &= 0.
+\end{align*}
+
+Second option:
+\begin{align*}
+\Ab(\xb)&=\begin{pmatrix} \sin(x_1+x_2+x_3)+\cos(x_1+x_2+x_3)\\
+-\sin^2(x_1+x_2+x_3)+\cos^2(x_1+x_2+x_3) -\cos(x_1+x_2+x_3)\\
+(\sin(x_1+x_2+x_3)-1)\sin(x_1+x_2+x_3)-\cos^2(x_1+x_2+x_3) 
+\end{pmatrix},\\
+\nabla \times \nabla \times \Ab(\xb)&=\begin{pmatrix} 3( \sin(x_1+x_2+x_3)+ \cos(x_1+x_2+x_3) )\\
+ -3( \cos(x_1+x_2+x_3)-4 \cos(2(x_1+x_2+x_3)) )\\ 
+ -3( \sin(x_1+x_2+x_3)+4 \cos(2(x_1+x_2+x_3)) )
+\end{pmatrix}, \\
+p(\xb) &= \cos(x_1+x_2+x_3), \\
+\nabla p(\xb) &= \begin{pmatrix}
+-\sin(x_1+x_2+x_3)\\-\sin(x_1+x_2+x_3)\\-\sin(x_1+x_2+x_3)
+\end{pmatrix}.
+\end{align*}
+
+Then our right-hand side is computed as
+\begin{align*}
+\Jb(\xb) = \nabla \times \nabla \times \Ab(\xb) + \nabla p(\xb).
+\end{align*}
+
+Since the right-hand side is usually accumulated from the particle distribution function, we introduce artifical particle noise by making a convex combination of the analytical current and a three dimensional random noise vector:
+\begin{align*}
+\tilde \Jb(\xb) = (1-\epsilon)\Jb(\xb) + \epsilon \operatorname{random}[0,1].
+\end{align*}
+
+%
+%
+%\subsection{alternative algorithm}
+%Initialisation: choose start value $\pb^0$
+%\begin{align*}
+%\ab^0 &= A^{-1}(\jb-B\pb^0), \\
+%\qb_0^0 &= B^\top \ab^0. 
+%\end{align*}
+%
+%Iteration $n=0,..., N-1$ :
+%\begin{align*}
+%\db_0 &= B^\top \ab^n, \\
+%\qb_1 &= A^{-1} B \qb_0^n,\\
+%\yb_0 &=B^\top \qb_1, \\
+%\alpha &= \frac{\db_0 \cdot \db_0 }{\db_0 \cdot \yb_0}, \\
+%\pb^{n+1} &= \pb^n + \alpha \qb_0^n, \\
+%\ab^{n+1} &= \ab^n + \alpha \qb_1, \\
+%\rb_0 &=B^\top \ab^{n+1}, \\ 
+%\beta &= \frac{\rb_0 \cdot \rb_0}{\db_0 \cdot \db_0}, \\
+%\qb_0^{n+1} &= \rb_0^{n+1} + \beta \qb_0^n.
+%\end{align*}
+%If $\|\rb_0\| < $ tol the iterations ends.
+
+\end{document}
