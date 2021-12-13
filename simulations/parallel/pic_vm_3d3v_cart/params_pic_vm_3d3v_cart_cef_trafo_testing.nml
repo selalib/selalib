@@ -40,8 +40,7 @@
         splitting_case = "splitting_cef_trafo"
         spline_degree = 3 2 1
 	splitting_type = "strang"
-        with_control_variate = .false.
-	
+ 	
 /
 &trafo
 	nparams = 6

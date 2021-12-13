@@ -255,7 +255,7 @@ contains
 
   !> Sample with control variate (we assume that the particle weights are given in the following order:
   !> (full f weight, value of initial distribution at time 0, delta f weights)
-  subroutine sample_cv_particle_sampling( self, particle_group, params, xmin, Lx, control_variate, time, map )
+  subroutine sample_cv_particle_sampling( self, particle_group, params, xmin, Lx, control_variate, time, map, lindf )
     class( sll_t_particle_sampling ), intent( inout ) :: self !< particle sampling object
     class(sll_c_particle_group_base), target, intent(inout)        :: particle_group !< particle group
     class( sll_c_distribution_params ),  target,     intent( inout )      :: params !< parameters for initial distribution
@@ -263,11 +263,12 @@ contains
     sll_real64,                        intent(in)               :: Lx(:) !< length of the domain.
     class(sll_t_control_variate),      intent(in)               :: control_variate !< PIC control variate
     sll_real64, optional,              intent(in)               :: time !< initial time (default: 0)
-    type(sll_t_mapping_3d), optional                :: map !< coordinate transformation 
+    type(sll_t_mapping_3d), optional                :: map !< coordinate transformation
+    logical,  optional                              :: lindf                                    
     !local variables
     sll_real64 :: vi(3), xi(3), x(3), wi(particle_group%n_weights)
     sll_int32  :: i_part, counter
-    sll_real64 :: time0, Rx(3), q, m
+    sll_real64 :: time0, Rx(3), q, m, g0, df_weight
     logical :: delta_perturb
 
     time0 = 0.0_f64
@@ -285,8 +286,8 @@ contains
     end if
 
     counter = 0
-    ! Fill wi(2) with value of initial distribution at initial positions (g0)
-    ! and wi(3) with the delta f weights
+    ! Fill g0 with value of initial distribution at initial positions (g0)
+    ! and df_weight with the delta f weights
     do i_part = 1, particle_group%n_particles
        q = particle_group%species%q
        m = particle_group%species%m
@@ -297,30 +298,31 @@ contains
        if( self%xiprofile ) then
           if( present(map)) then
              if( self%inverse ) then
-                wi(2) = params%eval_v_density( vi(1:params%dims(2)), xi(1:params%dims(1)), m=particle_group%species%m )/map%volume
+                g0 = params%eval_v_density( vi(1:params%dims(2)), xi(1:params%dims(1)), m=particle_group%species%m )/map%volume
              else
-                wi(2) = params%eval_v_density( vi(1:params%dims(2)), xi(1:params%dims(1)), m=particle_group%species%m )/map%jacobian(xi)
+                g0 = params%eval_v_density( vi(1:params%dims(2)), xi(1:params%dims(1)), m=particle_group%species%m )/map%jacobian(xi)
              end if
              Rx = xi
              Rx(1) = map%get_x1(xi) + m*vi(2)/q
              Rx(1) = (Rx(1) - xmin(1))/Lx(1)
-             wi(3) = control_variate%update_df_weight( Rx, vi, time0, wi(1), wi(2) )
+             df_weight = control_variate%update_df_weight( Rx, vi, time0, wi(1), g0 )
           else
              x = (xi - xmin)/Lx
-             wi(2) = params%eval_v_density( vi(1:params%dims(2)), x(1:params%dims(1)), m=particle_group%species%m )/product(Lx)
+             g0 = params%eval_v_density( vi(1:params%dims(2)), x(1:params%dims(1)), m=particle_group%species%m )/product(Lx)
              Rx = x
              Rx(1) = xi(1) + m*vi(2)/q
              Rx(1) = (Rx(1) - xmin(1))/Lx(1)
-             wi(3) = control_variate%update_df_weight( Rx, vi, time0, wi(1), wi(2) )
+             df_weight = control_variate%update_df_weight( Rx, vi, time0, wi(1), g0 )
           end if
        else
           if( present(map)) then
              x = xi
-             wi(2) = params%eval_v_density( vi(1:params%dims(2)), xi(1:params%dims(1)), m=particle_group%species%m )/map%jacobian(xi)
+             g0 = params%eval_v_density( vi(1:params%dims(2)), xi(1:params%dims(1)), m=particle_group%species%m )/map%jacobian(xi)
           else
              x = (xi - xmin)/Lx
-             wi(2) = params%eval_v_density( vi(1:params%dims(2)), xi(1:params%dims(1)), m=particle_group%species%m )/product(Lx)
+             g0 = params%eval_v_density( vi(1:params%dims(2)), xi(1:params%dims(1)), m=particle_group%species%m )/product(Lx)
           end if
+          df_weight = control_variate%update_df_weight( xi, vi, time0, wi(1), g0 )
           if(delta_perturb) then
              if( particle_group%species%q < 0._f64) then
                 if( x(1) > 0.5_f64-self%eps(1) .and. x(1) < 0.5_f64+self%eps(1) )then
@@ -333,16 +335,107 @@ contains
                 end if
              end if
           end if
-          wi(3) = control_variate%update_df_weight( xi, vi, time0, wi(1), wi(2) )
           call particle_group%set_v(i_part, vi)
        end if
-
+       if(lindf) then
+          wi(1) = df_weight
+       else
+          wi(2) = g0
+          wi(3) = df_weight
+       end if
        call particle_group%set_weights( i_part, wi )
     end do
     if(delta_perturb) then
        print*, 'delta_perturb_cv: ', self%eps, self%a, 'shifted particles:', counter
     end if
   end subroutine sample_cv_particle_sampling
+
+
+!!$   !> Sample with control variate (we assume that the particle weights are given in the following order:
+!!$  !> (full f weight, value of initial distribution at time 0, delta f weights)
+!!$  subroutine sample_lindf_particle_sampling( self, particle_group, params, xmin, Lx, control_variate, time, map )
+!!$    class( sll_t_particle_sampling ), intent( inout ) :: self !< particle sampling object
+!!$    class(sll_c_particle_group_base), target, intent(inout)        :: particle_group !< particle group
+!!$    class( sll_c_distribution_params ),  target,     intent( inout )      :: params !< parameters for initial distribution
+!!$    sll_real64,                        intent(in)               :: xmin(:) !< lower bound of the domain
+!!$    sll_real64,                        intent(in)               :: Lx(:) !< length of the domain.
+!!$    class(sll_t_control_variate),      intent(in)               :: control_variate !< PIC control variate
+!!$    sll_real64, optional,              intent(in)               :: time !< initial time (default: 0)
+!!$    type(sll_t_mapping_3d), optional                :: map !< coordinate transformation 
+!!$    !local variables
+!!$    sll_real64 :: vi(3), xi(3), x(3), wi(1)
+!!$    sll_int32  :: i_part, counter
+!!$    sll_real64 :: time0, Rx(3), q, m
+!!$    logical :: delta_perturb
+!!$
+!!$    time0 = 0.0_f64
+!!$    if( present(time) ) time0 = time
+!!$
+!!$    delta_perturb = self%delta_perturb
+!!$    self%delta_perturb = .false.
+!!$
+!!$    if( present(map)) then
+!!$       ! First sample the particles and set weights for full f
+!!$       call self%sample( particle_group, params, xmin, Lx, map )
+!!$    else
+!!$       ! First sample the particles and set weights for full f
+!!$       call self%sample( particle_group, params, xmin, Lx )
+!!$    end if
+!!$
+!!$    counter = 0
+!!$    ! Fill wi(2) with value of initial distribution at initial positions (g0)
+!!$    ! and wi(3) with the delta f weights
+!!$    do i_part = 1, particle_group%n_particles
+!!$       q = particle_group%species%q
+!!$       m = particle_group%species%m
+!!$       xi = particle_group%get_x( i_part )
+!!$       vi = particle_group%get_v( i_part )
+!!$       wi = particle_group%get_weights( i_part )
+!!$       ! TODO: Distinguish here between different initial sampling distributions
+!!$       if( self%xiprofile ) then
+!!$          if( present(map)) then
+!!$             Rx = xi
+!!$             Rx(1) = map%get_x1(xi) + m*vi(2)/q
+!!$             Rx(1) = (Rx(1) - xmin(1))/Lx(1)
+!!$             if( self%inverse ) then
+!!$                wi(1) = wi(1) -  params%eval_v_density( vi(1:params%dims(2)), Rx(1:params%dims(1)), m=particle_group%species%m )/params%eval_v_density( vi(1:params%dims(2)), xi(1:params%dims(1)), m=particle_group%species%m )*map%volume!control_variate%update_df_weight( Rx, vi, time0, wi(1), wi(2) )
+!!$             else
+!!$                wi(1) = wi(1) -  params%eval_v_density( vi(1:params%dims(2)), Rx(1:params%dims(1)), m=particle_group%species%m )/params%eval_v_density( vi(1:params%dims(2)), xi(1:params%dims(1)), m=particle_group%species%m )*map%jacobian(xi)
+!!$             end if
+!!$          else
+!!$             x = (xi - xmin)/Lx
+!!$             Rx = x
+!!$             Rx(1) = xi(1) + m*vi(2)/q
+!!$             Rx(1) = (Rx(1) - xmin(1))/Lx(1)
+!!$             wi(1) = wi(1) - params%eval_v_density( vi(1:params%dims(2)), Rx(1:params%dims(1)), m=particle_group%species%m )/params%eval_v_density( vi(1:params%dims(2)), x(1:params%dims(1)), m=particle_group%species%m )*product(Lx)!control_variate%update_df_weight( Rx, vi, time0, wi(1), wi(2) )
+!!$          end if
+!!$       else
+!!$          if(delta_perturb) then
+!!$             if( particle_group%species%q < 0._f64) then
+!!$                if( x(1) > 0.5_f64-self%eps(1) .and. x(1) < 0.5_f64+self%eps(1) )then
+!!$                   if( x(2) > 0.5_f64-self%eps(2) .and. x(2) < 0.5_f64+self%eps(2) ) then
+!!$                      if(xi(3) > 0.5_f64-self%eps(3) .and. x(3) < 0.5_f64+self%eps(3) )then
+!!$                         vi = vi + self%a
+!!$                         counter = counter + 1
+!!$                      end if
+!!$                   end if
+!!$                end if
+!!$             end if
+!!$          end if
+!!$          if( present(map)) then
+!!$             wi(1) = wi(1) - map%jacobian(xi)!control_variate%update_df_weight( xi, vi, time0, wi(1), wi(2) )
+!!$          else
+!!$             wi(1) = wi(1) - product(Lx)
+!!$          end if
+!!$          call particle_group%set_v(i_part, vi)
+!!$       end if
+!!$
+!!$       call particle_group%set_weights( i_part, wi )
+!!$    end do
+!!$    if(delta_perturb) then
+!!$       print*, 'delta_perturb_cv: ', self%eps, self%a, 'shifted particles:', counter
+!!$    end if
+!!$  end subroutine sample_lindf_particle_sampling
 
   !> Sample from distribution defined by \a params
   subroutine sample_particle_sampling( self, particle_group, params, xmin, Lx, map )
