@@ -7,3 +7,9 @@
 [![Documentation](https://img.shields.io/badge/Documentation-Doxygen-green)](https://selalib.github.io/selalib)
 
 Modular library for the kinetic and gyrokinetic simulation of tokamak plasmas by the semi-lagrangian or particle-in-cell methods.
+
+See the list of [contributors](https://github.com/selalib/selalib/contributors) to SeLaLib.
+
+<a href="https://github.com/selalib/selalib/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=selalib/selalib" />
+</a>
