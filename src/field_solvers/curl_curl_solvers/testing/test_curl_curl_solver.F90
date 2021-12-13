@@ -64,7 +64,7 @@ program test_curl_curl_solver
   sll_real64 :: x_max, x_min
   sll_real64 :: delta_x(3)
   type(sll_t_maxwell_3d_fem)  :: maxwell_3d
-  sll_int32  :: n_dofs(3), n_total, n_total0, n_total1
+  sll_int32  :: n_dofs(3), n_total, n_total0, n_total1, j
 
   type(sll_t_linear_operator_curl_3d) :: curl_matrix  !< curl matrix
   type(sll_t_linear_operator_penalized)  :: curl_operator !< curl matrix with constraint on constant vector
@@ -95,13 +95,13 @@ program test_curl_curl_solver
 
   ! Define computational domain
   x_min = .0_f64; x_max = 2.0_f64*sll_p_pi
-  n_dofs = [16, 8, 16]
+  n_dofs = 16![16, 16, 8]
   n_total = product(n_dofs)
   domain(1,:) = [x_min, x_max]
   domain(2,:) = [x_min, x_max]
   domain(3,:) = [x_min, x_max]
   ! Set spline degree of 0-forms
-  deg = [3,3,2]
+  deg = 3![3,3,2]
 
   delta_x = (domain(:,2)-domain(:,1))/real(n_dofs,f64)
 
@@ -117,20 +117,20 @@ program test_curl_curl_solver
 
   call curl_matrix%create( maxwell_3d%mass1_operator, maxwell_3d%mass2_operator, n_dofs, delta_x   )
   call curl_operator%create( linear_operator=curl_matrix, vecs=nullspace, n_dim_nullspace=1 )
-  call preconditioner_curl_jacobi%create( curl_operator )
+  call preconditioner_curl_jacobi%create( curl_matrix )
 
-  call curl_solver%create( curl_operator )!, preconditioner_curl_fft )
+  call curl_solver%create( curl_operator, preconditioner_curl_fft )
   curl_solver%null_space = .true.
   curl_solver%atol = 1.0d-12
-  curl_solver%verbose = .true.
+  !curl_solver%verbose = .true.
   curl_solver%n_maxiter=1000
 
   call MG_operator%create( maxwell_3d%mass1_operator, n_dofs, delta_x )
   call GTM_operator%create( maxwell_3d%mass1_operator, n_dofs, delta_x )
   call uzawa_iterator%create( curl_solver, MG_operator, GTM_operator )
-  uzawa_iterator%verbose = .true.
-  uzawa_iterator%atol = 1.0d-11
-  uzawa_iterator%n_maxiter=500
+  !uzawa_iterator%verbose = .true.
+  uzawa_iterator%atol = 1.0d-10
+  uzawa_iterator%n_maxiter=100
 
 
   allocate( afield(1:n_total1+n_total0*2) )
@@ -155,15 +155,13 @@ program test_curl_curl_solver
 !!$  call random_number( afield )
 !!$   call sll_s_multiply_ct(n_dofs, delta_x, afield, noise )
   call random_number( noise )
-  eps = 1d-4 !0._f64!
+  eps = 1d-8 !0._f64!
   current = (1._f64-eps) * current +  eps* noise
 !!$  rho = 0._f64
   call sll_s_multiply_gt(n_dofs, delta_x, current, rho )
   print*, 'rhs divergence', maxval(abs(rho))
 
-  !curl_matrix%epsilon = 6.0_f64!1d-0
-  !call curl_solver%solve( current, afield )
-  !call preconditioner_curl_fft%solve( current, afield )
+  !curl_matrix%epsilon = 2.0_f64!1d-0
   call uzawa_iterator%solve( current, afield )
 
   afield_ref = 0._f64
@@ -214,7 +212,7 @@ program test_curl_curl_solver
   deallocate( current )
   deallocate( noise )
 
-  if ( error(1) < 3.d-4 .AND. error(2) < 3.d-3 .AND. error(3) < 8.d-3 .AND. error(4) < 6.d-3 ) then
+  if ( error(1) < 3.d-4 .AND. error(2) < 8.d-4 .AND. error(3) < 1.d-3 .AND. error(4) < 4.d-4 ) then
      print*, 'PASSED.'
   else
      print*, 'FAILED.'
