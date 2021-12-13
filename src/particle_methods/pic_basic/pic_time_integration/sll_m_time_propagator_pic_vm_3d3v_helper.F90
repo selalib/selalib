@@ -126,7 +126,6 @@ module sll_m_time_propagator_pic_vm_3d3v_helper
      sll_real64 :: force_sign = 1._f64 !< sign of particle force
      logical :: adiabatic_electrons = .false. !< true for simulation with adiabatic electrons
      logical :: jmean = .false. !< logical for mean value of current 
-     logical :: lindf = .false. !< true for simulation with linear delta f method
      logical :: boundary = .false. !< true for non periodic boundary conditions
 
      sll_int32 :: n_particles_max ! Helper variable for size of temporary particle arrays
@@ -541,7 +540,7 @@ contains
 
     niter = 0
     residual = 1.0_f64
-   
+
     do while ( (residual(7) > self%iter_tolerance) .and. niter < self%max_iter )
        niter = niter+1
 
@@ -618,7 +617,7 @@ contains
              residual_local(6) = residual_local(6) + (vi(3)-self%vnew(i_sp,3,i_part))**2*abs(wi(1))
 
              residual_local(8) = residual_local(8) + mi(1)*0.5_f64*( vi(1)**2 + vi(2)**2 + vi(3)**2-self%vnew(i_sp,1,i_part)**2  -self%vnew(i_sp,2,i_part)**2  -self%vnew(i_sp,3,i_part)**2 )  
-             
+
              self%xnew(i_sp, :, i_part) = xnew
              self%vnew(i_sp, :, i_part) = vi
           end do
@@ -643,10 +642,10 @@ contains
 
           ! Compute residuals based on e
           residual_local(8) = residual_local(8) + 0.5_f64*(self%maxwell_solver%L2norm_squared( self%efield_dofs_work(1:self%n_total1), 1, 1 ) + self%maxwell_solver%L2norm_squared( self%efield_dofs_work(1+self%n_total1:self%n_total1+self%n_total0), 1, 2 ) +self%maxwell_solver%L2norm_squared( self%efield_dofs_work(1+self%n_total1 +self%n_total0:self%n_total1+2*self%n_total0), 1, 3 ) - self%maxwell_solver%L2norm_squared( self%efield_dofs_work(1:self%n_total1), 1, 1 ) + self%maxwell_solver%L2norm_squared( self%efield_dofs_new(1+self%n_total1:self%n_total1+self%n_total0), 1, 2 ) + self%maxwell_solver%L2norm_squared( self%efield_dofs_new(1+self%n_total1 +self%n_total0:self%n_total1+2*self%n_total0), 1, 3 ) ) 
-          
+
           residual_local(7) = (sum((self%efield_dofs_work-self%efield_dofs_new)**2))*product(self%particle_mesh_coupling%delta_x)
        end if
-       
+
        call sll_o_collective_allreduce( sll_v_world_collective, residual_local, 8, MPI_MAX, residual )
        residual(1:7) = sqrt(residual(1:7))
        residual(8) = abs(residual(8))
@@ -895,8 +894,7 @@ contains
        force_sign, &
        rhob, &
        control_variate, &
-       jmean, &
-       lindf)  
+       jmean)  
     class(sll_t_time_propagator_pic_vm_3d3v_helper), intent( out ) :: self !< time propagator object 
     class(sll_c_maxwell_3d_base), target,          intent( in ) :: maxwell_solver !< Maxwell solver
     class(sll_c_particle_mesh_coupling_3d), target,   intent(in)  :: particle_mesh_coupling !< Kernel smoother
@@ -916,7 +914,6 @@ contains
     sll_real64, optional, target, intent( in ) :: rhob(:) !< charge at the boundary
     class(sll_t_control_variates), optional, target, intent(in) :: control_variate !< Control variate (if delta f)
     logical, optional, intent(in) :: jmean !< logical for mean value of current
-    logical, optional, intent(in) :: lindf !< true for linear delta f method
     !local variables
     sll_int32 :: ierr, i_sp, j
     sll_real64, allocatable :: vec1(:)
@@ -996,7 +993,7 @@ contains
        allocate( sll_t_linear_operator_particle_mass_3d_diag  :: self%particle_mass_2 )
        allocate( sll_t_linear_operator_particle_mass_3d_diag  :: self%particle_mass_3 )
     end if
-  
+
     call self%particle_mass_1%create( self%particle_mesh_coupling%n_cells, [self%spline_degree(1)-1, self%spline_degree(2), self%spline_degree(3)] )
     call self%particle_mass_2%create( self%particle_mesh_coupling%n_cells, [self%spline_degree(1), self%spline_degree(2)-1, self%spline_degree(3)] )
     call self%particle_mass_3%create( self%particle_mesh_coupling%n_cells, [self%spline_degree(1), self%spline_degree(2), self%spline_degree(3)-1]  )
@@ -1056,10 +1053,7 @@ contains
        allocate(self%control_variate )
        allocate(self%control_variate%cv(self%particle_group%n_species) )
        self%control_variate => control_variate
-       self%i_weight = 3
-       if (present(lindf)) then
-          self%lindf = lindf
-       end if
+       self%i_weight = self%particle_group%group(1)%n_weights
     end if
 
   end subroutine initialize_pic_vm_3d3v
@@ -1084,8 +1078,7 @@ contains
        force_sign, &
        rhob, &
        control_variate, &
-       jmean, &
-       lindf)  
+       jmean)  
     class(sll_t_time_propagator_pic_vm_3d3v_helper), intent( out ) :: self !< time propagator object 
     class(sll_c_maxwell_3d_base), target,          intent( in ) :: maxwell_solver !< Maxwell solver
     class(sll_c_particle_mesh_coupling_3d), target, intent(in) :: particle_mesh_coupling !< Kernel smoother
@@ -1103,7 +1096,6 @@ contains
     sll_real64, optional, target,                  intent( in ) :: rhob(:) !< charge at the boundary
     class(sll_t_control_variates), optional, target, intent(in) :: control_variate !< Control variate (if delta f)
     logical, optional, intent(in) :: jmean !< logical for mean value of current
-    logical, optional, intent(in) :: lindf !< true for linear delta f method
     !local variables
     character(len=256) :: file_prefix
     sll_int32 :: input_file, rank
@@ -1111,7 +1103,6 @@ contains
     sll_real64 :: maxwell_tolerance, iter_tolerance, betar_set(2), force_sign_set
     sll_int32 :: max_iter, boundary_particles_set
     logical :: jmean_set
-    logical :: lindf_set
 
     namelist /output/ file_prefix
     namelist /time_solver/ maxwell_tolerance
@@ -1143,12 +1134,6 @@ contains
        jmean_set = .false.
     end if
 
-    if (present(lindf)) then
-       lindf_set = lindf
-    else
-       lindf_set = .false.
-    end if
-
     if( present(control_variate) ) then
        ! Read in solver tolerance
        open(newunit = input_file, file=filename, status='old',IOStat=io_stat)
@@ -1176,8 +1161,7 @@ contains
                force_sign=force_sign_set, &
                rhob = rhob, &
                control_variate = control_variate,&
-               jmean=jmean_set, &
-               lindf = lindf_set)
+               jmean=jmean_set)
        else
           read(input_file, output,IOStat=io_stat0)
           read(input_file, time_solver,IOStat=io_stat)
@@ -1231,8 +1215,7 @@ contains
                   force_sign=force_sign_set, &
                   rhob = rhob, &
                   control_variate = control_variate,&
-                  jmean=jmean_set, &
-                  lindf = lindf_set)
+                  jmean=jmean_set)
           else if (io_stat /= 0 .and. io_stat1 == 0) then
              if (rank == 0 ) then
                 open(newunit=file_id, file=trim(file_prefix)//'_parameters_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
@@ -1257,8 +1240,7 @@ contains
                   force_sign=force_sign_set, &
                   rhob = rhob, &
                   control_variate = control_variate,&
-                  jmean=jmean_set, &
-                  lindf = lindf_set)
+                  jmean=jmean_set)
           else
              if (rank == 0 ) then
                 open(newunit=file_id, file=trim(file_prefix)//'_parameters_used.dat', position = 'append', status='old', action='write', iostat=io_stat)
@@ -1284,8 +1266,7 @@ contains
                   force_sign=force_sign_set, &
                   rhob = rhob, &
                   control_variate = control_variate,&
-                  jmean=jmean_set, &
-                  lindf = lindf_set)
+                  jmean=jmean_set)
           end if
           close(input_file)
        end if
