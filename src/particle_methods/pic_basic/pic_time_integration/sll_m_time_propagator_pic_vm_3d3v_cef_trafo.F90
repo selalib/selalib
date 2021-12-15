@@ -382,7 +382,7 @@ contains
 
                    wall(3) = wall(3) + dt* (q/p%profile%T_i(Rx(1)) *sum(ephys*vbar) -&
                         ephys(2)*(p%profile%drho_0(Rx(1))/p%profile%rho_0(Rx(1))+(0.5_f64*m*sum(vbar**2)/p%profile%T_i(Rx(1)) - 1.5_f64)* p%profile%dT_i(Rx(1))/p%profile%T_i(Rx(1)) )  ) *&
-                        p%eval_v_density(vbar, Rx, m)/p%eval_v_density(vbar, xi, m)* self%map%jacobian(xi)
+                        self%control_variate%cv(i_sp)%control_variate(Rx, vbar, 0._f64)/p%eval_v_density(vbar, xi, m)* self%map%jacobian(xi)
                    !wall(3) = self%control_variate%cv(i_sp)%update_df_weight( Rx, vi, 0.0_f64, wall(1), wall(2) )
                 class default
                    wall(3) = self%control_variate%cv(i_sp)%update_df_weight( xi, vi, 0.0_f64, wall(1), wall(2) )
@@ -400,7 +400,7 @@ contains
 
                 wall(1) = wall(1) + dt* (q/p%profile%T_i(Rx(1)) *sum(ephys*vi) -&
                      ephys(2)*(p%profile%drho_0(Rx(1))/p%profile%rho_0(Rx(1))+(0.5_f64*m*sum(vi**2)/p%profile%T_i(Rx(1)) - 1.5_f64)* p%profile%dT_i(Rx(1))/p%profile%T_i(Rx(1)) )  ) *&
-                     p%eval_v_density(vi, Rx, m)/p%eval_v_density(vi, xi, m)* self%map%jacobian(xi)
+                     self%control_variate%cv(i_sp)%control_variate(Rx, vi, 0._f64)/p%eval_v_density(vi, xi, m)* self%map%jacobian(xi)
              class default
                 wall(1) = wall(1) + dt* qoverm* sum(ephys*vi) * self%map%jacobian(xi)
              end select
