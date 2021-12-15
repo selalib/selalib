@@ -268,6 +268,8 @@ Because of the de Rham complex the right hand side of a multiplication of the $A
 \K_r= \C^\top M_2 \C + r M_1 \G \G^\top M_1 
 \end{align*}
 \subsection{Uzawa algorithm}
+Implementation taken from \cite{uzawaiteration}.
+
 Initialisation: choose start value $\pb^0$
 \begin{align*}
 \ab^0 &= \K_r^{-1}(\jb-\L \pb^0), \\
@@ -396,4 +398,18 @@ Since the right-hand side is usually accumulated from the particle distribution 
 %\end{align*}
 %If $\|\rb_0\| < $ tol the iterations ends.
 
+\subsection{Literature}
+\begin{itemize}
+\item \cite{uzawa1958iterative}: theoretical introduction
+\item \cite{aujol2008introduction}: only short part on the general mechanism
+\item \cite{bacuta2006unified}: abstract Uzawa algorithm
+	\item \cite{bramble1997analysis}: analysis of inexact Uzawa algorithm
+\item \cite{zulehner2002analysis}: iterative methods for saddle point problems
+	\item \cite{graser2007preconditioned}: preconditioned uzawa iterations
+\item\cite{ho2017accelerating}: Anderson acceleration for uzawa algorithm
+\item \cite{robichaud1990iterative}: alternative algorithm
+\end{itemize}
+
+\bibliographystyle{abbrv}
+\bibliography{curl_bib}
 \end{document}
