@@ -119,7 +119,7 @@ program test_curl_curl_solver
   call curl_operator%create( linear_operator=curl_matrix, vecs=nullspace, n_dim_nullspace=1 )
   call preconditioner_curl_jacobi%create( curl_matrix )
 
-  call curl_solver%create( curl_operator, preconditioner_curl_fft )
+  call curl_solver%create( curl_operator, preconditioner_curl_fft ) ! if gridcell numbers are not the same in all directions, the fft preconditioner does not work
   curl_solver%null_space = .true.
   curl_solver%atol = 1.0d-12
   !curl_solver%verbose = .true.
