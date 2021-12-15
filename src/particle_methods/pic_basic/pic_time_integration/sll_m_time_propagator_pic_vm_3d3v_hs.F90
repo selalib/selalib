@@ -560,7 +560,7 @@ contains
 
                    wall(1) = wall(1) + dt* (q/p%profile%T_i(Rx(1)) * sum(efield * v_new)-&
                         efield(2)*(p%profile%drho_0(Rx(1))/p%profile%rho_0(Rx(1))+(0.5_f64*m*sum(v_new**2)/p%profile%T_i(Rx(1)) - 1.5_f64)* p%profile%dT_i(Rx(1))/p%profile%T_i(Rx(1))  ) ) *&
-                        p%eval_v_density(v_new, Rx, m)/p%eval_v_density(v_new, xi, m)*product(self%Lx)
+                        self%control_variate%cv(i_sp)%control_variate(Rx, v_new, 0._f64)/p%eval_v_density(v_new, xi, m)*product(self%Lx)
                 class default
                    wall(1) = wall(1) + dt* qoverm* sum(efield * v_new) *product(self%Lx)
                 end select

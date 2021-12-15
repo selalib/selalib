@@ -372,7 +372,7 @@ contains
 
                 wall(1) = wall(1) + dt* (q/p%profile%T_i(Rx(1)) * sum(efield * vnew)-&
                      efield(2)*(p%profile%drho_0(Rx(1))/p%profile%rho_0(Rx(1))+(0.5_f64*m*sum(vnew**2)/p%profile%T_i(Rx(1)) - 1.5_f64)* p%profile%dT_i(Rx(1))/p%profile%T_i(Rx(1))  ) ) *&
-                     p%eval_v_density(vnew, Rx, m)/p%eval_v_density(vnew, xi, m)*product(self%Lx)
+                     self%control_variate%cv(i_sp)%control_variate(Rx, vnew, 0._f64)/p%eval_v_density(vnew, xi, m)*product(self%Lx)
              type is(sll_t_params_noise_gaussian)
                 Rx = xi
                 wall(1) = wall(1) + dt* (q/p%profile%T_i(Rx(1)) * sum(efield * vnew)-&
