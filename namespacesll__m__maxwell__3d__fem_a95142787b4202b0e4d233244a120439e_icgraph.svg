@@ -9,24 +9,24 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 24)">
 <title>sll_s_compute_rhs_fem</title>
 <polygon fill="#ffffff" stroke="transparent" points="-4,4 -4,-24 287,-24 287,4 -4,4"/>
-<!-- Node93 -->
+<!-- Node101 -->
 <g id="node1" class="node">
-<title>Node93</title>
+<title>Node101</title>
 <polygon fill="#bfbfbf" stroke="#000000" points="0,-.5 0,-19.5 131,-19.5 131,-.5 0,-.5"/>
 <text text-anchor="middle" x="65.5" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_compute_rhs_fem</text>
 </g>
-<!-- Node94 -->
+<!-- Node102 -->
 <g id="node2" class="node">
-<title>Node94</title>
+<title>Node102</title>
 <g id="a_node2"><a xlink:href="namespacesll__m__maxwell__3d__fem.html#ab2781eda74156655a5fd15db858c1170" target="_top" xlink:title="Compute the L2 projection of a given function f on periodic splines of given degree. ">
 <polygon fill="#ffffff" stroke="#000000" points="167,-.5 167,-19.5 283,-19.5 283,-.5 167,-.5"/>
 <text text-anchor="middle" x="225" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">l2projection_3d_fem</text>
 </a>
 </g>
 </g>
-<!-- Node93&#45;&gt;Node94 -->
+<!-- Node101&#45;&gt;Node102 -->
 <g id="edge1" class="edge">
-<title>Node93&#45;&gt;Node94</title>
+<title>Node101&#45;&gt;Node102</title>
 <path fill="none" stroke="#191970" d="M141.5695,-10C150.0359,-10 158.5577,-10 166.7521,-10"/>
 <polygon fill="#191970" stroke="#191970" points="141.2957,-6.5001 131.2956,-10 141.2956,-13.5001 141.2957,-6.5001"/>
 </g>

@@ -9,16 +9,16 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 133)">
 <title>sll_s_spline_fem_mixedmass_line_boundary</title>
 <polygon fill="#ffffff" stroke="transparent" points="-4,4 -4,-133 558,-133 558,4 -4,4"/>
-<!-- Node118 -->
+<!-- Node126 -->
 <g id="node1" class="node">
-<title>Node118</title>
+<title>Node126</title>
 <polygon fill="#bfbfbf" stroke="#000000" points="0,-49.5 0,-79.5 160,-79.5 160,-49.5 0,-49.5"/>
 <text text-anchor="start" x="8" y="-67.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_spline_fem_mixedmass</text>
 <text text-anchor="middle" x="80" y="-56.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">_line_boundary</text>
 </g>
-<!-- Node119 -->
+<!-- Node127 -->
 <g id="node2" class="node">
-<title>Node119</title>
+<title>Node127</title>
 <g id="a_node2"><a xlink:href="namespacesll__m__spline__fem__utilities__sparse.html#a58ea8913e3f0590a3a20406f15b23c11" target="_top" xlink:title="Set up 1d mixed mass matrix for specific spline degrees and profile function. ">
 <polygon fill="#ffffff" stroke="#000000" points="196,-44 196,-85 355,-85 355,-44 196,-44"/>
 <text text-anchor="start" x="204" y="-73" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_spline_fem_utilities</text>
@@ -27,15 +27,15 @@
 </a>
 </g>
 </g>
-<!-- Node118&#45;&gt;Node119 -->
+<!-- Node126&#45;&gt;Node127 -->
 <g id="edge1" class="edge">
-<title>Node118&#45;&gt;Node119</title>
+<title>Node126&#45;&gt;Node127</title>
 <path fill="none" stroke="#191970" d="M170.1148,-64.5C178.7064,-64.5 187.3771,-64.5 195.8593,-64.5"/>
 <polygon fill="#191970" stroke="#191970" points="170.0815,-61.0001 160.0814,-64.5 170.0814,-68.0001 170.0815,-61.0001"/>
 </g>
-<!-- Node120 -->
+<!-- Node128 -->
 <g id="node3" class="node">
-<title>Node120</title>
+<title>Node128</title>
 <g id="a_node3"><a xlink:href="namespacesll__m__maxwell__clamped__1d__fem__sm.html#a400fe28b25203e207ad0786874c32912" target="_top" xlink:title="Initialization. ">
 <polygon fill="#ffffff" stroke="#000000" points="391,-98.5 391,-128.5 554,-128.5 554,-98.5 391,-98.5"/>
 <text text-anchor="start" x="399" y="-116.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_clamped</text>
@@ -43,15 +43,15 @@
 </a>
 </g>
 </g>
-<!-- Node119&#45;&gt;Node120 -->
+<!-- Node127&#45;&gt;Node128 -->
 <g id="edge2" class="edge">
-<title>Node119&#45;&gt;Node120</title>
+<title>Node127&#45;&gt;Node128</title>
 <path fill="none" stroke="#191970" d="M364.9322,-86.7445C380.8787,-90.7109 397.145,-94.7569 412.04,-98.4617"/>
 <polygon fill="#191970" stroke="#191970" points="365.6088,-83.3063 355.0596,-84.2889 363.9191,-90.0993 365.6088,-83.3063"/>
 </g>
-<!-- Node121 -->
+<!-- Node129 -->
 <g id="node4" class="node">
-<title>Node121</title>
+<title>Node129</title>
 <g id="a_node4"><a xlink:href="namespacesll__m__maxwell__clamped__1d__trafo.html#a800127433401043caf9d2b00dfa7e79f" target="_top" xlink:title="Initialization. ">
 <polygon fill="#ffffff" stroke="#000000" points="404,-49.5 404,-79.5 541,-79.5 541,-49.5 404,-49.5"/>
 <text text-anchor="start" x="412" y="-67.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_clamped</text>
@@ -59,15 +59,15 @@
 </a>
 </g>
 </g>
-<!-- Node119&#45;&gt;Node121 -->
+<!-- Node127&#45;&gt;Node129 -->
 <g id="edge3" class="edge">
-<title>Node119&#45;&gt;Node121</title>
+<title>Node127&#45;&gt;Node129</title>
 <path fill="none" stroke="#191970" d="M365.3404,-64.5C378.2343,-64.5 391.3277,-64.5 403.7275,-64.5"/>
 <polygon fill="#191970" stroke="#191970" points="365.0596,-61.0001 355.0596,-64.5 365.0596,-68.0001 365.0596,-61.0001"/>
 </g>
-<!-- Node122 -->
+<!-- Node130 -->
 <g id="node5" class="node">
-<title>Node122</title>
+<title>Node130</title>
 <g id="a_node5"><a xlink:href="namespacesll__m__maxwell__clamped__3d__fem.html#afadba212d3f01a688b12c751068d1707" target="_top" xlink:title="Initialization. ">
 <polygon fill="#ffffff" stroke="#000000" points="404,-.5 404,-30.5 541,-30.5 541,-.5 404,-.5"/>
 <text text-anchor="start" x="412" y="-18.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_clamped</text>
@@ -75,9 +75,9 @@
 </a>
 </g>
 </g>
-<!-- Node119&#45;&gt;Node122 -->
+<!-- Node127&#45;&gt;Node130 -->
 <g id="edge4" class="edge">
-<title>Node119&#45;&gt;Node122</title>
+<title>Node127&#45;&gt;Node130</title>
 <path fill="none" stroke="#191970" d="M364.9322,-42.2555C380.8787,-38.2891 397.145,-34.2431 412.04,-30.5383"/>
 <polygon fill="#191970" stroke="#191970" points="363.9191,-38.9007 355.0596,-44.7111 365.6088,-45.6937 363.9191,-38.9007"/>
 </g>

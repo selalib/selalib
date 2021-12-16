@@ -48,22 +48,22 @@ if (edges && edges.length) {
 <script type="text/javascript">
 var viewWidth = 879;
 var viewHeight = 429;
-var sectionId = 'dynsection-0';
+var sectionId = 'dynsection-1';
 </script>
 <script xlink:href="svgpan.js"/>
 <svg id="graph" class="graph">
 <g id="viewport">
 <title>init_3d_fem</title>
 <polygon fill="#ffffff" stroke="transparent" points="-4,4 -4,-424.5 875,-424.5 875,4 -4,4"/>
-<!-- Node4 -->
+<!-- Node8 -->
 <g id="node1" class="node">
-<title>Node4</title>
+<title>Node8</title>
 <polygon fill="#bfbfbf" stroke="#000000" points="0,-171 0,-190 74,-190 74,-171 0,-171"/>
 <text text-anchor="middle" x="37" y="-178" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">init_3d_fem</text>
 </g>
-<!-- Node5 -->
+<!-- Node9 -->
 <g id="node2" class="node">
-<title>Node5</title>
+<title>Node9</title>
 <g id="a_node2"><a xlink:href="namespacesll__m__spline__fem__utilities.html#ae3b59ded8bbb13b7762f0ac9dfb320be" target="_top" xlink:title="Computes the mass line for a mass matrix with degree splines. ">
 <polygon fill="#ffffff" stroke="#000000" points="125.5,-379.5 125.5,-409.5 283.5,-409.5 283.5,-379.5 125.5,-379.5"/>
 <text text-anchor="start" x="133.5" y="-397.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_spline_fem_utilities</text>
@@ -71,15 +71,15 @@ var sectionId = 'dynsection-0';
 </a>
 </g>
 </g>
-<!-- Node4&#45;&gt;Node5 -->
+<!-- Node8&#45;&gt;Node9 -->
 <g id="edge1" class="edge">
-<title>Node4&#45;&gt;Node5</title>
+<title>Node8&#45;&gt;Node9</title>
 <path fill="none" stroke="#191970" d="M37.8787,-190.252C41.1742,-220.955 55.5563,-316.5454 110,-366.5 113.1914,-369.4283 116.6756,-372.0512 120.3635,-374.4006"/>
 <polygon fill="#191970" stroke="#191970" points="118.8608,-377.5704 129.2963,-379.4009 122.28,-371.4623 118.8608,-377.5704"/>
 </g>
-<!-- Node7 -->
+<!-- Node11 -->
 <g id="node4" class="node">
-<title>Node7</title>
+<title>Node11</title>
 <g id="a_node4"><a xlink:href="namespacesll__m__spline__fem__utilities.html#adfa24c61f416471302339b83845ac77c" target="_top" xlink:title="Helper function to find line of mass matrix ( N_i^p N_j^{p&#45;1})) ">
 <polygon fill="#ffffff" stroke="#000000" points="110,-326.5 110,-356.5 299,-356.5 299,-326.5 110,-326.5"/>
 <text text-anchor="start" x="118" y="-344.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_spline_fem_utilities</text>
@@ -87,15 +87,15 @@ var sectionId = 'dynsection-0';
 </a>
 </g>
 </g>
-<!-- Node4&#45;&gt;Node7 -->
+<!-- Node8&#45;&gt;Node11 -->
 <g id="edge3" class="edge">
-<title>Node4&#45;&gt;Node7</title>
+<title>Node8&#45;&gt;Node11</title>
 <path fill="none" stroke="#191970" d="M39.8057,-190.1633C47.2123,-213.9895 69.5521,-276.0373 110,-309.5 116.0058,-314.4686 122.8201,-318.6792 129.9731,-322.2447"/>
 <polygon fill="#191970" stroke="#191970" points="128.627,-325.4774 139.1794,-326.4246 131.5209,-319.1035 128.627,-325.4774"/>
 </g>
-<!-- Node8 -->
+<!-- Node12 -->
 <g id="node5" class="node">
-<title>Node8</title>
+<title>Node12</title>
 <g id="a_node5"><a xlink:href="namespacesll__m__spline__fem__utilities__sparse.html#a2003f09f29c8034b9cb433328afaef6b" target="_top" xlink:title="Set up 1d mass matrix (sparsity pattern and values) ">
 <polygon fill="#ffffff" stroke="#000000" points="112,-165.5 112,-195.5 297,-195.5 297,-165.5 112,-165.5"/>
 <text text-anchor="start" x="120" y="-183.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_spline_fem_utilities</text>
@@ -103,15 +103,15 @@ var sectionId = 'dynsection-0';
 </a>
 </g>
 </g>
-<!-- Node4&#45;&gt;Node8 -->
+<!-- Node8&#45;&gt;Node12 -->
 <g id="edge5" class="edge">
-<title>Node4&#45;&gt;Node8</title>
+<title>Node8&#45;&gt;Node12</title>
 <path fill="none" stroke="#191970" d="M74.1737,-180.5C82.6145,-180.5 91.9809,-180.5 101.7091,-180.5"/>
 <polygon fill="#191970" stroke="#191970" points="101.9545,-184.0001 111.9544,-180.5 101.9544,-177.0001 101.9545,-184.0001"/>
 </g>
-<!-- Node11 -->
+<!-- Node15 -->
 <g id="node8" class="node">
-<title>Node11</title>
+<title>Node15</title>
 <g id="a_node8"><a xlink:href="namespacesll__m__spline__fem__utilities__sparse.html#ab1ac1f6dcb1c4dfe4711711a3e89dbe6" target="_top" xlink:title="sll_m_spline_fem_utilities\l_sparse::sll_s_spline_fem\l_mixedmass1d">
 <polygon fill="#ffffff" stroke="#000000" points="132.5,-105 132.5,-146 276.5,-146 276.5,-105 132.5,-105"/>
 <text text-anchor="start" x="140.5" y="-134" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_spline_fem_utilities</text>
@@ -120,15 +120,15 @@ var sectionId = 'dynsection-0';
 </a>
 </g>
 </g>
-<!-- Node4&#45;&gt;Node11 -->
+<!-- Node8&#45;&gt;Node15 -->
 <g id="edge8" class="edge">
-<title>Node4&#45;&gt;Node11</title>
+<title>Node8&#45;&gt;Node15</title>
 <path fill="none" stroke="#191970" d="M66.127,-170.9192C79.494,-166.5236 95.5505,-161.2453 110,-156.5 117.2667,-154.1136 124.848,-151.6249 132.4175,-149.1407"/>
 <polygon fill="#191970" stroke="#191970" points="133.5644,-152.448 141.9747,-146.0046 131.3819,-145.797 133.5644,-152.448"/>
 </g>
-<!-- Node14 -->
+<!-- Node18 -->
 <g id="node11" class="node">
-<title>Node14</title>
+<title>Node18</title>
 <g id="a_node11"><a xlink:href="namespacesll__m__spline__fem__utilities__3d.html#a6057d494b129b97fd792aafe62fb6932" target="_top" xlink:title="Set up 3d mass matrix for specific spline degrees and profile function. ">
 <polygon fill="#ffffff" stroke="#000000" points="122.5,-269.5 122.5,-299.5 286.5,-299.5 286.5,-269.5 122.5,-269.5"/>
 <text text-anchor="start" x="130.5" y="-287.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_spline_fem_utilities</text>
@@ -136,45 +136,45 @@ var sectionId = 'dynsection-0';
 </a>
 </g>
 </g>
-<!-- Node4&#45;&gt;Node14 -->
+<!-- Node8&#45;&gt;Node18 -->
 <g id="edge11" class="edge">
-<title>Node4&#45;&gt;Node14</title>
+<title>Node8&#45;&gt;Node18</title>
 <path fill="none" stroke="#191970" d="M52.4578,-190.0977C79.4105,-206.8325 135.5616,-241.6965 171.5663,-264.0516"/>
 <polygon fill="#191970" stroke="#191970" points="169.9141,-267.1455 180.2559,-269.447 173.6065,-261.1986 169.9141,-267.1455"/>
 </g>
-<!-- Node22 -->
+<!-- Node26 -->
 <g id="node19" class="node">
-<title>Node22</title>
+<title>Node26</title>
 <g id="a_node19"><a xlink:href="sll__m__maxwell__1d__trafo_8_f90.html#a9c311415a09c7e5c6d5c7dc66b773bc9" target="_top" xlink:title="profile_m0">
 <polygon fill="#ffffff" stroke="#000000" points="170.5,-67 170.5,-86 238.5,-86 238.5,-67 170.5,-67"/>
 <text text-anchor="middle" x="204.5" y="-74" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">profile_m0</text>
 </a>
 </g>
 </g>
-<!-- Node4&#45;&gt;Node22 -->
+<!-- Node8&#45;&gt;Node26 -->
 <g id="edge20" class="edge">
-<title>Node4&#45;&gt;Node22</title>
+<title>Node8&#45;&gt;Node26</title>
 <path fill="none" stroke="#191970" d="M42.3635,-170.7577C52.8235,-152.7498 77.7721,-114.3746 110,-95.5 125.0676,-86.6755 143.5518,-81.8881 160.1642,-79.3129"/>
 <polygon fill="#191970" stroke="#191970" points="160.7658,-82.7638 170.2186,-77.979 159.8451,-75.8246 160.7658,-82.7638"/>
 </g>
-<!-- Node23 -->
+<!-- Node27 -->
 <g id="node20" class="node">
-<title>Node23</title>
+<title>Node27</title>
 <g id="a_node20"><a xlink:href="sll__m__maxwell__1d__trafo_8_f90.html#a84da6f16f6cb045957fef43d185b23db" target="_top" xlink:title="profile_0">
 <polygon fill="#ffffff" stroke="#000000" points="175,-29 175,-48 234,-48 234,-29 175,-29"/>
 <text text-anchor="middle" x="204.5" y="-36" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">profile_0</text>
 </a>
 </g>
 </g>
-<!-- Node4&#45;&gt;Node23 -->
+<!-- Node8&#45;&gt;Node27 -->
 <g id="edge21" class="edge">
-<title>Node4&#45;&gt;Node23</title>
+<title>Node8&#45;&gt;Node27</title>
 <path fill="none" stroke="#191970" d="M39.6974,-170.9637C46.8569,-147.5098 68.6772,-86.8011 110,-57.5 125.8213,-46.2814 146.6861,-41.3265 164.785,-39.2631"/>
 <polygon fill="#191970" stroke="#191970" points="165.1323,-42.7462 174.7833,-38.3748 164.5127,-35.7736 165.1323,-42.7462"/>
 </g>
-<!-- Node6 -->
+<!-- Node10 -->
 <g id="node3" class="node">
-<title>Node6</title>
+<title>Node10</title>
 <g id="a_node3"><a xlink:href="namespacesll__m__gauss__legendre__integration.html#a0df63a9e8ee884c2d4a0d1f53602a949" target="_top" xlink:title="Returns a 2d array of size (2,npoints) containing gauss&#45;legendre points and weights in the interval [...">
 <polygon fill="#ffffff" stroke="#000000" points="339.5,-379 339.5,-420 506.5,-420 506.5,-379 339.5,-379"/>
 <text text-anchor="start" x="347.5" y="-408" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_gauss_legendre</text>
@@ -183,21 +183,21 @@ var sectionId = 'dynsection-0';
 </a>
 </g>
 </g>
-<!-- Node5&#45;&gt;Node6 -->
+<!-- Node9&#45;&gt;Node10 -->
 <g id="edge2" class="edge">
-<title>Node5&#45;&gt;Node6</title>
+<title>Node9&#45;&gt;Node10</title>
 <path fill="none" stroke="#191970" d="M283.6924,-396.3122C298.3787,-396.6483 313.8507,-397.0023 328.9293,-397.3474"/>
 <polygon fill="#191970" stroke="#191970" points="329.2135,-400.8547 339.291,-397.5845 329.3737,-393.8565 329.2135,-400.8547"/>
 </g>
-<!-- Node7&#45;&gt;Node6 -->
+<!-- Node11&#45;&gt;Node10 -->
 <g id="edge4" class="edge">
-<title>Node7&#45;&gt;Node6</title>
+<title>Node11&#45;&gt;Node10</title>
 <path fill="none" stroke="#191970" d="M261.0533,-356.5119C283.8256,-362.5567 310.6146,-369.6677 335.7771,-376.347"/>
 <polygon fill="#191970" stroke="#191970" points="335.1352,-379.7978 345.6984,-378.9806 336.9311,-373.0321 335.1352,-379.7978"/>
 </g>
-<!-- Node9 -->
+<!-- Node13 -->
 <g id="node6" class="node">
-<title>Node9</title>
+<title>Node13</title>
 <g id="a_node6"><a xlink:href="namespacesll__m__spline__fem__utilities__sparse.html#a10fb9b7a4dea5775b5aa44f03be76f0e" target="_top" xlink:title="Helper function to create sparsity pattern of the mass matrix. ">
 <polygon fill="#ffffff" stroke="#000000" points="351,-160 351,-201 495,-201 495,-160 351,-160"/>
 <text text-anchor="start" x="359" y="-189" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_spline_fem_utilities</text>
@@ -206,15 +206,15 @@ var sectionId = 'dynsection-0';
 </a>
 </g>
 </g>
-<!-- Node8&#45;&gt;Node9 -->
+<!-- Node12&#45;&gt;Node13 -->
 <g id="edge6" class="edge">
-<title>Node8&#45;&gt;Node9</title>
+<title>Node12&#45;&gt;Node13</title>
 <path fill="none" stroke="#191970" d="M297.1637,-180.5C311.5774,-180.5 326.3854,-180.5 340.5526,-180.5"/>
 <polygon fill="#191970" stroke="#191970" points="340.7405,-184.0001 350.7404,-180.5 340.7404,-177.0001 340.7405,-184.0001"/>
 </g>
-<!-- Node10 -->
+<!-- Node14 -->
 <g id="node7" class="node">
-<title>Node10</title>
+<title>Node14</title>
 <g id="a_node7"><a xlink:href="namespacesll__m__spline__fem__utilities__sparse.html#af733f1fdecc6e55f524603a72888ed31" target="_top" xlink:title="Assemble sparse matrix for mass matrix. ">
 <polygon fill="#ffffff" stroke="#000000" points="351,-110.5 351,-140.5 495,-140.5 495,-110.5 351,-110.5"/>
 <text text-anchor="start" x="359" y="-128.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_spline_fem_utilities</text>
@@ -222,15 +222,15 @@ var sectionId = 'dynsection-0';
 </a>
 </g>
 </g>
-<!-- Node8&#45;&gt;Node10 -->
+<!-- Node12&#45;&gt;Node14 -->
 <g id="edge7" class="edge">
-<title>Node8&#45;&gt;Node10</title>
+<title>Node12&#45;&gt;Node14</title>
 <path fill="none" stroke="#191970" d="M264.2061,-165.471C291.7851,-158.5289 324.7081,-150.2417 353.4069,-143.0177"/>
 <polygon fill="#191970" stroke="#191970" points="354.523,-146.346 363.3661,-140.5108 352.8142,-139.5578 354.523,-146.346"/>
 </g>
-<!-- Node12 -->
+<!-- Node16 -->
 <g id="node9" class="node">
-<title>Node12</title>
+<title>Node16</title>
 <g id="a_node9"><a xlink:href="namespacesll__m__spline__fem__utilities__sparse.html#ac6a7e77bc6c96ef0043d1391b6789d57" target="_top" xlink:title="Helper function to create sparsity pattern of the mass matrix with mixed degree deg1 and deg2...">
 <polygon fill="#ffffff" stroke="#000000" points="341,-50 341,-91 505,-91 505,-50 341,-50"/>
 <text text-anchor="start" x="349" y="-79" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_spline_fem_utilities</text>
@@ -239,15 +239,15 @@ var sectionId = 'dynsection-0';
 </a>
 </g>
 </g>
-<!-- Node11&#45;&gt;Node12 -->
+<!-- Node15&#45;&gt;Node16 -->
 <g id="edge9" class="edge">
-<title>Node11&#45;&gt;Node12</title>
+<title>Node15&#45;&gt;Node16</title>
 <path fill="none" stroke="#191970" d="M276.6506,-107.3385C294.2471,-102.9092 313.3006,-98.1131 331.6604,-93.4917"/>
 <polygon fill="#191970" stroke="#191970" points="332.6366,-96.8552 341.4797,-91.02 330.9278,-90.067 332.6366,-96.8552"/>
 </g>
-<!-- Node13 -->
+<!-- Node17 -->
 <g id="node10" class="node">
-<title>Node13</title>
+<title>Node17</title>
 <g id="a_node10"><a xlink:href="namespacesll__m__spline__fem__utilities__sparse.html#a547d8c6bef87406ed54468ccacf4c462" target="_top" xlink:title="Assemble the mixed mass matrix. ">
 <polygon fill="#ffffff" stroke="#000000" points="338,-.5 338,-30.5 508,-30.5 508,-.5 338,-.5"/>
 <text text-anchor="start" x="346" y="-18.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_spline_fem_utilities</text>
@@ -255,21 +255,21 @@ var sectionId = 'dynsection-0';
 </a>
 </g>
 </g>
-<!-- Node11&#45;&gt;Node13 -->
+<!-- Node15&#45;&gt;Node17 -->
 <g id="edge10" class="edge">
-<title>Node11&#45;&gt;Node13</title>
+<title>Node15&#45;&gt;Node17</title>
 <path fill="none" stroke="#191970" d="M276.7618,-108.3796C284.6736,-104.8464 292.282,-100.5998 299,-95.5 322.2699,-77.8353 311.4626,-57.8067 335,-40.5 337.5411,-38.6315 340.2176,-36.9025 342.9931,-35.3026"/>
 <polygon fill="#191970" stroke="#191970" points="344.8404,-38.289 352.1497,-30.6192 341.6528,-32.0569 344.8404,-38.289"/>
 </g>
-<!-- Node14&#45;&gt;Node6 -->
+<!-- Node18&#45;&gt;Node10 -->
 <g id="edge15" class="edge">
-<title>Node14&#45;&gt;Node6</title>
+<title>Node18&#45;&gt;Node10</title>
 <path fill="none" stroke="#191970" d="M265.8439,-299.5851C277.5414,-304.1609 289.1823,-310.0271 299,-317.5 321.3669,-334.5249 312.5702,-352.5581 335,-369.5 337.0286,-371.0322 339.1407,-372.4895 341.3183,-373.8752"/>
 <polygon fill="#191970" stroke="#191970" points="339.5911,-376.9194 350.0044,-378.8725 343.0819,-370.8519 339.5911,-376.9194"/>
 </g>
-<!-- Node15 -->
+<!-- Node19 -->
 <g id="node12" class="node">
-<title>Node15</title>
+<title>Node19</title>
 <g id="a_node12"><a xlink:href="namespacesll__m__spline__fem__utilities__3d__helper.html#ab61e8df08e3414cd54d1b85c91ddb4ad" target="_top" xlink:title="Helper function to create sparsity pattern of the 3d mass matrix. ">
 <polygon fill="#ffffff" stroke="#000000" points="351,-319 351,-360 495,-360 495,-319 351,-319"/>
 <text text-anchor="start" x="359" y="-348" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_spline_fem_utilities</text>
@@ -278,15 +278,15 @@ var sectionId = 'dynsection-0';
 </a>
 </g>
 </g>
-<!-- Node14&#45;&gt;Node15 -->
+<!-- Node18&#45;&gt;Node19 -->
 <g id="edge12" class="edge">
-<title>Node14&#45;&gt;Node15</title>
+<title>Node18&#45;&gt;Node19</title>
 <path fill="none" stroke="#191970" d="M264.2061,-299.529C287.8542,-305.4816 315.4316,-312.4233 340.9058,-318.8356"/>
 <polygon fill="#191970" stroke="#191970" points="340.3732,-322.3106 350.9251,-321.3576 342.082,-315.5224 340.3732,-322.3106"/>
 </g>
-<!-- Node18 -->
+<!-- Node22 -->
 <g id="node15" class="node">
-<title>Node18</title>
+<title>Node22</title>
 <g id="a_node15"><a xlink:href="namespacesll__m__spline__fem__utilities__3d.html#adb777f54b3a7be04fd78f00b22f072f9" target="_top" xlink:title="Computes the mass line for a mass matrix with degree splines. ">
 <polygon fill="#ffffff" stroke="#000000" points="335,-269.5 335,-299.5 511,-299.5 511,-269.5 335,-269.5"/>
 <text text-anchor="start" x="343" y="-287.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_spline_fem_utilities</text>
@@ -294,15 +294,15 @@ var sectionId = 'dynsection-0';
 </a>
 </g>
 </g>
-<!-- Node14&#45;&gt;Node18 -->
+<!-- Node18&#45;&gt;Node22 -->
 <g id="edge16" class="edge">
-<title>Node14&#45;&gt;Node18</title>
+<title>Node18&#45;&gt;Node22</title>
 <path fill="none" stroke="#191970" d="M286.7941,-284.5C299.2033,-284.5 312.1074,-284.5 324.81,-284.5"/>
 <polygon fill="#191970" stroke="#191970" points="324.9407,-288.0001 334.9407,-284.5 324.9406,-281.0001 324.9407,-288.0001"/>
 </g>
-<!-- Node19 -->
+<!-- Node23 -->
 <g id="node16" class="node">
-<title>Node19</title>
+<title>Node23</title>
 <g id="a_node16"><a xlink:href="namespacesll__m__spline__fem__utilities__3d__helper.html#a4d70bfcfbf78b2dbfed72ee7c3e2d91e" target="_top" xlink:title="Assemble the given row of the 3d mass matrix. ">
 <polygon fill="#ffffff" stroke="#000000" points="339.5,-220.5 339.5,-250.5 506.5,-250.5 506.5,-220.5 339.5,-220.5"/>
 <text text-anchor="start" x="347.5" y="-238.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_spline_fem_utilities</text>
@@ -310,15 +310,15 @@ var sectionId = 'dynsection-0';
 </a>
 </g>
 </g>
-<!-- Node14&#45;&gt;Node19 -->
+<!-- Node18&#45;&gt;Node23 -->
 <g id="edge17" class="edge">
-<title>Node14&#45;&gt;Node19</title>
+<title>Node18&#45;&gt;Node23</title>
 <path fill="none" stroke="#191970" d="M271.5421,-269.4654C295.137,-264.1741 321.8357,-258.1867 346.1737,-252.7288"/>
 <polygon fill="#191970" stroke="#191970" points="347.0929,-256.1097 356.0847,-250.5062 345.5611,-249.2793 347.0929,-256.1097"/>
 </g>
-<!-- Node16 -->
+<!-- Node20 -->
 <g id="node13" class="node">
-<title>Node16</title>
+<title>Node20</title>
 <g id="a_node13"><a xlink:href="namespacesll__m__spline__fem__utilities__3d__helper.html#a0ecb5b69702c19db85ec6fcf8f5cf530" target="_top" xlink:title="sll_m_spline_fem_utilities\l_3d_helper::loop2">
 <polygon fill="#ffffff" stroke="#000000" points="547,-324.5 547,-354.5 691,-354.5 691,-324.5 547,-324.5"/>
 <text text-anchor="start" x="555" y="-342.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_spline_fem_utilities</text>
@@ -326,15 +326,15 @@ var sectionId = 'dynsection-0';
 </a>
 </g>
 </g>
-<!-- Node15&#45;&gt;Node16 -->
+<!-- Node19&#45;&gt;Node20 -->
 <g id="edge13" class="edge">
-<title>Node15&#45;&gt;Node16</title>
+<title>Node19&#45;&gt;Node20</title>
 <path fill="none" stroke="#191970" d="M495.1482,-339.5C508.5432,-339.5 522.6322,-339.5 536.313,-339.5"/>
 <polygon fill="#191970" stroke="#191970" points="536.677,-343.0001 546.6769,-339.5 536.6769,-336.0001 536.677,-343.0001"/>
 </g>
-<!-- Node17 -->
+<!-- Node21 -->
 <g id="node14" class="node">
-<title>Node17</title>
+<title>Node21</title>
 <g id="a_node14"><a xlink:href="namespacesll__m__spline__fem__utilities__3d__helper.html#a44ec465b69568824a811ff2ba3831a7a" target="_top" xlink:title="sll_m_spline_fem_utilities\l_3d_helper::loop1">
 <polygon fill="#ffffff" stroke="#000000" points="727,-324.5 727,-354.5 871,-354.5 871,-324.5 727,-324.5"/>
 <text text-anchor="start" x="735" y="-342.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_spline_fem_utilities</text>
@@ -342,15 +342,15 @@ var sectionId = 'dynsection-0';
 </a>
 </g>
 </g>
-<!-- Node16&#45;&gt;Node17 -->
+<!-- Node20&#45;&gt;Node21 -->
 <g id="edge14" class="edge">
-<title>Node16&#45;&gt;Node17</title>
+<title>Node20&#45;&gt;Node21</title>
 <path fill="none" stroke="#191970" d="M691.1757,-339.5C699.5199,-339.5 708.0771,-339.5 716.5445,-339.5"/>
 <polygon fill="#191970" stroke="#191970" points="716.8081,-343.0001 726.8081,-339.5 716.808,-336.0001 716.8081,-343.0001"/>
 </g>
-<!-- Node20 -->
+<!-- Node24 -->
 <g id="node17" class="node">
-<title>Node20</title>
+<title>Node24</title>
 <g id="a_node17"><a xlink:href="namespacesll__m__spline__fem__utilities__3d__helper.html#af847495fdf13923f87f64ce3ab2359f8" target="_top" xlink:title="sll_m_spline_fem_utilities\l_3d_helper::assemble2">
 <polygon fill="#ffffff" stroke="#000000" points="547,-220.5 547,-250.5 691,-250.5 691,-220.5 547,-220.5"/>
 <text text-anchor="start" x="555" y="-238.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_spline_fem_utilities</text>
@@ -358,15 +358,15 @@ var sectionId = 'dynsection-0';
 </a>
 </g>
 </g>
-<!-- Node19&#45;&gt;Node20 -->
+<!-- Node23&#45;&gt;Node24 -->
 <g id="edge18" class="edge">
-<title>Node19&#45;&gt;Node20</title>
+<title>Node23&#45;&gt;Node24</title>
 <path fill="none" stroke="#191970" d="M506.6902,-235.5C516.5747,-235.5 526.6576,-235.5 536.5252,-235.5"/>
 <polygon fill="#191970" stroke="#191970" points="536.7128,-239.0001 546.7128,-235.5 536.7128,-232.0001 536.7128,-239.0001"/>
 </g>
-<!-- Node21 -->
+<!-- Node25 -->
 <g id="node18" class="node">
-<title>Node21</title>
+<title>Node25</title>
 <g id="a_node18"><a xlink:href="namespacesll__m__spline__fem__utilities__3d__helper.html#ab84b0dd7f4944ab6de020098b07c7e60" target="_top" xlink:title="sll_m_spline_fem_utilities\l_3d_helper::assemble1">
 <polygon fill="#ffffff" stroke="#000000" points="727,-220.5 727,-250.5 871,-250.5 871,-220.5 727,-220.5"/>
 <text text-anchor="start" x="735" y="-238.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_spline_fem_utilities</text>
@@ -374,9 +374,9 @@ var sectionId = 'dynsection-0';
 </a>
 </g>
 </g>
-<!-- Node20&#45;&gt;Node21 -->
+<!-- Node24&#45;&gt;Node25 -->
 <g id="edge19" class="edge">
-<title>Node20&#45;&gt;Node21</title>
+<title>Node24&#45;&gt;Node25</title>
 <path fill="none" stroke="#191970" d="M691.1757,-235.5C699.5199,-235.5 708.0771,-235.5 716.5445,-235.5"/>
 <polygon fill="#191970" stroke="#191970" points="716.8081,-239.0001 726.8081,-235.5 716.808,-232.0001 716.8081,-239.0001"/>
 </g>

@@ -73,9 +73,8 @@ var sectionId = 'dynsection-0';
 <title>Node2&#45;&gt;Node1</title>
 <path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M95.7208,-1036.3742C112.9841,-1045.5297 136.7009,-1056.7973 159,-1063 233.9476,-1083.8475 255.207,-1082 333,-1082 333,-1082 333,-1082 842,-1082 962.2672,-1082 994.4868,-1021.1287 1058,-919 1101.4941,-849.0619 1129.6392,-583.4003 1136.0844,-517.0744"/>
 <polygon fill="#9a32cd" stroke="#9a32cd" points="97.3017,-1033.2499 86.844,-1031.5506 93.9595,-1039.4005 97.3017,-1033.2499"/>
-<text text-anchor="middle" x="575" y="-1118" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> jmean</text>
-<text text-anchor="middle" x="575" y="-1107" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">boundary</text>
-<text text-anchor="middle" x="575" y="-1096" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">lindf</text>
+<text text-anchor="middle" x="575" y="-1107" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000"> jmean</text>
+<text text-anchor="middle" x="575" y="-1096" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">boundary</text>
 <text text-anchor="middle" x="575" y="-1085" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">adiabatic_electrons</text>
 </g>
 <!-- Node4 -->

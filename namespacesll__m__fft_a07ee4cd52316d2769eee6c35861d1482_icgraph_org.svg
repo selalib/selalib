@@ -9,15 +9,15 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 972.5)">
 <title>sll_s_fft_exec_r2c_1d</title>
 <polygon fill="#ffffff" stroke="transparent" points="-4,4 -4,-972.5 878,-972.5 878,4 -4,4"/>
-<!-- Node134 -->
+<!-- Node137 -->
 <g id="node1" class="node">
-<title>Node134</title>
+<title>Node137</title>
 <polygon fill="#bfbfbf" stroke="#000000" points="0,-344 0,-363 120,-363 120,-344 0,-344"/>
 <text text-anchor="middle" x="60" y="-351" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_fft_exec_r2c_1d</text>
 </g>
-<!-- Node135 -->
+<!-- Node138 -->
 <g id="node2" class="node">
-<title>Node135</title>
+<title>Node138</title>
 <g id="a_node2"><a xlink:href="namespacesll__m__poisson__1d__hmf.html#a2b4b53444694dd14c7284f4cc0fa0bfd" target="_top" xlink:title="Solve the 1d equation for the Vlasov&#45;HMF model. ">
 <polygon fill="#ffffff" stroke="#000000" points="173.5,-505 173.5,-546 301.5,-546 301.5,-505 173.5,-505"/>
 <text text-anchor="start" x="181.5" y="-534" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_poisson_1d_hmf</text>
@@ -26,30 +26,30 @@
 </a>
 </g>
 </g>
-<!-- Node134&#45;&gt;Node135 -->
+<!-- Node137&#45;&gt;Node138 -->
 <g id="edge1" class="edge">
-<title>Node134&#45;&gt;Node135</title>
+<title>Node137&#45;&gt;Node138</title>
 <path fill="none" stroke="#191970" d="M77.5368,-370.4934C110.3511,-402.2909 180.9063,-470.6599 216.3165,-504.9729"/>
 <polygon fill="#191970" stroke="#191970" points="79.6689,-367.6857 70.0517,-363.2403 74.7976,-372.7128 79.6689,-367.6857"/>
 </g>
-<!-- Node137 -->
+<!-- Node140 -->
 <g id="node4" class="node">
-<title>Node137</title>
+<title>Node140</title>
 <g id="a_node4"><a xlink:href="namespacesll__m__fft.html#ac3f0bdd60b0eb75e936d13bf15f06ea2" target="_top" xlink:title="Compute fast Fourier transform in real to real mode. ">
 <polygon fill="#ffffff" stroke="#000000" points="178,-366 178,-385 297,-385 297,-366 178,-366"/>
 <text text-anchor="middle" x="237.5" y="-373" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_fft_exec_r2r_1d</text>
 </a>
 </g>
 </g>
-<!-- Node134&#45;&gt;Node137 -->
+<!-- Node137&#45;&gt;Node140 -->
 <g id="edge3" class="edge">
-<title>Node134&#45;&gt;Node137</title>
+<title>Node137&#45;&gt;Node140</title>
 <path fill="none" stroke="#191970" d="M130.2837,-362.2112C146.0012,-364.1593 162.5273,-366.2076 177.77,-368.0968"/>
 <polygon fill="#191970" stroke="#191970" points="130.448,-358.7049 120.0934,-360.9482 129.5869,-365.6517 130.448,-358.7049"/>
 </g>
-<!-- Node169 -->
+<!-- Node172 -->
 <g id="node36" class="node">
-<title>Node169</title>
+<title>Node172</title>
 <g id="a_node36"><a xlink:href="namespacesll__m__advection__1d__ampere.html#adf823e7b66c7a72a566f83a2a1d4264b" target="_top" xlink:title="sll_m_advection_1d\l_ampere::advect_1d_constant">
 <polygon fill="#ffffff" stroke="#000000" points="156,-316.5 156,-346.5 319,-346.5 319,-316.5 156,-316.5"/>
 <text text-anchor="start" x="164" y="-334.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_advection_1d</text>
@@ -57,15 +57,15 @@
 </a>
 </g>
 </g>
-<!-- Node134&#45;&gt;Node169 -->
+<!-- Node137&#45;&gt;Node172 -->
 <g id="edge36" class="edge">
-<title>Node134&#45;&gt;Node169</title>
+<title>Node137&#45;&gt;Node172</title>
 <path fill="none" stroke="#191970" d="M130.1939,-344.7999C138.5863,-343.7597 147.2103,-342.6908 155.7476,-341.6327"/>
 <polygon fill="#191970" stroke="#191970" points="129.5869,-341.3483 120.0934,-346.0518 130.448,-348.2951 129.5869,-341.3483"/>
 </g>
-<!-- Node170 -->
+<!-- Node173 -->
 <g id="node37" class="node">
-<title>Node170</title>
+<title>Node173</title>
 <g id="a_node37"><a xlink:href="namespacesll__m__advection__1d__spectral.html#af930378a409712cb569be92a5f3749c6" target="_top" xlink:title="sll_m_advection_1d\l_spectral::advect_1d\l_constant">
 <polygon fill="#ffffff" stroke="#000000" points="179,-256 179,-297 296,-297 296,-256 179,-256"/>
 <text text-anchor="start" x="187" y="-285" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_advection_1d</text>
@@ -74,15 +74,15 @@
 </a>
 </g>
 </g>
-<!-- Node134&#45;&gt;Node170 -->
+<!-- Node137&#45;&gt;Node173 -->
 <g id="edge37" class="edge">
-<title>Node134&#45;&gt;Node170</title>
+<title>Node137&#45;&gt;Node173</title>
 <path fill="none" stroke="#191970" d="M87.9137,-339.3653C106.9202,-329.9295 132.7518,-317.4708 156,-307.5 164.2085,-303.9795 172.9623,-300.4351 181.5742,-297.0649"/>
 <polygon fill="#191970" stroke="#191970" points="86.2923,-336.2628 78.9101,-343.8624 89.4202,-342.5251 86.2923,-336.2628"/>
 </g>
-<!-- Node136 -->
+<!-- Node139 -->
 <g id="node3" class="node">
-<title>Node136</title>
+<title>Node139</title>
 <g id="a_node3"><a xlink:href="namespacesll__m__poisson__1d__hmf.html#aca5cc2791e1093ebe7bb28c8850f9af9" target="_top" xlink:title="solves &#160;with &#160;in 2d ">
 <polygon fill="#ffffff" stroke="#000000" points="371,-606 371,-647 499,-647 499,-606 371,-606"/>
 <text text-anchor="start" x="379" y="-635" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_poisson_1d_hmf</text>
@@ -91,15 +91,15 @@
 </a>
 </g>
 </g>
-<!-- Node135&#45;&gt;Node136 -->
+<!-- Node138&#45;&gt;Node139 -->
 <g id="edge2" class="edge">
-<title>Node135&#45;&gt;Node136</title>
+<title>Node138&#45;&gt;Node139</title>
 <path fill="none" stroke="#191970" d="M276.5898,-551.6199C298.9761,-565.9351 327.9217,-583.381 355,-596.5 361.8081,-599.7984 369.0786,-602.9732 376.3571,-605.9428"/>
 <polygon fill="#191970" stroke="#191970" points="278.3412,-548.5847 268.0413,-546.1021 274.545,-554.4659 278.3412,-548.5847"/>
 </g>
-<!-- Node138 -->
+<!-- Node141 -->
 <g id="node5" class="node">
-<title>Node138</title>
+<title>Node141</title>
 <g id="a_node5"><a xlink:href="namespacesll__m__maxwell__1d__fem.html#a0292d383eb02a02563a4a11367866848" target="_top" xlink:title="sll_m_maxwell_1d_fem\l::solve_circulant">
 <polygon fill="#ffffff" stroke="#000000" points="369,-556.5 369,-586.5 501,-586.5 501,-556.5 369,-556.5"/>
 <text text-anchor="start" x="377" y="-574.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_1d_fem</text>
@@ -107,15 +107,15 @@
 </a>
 </g>
 </g>
-<!-- Node137&#45;&gt;Node138 -->
+<!-- Node140&#45;&gt;Node141 -->
 <g id="edge4" class="edge">
-<title>Node137&#45;&gt;Node138</title>
+<title>Node140&#45;&gt;Node141</title>
 <path fill="none" stroke="#191970" d="M249.7581,-393.5268C279.6762,-437.5138 354.0675,-546.818 355,-547.5 359.6817,-550.924 364.8535,-553.864 370.2479,-556.3875"/>
 <polygon fill="#191970" stroke="#191970" points="252.6091,-391.4952 244.0914,-385.1945 246.8209,-395.4317 252.6091,-391.4952"/>
 </g>
-<!-- Node155 -->
+<!-- Node158 -->
 <g id="node22" class="node">
-<title>Node155</title>
+<title>Node158</title>
 <g id="a_node22"><a xlink:href="namespacesll__m__maxwell__1d__ps.html#a5c9b2f85c669dd1b29e92187d52ff1eb" target="_top" xlink:title="sll_m_maxwell_1d_ps\l::grad_proj0">
 <polygon fill="#ffffff" stroke="#000000" points="373,-507.5 373,-537.5 497,-537.5 497,-507.5 373,-507.5"/>
 <text text-anchor="start" x="381" y="-525.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_1d_ps</text>
@@ -123,15 +123,15 @@
 </a>
 </g>
 </g>
-<!-- Node137&#45;&gt;Node155 -->
+<!-- Node140&#45;&gt;Node158 -->
 <g id="edge22" class="edge">
-<title>Node137&#45;&gt;Node155</title>
+<title>Node140&#45;&gt;Node158</title>
 <path fill="none" stroke="#191970" d="M249.9217,-393.5314C269.2995,-420.3207 309.2778,-470.4763 355,-498.5 360.5634,-501.9099 366.6428,-504.8625 372.8849,-507.4133"/>
 <polygon fill="#191970" stroke="#191970" points="252.5883,-391.2408 243.9511,-385.1048 246.8766,-395.2877 252.5883,-391.2408"/>
 </g>
-<!-- Node156 -->
+<!-- Node159 -->
 <g id="node23" class="node">
-<title>Node156</title>
+<title>Node159</title>
 <g id="a_node23"><a xlink:href="namespacesll__m__maxwell__1d__ps.html#a46e3fb15ca597b392b2a0e6614bd19a3" target="_top" xlink:title="sll_m_maxwell_1d_ps\l::proj1_grad">
 <polygon fill="#ffffff" stroke="#000000" points="373,-458.5 373,-488.5 497,-488.5 497,-458.5 373,-458.5"/>
 <text text-anchor="start" x="381" y="-476.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_1d_ps</text>
@@ -139,15 +139,15 @@
 </a>
 </g>
 </g>
-<!-- Node137&#45;&gt;Node156 -->
+<!-- Node140&#45;&gt;Node159 -->
 <g id="edge23" class="edge">
-<title>Node137&#45;&gt;Node156</title>
+<title>Node140&#45;&gt;Node159</title>
 <path fill="none" stroke="#191970" d="M258.4571,-391.1662C281.2252,-407.5817 319.1582,-433.2032 355,-449.5 362.26,-452.801 370.0931,-455.7914 377.9179,-458.4523"/>
 <polygon fill="#191970" stroke="#191970" points="260.372,-388.2306 250.2322,-385.159 256.2433,-393.8835 260.372,-388.2306"/>
 </g>
-<!-- Node157 -->
+<!-- Node160 -->
 <g id="node24" class="node">
-<title>Node157</title>
+<title>Node160</title>
 <g id="a_node24"><a xlink:href="namespacesll__m__maxwell__1d__ps.html#addd00456d6978f3e54ed7c92ef1fed51" target="_top" xlink:title="Compute E_i from j_i integrated over the time interval using weak Ampere formulation. ">
 <polygon fill="#ffffff" stroke="#000000" points="361.5,-409.5 361.5,-439.5 508.5,-439.5 508.5,-409.5 361.5,-409.5"/>
 <text text-anchor="start" x="369.5" y="-427.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_1d_ps</text>
@@ -155,15 +155,15 @@
 </a>
 </g>
 </g>
-<!-- Node137&#45;&gt;Node157 -->
+<!-- Node140&#45;&gt;Node160 -->
 <g id="edge24" class="edge">
-<title>Node137&#45;&gt;Node157</title>
+<title>Node140&#45;&gt;Node160</title>
 <path fill="none" stroke="#191970" d="M285.9245,-387.5142C312.6105,-394.135 345.9884,-402.4161 374.3918,-409.463"/>
 <polygon fill="#191970" stroke="#191970" points="286.5974,-384.0751 276.0488,-385.064 284.9118,-390.8691 286.5974,-384.0751"/>
 </g>
-<!-- Node158 -->
+<!-- Node161 -->
 <g id="node25" class="node">
-<title>Node158</title>
+<title>Node161</title>
 <g id="a_node25"><a xlink:href="namespacesll__m__maxwell__1d__ps.html#ae284c34a8333b70f2809cbeefc25b95d" target="_top" xlink:title="sll_m_maxwell_1d_ps\l::transform_dofs_1d_ps">
 <polygon fill="#ffffff" stroke="#000000" points="369.5,-360.5 369.5,-390.5 500.5,-390.5 500.5,-360.5 369.5,-360.5"/>
 <text text-anchor="start" x="377.5" y="-378.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_1d_ps</text>
@@ -171,15 +171,15 @@
 </a>
 </g>
 </g>
-<!-- Node137&#45;&gt;Node158 -->
+<!-- Node140&#45;&gt;Node161 -->
 <g id="edge25" class="edge">
-<title>Node137&#45;&gt;Node158</title>
+<title>Node140&#45;&gt;Node161</title>
 <path fill="none" stroke="#191970" d="M307.1138,-375.5C327.3598,-375.5 349.4004,-375.5 369.3913,-375.5"/>
 <polygon fill="#191970" stroke="#191970" points="307.0244,-372.0001 297.0243,-375.5 307.0243,-379.0001 307.0244,-372.0001"/>
 </g>
-<!-- Node159 -->
+<!-- Node162 -->
 <g id="node26" class="node">
-<title>Node159</title>
+<title>Node162</title>
 <g id="a_node26"><a xlink:href="namespacesll__m__maxwell__1d__ps.html#af92d3c7405230ec0d3d67e6d6035ec11" target="_top" xlink:title="sll_m_maxwell_1d_ps\l::compute_e_from_rho_1d_ps">
 <polygon fill="#ffffff" stroke="#000000" points="355,-311.5 355,-341.5 515,-341.5 515,-311.5 355,-311.5"/>
 <text text-anchor="start" x="363" y="-329.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_1d_ps</text>
@@ -187,15 +187,15 @@
 </a>
 </g>
 </g>
-<!-- Node137&#45;&gt;Node159 -->
+<!-- Node140&#45;&gt;Node162 -->
 <g id="edge26" class="edge">
-<title>Node137&#45;&gt;Node159</title>
+<title>Node140&#45;&gt;Node162</title>
 <path fill="none" stroke="#191970" d="M289.1727,-363.6511C299.0833,-361.3227 309.3709,-358.8672 319,-356.5 338.19,-351.7824 359.1119,-346.4348 377.8376,-341.5745"/>
 <polygon fill="#191970" stroke="#191970" points="288.3672,-360.2449 279.4262,-365.9291 289.9604,-367.0612 288.3672,-360.2449"/>
 </g>
-<!-- Node160 -->
+<!-- Node163 -->
 <g id="node27" class="node">
-<title>Node160</title>
+<title>Node163</title>
 <g id="a_node27"><a xlink:href="namespacesll__m__maxwell__1d__ps.html#a969d68da25da33b0f5277a0787f4efd3" target="_top" xlink:title="sll_m_maxwell_1d_ps\l::compute_rho_from_e_1d_ps">
 <polygon fill="#ffffff" stroke="#000000" points="355,-262.5 355,-292.5 515,-292.5 515,-262.5 355,-262.5"/>
 <text text-anchor="start" x="363" y="-280.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_1d_ps</text>
@@ -203,15 +203,15 @@
 </a>
 </g>
 </g>
-<!-- Node137&#45;&gt;Node160 -->
+<!-- Node140&#45;&gt;Node163 -->
 <g id="edge27" class="edge">
-<title>Node137&#45;&gt;Node160</title>
+<title>Node140&#45;&gt;Node163</title>
 <path fill="none" stroke="#191970" d="M306.8026,-363.3605C311.0914,-361.4015 315.2027,-359.131 319,-356.5 342.7096,-340.0727 331.913,-319.7914 355,-302.5 360.1246,-298.6619 365.8509,-295.4046 371.8207,-292.6418"/>
 <polygon fill="#191970" stroke="#191970" points="305.1917,-360.234 297.1834,-367.1706 307.7696,-366.7421 305.1917,-360.234"/>
 </g>
-<!-- Node161 -->
+<!-- Node164 -->
 <g id="node28" class="node">
-<title>Node161</title>
+<title>Node164</title>
 <g id="a_node28"><a xlink:href="namespacesll__m__maxwell__1d__ps.html#a362d231e63166df52032a375a65d7553" target="_top" xlink:title="Compute the L2 projection of a given function f on periodic splines of given degree. ">
 <polygon fill="#ffffff" stroke="#000000" points="373,-213.5 373,-243.5 497,-243.5 497,-213.5 373,-213.5"/>
 <text text-anchor="start" x="381" y="-231.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_1d_ps</text>
@@ -219,15 +219,15 @@
 </a>
 </g>
 </g>
-<!-- Node137&#45;&gt;Node161 -->
+<!-- Node140&#45;&gt;Node164 -->
 <g id="edge28" class="edge">
-<title>Node137&#45;&gt;Node161</title>
+<title>Node140&#45;&gt;Node164</title>
 <path fill="none" stroke="#191970" d="M306.6076,-364.9518C311.0819,-362.6309 315.2776,-359.8433 319,-356.5 355.0779,-324.0964 320.1429,-287.2133 355,-253.5 360.1251,-248.543 366.2192,-244.5677 372.7236,-241.3799"/>
 <polygon fill="#191970" stroke="#191970" points="304.869,-361.8912 297.0944,-369.089 307.6606,-368.3105 304.869,-361.8912"/>
 </g>
-<!-- Node162 -->
+<!-- Node165 -->
 <g id="node29" class="node">
-<title>Node162</title>
+<title>Node165</title>
 <g id="a_node29"><a xlink:href="namespacesll__m__periodic__interp.html#af13c2d535538f2d6ca1e3e7b40b38139" target="_top" xlink:title="sll_m_periodic_interp\l::sll_s_periodic_interp">
 <polygon fill="#ffffff" stroke="#000000" points="374,-164.5 374,-194.5 496,-194.5 496,-164.5 374,-164.5"/>
 <text text-anchor="start" x="382" y="-182.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_periodic_interp</text>
@@ -235,15 +235,15 @@
 </a>
 </g>
 </g>
-<!-- Node137&#45;&gt;Node162 -->
+<!-- Node140&#45;&gt;Node165 -->
 <g id="edge29" class="edge">
-<title>Node137&#45;&gt;Node162</title>
+<title>Node140&#45;&gt;Node165</title>
 <path fill="none" stroke="#191970" d="M306.4277,-365.6915C311.0316,-363.2133 315.2999,-360.1871 319,-356.5 368.1768,-307.496 307.6657,-255.286 355,-204.5 360.2582,-198.8583 366.7682,-194.4811 373.7862,-191.0866"/>
 <polygon fill="#191970" stroke="#191970" points="304.9195,-362.5319 297.2215,-369.8115 307.7789,-368.9213 304.9195,-362.5319"/>
 </g>
-<!-- Node166 -->
+<!-- Node169 -->
 <g id="node33" class="node">
-<title>Node166</title>
+<title>Node169</title>
 <g id="a_node33"><a xlink:href="namespacesll__m__fft__filter__1d.html#a266fbb587e0a14b965c2406cbf9855de" target="_top" xlink:title="sll_m_fft_filter_1d\l::sll_s_fft_filter">
 <polygon fill="#ffffff" stroke="#000000" points="383,-49.5 383,-79.5 487,-79.5 487,-49.5 383,-49.5"/>
 <text text-anchor="start" x="391" y="-67.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_fft_filter_1d</text>
@@ -251,15 +251,15 @@
 </a>
 </g>
 </g>
-<!-- Node137&#45;&gt;Node166 -->
+<!-- Node140&#45;&gt;Node169 -->
 <g id="edge33" class="edge">
-<title>Node137&#45;&gt;Node166</title>
+<title>Node140&#45;&gt;Node169</title>
 <path fill="none" stroke="#191970" d="M306.4251,-366.0433C311.0671,-363.4917 315.3424,-360.3522 319,-356.5 381.4895,-290.6858 315.5908,-237.2518 355,-155.5 369.8892,-124.6134 398.2508,-96.1666 416.8923,-79.5744"/>
 <polygon fill="#191970" stroke="#191970" points="304.7793,-362.9464 297.1125,-370.2587 307.666,-369.3235 304.7793,-362.9464"/>
 </g>
-<!-- Node139 -->
+<!-- Node142 -->
 <g id="node6" class="node">
-<title>Node139</title>
+<title>Node142</title>
 <g id="a_node6"><a xlink:href="namespacesll__m__maxwell__1d__fem.html#a9529d7ddd5961fc724e0b452425e5e2f" target="_top" xlink:title="compute Ey from Bz using weak Ampere formulation ">
 <polygon fill="#ffffff" stroke="#000000" points="562.5,-902.5 562.5,-932.5 694.5,-932.5 694.5,-902.5 562.5,-902.5"/>
 <text text-anchor="start" x="570.5" y="-920.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_1d_fem</text>
@@ -267,15 +267,15 @@
 </a>
 </g>
 </g>
-<!-- Node138&#45;&gt;Node139 -->
+<!-- Node141&#45;&gt;Node142 -->
 <g id="edge5" class="edge">
-<title>Node138&#45;&gt;Node139</title>
+<title>Node141&#45;&gt;Node142</title>
 <path fill="none" stroke="#191970" d="M509.3997,-590.8216C511.4111,-592.5571 513.2888,-594.4455 515,-596.5 599.813,-698.3313 466.6541,-790.2814 551,-892.5 554.2392,-896.4256 558.1,-899.7416 562.3435,-902.5416"/>
 <polygon fill="#191970" stroke="#191970" points="511.2193,-587.8202 501.0472,-584.8574 507.1515,-593.517 511.2193,-587.8202"/>
 </g>
-<!-- Node142 -->
+<!-- Node145 -->
 <g id="node9" class="node">
-<title>Node142</title>
+<title>Node145</title>
 <g id="a_node9"><a xlink:href="namespacesll__m__maxwell__1d__fem.html#a2d1b34af6ce5bd3e84443d7ec7e2e1c7" target="_top" xlink:title="sll_m_maxwell_1d_fem\l::sll_s_compute_e_from\l_rho_1d_fem">
 <polygon fill="#ffffff" stroke="#000000" points="562.5,-842 562.5,-883 694.5,-883 694.5,-842 562.5,-842"/>
 <text text-anchor="start" x="570.5" y="-871" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_1d_fem</text>
@@ -284,15 +284,15 @@
 </a>
 </g>
 </g>
-<!-- Node138&#45;&gt;Node142 -->
+<!-- Node141&#45;&gt;Node145 -->
 <g id="edge8" class="edge">
-<title>Node138&#45;&gt;Node142</title>
+<title>Node141&#45;&gt;Node145</title>
 <path fill="none" stroke="#191970" d="M509.4647,-591.0121C511.4442,-592.6947 513.2993,-594.52 515,-596.5 584.1323,-676.9885 484.5795,-749.7594 551,-832.5 554.2515,-836.5504 558.121,-840.0548 562.3706,-843.0868"/>
 <polygon fill="#191970" stroke="#191970" points="511.4576,-588.1347 501.2758,-585.205 507.4083,-593.8447 511.4576,-588.1347"/>
 </g>
-<!-- Node143 -->
+<!-- Node146 -->
 <g id="node10" class="node">
-<title>Node143</title>
+<title>Node146</title>
 <g id="a_node10"><a xlink:href="namespacesll__m__maxwell__1d__fem.html#a93a33efea7cd5b3605cd58cea29c20dc" target="_top" xlink:title="Compute rho from Gauss law for given efield. ">
 <polygon fill="#ffffff" stroke="#000000" points="562.5,-782 562.5,-823 694.5,-823 694.5,-782 562.5,-782"/>
 <text text-anchor="start" x="570.5" y="-811" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_1d_fem</text>
@@ -301,15 +301,15 @@
 </a>
 </g>
 </g>
-<!-- Node138&#45;&gt;Node143 -->
+<!-- Node141&#45;&gt;Node146 -->
 <g id="edge9" class="edge">
-<title>Node138&#45;&gt;Node143</title>
+<title>Node141&#45;&gt;Node146</title>
 <path fill="none" stroke="#191970" d="M509.3367,-591.1249C511.3525,-592.7755 513.25,-594.5634 515,-596.5 568.5312,-655.7378 499.4661,-711.5166 551,-772.5 554.2593,-776.357 558.0761,-779.7201 562.2369,-782.6523"/>
 <polygon fill="#191970" stroke="#191970" points="511.2596,-588.1996 501.0372,-585.4153 507.2921,-593.9667 511.2596,-588.1996"/>
 </g>
-<!-- Node144 -->
+<!-- Node147 -->
 <g id="node11" class="node">
-<title>Node144</title>
+<title>Node147</title>
 <g id="a_node11"><a xlink:href="namespacesll__m__maxwell__1d__fem.html#a35f67335e750d8c00872ac2599d5bfbe" target="_top" xlink:title="Compute E_i from j_i integrated over the time interval using weak Ampere formulation. ">
 <polygon fill="#ffffff" stroke="#000000" points="551,-732.5 551,-762.5 706,-762.5 706,-732.5 551,-732.5"/>
 <text text-anchor="start" x="559" y="-750.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_1d_fem</text>
@@ -317,15 +317,15 @@
 </a>
 </g>
 </g>
-<!-- Node138&#45;&gt;Node144 -->
+<!-- Node141&#45;&gt;Node147 -->
 <g id="edge10" class="edge">
-<title>Node138&#45;&gt;Node144</title>
+<title>Node141&#45;&gt;Node147</title>
 <path fill="none" stroke="#191970" d="M509.7289,-591.7574C511.5846,-593.2293 513.3487,-594.8076 515,-596.5 555.6732,-638.1856 510.5181,-680.6286 551,-722.5 554.7341,-726.3623 559.0673,-729.6289 563.7394,-732.3914"/>
 <polygon fill="#191970" stroke="#191970" points="511.3268,-588.6154 501.0696,-585.9622 507.4335,-594.4328 511.3268,-588.6154"/>
 </g>
-<!-- Node146 -->
+<!-- Node149 -->
 <g id="node13" class="node">
-<title>Node146</title>
+<title>Node149</title>
 <g id="a_node13"><a xlink:href="namespacesll__m__maxwell__1d__fem.html#af1b844cf1315847ac495f1d957189479" target="_top" xlink:title="sll_m_maxwell_1d_fem\l::compute_e_from_j_1d\l_fem_shape">
 <polygon fill="#ffffff" stroke="#000000" points="562.5,-672 562.5,-713 694.5,-713 694.5,-672 562.5,-672"/>
 <text text-anchor="start" x="570.5" y="-701" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_1d_fem</text>
@@ -334,15 +334,15 @@
 </a>
 </g>
 </g>
-<!-- Node138&#45;&gt;Node146 -->
+<!-- Node141&#45;&gt;Node149 -->
 <g id="edge12" class="edge">
-<title>Node138&#45;&gt;Node146</title>
+<title>Node141&#45;&gt;Node149</title>
 <path fill="none" stroke="#191970" d="M508.48,-591.748C510.7506,-593.2224 512.933,-594.8039 515,-596.5 540.83,-617.6957 525.8884,-640.458 551,-662.5 555.012,-666.0215 559.4831,-669.1518 564.197,-671.9304"/>
 <polygon fill="#191970" stroke="#191970" points="509.7688,-588.4557 499.3423,-586.5747 506.3201,-594.5472 509.7688,-588.4557"/>
 </g>
-<!-- Node147 -->
+<!-- Node150 -->
 <g id="node14" class="node">
-<title>Node147</title>
+<title>Node150</title>
 <g id="a_node14"><a xlink:href="namespacesll__m__maxwell__1d__fem.html#ae42fa711464cf385b882b84fd8c63511" target="_top" xlink:title="sll_m_maxwell_1d_fem\l::multiply_interpolation\l_inverse_transpose">
 <polygon fill="#ffffff" stroke="#000000" points="562.5,-612 562.5,-653 694.5,-653 694.5,-612 562.5,-612"/>
 <text text-anchor="start" x="570.5" y="-641" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_1d_fem</text>
@@ -351,15 +351,15 @@
 </a>
 </g>
 </g>
-<!-- Node138&#45;&gt;Node147 -->
+<!-- Node141&#45;&gt;Node150 -->
 <g id="edge14" class="edge">
-<title>Node138&#45;&gt;Node147</title>
+<title>Node141&#45;&gt;Node150</title>
 <path fill="none" stroke="#191970" d="M492.9261,-589.5699C500.356,-591.8971 507.8585,-594.2516 515,-596.5 530.8731,-601.4975 547.9865,-606.9117 563.9906,-611.9864"/>
 <polygon fill="#191970" stroke="#191970" points="493.826,-586.1842 483.2371,-586.5377 491.7352,-592.8647 493.826,-586.1842"/>
 </g>
-<!-- Node148 -->
+<!-- Node151 -->
 <g id="node15" class="node">
-<title>Node148</title>
+<title>Node151</title>
 <g id="a_node15"><a xlink:href="namespacesll__m__maxwell__1d__fem.html#a24ad9e6b445cc06f4c31dda8b252fd26" target="_top" xlink:title="Solves for the efield part in a implicit curl part solve. ">
 <polygon fill="#ffffff" stroke="#000000" points="562.5,-562.5 562.5,-592.5 694.5,-592.5 694.5,-562.5 562.5,-562.5"/>
 <text text-anchor="start" x="570.5" y="-580.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_1d_fem</text>
@@ -367,15 +367,15 @@
 </a>
 </g>
 </g>
-<!-- Node138&#45;&gt;Node148 -->
+<!-- Node141&#45;&gt;Node151 -->
 <g id="edge15" class="edge">
-<title>Node138&#45;&gt;Node148</title>
+<title>Node141&#45;&gt;Node151</title>
 <path fill="none" stroke="#191970" d="M511.4188,-573.8696C528.2813,-574.3924 546.0067,-574.9421 562.4188,-575.451"/>
 <polygon fill="#191970" stroke="#191970" points="511.1542,-570.3598 501.0505,-573.5481 510.9372,-577.3564 511.1542,-570.3598"/>
 </g>
-<!-- Node149 -->
+<!-- Node152 -->
 <g id="node16" class="node">
-<title>Node149</title>
+<title>Node152</title>
 <g id="a_node16"><a xlink:href="namespacesll__m__maxwell__1d__fem.html#abfc2b83c57927e44075c5d11b8949235" target="_top" xlink:title="Compute square of the L2norm. ">
 <polygon fill="#ffffff" stroke="#000000" points="557,-513.5 557,-543.5 700,-543.5 700,-513.5 557,-513.5"/>
 <text text-anchor="start" x="565" y="-531.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_1d_fem</text>
@@ -383,15 +383,15 @@
 </a>
 </g>
 </g>
-<!-- Node138&#45;&gt;Node149 -->
+<!-- Node141&#45;&gt;Node152 -->
 <g id="edge16" class="edge">
-<title>Node138&#45;&gt;Node149</title>
+<title>Node141&#45;&gt;Node152</title>
 <path fill="none" stroke="#191970" d="M511.1289,-554.5825C527.5158,-550.9409 544.7305,-547.1154 560.7721,-543.5506"/>
 <polygon fill="#191970" stroke="#191970" points="510.0531,-551.2361 501.0505,-556.8221 511.5717,-558.0694 510.0531,-551.2361"/>
 </g>
-<!-- Node150 -->
+<!-- Node153 -->
 <g id="node17" class="node">
-<title>Node150</title>
+<title>Node153</title>
 <g id="a_node17"><a xlink:href="namespacesll__m__maxwell__1d__fem.html#a95835fb7a7173512d52e22df72949289" target="_top" xlink:title="sll_m_maxwell_1d_fem\l::inner_product_1d_fem">
 <polygon fill="#ffffff" stroke="#000000" points="562.5,-464.5 562.5,-494.5 694.5,-494.5 694.5,-464.5 562.5,-464.5"/>
 <text text-anchor="start" x="570.5" y="-482.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_1d_fem</text>
@@ -399,15 +399,15 @@
 </a>
 </g>
 </g>
-<!-- Node138&#45;&gt;Node150 -->
+<!-- Node141&#45;&gt;Node153 -->
 <g id="edge17" class="edge">
-<title>Node138&#45;&gt;Node150</title>
+<title>Node141&#45;&gt;Node153</title>
 <path fill="none" stroke="#191970" d="M507.3761,-552.0175C510.0072,-550.6118 512.5594,-549.1081 515,-547.5 535.8127,-533.7862 530.3296,-518.4272 551,-504.5 556.745,-500.6291 563.1301,-497.3242 569.6998,-494.5103"/>
 <polygon fill="#191970" stroke="#191970" points="505.6784,-548.9499 498.1739,-556.4288 508.7043,-555.2621 505.6784,-548.9499"/>
 </g>
-<!-- Node151 -->
+<!-- Node154 -->
 <g id="node18" class="node">
-<title>Node151</title>
+<title>Node154</title>
 <g id="a_node18"><a xlink:href="namespacesll__m__maxwell__1d__fem.html#af92aa77aac30fa9ad87a4cf10cb88ceb" target="_top" xlink:title="Compute the L2 projection of a given function f on periodic splines of given degree. ">
 <polygon fill="#ffffff" stroke="#000000" points="562.5,-415.5 562.5,-445.5 694.5,-445.5 694.5,-415.5 562.5,-415.5"/>
 <text text-anchor="start" x="570.5" y="-433.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_1d_fem</text>
@@ -415,15 +415,15 @@
 </a>
 </g>
 </g>
-<!-- Node138&#45;&gt;Node151 -->
+<!-- Node141&#45;&gt;Node154 -->
 <g id="edge18" class="edge">
-<title>Node138&#45;&gt;Node151</title>
+<title>Node141&#45;&gt;Node154</title>
 <path fill="none" stroke="#191970" d="M509.6585,-551.875C511.5239,-550.5131 513.3106,-549.057 515,-547.5 547.2871,-517.7436 519.0209,-485.5872 551,-455.5 555.1187,-451.625 559.8424,-448.3505 564.8815,-445.5836"/>
 <polygon fill="#191970" stroke="#191970" points="507.6597,-548.9968 501.0318,-557.2625 511.3676,-554.934 507.6597,-548.9968"/>
 </g>
-<!-- Node152 -->
+<!-- Node155 -->
 <g id="node19" class="node">
-<title>Node152</title>
+<title>Node155</title>
 <g id="a_node19"><a xlink:href="namespacesll__m__maxwell__1d__fem.html#acb63eb5eafceb69a879302928c503bfa" target="_top" xlink:title="sll_m_maxwell_1d_fem\l::multiply_mass_1d_fem">
 <polygon fill="#ffffff" stroke="#000000" points="560,-366.5 560,-396.5 697,-396.5 697,-366.5 560,-366.5"/>
 <text text-anchor="start" x="568" y="-384.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_1d_fem</text>
@@ -431,15 +431,15 @@
 </a>
 </g>
 </g>
-<!-- Node138&#45;&gt;Node152 -->
+<!-- Node141&#45;&gt;Node155 -->
 <g id="edge19" class="edge">
-<title>Node138&#45;&gt;Node152</title>
+<title>Node141&#45;&gt;Node155</title>
 <path fill="none" stroke="#191970" d="M509.7817,-552.2519C511.6222,-550.7816 513.3687,-549.2004 515,-547.5 559.7753,-500.8279 506.7075,-453.6305 551,-406.5 554.5823,-402.6882 558.748,-399.456 563.2536,-396.7156"/>
 <polygon fill="#191970" stroke="#191970" points="507.5376,-549.5422 501.1751,-558.0139 511.4319,-555.359 507.5376,-549.5422"/>
 </g>
-<!-- Node153 -->
+<!-- Node156 -->
 <g id="node20" class="node">
-<title>Node153</title>
+<title>Node156</title>
 <g id="a_node20"><a xlink:href="namespacesll__m__maxwell__1d__fem.html#a07ac85d431e1ab78f59da39ba51cdafb" target="_top" xlink:title="Invert the mass matrix. ">
 <polygon fill="#ffffff" stroke="#000000" points="562.5,-317.5 562.5,-347.5 694.5,-347.5 694.5,-317.5 562.5,-317.5"/>
 <text text-anchor="start" x="570.5" y="-335.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_1d_fem</text>
@@ -447,15 +447,15 @@
 </a>
 </g>
 </g>
-<!-- Node138&#45;&gt;Node153 -->
+<!-- Node141&#45;&gt;Node156 -->
 <g id="edge20" class="edge">
-<title>Node138&#45;&gt;Node153</title>
+<title>Node141&#45;&gt;Node156</title>
 <path fill="none" stroke="#191970" d="M509.3602,-552.8504C511.3694,-551.212 513.2591,-549.4325 515,-547.5 572.5262,-483.6439 494.1341,-421.9448 551,-357.5 554.3674,-353.6838 558.3204,-350.4465 562.6276,-347.7007"/>
 <polygon fill="#191970" stroke="#191970" points="507.3711,-549.9705 501.0812,-558.4963 511.3149,-555.7538 507.3711,-549.9705"/>
 </g>
-<!-- Node154 -->
+<!-- Node157 -->
 <g id="node21" class="node">
-<title>Node154</title>
+<title>Node157</title>
 <g id="a_node21"><a xlink:href="namespacesll__m__maxwell__1d__fem.html#a51ffa2cd61a78cdc2741d91f48a81574" target="_top" xlink:title="Invert the mass matrix. ">
 <polygon fill="#ffffff" stroke="#000000" points="559,-268.5 559,-298.5 698,-298.5 698,-268.5 559,-268.5"/>
 <text text-anchor="start" x="567" y="-286.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_1d_fem</text>
@@ -463,15 +463,15 @@
 </a>
 </g>
 </g>
-<!-- Node138&#45;&gt;Node154 -->
+<!-- Node141&#45;&gt;Node157 -->
 <g id="edge21" class="edge">
-<title>Node138&#45;&gt;Node154</title>
+<title>Node141&#45;&gt;Node157</title>
 <path fill="none" stroke="#191970" d="M509.8785,-552.5764C511.7024,-551.0134 513.4176,-549.3246 515,-547.5 585.3798,-466.3468 481.4592,-390.3733 551,-308.5 554.2948,-304.6209 558.1955,-301.3384 562.4666,-298.5614"/>
 <polygon fill="#191970" stroke="#191970" points="507.4151,-550.0307 501.2591,-558.6535 511.4488,-555.7517 507.4151,-550.0307"/>
 </g>
-<!-- Node140 -->
+<!-- Node143 -->
 <g id="node7" class="node">
-<title>Node140</title>
+<title>Node143</title>
 <g id="a_node7"><a xlink:href="namespacesll__m__maxwell__1d__fem.html#a47196627859f2c2d812ad68b15d300fb" target="_top" xlink:title="compute Ey from Bz using weak Ampere formulation ">
 <polygon fill="#ffffff" stroke="#000000" points="742,-927 742,-968 874,-968 874,-927 742,-927"/>
 <text text-anchor="start" x="750" y="-956" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_1d_fem</text>
@@ -480,15 +480,15 @@
 </a>
 </g>
 </g>
-<!-- Node139&#45;&gt;Node140 -->
+<!-- Node142&#45;&gt;Node143 -->
 <g id="edge6" class="edge">
-<title>Node139&#45;&gt;Node140</title>
+<title>Node142&#45;&gt;Node143</title>
 <path fill="none" stroke="#191970" d="M704.7998,-930.2521C717.0942,-932.3068 729.7331,-934.4192 741.7654,-936.4301"/>
 <polygon fill="#191970" stroke="#191970" points="705.0146,-926.7395 694.5745,-928.5431 703.8607,-933.6437 705.0146,-926.7395"/>
 </g>
-<!-- Node141 -->
+<!-- Node144 -->
 <g id="node8" class="node">
-<title>Node141</title>
+<title>Node144</title>
 <g id="a_node8"><a xlink:href="namespacesll__m__maxwell__1d__fem.html#a5e87fba6009f2ef888e836db7b8eaf0c" target="_top" xlink:title="sll_m_maxwell_1d_fem\l::sll_s_compute_b_from\l_e_1d_fem">
 <polygon fill="#ffffff" stroke="#000000" points="742,-867 742,-908 874,-908 874,-867 742,-867"/>
 <text text-anchor="start" x="750" y="-896" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_1d_fem</text>
@@ -497,15 +497,15 @@
 </a>
 </g>
 </g>
-<!-- Node139&#45;&gt;Node141 -->
+<!-- Node142&#45;&gt;Node144 -->
 <g id="edge7" class="edge">
-<title>Node139&#45;&gt;Node141</title>
+<title>Node142&#45;&gt;Node144</title>
 <path fill="none" stroke="#191970" d="M704.7998,-904.7479C717.0942,-902.6932 729.7331,-900.5808 741.7654,-898.5699"/>
 <polygon fill="#191970" stroke="#191970" points="703.8607,-901.3563 694.5745,-906.4569 705.0146,-908.2605 703.8607,-901.3563"/>
 </g>
-<!-- Node145 -->
+<!-- Node148 -->
 <g id="node12" class="node">
-<title>Node145</title>
+<title>Node148</title>
 <g id="a_node12"><a xlink:href="namespacesll__m__maxwell__1d__fem.html#a3cb1b8bf0285889d4089bf972aa81c3f" target="_top" xlink:title="Choose between compute_E_from_j_1d_fem and compute_E_from_j_1d_fem_shape. ">
 <polygon fill="#ffffff" stroke="#000000" points="742,-705.5 742,-735.5 874,-735.5 874,-705.5 742,-705.5"/>
 <text text-anchor="start" x="750" y="-723.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_1d_fem</text>
@@ -513,21 +513,21 @@
 </a>
 </g>
 </g>
-<!-- Node144&#45;&gt;Node145 -->
+<!-- Node147&#45;&gt;Node148 -->
 <g id="edge11" class="edge">
-<title>Node144&#45;&gt;Node145</title>
+<title>Node147&#45;&gt;Node148</title>
 <path fill="none" stroke="#191970" d="M716.2294,-734.3039C724.8094,-733.0133 733.4141,-731.719 741.7295,-730.4683"/>
 <polygon fill="#191970" stroke="#191970" points="715.5555,-730.8658 706.1873,-735.8144 716.5967,-737.788 715.5555,-730.8658"/>
 </g>
-<!-- Node146&#45;&gt;Node145 -->
+<!-- Node149&#45;&gt;Node148 -->
 <g id="edge13" class="edge">
-<title>Node146&#45;&gt;Node145</title>
+<title>Node149&#45;&gt;Node148</title>
 <path fill="none" stroke="#191970" d="M704.7998,-704.4019C717.0942,-706.3197 729.7331,-708.2912 741.7654,-710.1681"/>
 <polygon fill="#191970" stroke="#191970" points="704.9944,-700.89 694.5745,-702.8069 703.9155,-707.8064 704.9944,-700.89"/>
 </g>
-<!-- Node163 -->
+<!-- Node166 -->
 <g id="node30" class="node">
-<title>Node163</title>
+<title>Node166</title>
 <g id="a_node30"><a xlink:href="namespacesll__m__periodic__interpolator__1d.html#ae6f0cb5c46ddb52e2ab53c9c1e65792b" target="_top" xlink:title="sll_m_periodic_interpolator\l_1d::per_interpolate1d_disp">
 <polygon fill="#ffffff" stroke="#000000" points="552.5,-219.5 552.5,-249.5 704.5,-249.5 704.5,-219.5 552.5,-219.5"/>
 <text text-anchor="start" x="560.5" y="-237.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_periodic_interpolator</text>
@@ -535,15 +535,15 @@
 </a>
 </g>
 </g>
-<!-- Node162&#45;&gt;Node163 -->
+<!-- Node165&#45;&gt;Node166 -->
 <g id="edge30" class="edge">
-<title>Node162&#45;&gt;Node163</title>
+<title>Node165&#45;&gt;Node166</title>
 <path fill="none" stroke="#191970" d="M497.6981,-197.3212C522.8818,-204.4793 551.5938,-212.6404 575.6892,-219.4892"/>
 <polygon fill="#191970" stroke="#191970" points="498.4507,-193.8965 487.8747,-194.529 496.5368,-200.6298 498.4507,-193.8965"/>
 </g>
-<!-- Node164 -->
+<!-- Node167 -->
 <g id="node31" class="node">
-<title>Node164</title>
+<title>Node167</title>
 <g id="a_node31"><a xlink:href="namespacesll__m__periodic__interpolator__1d.html#afddf771cf26aba1439b7c9068626b0a2" target="_top" xlink:title="sll_m_periodic_interpolator\l_1d::per_interpolate1d_disp\l_inplace">
 <polygon fill="#ffffff" stroke="#000000" points="552.5,-159 552.5,-200 704.5,-200 704.5,-159 552.5,-159"/>
 <text text-anchor="start" x="560.5" y="-188" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_periodic_interpolator</text>
@@ -552,15 +552,15 @@
 </a>
 </g>
 </g>
-<!-- Node162&#45;&gt;Node164 -->
+<!-- Node165&#45;&gt;Node167 -->
 <g id="edge31" class="edge">
-<title>Node162&#45;&gt;Node164</title>
+<title>Node165&#45;&gt;Node167</title>
 <path fill="none" stroke="#191970" d="M506.4295,-179.5C521.3987,-179.5 537.2377,-179.5 552.3709,-179.5"/>
 <polygon fill="#191970" stroke="#191970" points="506.2246,-176.0001 496.2246,-179.5 506.2246,-183.0001 506.2246,-176.0001"/>
 </g>
-<!-- Node165 -->
+<!-- Node168 -->
 <g id="node32" class="node">
-<title>Node165</title>
+<title>Node168</title>
 <g id="a_node32"><a xlink:href="namespacesll__m__advection__1d__periodic.html#a83e408dd2f8ef25942506b71256ab110" target="_top" xlink:title="sll_m_advection_1d\l_periodic::periodic\l_advect_1d_constant">
 <polygon fill="#ffffff" stroke="#000000" points="569,-99 569,-140 688,-140 688,-99 569,-99"/>
 <text text-anchor="start" x="577" y="-128" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_advection_1d</text>
@@ -569,15 +569,15 @@
 </a>
 </g>
 </g>
-<!-- Node162&#45;&gt;Node165 -->
+<!-- Node165&#45;&gt;Node168 -->
 <g id="edge32" class="edge">
-<title>Node162&#45;&gt;Node165</title>
+<title>Node165&#45;&gt;Node168</title>
 <path fill="none" stroke="#191970" d="M493.4733,-161.3687C517.366,-153.9602 544.9718,-145.4002 568.972,-137.9583"/>
 <polygon fill="#191970" stroke="#191970" points="492.343,-158.0548 483.8282,-164.3595 494.4162,-164.7407 492.343,-158.0548"/>
 </g>
-<!-- Node167 -->
+<!-- Node170 -->
 <g id="node34" class="node">
-<title>Node167</title>
+<title>Node170</title>
 <g id="a_node34"><a xlink:href="namespacesll__m__fft__filter__1d.html#a0bf667222115b04c68c72b447b5e7d7b" target="_top" xlink:title="sll_m_fft_filter_1d\l::apply_fft_1d">
 <polygon fill="#ffffff" stroke="#000000" points="576.5,-49.5 576.5,-79.5 680.5,-79.5 680.5,-49.5 576.5,-49.5"/>
 <text text-anchor="start" x="584.5" y="-67.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_fft_filter_1d</text>
@@ -585,15 +585,15 @@
 </a>
 </g>
 </g>
-<!-- Node166&#45;&gt;Node167 -->
+<!-- Node169&#45;&gt;Node170 -->
 <g id="edge34" class="edge">
-<title>Node166&#45;&gt;Node167</title>
+<title>Node169&#45;&gt;Node170</title>
 <path fill="none" stroke="#191970" d="M497.4051,-64.5C522.8712,-64.5 551.9853,-64.5 576.298,-64.5"/>
 <polygon fill="#191970" stroke="#191970" points="497.109,-61.0001 487.109,-64.5 497.109,-68.0001 497.109,-61.0001"/>
 </g>
-<!-- Node168 -->
+<!-- Node171 -->
 <g id="node35" class="node">
-<title>Node168</title>
+<title>Node171</title>
 <g id="a_node35"><a xlink:href="namespacesll__m__fft__filter__1d.html#a8cf6b779bce6f08b9c19fa30506288ef" target="_top" xlink:title="sll_m_fft_filter_1d\l::apply_inplace_fft_1d">
 <polygon fill="#ffffff" stroke="#000000" points="567,-.5 567,-30.5 690,-30.5 690,-.5 567,-.5"/>
 <text text-anchor="start" x="575" y="-18.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_fft_filter_1d</text>
@@ -601,9 +601,9 @@
 </a>
 </g>
 </g>
-<!-- Node166&#45;&gt;Node168 -->
+<!-- Node169&#45;&gt;Node171 -->
 <g id="edge35" class="edge">
-<title>Node166&#45;&gt;Node168</title>
+<title>Node169&#45;&gt;Node171</title>
 <path fill="none" stroke="#191970" d="M496.8215,-48.8449C519.9676,-42.9837 546.1943,-36.3423 569.1152,-30.538"/>
 <polygon fill="#191970" stroke="#191970" points="495.9438,-45.4566 487.109,-51.3044 497.6622,-52.2425 495.9438,-45.4566"/>
 </g>

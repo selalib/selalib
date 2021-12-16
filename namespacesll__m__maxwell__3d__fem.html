@@ -117,6 +117,10 @@ Functions/Subroutines</h2></td></tr>
 <tr class="memitem:ab2781eda74156655a5fd15db858c1170"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__3d__fem.html#ab2781eda74156655a5fd15db858c1170">l2projection_3d_fem</a> (self, form, component, coefs_dofs, func1, func2, func3)</td></tr>
 <tr class="memdesc:ab2781eda74156655a5fd15db858c1170"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the L2 projection of a given function f on periodic splines of given degree.  <a href="#ab2781eda74156655a5fd15db858c1170">More...</a><br /></td></tr>
 <tr class="separator:ab2781eda74156655a5fd15db858c1170"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adc7832ac975656fa8108de6bb862d9b7"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__3d__fem.html#adc7832ac975656fa8108de6bb862d9b7">compute_dofs</a> (self, form, component, coefs_dofs, func1, func2, func3)</td></tr>
+<tr class="separator:adc7832ac975656fa8108de6bb862d9b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1526e1d8ba3488d21a8040da9d42b028"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__3d__fem.html#a1526e1d8ba3488d21a8040da9d42b028">sll_compute_edge_integral</a> (self, func1, func2, func3, coefs_dofs)</td></tr>
+<tr class="separator:a1526e1d8ba3488d21a8040da9d42b028"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5fc38d7461b2f12a65e34990f95d0a8d"><td class="memItemLeft" align="right" valign="top">real(kind=f64) function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__maxwell__3d__fem.html#a5fc38d7461b2f12a65e34990f95d0a8d">l2norm_squared_3d_fem</a> (self, coefs, form, component)</td></tr>
 <tr class="memdesc:a5fc38d7461b2f12a65e34990f95d0a8d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute square of the L2norm.  <a href="#a5fc38d7461b2f12a65e34990f95d0a8d">More...</a><br /></td></tr>
 <tr class="separator:a5fc38d7461b2f12a65e34990f95d0a8d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -158,6 +162,92 @@ Functions/Subroutines</h2></td></tr>
 <tr class="separator:ab0985001bd509ff6428b29b6b35616ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
+<a id="adc7832ac975656fa8108de6bb862d9b7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adc7832ac975656fa8108de6bb862d9b7">&#9670;&nbsp;</a></span>compute_dofs()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_maxwell_3d_fem::compute_dofs </td>
+          <td>(</td>
+          <td class="paramtype">class(<a class="el" href="structsll__m__maxwell__3d__fem_1_1sll__t__maxwell__3d__fem.html">sll_t_maxwell_3d_fem</a>)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>form</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer(kind=i32), intent(in)&#160;</td>
+          <td class="paramname"><em>component</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(out)&#160;</td>
+          <td class="paramname"><em>coefs_dofs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">procedure(<a class="el" href="interfacesll__m__maxwell__3d__base_1_1sll__i__function__3d__real64.html">sll_i_function_3d_real64</a>)&#160;</td>
+          <td class="paramname"><em>func1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">procedure(<a class="el" href="interfacesll__m__maxwell__3d__base_1_1sll__i__function__3d__real64.html">sll_i_function_3d_real64</a>), optional&#160;</td>
+          <td class="paramname"><em>func2</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">procedure(<a class="el" href="interfacesll__m__maxwell__3d__base_1_1sll__i__function__3d__real64.html">sll_i_function_3d_real64</a>), optional&#160;</td>
+          <td class="paramname"><em>func3</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">self</td><td>Maxwell solver class</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">form</td><td>Specify if the function is a0,1,2 or 3-form</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">component</td><td>Specify the component of the function</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">coefs_dofs</td><td>Finite Element right-hand-side</td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">func1</td><td>Function first component</td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">func2</td><td>Function second component</td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">func3</td><td>Function third component </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html#l00450">450</a> of file <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html">sll_m_maxwell_3d_fem.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__3d__fem_adc7832ac975656fa8108de6bb862d9b7_cgraph.svg" width="642" height="67"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
 <a id="ab0985001bd509ff6428b29b6b35616ff"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab0985001bd509ff6428b29b6b35616ff">&#9670;&nbsp;</a></span>compute_field_energy()</h2>
 
@@ -215,7 +305,7 @@ Functions/Subroutines</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html#l00971">971</a> of file <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html">sll_m_maxwell_3d_fem.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html#l01032">1032</a> of file <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html">sll_m_maxwell_3d_fem.F90</a>.</p>
 
 </div>
 </div>
@@ -251,7 +341,7 @@ Functions/Subroutines</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html#l00777">777</a> of file <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html">sll_m_maxwell_3d_fem.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html#l00838">838</a> of file <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html">sll_m_maxwell_3d_fem.F90</a>.</p>
 
 </div>
 </div>
@@ -347,7 +437,7 @@ Functions/Subroutines</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html#l00502">502</a> of file <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html">sll_m_maxwell_3d_fem.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html#l00562">562</a> of file <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html">sll_m_maxwell_3d_fem.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -435,7 +525,7 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html#l00706">706</a> of file <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html">sll_m_maxwell_3d_fem.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html#l00767">767</a> of file <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html">sll_m_maxwell_3d_fem.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -510,7 +600,7 @@ Here is the call graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Result: squared L2 norm </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html#l00467">467</a> of file <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html">sll_m_maxwell_3d_fem.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html#l00527">527</a> of file <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html">sll_m_maxwell_3d_fem.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -584,7 +674,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Result: squared L2 norm </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html#l00452">452</a> of file <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html">sll_m_maxwell_3d_fem.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html#l00512">512</a> of file <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html">sll_m_maxwell_3d_fem.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -731,7 +821,7 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html#l00842">842</a> of file <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html">sll_m_maxwell_3d_fem.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html#l00903">903</a> of file <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html">sll_m_maxwell_3d_fem.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -796,7 +886,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html#l00853">853</a> of file <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html">sll_m_maxwell_3d_fem.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html#l00914">914</a> of file <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html">sll_m_maxwell_3d_fem.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -860,7 +950,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html#l00820">820</a> of file <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html">sll_m_maxwell_3d_fem.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html#l00881">881</a> of file <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html">sll_m_maxwell_3d_fem.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -925,7 +1015,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html#l00831">831</a> of file <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html">sll_m_maxwell_3d_fem.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html#l00892">892</a> of file <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html">sll_m_maxwell_3d_fem.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -998,7 +1088,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html#l00864">864</a> of file <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html">sll_m_maxwell_3d_fem.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html#l00925">925</a> of file <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html">sll_m_maxwell_3d_fem.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -1063,7 +1153,7 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html#l00891">891</a> of file <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html">sll_m_maxwell_3d_fem.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html#l00952">952</a> of file <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html">sll_m_maxwell_3d_fem.F90</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
@@ -1130,7 +1220,85 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html#l00940">940</a> of file <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html">sll_m_maxwell_3d_fem.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html#l01001">1001</a> of file <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html">sll_m_maxwell_3d_fem.F90</a>.</p>
+
+</div>
+</div>
+<a id="a1526e1d8ba3488d21a8040da9d42b028"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1526e1d8ba3488d21a8040da9d42b028">&#9670;&nbsp;</a></span>sll_compute_edge_integral()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine sll_m_maxwell_3d_fem::sll_compute_edge_integral </td>
+          <td>(</td>
+          <td class="paramtype">class(<a class="el" href="structsll__m__maxwell__3d__fem_1_1sll__t__maxwell__3d__fem.html">sll_t_maxwell_3d_fem</a>)&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">procedure(<a class="el" href="interfacesll__m__maxwell__3d__base_1_1sll__i__function__3d__real64.html">sll_i_function_3d_real64</a>)&#160;</td>
+          <td class="paramname"><em>func1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">procedure(<a class="el" href="interfacesll__m__maxwell__3d__base_1_1sll__i__function__3d__real64.html">sll_i_function_3d_real64</a>)&#160;</td>
+          <td class="paramname"><em>func2</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">procedure(<a class="el" href="interfacesll__m__maxwell__3d__base_1_1sll__i__function__3d__real64.html">sll_i_function_3d_real64</a>)&#160;</td>
+          <td class="paramname"><em>func3</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:), intent(out)&#160;</td>
+          <td class="paramname"><em>coefs_dofs</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">self</td><td>Maxwell solver class</td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">func1</td><td>Function first component</td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">func2</td><td>Function second component</td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">func3</td><td>Function third component</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">coefs_dofs</td><td>Finite Element right-hand-side </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html#l00472">472</a> of file <a class="el" href="sll__m__maxwell__3d__fem_8_f90_source.html">sll_m_maxwell_3d_fem.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__3d__fem_a1526e1d8ba3488d21a8040da9d42b028_cgraph.svg" width="479" height="67"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__maxwell__3d__fem_a1526e1d8ba3488d21a8040da9d42b028_icgraph.svg" width="371" height="38"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
 
 </div>
 </div>
@@ -1734,7 +1902,7 @@ Here is the caller graph for this function:</div>
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Mon Dec 13 2021 09:01:31 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Dec 16 2021 14:50:10 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

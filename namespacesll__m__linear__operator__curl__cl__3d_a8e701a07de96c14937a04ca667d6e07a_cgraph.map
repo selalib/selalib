@@ -1,0 +1,6 @@
+<map id="dot_curl_cl_3d" name="dot_curl_cl_3d">
+<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities__3d__clamped.html#a6fd9c28d16272d6150f26711e3d78882" title="Multiply by discrete curl matrix. " alt="" coords="168,5,375,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__spline__fem__utilities__3d__clamped.html#a22d7b1fe3ce1d379ae4ef8f5b845a622" title="Multiply by transpose of discrete curl matrix. " alt="" coords="168,85,375,141"/>
+<area shape="rect" id="node4" href="$namespacesll__m__spline__fem__utilities__3d__clamped.html#a9ebe6dd15284ac369b64219d2bbf01a7" title="Multiply by transpose of dicrete gradient matrix. " alt="" coords="168,165,375,221"/>
+<area shape="rect" id="node5" href="$namespacesll__m__spline__fem__utilities__3d__clamped.html#a675b04d0f9415d564be08e0fc10530de" title="Multiply by dicrete gradient matrix. " alt="" coords="168,245,375,301"/>
+</map>

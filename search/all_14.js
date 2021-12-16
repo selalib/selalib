@@ -26,5 +26,6 @@ var searchData=
   ['update_5fweight',['update_weight',['../sll__pif__general_8_f90.html#a2f3e44eee6a2692d40046b681d18b508',1,'sll_pif_general.F90']]],
   ['use_5ffast_5falgorithm',['use_fast_algorithm',['../structsll__m__cubic__splines_1_1sll__t__cubic__spline__1d.html#a87db42cd500e0c42c9ae8359766e11cc',1,'sll_m_cubic_splines::sll_t_cubic_spline_1d']]],
   ['use_5fopenmp_5fthreading',['use_openmp_threading',['../namespacesll__m__poisson__3d__periodic__par.html#a824b787e644124a86873cd69ffedd0a3',1,'sll_m_poisson_3d_periodic_par']]],
-  ['utilities_5fdoc_2ef90',['utilities_doc.F90',['../utilities__doc_8_f90.html',1,'']]]
+  ['utilities_5fdoc_2ef90',['utilities_doc.F90',['../utilities__doc_8_f90.html',1,'']]],
+  ['uzawa_5fiterator',['uzawa_iterator',['../namespacesll__m__uzawa__iterator.html#ab7168ebe08ece4cefff6d4a1a0e67687',1,'sll_m_uzawa_iterator']]]
 ];

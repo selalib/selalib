@@ -98,9 +98,9 @@ Functions/Subroutines</h2></td></tr>
 <tr class="separator:a63810cc841f120094dd212bafa3f1ddc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae6677d4553b40e04c160660d27d808cf"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__sampling.html#ae6677d4553b40e04c160660d27d808cf">reset_seed_jump</a> (self, jump)</td></tr>
 <tr class="separator:ae6677d4553b40e04c160660d27d808cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:add5d9b2e3299a80fa7272f1df4967bda"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__sampling.html#add5d9b2e3299a80fa7272f1df4967bda">sample_cv_particle_sampling</a> (self, particle_group, params, xmin, Lx, <a class="el" href="sll__pif__general_8_f90.html#a941ae850bee4632949945fc4f6ea0c16">control_variate</a>, time, map)</td></tr>
-<tr class="memdesc:add5d9b2e3299a80fa7272f1df4967bda"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sample with control variate (we assume that the particle weights are given in the following order: (full f weight, value of initial distribution at time 0, delta f weights)  <a href="#add5d9b2e3299a80fa7272f1df4967bda">More...</a><br /></td></tr>
-<tr class="separator:add5d9b2e3299a80fa7272f1df4967bda"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a58433a827754f39a8e802a607c2e0477"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__sampling.html#a58433a827754f39a8e802a607c2e0477">sample_cv_particle_sampling</a> (self, particle_group, params, xmin, Lx, <a class="el" href="sll__pif__general_8_f90.html#a941ae850bee4632949945fc4f6ea0c16">control_variate</a>, time, map, lindf)</td></tr>
+<tr class="memdesc:a58433a827754f39a8e802a607c2e0477"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sample with control variate (we assume that the particle weights are given in the following order: (full f weight, value of initial distribution at time 0, delta f weights)  <a href="#a58433a827754f39a8e802a607c2e0477">More...</a><br /></td></tr>
+<tr class="separator:a58433a827754f39a8e802a607c2e0477"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac9125c3951b3e700abe38fb493f1ca76"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__sampling.html#ac9125c3951b3e700abe38fb493f1ca76">sample_particle_sampling</a> (self, particle_group, params, xmin, Lx, map)</td></tr>
 <tr class="memdesc:ac9125c3951b3e700abe38fb493f1ca76"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sample from distribution defined by <em>params</em>.  <a href="#ac9125c3951b3e700abe38fb493f1ca76">More...</a><br /></td></tr>
 <tr class="separator:ac9125c3951b3e700abe38fb493f1ca76"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -214,7 +214,7 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__sampling_8_f90_source.html#l01293">1293</a> of file <a class="el" href="sll__m__particle__sampling_8_f90_source.html">sll_m_particle_sampling.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__sampling_8_f90_source.html#l01386">1386</a> of file <a class="el" href="sll__m__particle__sampling_8_f90_source.html">sll_m_particle_sampling.F90</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
@@ -385,8 +385,8 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a id="add5d9b2e3299a80fa7272f1df4967bda"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#add5d9b2e3299a80fa7272f1df4967bda">&#9670;&nbsp;</a></span>sample_cv_particle_sampling()</h2>
+<a id="a58433a827754f39a8e802a607c2e0477"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a58433a827754f39a8e802a607c2e0477">&#9670;&nbsp;</a></span>sample_cv_particle_sampling()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -440,7 +440,13 @@ Here is the caller graph for this function:</div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">type(<a class="el" href="structsll__m__mapping__3d_1_1sll__t__mapping__3d.html">sll_t_mapping_3d</a>), optional&#160;</td>
-          <td class="paramname"><em>map</em>&#160;</td>
+          <td class="paramname"><em>map</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">logical, optional&#160;</td>
+          <td class="paramname"><em>lindf</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -545,7 +551,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__sampling_8_f90_source.html#l00349">349</a> of file <a class="el" href="sll__m__particle__sampling_8_f90_source.html">sll_m_particle_sampling.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__sampling_8_f90_source.html#l00442">442</a> of file <a class="el" href="sll__m__particle__sampling_8_f90_source.html">sll_m_particle_sampling.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -619,7 +625,7 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__sampling_8_f90_source.html#l00409">409</a> of file <a class="el" href="sll__m__particle__sampling_8_f90_source.html">sll_m_particle_sampling.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__sampling_8_f90_source.html#l00502">502</a> of file <a class="el" href="sll__m__particle__sampling_8_f90_source.html">sll_m_particle_sampling.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -706,7 +712,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__sampling_8_f90_source.html#l01159">1159</a> of file <a class="el" href="sll__m__particle__sampling_8_f90_source.html">sll_m_particle_sampling.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__sampling_8_f90_source.html#l01252">1252</a> of file <a class="el" href="sll__m__particle__sampling_8_f90_source.html">sll_m_particle_sampling.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -786,7 +792,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__sampling_8_f90_source.html#l00619">619</a> of file <a class="el" href="sll__m__particle__sampling_8_f90_source.html">sll_m_particle_sampling.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__sampling_8_f90_source.html#l00712">712</a> of file <a class="el" href="sll__m__particle__sampling_8_f90_source.html">sll_m_particle_sampling.F90</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
@@ -860,7 +866,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__sampling_8_f90_source.html#l00521">521</a> of file <a class="el" href="sll__m__particle__sampling_8_f90_source.html">sll_m_particle_sampling.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__sampling_8_f90_source.html#l00614">614</a> of file <a class="el" href="sll__m__particle__sampling_8_f90_source.html">sll_m_particle_sampling.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -940,7 +946,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__sampling_8_f90_source.html#l01324">1324</a> of file <a class="el" href="sll__m__particle__sampling_8_f90_source.html">sll_m_particle_sampling.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__sampling_8_f90_source.html#l01417">1417</a> of file <a class="el" href="sll__m__particle__sampling_8_f90_source.html">sll_m_particle_sampling.F90</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
@@ -1014,7 +1020,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__sampling_8_f90_source.html#l00958">958</a> of file <a class="el" href="sll__m__particle__sampling_8_f90_source.html">sll_m_particle_sampling.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__sampling_8_f90_source.html#l01051">1051</a> of file <a class="el" href="sll__m__particle__sampling_8_f90_source.html">sll_m_particle_sampling.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -1101,7 +1107,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__sampling_8_f90_source.html#l01421">1421</a> of file <a class="el" href="sll__m__particle__sampling_8_f90_source.html">sll_m_particle_sampling.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__sampling_8_f90_source.html#l01514">1514</a> of file <a class="el" href="sll__m__particle__sampling_8_f90_source.html">sll_m_particle_sampling.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -1181,7 +1187,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__sampling_8_f90_source.html#l01064">1064</a> of file <a class="el" href="sll__m__particle__sampling_8_f90_source.html">sll_m_particle_sampling.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__sampling_8_f90_source.html#l01157">1157</a> of file <a class="el" href="sll__m__particle__sampling_8_f90_source.html">sll_m_particle_sampling.F90</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
@@ -1255,7 +1261,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__sampling_8_f90_source.html#l00709">709</a> of file <a class="el" href="sll__m__particle__sampling_8_f90_source.html">sll_m_particle_sampling.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__sampling_8_f90_source.html#l00802">802</a> of file <a class="el" href="sll__m__particle__sampling_8_f90_source.html">sll_m_particle_sampling.F90</a>.</p>
 
 </div>
 </div>
@@ -1323,7 +1329,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__sampling_8_f90_source.html#l00844">844</a> of file <a class="el" href="sll__m__particle__sampling_8_f90_source.html">sll_m_particle_sampling.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__sampling_8_f90_source.html#l00937">937</a> of file <a class="el" href="sll__m__particle__sampling_8_f90_source.html">sll_m_particle_sampling.F90</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
@@ -1365,7 +1371,7 @@ Here is the caller graph for this function:</div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__particle__sampling_8_f90_source.html#l01554">1554</a> of file <a class="el" href="sll__m__particle__sampling_8_f90_source.html">sll_m_particle_sampling.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__particle__sampling_8_f90_source.html#l01647">1647</a> of file <a class="el" href="sll__m__particle__sampling_8_f90_source.html">sll_m_particle_sampling.F90</a>.</p>
 
 </div>
 </div>
@@ -1531,7 +1537,7 @@ Here is the caller graph for this function:</div>
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Mon Dec 13 2021 09:01:32 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Dec 16 2021 14:50:11 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

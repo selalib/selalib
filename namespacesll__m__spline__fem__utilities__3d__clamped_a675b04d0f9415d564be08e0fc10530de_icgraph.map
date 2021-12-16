@@ -1,5 +1,7 @@
 <map id="sll_s_multiply_g_clamped" name="sll_s_multiply_g_clamped">
-<area shape="rect" id="node2" href="$namespacesll__m__linear__operator__poisson__clamped__3d.html#aab87c55f973bfedf708f880408e3b69a" title="sll_m_linear_operator\l_poisson_clamped_3d::\ldot_poisson_clamped_3d" alt="" coords="244,5,431,61"/>
-<area shape="rect" id="node3" href="$namespacesll__m__maxwell__clamped__3d__fem.html#ad820cf24ee3fa40d60bf6ecbe741d2e7" title="Multiply by dicrete gradient matrix. " alt="" coords="246,86,429,127"/>
-<area shape="rect" id="node4" href="$namespacesll__m__maxwell__clamped__3d__trafo.html#a6560400eb959d34eac8bd16b1e2b2c04" title="Multiply by dicrete gradient matrix. " alt="" coords="246,151,429,193"/>
+<area shape="rect" id="node2" href="$namespacesll__m__linear__operator__curl__cl__3d.html#a8e701a07de96c14937a04ca667d6e07a" title="sll_m_linear_operator\l_curl_cl_3d::dot_curl_cl_3d" alt="" coords="244,5,439,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__linear__operator__mg__cl.html#ab5855313c5b650b9e1e48fe0b851f7b3" title="sll_m_linear_operator\l_mg_cl::dot_mg_cl" alt="" coords="260,71,423,112"/>
+<area shape="rect" id="node4" href="$namespacesll__m__linear__operator__poisson__clamped__3d.html#aab87c55f973bfedf708f880408e3b69a" title="sll_m_linear_operator\l_poisson_clamped_3d::\ldot_poisson_clamped_3d" alt="" coords="248,137,435,193"/>
+<area shape="rect" id="node5" href="$namespacesll__m__maxwell__clamped__3d__fem.html#ad820cf24ee3fa40d60bf6ecbe741d2e7" title="Multiply by dicrete gradient matrix. " alt="" coords="250,217,433,259"/>
+<area shape="rect" id="node6" href="$namespacesll__m__maxwell__clamped__3d__trafo.html#a6560400eb959d34eac8bd16b1e2b2c04" title="Multiply by dicrete gradient matrix. " alt="" coords="250,283,433,324"/>
 </map>

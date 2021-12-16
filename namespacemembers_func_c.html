@@ -120,6 +120,9 @@ $(function() {
 <li>check_convergence_linear_solver_mgmres()
 : <a class="el" href="namespacesll__m__linear__solver__mgmres.html#a9801a9156d255b6e76cceadef9bef28b">sll_m_linear_solver_mgmres</a>
 </li>
+<li>check_convergence_uzawa_iterator()
+: <a class="el" href="namespacesll__m__uzawa__iterator.html#af73a9d0de88069b8b27528ac372044c2">sll_m_uzawa_iterator</a>
+</li>
 <li>check_other_rank()
 : <a class="el" href="namespacesll__m__point__to__point__comms.html#aec6d99aac06fc524a627fb7e72df31c6">sll_m_point_to_point_comms</a>
 </li>
@@ -267,6 +270,9 @@ $(function() {
 </li>
 <li>compute_df_tsc()
 : <a class="el" href="namespacesll__m__pic__visu.html#ade5c2cf830ba34553d4c165b14cb8f7c">sll_m_pic_visu</a>
+</li>
+<li>compute_dofs()
+: <a class="el" href="namespacesll__m__maxwell__3d__fem.html#adc7832ac975656fa8108de6bb862d9b7">sll_m_maxwell_3d_fem</a>
 </li>
 <li>compute_double_gyroaverage_matrix()
 : <a class="el" href="namespacesll__m__qn__2d__polar__precompute.html#ab0cbc4348ba57772dc87a85395ebed2c">sll_m_qn_2d_polar_precompute</a>
@@ -679,7 +685,8 @@ $(function() {
 : <a class="el" href="namespacesll__m__initial__distribution.html#a0154368cd76f9136ee6886719def68d5">sll_m_initial_distribution</a>
 </li>
 <li>create_3d_trafo()
-: <a class="el" href="namespacesll__m__preconditioner__singular.html#ad6e06711d74924ac87a3dfd7a7328b1e">sll_m_preconditioner_singular</a>
+: <a class="el" href="namespacesll__m__preconditioner__jacobi.html#ac910056e14d1265d0be4e33215f5cb76">sll_m_preconditioner_jacobi</a>
+, <a class="el" href="namespacesll__m__preconditioner__singular.html#ad6e06711d74924ac87a3dfd7a7328b1e">sll_m_preconditioner_singular</a>
 </li>
 <li>create_extraction_operator_0()
 : <a class="el" href="namespacesll__m__extraction__operator__0.html#a0cef51621902bd2d9082e9d57435618a">sll_m_extraction_operator_0</a>
@@ -702,6 +709,12 @@ $(function() {
 <li>create_linear_operator_block()
 : <a class="el" href="namespacesll__m__linear__operator__block.html#af97fded0d1b683ba6568985bcdfd3470">sll_m_linear_operator_block</a>
 </li>
+<li>create_linear_operator_curl_3d()
+: <a class="el" href="namespacesll__m__linear__operator__curl__3d.html#ae40ec7cb3bc83e43127452af61c71154">sll_m_linear_operator_curl_3d</a>
+</li>
+<li>create_linear_operator_curl_cl_3d()
+: <a class="el" href="namespacesll__m__linear__operator__curl__cl__3d.html#a46fdb2335c17f6674c4425846b1f80a6">sll_m_linear_operator_curl_cl_3d</a>
+</li>
 <li>create_linear_operator_ecsim()
 : <a class="el" href="namespacesll__m__linear__operator__ecsim.html#acf5dfbd8926c3ac53f0b7c5a84d89d37">sll_m_linear_operator_ecsim</a>
 </li>
@@ -711,8 +724,20 @@ $(function() {
 <li>create_linear_operator_ecsim_ev()
 : <a class="el" href="namespacesll__m__linear__operator__ecsim__ev.html#a226444bafab98854cc8853539175d3a8">sll_m_linear_operator_ecsim_ev</a>
 </li>
+<li>create_linear_operator_gtm()
+: <a class="el" href="namespacesll__m__linear__operator__gtm.html#afdf39c2cb4240a4f763b2ea9539c913b">sll_m_linear_operator_gtm</a>
+</li>
+<li>create_linear_operator_gtm_cl()
+: <a class="el" href="namespacesll__m__linear__operator__gtm__cl.html#a8809581a33f154e4de7937139bda2792">sll_m_linear_operator_gtm_cl</a>
+</li>
 <li>create_linear_operator_kron()
 : <a class="el" href="namespacesll__m__linear__operator__kron.html#a50738856c8d7153657d700a26a4fb76a">sll_m_linear_operator_kron</a>
+</li>
+<li>create_linear_operator_mg()
+: <a class="el" href="namespacesll__m__linear__operator__mg.html#a4797140d320fd21ad0e7b7db0066447c">sll_m_linear_operator_mg</a>
+</li>
+<li>create_linear_operator_mg_cl()
+: <a class="el" href="namespacesll__m__linear__operator__mg__cl.html#abacd656db2776ad95565a472b7e4a9a5">sll_m_linear_operator_mg_cl</a>
 </li>
 <li>create_linear_operator_particle_mass_1d()
 : <a class="el" href="namespacesll__m__linear__operator__particle__mass__1d.html#a498c380b67c90d27b9d15f6211ddc0f7">sll_m_linear_operator_particle_mass_1d</a>
@@ -798,6 +823,12 @@ $(function() {
 </li>
 <li>create_poisson_fft()
 : <a class="el" href="namespacesll__m__preconditioner__poisson__fft.html#af11179b5eda37bebd0a90175717cf2c4">sll_m_preconditioner_poisson_fft</a>
+</li>
+<li>create_preconditioner()
+: <a class="el" href="namespacesll__m__preconditioner__curl__solver__fft.html#a3b2fb1ca4c033320def7c3fd39a489a6">sll_m_preconditioner_curl_solver_fft</a>
+</li>
+<li>create_uzawa_iterator()
+: <a class="el" href="namespacesll__m__uzawa__iterator.html#afd4144a0dfa57068c4fa25153c13a0f4">sll_m_uzawa_iterator</a>
 </li>
 <li>csl_advect_1d()
 : <a class="el" href="namespacesll__m__advection__1d__csl.html#af31483f4b10c3c50c15bed59be12ff65">sll_m_advection_1d_csl</a>
@@ -928,6 +959,9 @@ $(function() {
 <li>sll_collective_scatter_real64()
 : <a class="el" href="namespacesll__m__collective.html#ade04fbeb0c43410cbefc6200e58f92c6">sll_m_collective</a>
 </li>
+<li>sll_compute_edge_integral()
+: <a class="el" href="namespacesll__m__maxwell__3d__fem.html#a1526e1d8ba3488d21a8040da9d42b028">sll_m_maxwell_3d_fem</a>
+</li>
 <li>sll_count_non_zero_elts()
 : <a class="el" href="namespacesll__m__sparse__matrix.html#a8dc760a51bf16f1179981ac85563a195">sll_m_sparse_matrix</a>
 </li>
@@ -945,7 +979,7 @@ $(function() {
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Mon Dec 13 2021 09:01:33 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Dec 16 2021 14:50:12 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

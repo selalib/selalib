@@ -9,15 +9,15 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 316)">
 <title>sll_s_multiply_gt_1d</title>
 <polygon fill="#ffffff" stroke="transparent" points="-4,4 -4,-316 534,-316 534,4 -4,4"/>
-<!-- Node51 -->
+<!-- Node57 -->
 <g id="node1" class="node">
-<title>Node51</title>
+<title>Node57</title>
 <polygon fill="#bfbfbf" stroke="#000000" points="0,-189 0,-208 116,-208 116,-189 0,-189"/>
 <text text-anchor="middle" x="58" y="-196" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_multiply_gt_1d</text>
 </g>
-<!-- Node52 -->
+<!-- Node58 -->
 <g id="node2" class="node">
-<title>Node52</title>
+<title>Node58</title>
 <g id="a_node2"><a xlink:href="namespacesll__m__linear__operator__poisson__1d.html#a153e8d661c69b11b4973c5c07969773d" target="_top" xlink:title="sll_m_linear_operator\l_poisson_1d::dot_poisson_1d">
 <polygon fill="#ffffff" stroke="#000000" points="158,-281.5 158,-311.5 316,-311.5 316,-281.5 158,-281.5"/>
 <text text-anchor="start" x="166" y="-299.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_linear_operator</text>
@@ -25,15 +25,15 @@
 </a>
 </g>
 </g>
-<!-- Node51&#45;&gt;Node52 -->
+<!-- Node57&#45;&gt;Node58 -->
 <g id="edge1" class="edge">
-<title>Node51&#45;&gt;Node52</title>
+<title>Node57&#45;&gt;Node58</title>
 <path fill="none" stroke="#191970" d="M74.8184,-215.1466C92.5969,-231.8748 122.1478,-257.2967 152,-272.5 158.6953,-275.9098 165.9417,-278.8936 173.2828,-281.4895"/>
 <polygon fill="#191970" stroke="#191970" points="77.1575,-212.5403 67.5196,-208.1403 72.31,-217.5903 77.1575,-212.5403"/>
 </g>
-<!-- Node53 -->
+<!-- Node59 -->
 <g id="node3" class="node">
-<title>Node53</title>
+<title>Node59</title>
 <g id="a_node3"><a xlink:href="namespacesll__m__linear__operator__schur__eb__1d.html#ac639f132c47856a22399dd739b4fb128" target="_top" xlink:title="sll_m_linear_operator\l_schur_eb_1d::dot_schur_eb_1d">
 <polygon fill="#ffffff" stroke="#000000" points="152,-232.5 152,-262.5 322,-262.5 322,-232.5 152,-232.5"/>
 <text text-anchor="start" x="160" y="-250.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_linear_operator</text>
@@ -41,15 +41,15 @@
 </a>
 </g>
 </g>
-<!-- Node51&#45;&gt;Node53 -->
+<!-- Node57&#45;&gt;Node59 -->
 <g id="edge2" class="edge">
-<title>Node51&#45;&gt;Node53</title>
+<title>Node57&#45;&gt;Node59</title>
 <path fill="none" stroke="#191970" d="M102.8506,-210.7776C126.8737,-217.3537 156.6664,-225.5092 182.069,-232.463"/>
 <polygon fill="#191970" stroke="#191970" points="103.5072,-207.3286 92.9379,-208.064 101.659,-214.0802 103.5072,-207.3286"/>
 </g>
-<!-- Node54 -->
+<!-- Node60 -->
 <g id="node4" class="node">
-<title>Node54</title>
+<title>Node60</title>
 <g id="a_node4"><a xlink:href="namespacesll__m__maxwell__1d__fem.html#aa477d469a63715e37b1d2c9f9d0a57a0" target="_top" xlink:title="sll_m_maxwell_1d_fem\l::multiply_gt">
 <polygon fill="#ffffff" stroke="#000000" points="171,-183.5 171,-213.5 303,-213.5 303,-183.5 171,-183.5"/>
 <text text-anchor="start" x="179" y="-201.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_1d_fem</text>
@@ -57,15 +57,15 @@
 </a>
 </g>
 </g>
-<!-- Node51&#45;&gt;Node54 -->
+<!-- Node57&#45;&gt;Node60 -->
 <g id="edge3" class="edge">
-<title>Node51&#45;&gt;Node54</title>
+<title>Node57&#45;&gt;Node60</title>
 <path fill="none" stroke="#191970" d="M126.5296,-198.5C141.0526,-198.5 156.3562,-198.5 170.791,-198.5"/>
 <polygon fill="#191970" stroke="#191970" points="126.1162,-195.0001 116.1162,-198.5 126.1161,-202.0001 126.1162,-195.0001"/>
 </g>
-<!-- Node56 -->
+<!-- Node62 -->
 <g id="node6" class="node">
-<title>Node56</title>
+<title>Node62</title>
 <g id="a_node6"><a xlink:href="namespacesll__m__maxwell__1d__fem__sm.html#ae5d6f36942ad1f3390025da81662e1c4" target="_top" xlink:title="Multiply by transpose of dicrete gradient matrix. ">
 <polygon fill="#ffffff" stroke="#000000" points="171,-134.5 171,-164.5 303,-164.5 303,-134.5 171,-134.5"/>
 <text text-anchor="start" x="179" y="-152.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_1d_fem</text>
@@ -73,15 +73,15 @@
 </a>
 </g>
 </g>
-<!-- Node51&#45;&gt;Node56 -->
+<!-- Node57&#45;&gt;Node62 -->
 <g id="edge5" class="edge">
-<title>Node51&#45;&gt;Node56</title>
+<title>Node57&#45;&gt;Node62</title>
 <path fill="none" stroke="#191970" d="M102.8506,-186.2224C126.8737,-179.6463 156.6664,-171.4908 182.069,-164.537"/>
 <polygon fill="#191970" stroke="#191970" points="101.659,-182.9198 92.9379,-188.936 103.5072,-189.6714 101.659,-182.9198"/>
 </g>
-<!-- Node59 -->
+<!-- Node65 -->
 <g id="node9" class="node">
-<title>Node59</title>
+<title>Node65</title>
 <g id="a_node9"><a xlink:href="namespacesll__m__maxwell__1d__trafo.html#a3372a7daa9bfed18d307a7944907fc9a" target="_top" xlink:title="Multiply by transpose of dicrete gradient matrix. ">
 <polygon fill="#ffffff" stroke="#000000" points="169,-49.5 169,-79.5 305,-79.5 305,-49.5 169,-49.5"/>
 <text text-anchor="start" x="177" y="-67.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_1d_trafo</text>
@@ -89,15 +89,15 @@
 </a>
 </g>
 </g>
-<!-- Node51&#45;&gt;Node59 -->
+<!-- Node57&#45;&gt;Node65 -->
 <g id="edge8" class="edge">
-<title>Node51&#45;&gt;Node59</title>
+<title>Node57&#45;&gt;Node65</title>
 <path fill="none" stroke="#191970" d="M77.967,-182.6408C96.8811,-167.7021 126.1567,-144.7973 152,-125.5 173.3943,-109.5247 198.2454,-91.7827 215.5291,-79.5704"/>
 <polygon fill="#191970" stroke="#191970" points="75.7247,-179.9519 70.0554,-188.9023 80.0688,-185.4408 75.7247,-179.9519"/>
 </g>
-<!-- Node55 -->
+<!-- Node61 -->
 <g id="node5" class="node">
-<title>Node55</title>
+<title>Node61</title>
 <g id="a_node5"><a xlink:href="namespacesll__m__maxwell__1d__fem.html#a1e96468d8d3973e8cfde8e1c239ad85a" target="_top" xlink:title="For model with adiabatic electrons. ">
 <polygon fill="#ffffff" stroke="#000000" points="378,-219 378,-260 510,-260 510,-219 378,-219"/>
 <text text-anchor="start" x="386" y="-248" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_1d_fem</text>
@@ -106,15 +106,15 @@
 </a>
 </g>
 </g>
-<!-- Node54&#45;&gt;Node55 -->
+<!-- Node60&#45;&gt;Node61 -->
 <g id="edge4" class="edge">
-<title>Node54&#45;&gt;Node55</title>
+<title>Node60&#45;&gt;Node61</title>
 <path fill="none" stroke="#191970" d="M313.0251,-213.5581C334.2855,-217.7691 357.2133,-222.3104 377.8524,-226.3983"/>
 <polygon fill="#191970" stroke="#191970" points="313.5547,-210.0951 303.0652,-211.5854 312.1946,-216.9617 313.5547,-210.0951"/>
 </g>
-<!-- Node57 -->
+<!-- Node63 -->
 <g id="node7" class="node">
-<title>Node57</title>
+<title>Node63</title>
 <g id="a_node7"><a xlink:href="namespacesll__m__maxwell__1d__fem__sm.html#a1dcfb34db3bbc411d2de54105161b30a" target="_top" xlink:title="Compute rho from Gauss law for given efield. ">
 <polygon fill="#ffffff" stroke="#000000" points="376.5,-159 376.5,-200 511.5,-200 511.5,-159 376.5,-159"/>
 <text text-anchor="start" x="384.5" y="-188" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_1d_fem</text>
@@ -123,15 +123,15 @@
 </a>
 </g>
 </g>
-<!-- Node56&#45;&gt;Node57 -->
+<!-- Node62&#45;&gt;Node63 -->
 <g id="edge6" class="edge">
-<title>Node56&#45;&gt;Node57</title>
+<title>Node62&#45;&gt;Node63</title>
 <path fill="none" stroke="#191970" d="M313.108,-160.5301C333.8573,-163.5373 356.1893,-166.7738 376.4286,-169.707"/>
 <polygon fill="#191970" stroke="#191970" points="313.4639,-157.0452 303.0652,-159.0747 312.4598,-163.9729 313.4639,-157.0452"/>
 </g>
-<!-- Node58 -->
+<!-- Node64 -->
 <g id="node8" class="node">
-<title>Node58</title>
+<title>Node64</title>
 <g id="a_node8"><a xlink:href="namespacesll__m__maxwell__1d__fem__sm.html#a44da88b229b20ed15111c83383990a66" target="_top" xlink:title="For model with adiabatic electrons. ">
 <polygon fill="#ffffff" stroke="#000000" points="377,-99 377,-140 511,-140 511,-99 377,-99"/>
 <text text-anchor="start" x="385" y="-128" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_1d_fem</text>
@@ -140,15 +140,15 @@
 </a>
 </g>
 </g>
-<!-- Node56&#45;&gt;Node58 -->
+<!-- Node62&#45;&gt;Node64 -->
 <g id="edge7" class="edge">
-<title>Node56&#45;&gt;Node58</title>
+<title>Node62&#45;&gt;Node64</title>
 <path fill="none" stroke="#191970" d="M313.1595,-138.4624C334.0162,-135.4397 356.4685,-132.1857 376.7852,-129.2413"/>
 <polygon fill="#191970" stroke="#191970" points="312.4598,-135.0271 303.0652,-139.9253 313.4639,-141.9548 312.4598,-135.0271"/>
 </g>
-<!-- Node60 -->
+<!-- Node66 -->
 <g id="node10" class="node">
-<title>Node60</title>
+<title>Node66</title>
 <g id="a_node10"><a xlink:href="namespacesll__m__maxwell__1d__trafo.html#a10b64c7ae3cab98344ca64c90e7dba94" target="_top" xlink:title="Compute rho from Gauss law for given efield. ">
 <polygon fill="#ffffff" stroke="#000000" points="358,-49.5 358,-79.5 530,-79.5 530,-49.5 358,-49.5"/>
 <text text-anchor="start" x="366" y="-67.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_1d_trafo</text>
@@ -156,15 +156,15 @@
 </a>
 </g>
 </g>
-<!-- Node59&#45;&gt;Node60 -->
+<!-- Node65&#45;&gt;Node66 -->
 <g id="edge9" class="edge">
-<title>Node59&#45;&gt;Node60</title>
+<title>Node65&#45;&gt;Node66</title>
 <path fill="none" stroke="#191970" d="M315.0871,-64.5C329.0298,-64.5 343.6283,-64.5 357.7831,-64.5"/>
 <polygon fill="#191970" stroke="#191970" points="315.0663,-61.0001 305.0662,-64.5 315.0662,-68.0001 315.0663,-61.0001"/>
 </g>
-<!-- Node61 -->
+<!-- Node67 -->
 <g id="node11" class="node">
-<title>Node61</title>
+<title>Node67</title>
 <g id="a_node11"><a xlink:href="namespacesll__m__maxwell__1d__trafo.html#a903528819de647900ba7230c356a2181" target="_top" xlink:title="For model with adiabatic electrons. ">
 <polygon fill="#ffffff" stroke="#000000" points="360,-.5 360,-30.5 528,-30.5 528,-.5 360,-.5"/>
 <text text-anchor="start" x="368" y="-18.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_maxwell_1d_trafo</text>
@@ -172,9 +172,9 @@
 </a>
 </g>
 </g>
-<!-- Node59&#45;&gt;Node61 -->
+<!-- Node65&#45;&gt;Node67 -->
 <g id="edge10" class="edge">
-<title>Node59&#45;&gt;Node61</title>
+<title>Node65&#45;&gt;Node67</title>
 <path fill="none" stroke="#191970" d="M310.5223,-47.0962C333.4212,-41.6757 358.4626,-35.748 380.6065,-30.5062"/>
 <polygon fill="#191970" stroke="#191970" points="309.4384,-43.7559 300.5136,-49.4654 311.0509,-50.5677 309.4384,-43.7559"/>
 </g>
