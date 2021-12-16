@@ -112,7 +112,6 @@ module sll_m_maxwell_clamped_3d_trafo
      type(sll_t_preconditioner_singular) :: preconditioner2 !< preconditioner for mass matrices
 
      type(sll_t_preconditioner_poisson_fft ) :: poisson_preconditioner !< Fourier solver for Poisson matrix
-     
      logical :: adiabatic_electrons = .false.
 
    contains

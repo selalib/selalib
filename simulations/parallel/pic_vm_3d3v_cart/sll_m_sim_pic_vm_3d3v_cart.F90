@@ -231,6 +231,7 @@ module sll_m_sim_pic_vm_3d3v_cart
      logical :: external_field = .false.  !< true for run with external electric field
      logical :: adiabatic_electrons = .false. !< true for run with adiabatic electrons
      logical :: fft = .false. !< true for fft filter
+     logical :: deltaf = .false.
 
      type(sll_t_profile_functions) :: profile !< temperature profile
      class(sll_c_filter_base_3d), allocatable :: filter !< filter
@@ -328,8 +329,7 @@ contains
     character(len=256) :: splitting_type = "none"
     character(len=256) :: boundary_fields = "none"
     character(len=256) :: boundary_particles = "none"
-    logical            :: with_control_variate = .false.
-    logical            :: lindf = .false.
+    character(len=256) :: deltaf = "none"
     character(len=256) :: filtering = "none"
     sll_int32          :: filter_iter = 0
     sll_int32          :: mode(3) = 0
@@ -345,7 +345,7 @@ contains
 
     namelist /grid_dims/          ng_x, x_min, x_max, jmean
 
-    namelist /pic_params/         n_particles, sampling_case, delta_perturb, delta_eps, splitting_case, spline_degree, splitting_type, boundary_fields, boundary_particles, with_control_variate, lindf, filtering, filter_iter, mode, fft_diag
+    namelist /pic_params/         n_particles, sampling_case, delta_perturb, delta_eps, splitting_case, spline_degree, splitting_type, boundary_fields, boundary_particles, deltaf, filtering, filter_iter, mode, fft_diag
     namelist /ctest/              ctest_case
     namelist /time_iterate/       n_sub_iter
 
@@ -557,16 +557,25 @@ contains
        sim%splitting_type=sll_p_strang_splitting
     end select
 
-    ! Control variate
-    if (with_control_variate .eqv. .true.) then
+    ! Delta f method
+    select case( deltaf )
+    case("control_variate")
        sim%no_weights = 3
        allocate(sim%control_variate)
        allocate(sim%control_variate%cv(1))
        call sim%control_variate%cv(1)%init( control_variate_equi, &
             distribution_params=sim%init_distrib_params )
-    else
+       sim%deltaf = .true.
+    case("linear")
        sim%no_weights = 1
-    end if
+       allocate(sim%control_variate)
+       allocate(sim%control_variate%cv(1))
+       call sim%control_variate%cv(1)%init( control_variate_equi, &
+            distribution_params=sim%init_distrib_params )
+       sim%deltaf = .true.
+    case default
+       sim%no_weights = 1
+    end select
 
     ! filter
     select case( filtering )
@@ -733,7 +742,16 @@ contains
        allocate( sll_t_time_propagator_pic_vm_3d3v_hs :: sim%propagator )
        select type( qp=>sim%propagator )
        type is ( sll_t_time_propagator_pic_vm_3d3v_hs )
-          if (sim%no_weights == 1) then
+          if (sim%deltaf) then
+             call qp%init( sim%maxwell_solver, &
+                  sim%particle_mesh_coupling, sim%particle_group, &
+                  sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
+                  sim%domain(:,1), sim%domain(:,3), sim%filter, &
+                  sim%boundary_particles, betar=sim%plasma_betar(1:2), &
+                  force_sign=sim%force_sign, electrostatic=electrostatic, &
+                  rhob = sim%rhob, control_variate=sim%control_variate, &
+                  jmean = jmean)
+          else
              call qp%init( sim%maxwell_solver, &
                   sim%particle_mesh_coupling, sim%particle_group, &
                   sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
@@ -741,43 +759,34 @@ contains
                   sim%boundary_particles, betar=sim%plasma_betar(1:2), &
                   force_sign=sim%force_sign, electrostatic=electrostatic, &
                   rhob = sim%rhob, jmean = jmean)
-          else
-             call qp%init( sim%maxwell_solver, &
-                  sim%particle_mesh_coupling, sim%particle_group, &
-                  sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
-                  sim%domain(:,1), sim%domain(:,3), sim%filter, &
-                  sim%boundary_particles, betar=sim%plasma_betar(1:2), &
-                  force_sign=sim%force_sign, electrostatic=electrostatic, &
-                  rhob = sim%rhob,  control_variate=sim%control_variate, &
-                  jmean = jmean, lindf = lindf)
           end if
        end select
     elseif (sim%splitting_case == sll_p_splitting_disgradE) then
        allocate( sll_t_time_propagator_pic_vm_3d3v_disgradE :: sim%propagator )
        select type( qpdisgradE=>sim%propagator )
        type is ( sll_t_time_propagator_pic_vm_3d3v_disgradE )
-          if (sim%no_weights == 1) then
+          if (sim%deltaf) then
+              call qpdisgradE%init_from_file(sim%maxwell_solver, &
+                  sim%particle_mesh_coupling, sim%particle_group, &
+                  sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
+                  sim%domain(:,1), sim%domain(:,3), sim%filter, &
+                  trim(filename), sim%boundary_particles, betar=sim%plasma_betar(1:2), &
+                  force_sign=sim%force_sign, electrostatic=electrostatic, rhob = sim%rhob, &
+                  control_variate=sim%control_variate, jmean = jmean )
+           else
              call qpdisgradE%init_from_file(sim%maxwell_solver, &
                   sim%particle_mesh_coupling, sim%particle_group, &
                   sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
                   sim%domain(:,1), sim%domain(:,3), sim%filter, &
                   trim(filename), sim%boundary_particles, betar=sim%plasma_betar(1:2), &
                   force_sign=sim%force_sign, electrostatic=electrostatic, rhob = sim%rhob, jmean = jmean )
-          else
-             call qpdisgradE%init_from_file(sim%maxwell_solver, &
-                  sim%particle_mesh_coupling, sim%particle_group, &
-                  sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
-                  sim%domain(:,1), sim%domain(:,3), sim%filter, &
-                  trim(filename), sim%boundary_particles, betar=sim%plasma_betar(1:2), &
-                  force_sign=sim%force_sign, electrostatic=electrostatic, rhob = sim%rhob, &
-                  control_variate=sim%control_variate, lindf = lindf, jmean = jmean )
           end if
        end select
     elseif (sim%splitting_case == sll_p_splitting_disgradEC) then
        allocate( sll_t_time_propagator_pic_vm_3d3v_disgradEC :: sim%propagator )
        select type( qpdg=>sim%propagator )
        type is ( sll_t_time_propagator_pic_vm_3d3v_disgradEC )
-          if (sim%no_weights == 1) then
+          if (sim%deltaf) then
              call qpdg%init_from_file(sim%maxwell_solver, &
                   sim%particle_mesh_coupling, sim%particle_group, &
                   sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
@@ -799,7 +808,15 @@ contains
        allocate( sll_t_time_propagator_pic_vm_3d3v_disgradE_trafo :: sim%propagator )
        select type( qdisgradEtrafo=>sim%propagator )
        type is ( sll_t_time_propagator_pic_vm_3d3v_disgradE_trafo )
-          if (sim%no_weights == 1) then
+          if (sim%deltaf) then
+             call qdisgradEtrafo%init_from_file(sim%maxwell_solver, &
+                  sim%particle_mesh_coupling, sim%particle_group, &
+                  sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
+                  sim%domain(:,1), sim%domain(:,3), sim%map, &
+                  trim(filename), sim%boundary_particles, betar=sim%plasma_betar(1:2), &
+                  force_sign=sim%force_sign, electrostatic=electrostatic, &
+                  control_variate=sim%control_variate, rhob = sim%rhob, jmean = jmean)
+          else
              call qdisgradEtrafo%init_from_file(sim%maxwell_solver, &
                   sim%particle_mesh_coupling, sim%particle_group, &
                   sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
@@ -807,51 +824,43 @@ contains
                   trim(filename), sim%boundary_particles, betar=sim%plasma_betar(1:2), &
                   force_sign=sim%force_sign, electrostatic=electrostatic, &
                   rhob = sim%rhob, jmean = jmean)
-          else
-             call qdisgradEtrafo%init_from_file(sim%maxwell_solver, &
-                  sim%particle_mesh_coupling, sim%particle_group, &
-                  sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
-                  sim%domain(:,1), sim%domain(:,3), sim%map, &
-                  trim(filename), sim%boundary_particles, betar=sim%plasma_betar(1:2), &
-                  force_sign=sim%force_sign, electrostatic=electrostatic, &
-                  control_variate=sim%control_variate, rhob = sim%rhob, lindf= lindf, jmean = jmean)
           end if
        end select
     elseif (sim%splitting_case == sll_p_splitting_hs_trafo) then
        allocate( sll_t_time_propagator_pic_vm_3d3v_hs_trafo :: sim%propagator )
        select type( qhstrafo=>sim%propagator )
        type is ( sll_t_time_propagator_pic_vm_3d3v_hs_trafo )
-          if (sim%no_weights == 1) then
-             call qhstrafo%init_from_file(sim%maxwell_solver, &
-                  sim%particle_mesh_coupling, sim%particle_group, &
-                  sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
-                  sim%domain(:,1), sim%domain(:,3), sim%map, &
-                  trim(filename), sim%boundary_particles, betar=sim%plasma_betar(1:2), electrostatic=electrostatic, rhob = sim%rhob)
-          else
+          if (sim%deltaf) then
              call qhstrafo%init_from_file(sim%maxwell_solver, &
                   sim%particle_mesh_coupling, sim%particle_group, &
                   sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
                   sim%domain(:,1), sim%domain(:,3), sim%map, &
                   trim(filename), sim%boundary_particles, betar=sim%plasma_betar(1:2), electrostatic=electrostatic, rhob = sim%rhob, &
-                  control_variate=sim%control_variate, lindf = lindf)
+                  control_variate=sim%control_variate)
+          else
+             call qhstrafo%init_from_file(sim%maxwell_solver, &
+                  sim%particle_mesh_coupling, sim%particle_group, &
+                  sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
+                  sim%domain(:,1), sim%domain(:,3), sim%map, &
+                  trim(filename), sim%boundary_particles, betar=sim%plasma_betar(1:2), electrostatic=electrostatic, rhob = sim%rhob)
           end if
        end select
     elseif (sim%splitting_case == sll_p_splitting_cef_trafo) then
        allocate( sll_t_time_propagator_pic_vm_3d3v_cef_trafo :: sim%propagator )
        select type( qceftrafo=>sim%propagator )
        type is ( sll_t_time_propagator_pic_vm_3d3v_cef_trafo )
-          if (sim%no_weights == 1) then
+          if (sim%deltaf) then
              call qceftrafo%init_from_file(sim%maxwell_solver, &
                   sim%particle_mesh_coupling, sim%particle_group, &
                   sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
                   sim%domain(:,1), sim%domain(:,3), sim%map, &
-                  trim(filename), boundary_particles=sim%boundary_particles, betar=sim%plasma_betar(1:2), electrostatic=electrostatic, rhob = sim%rhob)
+                  trim(filename), boundary_particles=sim%boundary_particles, betar=sim%plasma_betar(1:2), electrostatic=electrostatic, rhob = sim%rhob, control_variate=sim%control_variate)
           else
              call qceftrafo%init_from_file(sim%maxwell_solver, &
                   sim%particle_mesh_coupling, sim%particle_group, &
                   sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
                   sim%domain(:,1), sim%domain(:,3), sim%map, &
-                  trim(filename), boundary_particles=sim%boundary_particles, betar=sim%plasma_betar(1:2), electrostatic=electrostatic, rhob = sim%rhob, control_variate=sim%control_variate, lindf = lindf)
+                  trim(filename), boundary_particles=sim%boundary_particles, betar=sim%plasma_betar(1:2), electrostatic=electrostatic, rhob = sim%rhob)
           end if
        end select
     elseif (sim%splitting_case == sll_p_splitting_disgradEC_trafo) then
@@ -869,18 +878,18 @@ contains
        allocate( sll_t_time_propagator_pic_vm_3d3v_cef :: sim%propagator )
        select type( qpcef=>sim%propagator )
        type is ( sll_t_time_propagator_pic_vm_3d3v_cef )
-          if (sim%no_weights == 1) then
+            if (sim%deltaf) then
              call qpcef%init(sim%maxwell_solver, &
                   sim%particle_mesh_coupling, sim%particle_group, &
                   sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
                   sim%domain(:,1), sim%domain(:,3), sim%boundary_particles, &
-                  betar=sim%plasma_betar(1:2), electrostatic=electrostatic, rhob = sim%rhob )
+                  betar=sim%plasma_betar(1:2), electrostatic=electrostatic, rhob = sim%rhob, control_variate=sim%control_variate )
           else
              call qpcef%init(sim%maxwell_solver, &
                   sim%particle_mesh_coupling, sim%particle_group, &
                   sim%phi_dofs, sim%efield_dofs, sim%bfield_dofs, &
                   sim%domain(:,1), sim%domain(:,3), sim%boundary_particles, &
-                  betar=sim%plasma_betar(1:2), electrostatic=electrostatic, rhob = sim%rhob, control_variate=sim%control_variate, lindf = lindf )
+                  betar=sim%plasma_betar(1:2), electrostatic=electrostatic, rhob = sim%rhob )
           end if
        end select
     elseif (sim%splitting_case == sll_p_splitting_disgradE_trunc) then
@@ -919,8 +928,7 @@ contains
        write(file_id, *) 'n_particles:', sim%n_total_particles
        write(file_id, *) 'spline degree:', sim%degree_smoother
        write(file_id, *) 'no_weights:', sim%no_weights
-       write(file_id, *) 'control_variate', with_control_variate
-       write(file_id, *) 'linear delta f', lindf
+       write(file_id, *) 'deltaf', deltaf
        close(file_id)
     end if
 
@@ -955,21 +963,31 @@ contains
        call sll_s_int2string( sim%restart_steps, step )
        call sim%particle_group%group(1)%read(trim(sim%restart_file)//step//'_particles_'//crank//'.dat')
     else
-       if(sim%ct) then
+       if (sim%deltaf) then
           if (sim%no_weights == 1) then
+             if(sim%ct) then
+                call sim%sampler%sample_cv( sim%particle_group%group(1), sim%init_distrib_params, &
+                     sim%map%get_x([0._f64,0._f64,0._f64]), sim%map%Lx, sim%control_variate%cv(1), map=sim%map, lindf = .true. )
+             else
+                call sim%sampler%sample_cv( sim%particle_group%group(1), sim%init_distrib_params, &
+                     sim%domain(:,1), sim%domain(:,3), sim%control_variate%cv(1), lindf = .true. )
+             end if
+          else
+             if(sim%ct) then    
+                call sim%sampler%sample_cv( sim%particle_group%group(1), sim%init_distrib_params, &
+                     sim%map%get_x([0._f64,0._f64,0._f64]), sim%map%Lx, sim%control_variate%cv(1), map=sim%map )
+             else
+                call sim%sampler%sample_cv( sim%particle_group%group(1), sim%init_distrib_params, &
+                     sim%domain(:,1), sim%domain(:,3), sim%control_variate%cv(1) )
+             end if
+          end if
+       else
+          if(sim%ct) then  
              call sim%sampler%sample( sim%particle_group%group(1), sim%init_distrib_params, &
                   sim%map%get_x([0._f64,0._f64,0._f64]), sim%map%Lx, map=sim%map )
           else
-             call sim%sampler%sample_cv( sim%particle_group%group(1), sim%init_distrib_params, &
-                  sim%map%get_x([0._f64,0._f64,0._f64]), sim%map%Lx, sim%control_variate%cv(1), map=sim%map )
-          end if
-       else
-          if (sim%no_weights == 1) then
              call sim%sampler%sample( sim%particle_group%group(1), sim%init_distrib_params, &
                   sim%domain(:,1), sim%domain(:,3) )
-          else
-             call sim%sampler%sample_cv( sim%particle_group%group(1), sim%init_distrib_params, &
-                  sim%domain(:,1), sim%domain(:,3), sim%control_variate%cv(1) )
           end if
        end if
     end if
@@ -1260,7 +1278,7 @@ contains
     deallocate(sim%particle_mesh_coupling)
     deallocate(sim%efield_dofs)
     deallocate(sim%bfield_dofs)
-    if( sim%no_weights == 3) then
+    if( sim%deltaf) then
        call sim%control_variate%cv(1)%free()
     end if
     if ( sim%restart .eqv. .false. ) then
@@ -2070,7 +2088,7 @@ contains
 
     call sim%filter%apply_inplace( rho )
 
-    if (sim%no_weights == 1) then
+    if (sim%deltaf .eqv. .false.) then
        ! Add background distribution of neutralizing ions
        rho =  sim%force_sign*(rho - sim%charge * sim%background_charge) 
     end if
@@ -2157,7 +2175,7 @@ contains
 
     call sim%filter%apply_inplace( rho )
 
-    if (sim%no_weights == 1) then
+    if (sim%deltaf .eqv. .false.) then
        ! Add neutralizing background distribution 
        rho = sim%force_sign*(rho - sim%charge * sim%background_charge)
     end if

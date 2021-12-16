@@ -28,6 +28,7 @@ add_library(
   sll_m_linear_solver_block.F90
   sll_m_linear_solver_cg.F90
   sll_m_linear_solver_mgmres.F90
+  sll_m_uzawa_iterator.F90
   sll_m_linear_operator_base.F90)
 
 if(Fortran_COMPILER MATCHES IBM)

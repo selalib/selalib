@@ -40,7 +40,6 @@
 	splitting_type = "strang"
 	boundary_fields = "clamped"
 	boundary_particles = "reflection"
-	!with_control_variate = .false.
 /
 
 &trafo
