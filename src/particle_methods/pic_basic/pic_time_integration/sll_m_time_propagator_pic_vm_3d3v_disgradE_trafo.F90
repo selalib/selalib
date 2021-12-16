@@ -60,7 +60,7 @@ module sll_m_time_propagator_pic_vm_3d3v_disgradE_trafo
 
 contains
 
-  
+
   !> Strang splitting
   subroutine strang_splitting_pic_vm_3d3v(self,dt, number_steps)
     class(sll_t_time_propagator_pic_vm_3d3v_disgradE_trafo), intent(inout) :: self !< time propagator object 
@@ -90,7 +90,7 @@ contains
 
   end subroutine strang_splitting_pic_vm_3d3v
 
-  
+
   !> Lie splitting
   subroutine lie_splitting_pic_vm_3d3v(self,dt, number_steps)
     class(sll_t_time_propagator_pic_vm_3d3v_disgradE_trafo), intent(inout) :: self !< time propagator object 
@@ -116,7 +116,7 @@ contains
 
   end subroutine lie_splitting_pic_vm_3d3v
 
-  
+
   !> Lie splitting (oposite ordering)
   subroutine lie_splitting_back_pic_vm_3d3v(self,dt, number_steps)
     class(sll_t_time_propagator_pic_vm_3d3v_disgradE_trafo), intent( inout ) :: self !< time propagator object 
@@ -142,7 +142,7 @@ contains
 
   end subroutine lie_splitting_back_pic_vm_3d3v
 
-  
+
   !---------------------------------------------------------------------------!
   !> Constructor.
   subroutine initialize_pic_vm_3d3v(&
@@ -164,8 +164,7 @@ contains
        rhob, &
        electrostatic, &
        control_variate, &
-       jmean, &
-       lindf) 
+       jmean) 
     class(sll_t_time_propagator_pic_vm_3d3v_disgradE_trafo), intent( out ) :: self !< time propagator object 
     class(sll_c_maxwell_3d_base), target,          intent( in ) :: maxwell_solver      !< Maxwell solver
     class(sll_c_particle_mesh_coupling_3d), target, intent(in) :: particle_mesh_coupling !< Particle mesh coupling
@@ -175,7 +174,7 @@ contains
     sll_real64, target,                            intent( in ) :: bfield_dofs(:) !< array for the coefficients of the bfield
     sll_real64,                                    intent( in ) :: x_min(3) !< Lower bound of x domain
     sll_real64,                                    intent( in ) :: Lx(3) !< Length of the domain in x direction.
-     type(sll_t_mapping_3d), target,                intent( inout ) :: map !< Coordinate transformation
+    type(sll_t_mapping_3d), target,                intent( inout ) :: map !< Coordinate transformation
     sll_int32, optional,                           intent( in ) :: boundary_particles !< particle boundary conditions
     sll_real64, optional,                          intent( in ) :: solver_tolerance !< Solver tolerance
     sll_real64, optional,                          intent( in ) :: iter_tolerance !< iteration tolerance
@@ -186,21 +185,19 @@ contains
     sll_real64, optional, target,                  intent( in ) :: rhob(:) !< charge at the boundary
     class(sll_t_control_variates), optional, target, intent(in) :: control_variate !< Control variate (if delta f)
     logical, optional, intent(in) :: jmean !< logical for mean value of current
-    logical, optional, intent(in) :: lindf !< true for linear delta f method
     !local variables
     sll_int32 :: max_iter_set
     sll_int32 :: boundary_particles_set
     sll_real64 :: solver_tolerance_set, iter_tolerance_set
     sll_real64 :: betar_set(2), force_sign_set
     logical :: jmean_set
-    logical :: lindf_set
 
-      if( present(boundary_particles) )then
+    if( present(boundary_particles) )then
        boundary_particles_set = boundary_particles
     else
        boundary_particles_set = 100
     end if
-    
+
     if (present(solver_tolerance) )  then
        solver_tolerance_set = solver_tolerance
     else
@@ -239,11 +236,6 @@ contains
        jmean_set = .false.
     end if
 
-    if (present(lindf)) then
-       lindf_set = lindf
-    else
-       lindf_set = .false.
-    end if
 
     if( present( control_variate) ) then
        call self%helper%init(maxwell_solver, &
@@ -263,8 +255,7 @@ contains
             force_sign=force_sign_set, &
             rhob = rhob, &
             control_variate = control_variate,&
-            jmean=jmean_set, &
-            lindf = lindf_set) 
+            jmean=jmean_set) 
     else
        call self%helper%init(maxwell_solver, &
             particle_mesh_coupling, &
@@ -306,8 +297,7 @@ contains
        electrostatic, &
        rhob, &
        control_variate,&
-       jmean, &
-       lindf) 
+       jmean) 
     class(sll_t_time_propagator_pic_vm_3d3v_disgradE_trafo), intent( out ) :: self !< time propagator object 
     class(sll_c_maxwell_3d_base), target,          intent( in ) :: maxwell_solver !< Maxwell solver
     class(sll_c_particle_mesh_coupling_3d), target, intent(in) :: particle_mesh_coupling !< Particle mesh coupling
@@ -326,12 +316,10 @@ contains
     sll_real64, optional, target,                  intent( in ) :: rhob(:)
     class(sll_t_control_variates), optional, target, intent(in) :: control_variate !< Control variate (if delta f)
     logical, optional, intent(in) :: jmean !< logical for mean value of current
-    logical, optional, intent(in) :: lindf !< true for linear delta f method
     !local variables
     sll_real64 :: betar_set(2), force_sign_set
     sll_int32 :: boundary_particles_set
     logical :: jmean_set
-    logical :: lindf_set
 
     if( present(boundary_particles) )then
        boundary_particles_set = boundary_particles
@@ -361,12 +349,6 @@ contains
        jmean_set = .false.
     end if
 
-    if (present(lindf)) then
-       lindf_set = lindf
-    else
-       lindf_set = .false.
-    end if
-
     if( present( control_variate) ) then
        call self%helper%init_from_file(  maxwell_solver, &
             particle_mesh_coupling, &
@@ -383,8 +365,7 @@ contains
             force_sign=force_sign_set, &
             rhob = rhob, &
             control_variate = control_variate,&
-            jmean=jmean_set, &
-            lindf = lindf_set)
+            jmean=jmean_set)
     else
        call self%helper%init_from_file(  maxwell_solver, &
             particle_mesh_coupling, &

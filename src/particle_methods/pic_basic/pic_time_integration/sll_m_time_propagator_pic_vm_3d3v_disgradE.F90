@@ -164,8 +164,7 @@ contains
        electrostatic, &
        rhob, &
        control_variate, &
-       jmean, &
-       lindf) 
+       jmean) 
     class(sll_t_time_propagator_pic_vm_3d3v_disgradE), intent( out ) :: self !< time propagator object 
     class(sll_c_maxwell_3d_base), target,          intent( in ) :: maxwell_solver !< Maxwell solver
     class(sll_c_particle_mesh_coupling_3d), target,   intent(in)  :: particle_mesh_coupling !< Particle mesh coupling
@@ -184,13 +183,11 @@ contains
     sll_real64, optional, target,                  intent( in ) :: rhob(:) !< charge at the boundary
     class(sll_t_control_variates), optional, target, intent(in) :: control_variate !< Control variate (if delta f)
     logical, optional, intent(in) :: jmean !< logical for mean value of current
-    logical, optional, intent(in) :: lindf !< true for linear delta f method
     !local variables
     sll_real64 :: solver_tolerance_set
     sll_real64 :: betar_set(2), force_sign_set
     sll_int32 :: boundary_particles_set
     logical :: jmean_set
-    logical :: lindf_set
 
     if( present(boundary_particles) )then
        boundary_particles_set = boundary_particles
@@ -226,12 +223,6 @@ contains
        jmean_set = .false.
     end if
 
-    if (present(lindf)) then
-       lindf_set = lindf
-    else
-       lindf_set = .false.
-    end if
-
     if( present( control_variate) ) then
        call self%helper%init(maxwell_solver, &
             particle_mesh_coupling, &
@@ -247,8 +238,7 @@ contains
             betar=betar_set, &
             force_sign=force_sign_set, &
             control_variate = control_variate,&
-            jmean=jmean_set, &
-            lindf = lindf_set)
+            jmean=jmean_set)
     else
        call self%helper%init(maxwell_solver, &
             particle_mesh_coupling, &
@@ -288,8 +278,7 @@ contains
        electrostatic, &
        rhob, &
        control_variate,&
-       jmean, &
-       lindf) 
+       jmean) 
     class(sll_t_time_propagator_pic_vm_3d3v_disgradE), intent( out ) :: self !< time propagator object 
     class(sll_c_maxwell_3d_base), target,          intent( in ) :: maxwell_solver !< Maxwell solver
     class(sll_c_particle_mesh_coupling_3d), target, intent(in) :: particle_mesh_coupling !< Particle mesh coupling
@@ -308,12 +297,10 @@ contains
     sll_real64, optional, target,                  intent( in ) :: rhob(:) !< charge at the boundary
     class(sll_t_control_variates), optional, target, intent(in) :: control_variate !< Control variate (if delta f)
     logical, optional, intent(in) :: jmean !< logical for mean value of current
-    logical, optional, intent(in) :: lindf !< true for linear delta f method
     !local variables
     sll_real64 :: betar_set(2), force_sign_set
     sll_int32 :: boundary_particles_set
     logical :: jmean_set
-    logical :: lindf_set
 
     if( present(boundary_particles) )then
        boundary_particles_set = boundary_particles
@@ -343,12 +330,6 @@ contains
        jmean_set = .false.
     end if
 
-    if (present(lindf)) then
-       lindf_set = lindf
-    else
-       lindf_set = .false.
-    end if
-
     if( present( control_variate) ) then
        call self%helper%init_from_file(  maxwell_solver, &
             particle_mesh_coupling, &
@@ -365,8 +346,7 @@ contains
             force_sign=force_sign_set, &
             rhob = rhob, &
             control_variate = control_variate, &
-            jmean=jmean_set, &
-            lindf = lindf_set)
+            jmean=jmean_set)
     else
        call self%helper%init_from_file(  maxwell_solver, &
             particle_mesh_coupling, &
