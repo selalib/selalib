@@ -40,8 +40,8 @@ module sll_mpi
 !-----------------------------------------------------------------------
 ! Select here the desired bindings: f77 or f90
 
-   use mpi
-   implicit none
+  use mpi
+  implicit none
 !  include "mpif.h"
 !  ! These functions are defined in "use mpi" but not in "mpif.h"
 !  external :: mpi_init, mpi_init_thread, mpi_initialized, mpi_finalize, &
@@ -52,78 +52,80 @@ module sll_mpi
 !-----------------------------------------------------------------------
 ! Module interface
 
-   public :: &
-      mpi_allgather, &
-      mpi_allgatherv, &
-      mpi_allreduce, &
-      mpi_alltoall, &
-      mpi_alltoallv, &
-      mpi_any_source, &
-      mpi_any_tag, &
-      mpi_barrier, &
-      mpi_bcast, &
-      mpi_byte, &
-      mpi_cart_coords, &
-      mpi_cart_create, &
-      mpi_cart_get, &
-      mpi_cart_sub, &
-      mpi_cart_shift, &
-      mpi_character, &
-      mpi_comm_free, &
-      mpi_comm_rank, &
-      mpi_comm_size, &
-      mpi_comm_split, &
-      mpi_comm_world, &
-      mpi_complex, &
-      mpi_dims_create, &
-      mpi_double, &
-      mpi_double_complex, &
-      mpi_double_precision, &
-      mpi_finalize, &
-      mpi_gather, &
-      mpi_gatherv, &
-      mpi_get_count, &
-      !mpi_iallreduce,      &
-      mpi_in_place, &
-      mpi_info_null, &
-      mpi_init, &
-      mpi_init_thread, &
-      mpi_integer, &
-      mpi_integer8, &
-      mpi_irecv, &
-      mpi_isend, &
-      mpi_land, &
-      mpi_logical, &
-      mpi_lor, &
-      mpi_max, &
-      mpi_proc_null, &
-      mpi_prod, &
-      mpi_real, &
-      mpi_real8, &
-      mpi_recv, &
-      mpi_reduce, &
-      mpi_request_null, &
-      mpi_request_free, &
-      mpi_send, &
-      mpi_sendrecv, &
-      mpi_scatter, &
-      mpi_scatterv, &
-      mpi_source, &
-      mpi_status_ignore, &
-      mpi_status_size, &
-      mpi_success, &
-      mpi_sum, &
-      mpi_thread_funneled, &
-      mpi_thread_multiple, &
-      mpi_thread_single, &
-      mpi_undefined, &
-      mpi_wait, &
-      mpi_wtime, &
-      mpi_group_incl, &
-      mpi_comm_create, &
-      mpi_group_free
+  public ::              &
+    mpi_allgather,       &
+    mpi_allgatherv,      &
+    mpi_allreduce,       &
+    mpi_alltoall,        &
+    mpi_alltoallv,       &
+    mpi_any_source,      &
+    mpi_any_tag,         &
+    mpi_barrier,         &
+    mpi_bcast,           &
+    mpi_byte,            &
+    mpi_cart_coords,     &
+    mpi_cart_create,     &
+    mpi_cart_get,        &
+    mpi_cart_sub,        &
+    mpi_cart_shift,      &
+    mpi_character,       &
+    mpi_comm_free,       &
+    mpi_comm_rank,       &
+    mpi_comm_size,       &
+    mpi_comm_split,      &
+    mpi_comm_world,      &
+    mpi_complex,         &
+    mpi_dims_create,     &
+    mpi_double,          &
+    mpi_double_complex,  &
+    mpi_double_precision,&
+    mpi_finalize,        &
+    mpi_gather,          &
+    mpi_gatherv,         &
+    mpi_get_count,       &
+    !mpi_iallreduce,      &
+    mpi_in_place,        &
+    mpi_info_null,       &
+    mpi_init,            &
+    mpi_init_thread,     &
+    mpi_integer,         &
+    mpi_integer8,        &
+    mpi_irecv,           &
+    mpi_isend,           &
+    mpi_land,            &
+    mpi_logical,         &
+    mpi_lor,             &
+    mpi_max,             &
+    mpi_proc_null,       &
+    mpi_prod,            &
+    mpi_real,            &
+    mpi_real8,           &
+    mpi_recv,            &
+    mpi_reduce,          &
+    mpi_request_null,    &
+    mpi_request_free,    &
+    mpi_send,            &
+    mpi_sendrecv,        &
+    mpi_scatter,         &
+    mpi_scatterv,        &
+    mpi_source,          &
+    mpi_status_ignore,   &
+    mpi_status_size,     &
+    mpi_success,         &
+    mpi_sum,             &
+    mpi_thread_funneled, &
+    mpi_thread_multiple, &
+    mpi_thread_single,   &
+    mpi_undefined,       &
+    mpi_wait,            &
+    mpi_wtime,           &
+    mpi_group_incl,      &
+    mpi_comm_create,     &
+    mpi_group_free,      &
+    mpi_get_processor_name, &
+    mpi_max_processor_name
 
-   private
+  private
 
 !-----------------------------------------------------------------------
 ! These are the subroutines that are not defined in module "mpi"
