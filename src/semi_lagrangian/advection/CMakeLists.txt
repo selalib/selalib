@@ -26,6 +26,7 @@ target_link_libraries(
   sll_characteristics
   sll_quadrature
   sll_periodic_interpolation
+  sll_distribution_function
   sll_splines
   sll_fft
   sll_utilities)
