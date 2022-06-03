@@ -1,0 +1,38 @@
+
+
+# DD version with dynamic halos
+set( SIM_NAME_SLIM bsl_vp_3d3v_cart_dd_slim )
+set( TEST_NAME_SLIM "sim_${SIM_NAME_SLIM}" )
+set( EXECUTABLE_SLIM "${TEST_NAME_SLIM}" )
+
+ADD_EXECUTABLE( ${EXECUTABLE_SLIM}
+                sll_m_sim_${SIM_NAME_SLIM}.F90
+                ${TEST_NAME_SLIM}.F90
+                sll_m_sim_6d_utilities.F90 )
+
+IF(USE_FMEMPOOL)
+  set( FMEMPOOL "fmempool" )
+  add_definitions( -DUSE_FMEMPOOL )
+ENDIF(USE_FMEMPOOL)
+
+
+TARGET_LINK_LIBRARIES( ${EXECUTABLE_SLIM} ${SLL_LIB} ${SLL_EXT} ${SLL_DEPS} ${FMEMPOOL} )
+INSTALL( TARGETS ${EXECUTABLE_SLIM} DESTINATION ${INSTALL_DIR_BASE}/${EXECUTABLE_SLIM} )
+
+file( GLOB INPUT_FILES "*.nml" )
+file( GLOB REFERENCE_FILES "reffile_*.dat" )
+file( GLOB POST_PROC "*.dat" "*.gnu" )
+
+#INSTALL( FILES ${INPUT_FILES} README ${POST_PROC} DESTINATION ${INSTALL_DIR_BASE} )
+
+
+# TODO : add slim test, add slim overlap test
+IF(BUILD_TESTING)
+  FILE( COPY ${INPUT_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
+  FILE( COPY ${REFERENCE_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
+  SET( ARGS ${CMAKE_CURRENT_SOURCE_DIR}/param_bsl_vp_3d3v_cart_dd_testing.nml )
+
+  ADD_MPI_TEST( bsl_vp_3d3v_cart_dd_slim ${EXECUTABLE_SLIM} ${PROCS} ${ARGS} )
+  SET_TESTS_PROPERTIES( bsl_vp_3d3v_cart_dd_slim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+
+ENDIF(BUILD_TESTING)
