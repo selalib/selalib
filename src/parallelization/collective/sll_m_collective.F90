@@ -168,6 +168,8 @@ module sll_m_collective
    public :: &
       sll_f_collectives_are_same, &
       sll_s_boot_collective, &
+      sll_s_allocate_collective, &
+      sll_s_set_communicator_collective, &
       sll_o_collective_allgather, &
       sll_o_collective_allgatherv, &
       sll_s_collective_allgatherv_real64, &
@@ -414,7 +416,7 @@ contains !************************** Operations **************************
       sll_int32, intent(in), optional :: required
       sll_int32 :: ierr
 
-      SLL_ALLOCATE(sll_v_world_collective, ierr)
+      call sll_s_allocate_collective()
 
       if (present(required)) then
          sll_v_world_collective%thread_level_required = required
@@ -422,20 +424,32 @@ contains !************************** Operations **************************
          sll_v_world_collective%thread_level_required = MPI_THREAD_FUNNELED
       end if
 
+      call sll_s_set_communicator_collective(MPI_COMM_WORLD)
       call MPI_Init_Thread(sll_v_world_collective%thread_level_required, &
                            sll_v_world_collective%thread_level_provided, &
                            ierr)
-      sll_v_world_collective%comm = MPI_COMM_WORLD
-      sll_v_world_collective%color = 0
-      sll_v_world_collective%key = 0
-      call MPI_COMM_RANK(MPI_COMM_WORLD, sll_v_world_collective%rank, ierr)
-      call sll_s_test_mpi_error(ierr, 'sll_s_boot_collective(): MPI_COMM_RANK()')
-      call MPI_COMM_SIZE(MPI_COMM_WORLD, sll_v_world_collective%size, ierr)
-      call sll_s_test_mpi_error(ierr, 'sll_s_boot_collective(): MPI_COMM_SIZE()')
    end subroutine sll_s_boot_collective
 
+   subroutine sll_s_allocate_collective() bind(C,name='sll_s_allocate_collective')
+     sll_int32 :: ierr
+     SLL_ALLOCATE( sll_v_world_collective, ierr )
+   end subroutine sll_s_allocate_collective
+
+   subroutine sll_s_set_communicator_collective(communicator_in) bind(C,name='sll_s_set_communicator_collective')
+     sll_int32, intent(in) :: communicator_in
+     sll_int32 :: ierr
+
+     sll_v_world_collective%comm     = communicator_in
+     sll_v_world_collective%color    = 0
+     sll_v_world_collective%key      = 0
+     call MPI_COMM_RANK( communicator_in, sll_v_world_collective%rank, ierr )
+     call sll_s_test_mpi_error( ierr, 'sll_s_boot_collective(): MPI_COMM_RANK()' )
+     call MPI_COMM_SIZE( communicator_in, sll_v_world_collective%size, ierr )
+     call sll_s_test_mpi_error( ierr, 'sll_s_boot_collective(): MPI_COMM_SIZE()')
+   end subroutine sll_s_set_communicator_collective
+
    !> @brief Ends the paralell environment
-   subroutine sll_s_halt_collective()
+   subroutine sll_s_halt_collective() bind(C,name='sll_s_halt_collective')
       sll_int32 :: ierr
       call MPI_BARRIER(MPI_COMM_WORLD, ierr)
       call sll_s_test_mpi_error(ierr, &
