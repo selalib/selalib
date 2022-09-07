@@ -142,6 +142,9 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
      sll_int32  :: n_pts(6) ! Number of points per dimension
      sll_int32  :: lagrange_width(2) ! Half of stencil width for lagrange interpolation
      sll_int32  :: n_disp(6) ! Maximum allowed number of cells that points are displaced along each dimension.
+     logical    :: restart  ! Is it a restart? yes/no
+     sll_int32  :: first_time_step !< Number of first time steps (1 usually, >1 for restart)
+     character(len=256) :: restart_filename
 
      ! Mesh parameters
      type(sll_t_cartesian_mesh_6d) :: mesh6d
@@ -198,6 +201,7 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
      logical :: ctest
      character(len=256) :: ctest_ref_file
      character(len=256) :: out_file_prefix
+     character(len=256) :: add_file_prefix
      character(len=256) :: nml_filename
 
      !> Specify initial value
@@ -206,6 +210,7 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
      sll_int32 :: advector_type
 
      type(sll_t_clocks) :: clocks
+     sll_int32 :: n_diagnostics
 
      contains
        procedure :: run => run_6d_vp_dd
@@ -235,6 +240,9 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
       character(len=256)   :: test_case
       character(len=256)   :: file_prefix
       character(len=256)   :: ctest_ref_file
+      character(len=256)   :: restart_filename
+      sll_int32  :: restart_itime = 0
+      logical    :: restart = .false.
       sll_int32  :: max_disp
       sll_int32  :: num_cells_x1
       sll_int32  :: num_cells_x2
@@ -252,12 +260,14 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
       logical    :: ctest
       sll_int32 :: omp_world_size
       sll_int32 :: n_iterations
+      sll_int32 :: n_diagnostics = 1
       sll_int32  :: n_blocks(nd), block_dim(nd), process_grid(nd)
 
       ! Define namelist for input files
       namelist /sim_params/ final_time, delta_t, ctest, ctest_ref_file, test_case
       namelist /sim_params/ max_disp
       namelist /sim_params/ n_iterations
+      namelist /restart_params/ restart, restart_filename, restart_itime, n_diagnostics
       namelist /grid_dims/ num_cells_x1, num_cells_x2, num_cells_x3
       namelist /grid_dims/ num_cells_x4, num_cells_x5, num_cells_x6
       namelist /domain_dims/ v_max, x1_max, x2_max, x3_max
@@ -280,7 +290,17 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
       read(input_file, advect_params)
       read(input_file, output)
 
+      sim%restart = restart
+      sim%restart_filename = restart_filename
+      sim%first_time_step = restart_itime
+      sim%n_diagnostics = n_diagnostics
+
+      if ( sim%restart .EQV. .false.) then
+            sim%first_time_step=1
+      endif
+
       sim%out_file_prefix = file_prefix
+      sim%add_file_prefix = trim(file_prefix) // 'add'
 
       select case(interpolator_type)
       case("fixed")
@@ -943,22 +963,26 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
 
         call sll_s_start_clock(sim%clocks, 'D')
 
-        call sll_s_time_history_diagnostics(&
-                   sim%decomposition%local%mn, &
-                   sim%decomposition%local%mx, &
-                   sim%decomposition%local%mn, &  ! previously: `sim%decomposition%local%lo`
-                   real(itime, f64)*sim%delta_t, &
-                   sim%mesh6d%volume, &
-                   sim%mesh6d%volume_eta123, &
-                   sim%etas,&
-                   sim%f6d, &
-                   sim%rho, &
-                   sim%phi, &
-                   sim%ex, &
-                   sim%ey, &
-                   sim%ez, &
-                   sim%thdiag_file_id, &
-                   sim%topology_3d_velocity%coords)
+        if ( mod(itime, int( sim%n_diagnostics)) == 0) then
+
+          call sll_s_time_history_diagnostics(&
+                    sim%decomposition%local%mn, &
+                    sim%decomposition%local%mx, &
+                    sim%decomposition%local%mn, &  ! previously: `sim%decomposition%local%lo`
+                    real(itime, f64)*sim%delta_t, &
+                    sim%mesh6d%volume, &
+                    sim%mesh6d%volume_eta123, &
+                    sim%etas,&
+                    sim%f6d, &
+                    sim%rho, &
+                    sim%phi, &
+                    sim%ex, &
+                    sim%ey, &
+                    sim%ez, &
+                    sim%thdiag_file_id, &
+                    sim%topology_3d_velocity%coords)
+
+        endif
 
         call sll_s_stop_clock(sim%clocks, 'D')
 
