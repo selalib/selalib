@@ -177,7 +177,7 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
 
 
      ! Distribution function
-     sll_real64, allocatable :: f6d(:,:,:,:,:,:)
+     sll_real64, pointer :: f6d(:,:,:,:,:,:)
      ! Phi, efields
      sll_real64, allocatable :: rho(:,:,:)
      sll_real64, allocatable :: phi(:,:,:)
@@ -216,10 +216,43 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
        procedure :: run => run_6d_vp_dd
        procedure :: init_from_file => init_6d_vp_dd
        procedure :: delete => delete_6d_vp_dd
+       procedure :: get_distribution
+       procedure :: set_distribution
+       procedure :: get_local_size
+
     end type sll_t_sim_bsl_vp_3d3v_cart_dd_slim
 
 
   contains
+
+    subroutine get_distribution( sim, distribution )
+      class(sll_t_sim_bsl_vp_3d3v_cart_dd_slim), intent(inout) :: sim
+      sll_real64, pointer,  intent( out ) :: distribution(:,:,:,:,:,:)
+
+      distribution => sim%f6d
+
+    end subroutine get_distribution
+
+
+    subroutine set_distribution( sim, distribution )
+      class(sll_t_sim_bsl_vp_3d3v_cart_dd_slim), intent(inout) :: sim
+      sll_real64, pointer,  intent( in ) :: distribution(:,:,:,:,:,:)
+
+      sim%f6d => distribution
+
+    end subroutine set_distribution
+
+    subroutine get_local_size(sim, local_size)
+      class(sll_t_sim_bsl_vp_3d3v_cart_dd_slim), intent(inout) :: sim
+      sll_int32,  intent( out ) :: local_size(6)
+
+      sll_int32 :: i
+
+      do i=1,6
+         local_size(i) = sim%decomposition%local%nw(i)
+      end do
+
+    end subroutine get_local_size
 
 
     subroutine init_6d_vp_dd(sim, filename)
