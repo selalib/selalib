@@ -424,10 +424,10 @@ contains !************************** Operations **************************
          sll_v_world_collective%thread_level_required = MPI_THREAD_FUNNELED
       end if
 
-      call sll_s_set_communicator_collective(MPI_COMM_WORLD)
       call MPI_Init_Thread(sll_v_world_collective%thread_level_required, &
                            sll_v_world_collective%thread_level_provided, &
                            ierr)
+      call sll_s_set_communicator_collective(MPI_COMM_WORLD)
    end subroutine sll_s_boot_collective
 
    subroutine sll_s_allocate_collective() bind(C,name='sll_s_allocate_collective')
