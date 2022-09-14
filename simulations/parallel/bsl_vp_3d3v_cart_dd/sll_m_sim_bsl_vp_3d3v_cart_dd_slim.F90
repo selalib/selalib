@@ -212,6 +212,8 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
      type(sll_t_clocks) :: clocks
      sll_int32 :: n_diagnostics
 
+     logical :: time_in_phase = .false.
+
      contains
        procedure :: run => run_6d_vp_dd
        procedure :: init_from_file => init_6d_vp_dd
@@ -296,6 +298,7 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
       sll_int32 :: n_iterations
       sll_int32 :: n_diagnostics = 1
       sll_int32  :: n_blocks(nd), block_dim(nd), process_grid(nd)
+      logical   :: time_in_phase = .false.
 
       ! Define namelist for input files
       namelist /sim_params/ final_time, delta_t, ctest, ctest_ref_file, test_case
@@ -306,7 +309,7 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
       namelist /grid_dims/ num_cells_x4, num_cells_x5, num_cells_x6
       namelist /domain_dims/ v_max, x1_max, x2_max, x3_max
       namelist /advect_params/ bc_type, stencil, interpolator_type, stencil_x
-      namelist /output/ file_prefix
+      namelist /output/ file_prefix, time_in_phase
       namelist /parallel_params/ n_blocks, block_dim, process_grid
 
       aux_data_idx_mn(:) = 1
@@ -330,6 +333,7 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
       sim%restart_filename = restart_filename
       sim%first_time_step = restart_itime
       sim%n_diagnostics = n_diagnostics
+      sim%time_in_phase = time_in_phase
 
       if ( sim%restart .EQV. .false.) then
             sim%first_time_step=1
