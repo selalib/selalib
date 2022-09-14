@@ -263,6 +263,7 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
       ! local variables
       sll_int32 :: input_file
       sll_int32 :: IO_stat
+      sll_int32 :: aux_data_idx_mn(6)
       ! For namelists
       sll_real64 :: final_time
       sll_real64 :: delta_t
@@ -307,6 +308,8 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
       namelist /advect_params/ bc_type, stencil, interpolator_type, stencil_x
       namelist /output/ file_prefix
       namelist /parallel_params/ n_blocks, block_dim, process_grid
+
+      aux_data_idx_mn(:) = 1
 
       sim%nml_filename = filename
       n_iterations = -1
@@ -540,23 +543,7 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
          call sll_s_ascii_file_create( trim(sim%out_file_prefix)//'.dat', sim%thdiag_file_id, ierr)
       endif
 
-    end subroutine init_6d_vp_dd
 
-
-    subroutine run_6d_vp_dd(sim)
-      class(sll_t_sim_bsl_vp_3d3v_cart_dd_slim), intent(inout) :: sim
-
-      sll_int32 :: itime
-      sll_int32 :: aux_data_idx_mn(6)
-      logical :: nan_blowup
-      type(sll_t_time_mark) :: t0, t1, t0_step, t1_step
-      sll_real64 :: wall_time(1)
-
-      ! load initial value
-
-      aux_data_idx_mn(:) = 1
-
-      nan_blowup = .false.
 
       call sll_s_set_local_grid( sim%decomposition%local%nw, &
            sim%decomposition%local%mn, &
@@ -671,170 +658,24 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
               sim%f6d)
       end select
 
+    end subroutine init_6d_vp_dd
+
+
+    subroutine run_6d_vp_dd(sim)
+      class(sll_t_sim_bsl_vp_3d3v_cart_dd_slim), intent(inout) :: sim
+
+      sll_int32 :: itime
+      type(sll_t_time_mark) :: t0, t1, t0_step, t1_step
+      sll_real64 :: wall_time(1)
+
+      ! load initial value
+
+
 !      call sll_f_apply_halo_exchange(sim%topology, sim%decomposition, sim%f6d, sll_f_select_dim(5))
 !      call sll_s_advection_6d_lagrange_dd_slim_advect_eta5(sim%advector, -sim%ey*sim%delta_t*0.5_f64/sim%mesh6d%delta_eta(5), sim%f6d)
 !
 !      call sll_f_apply_halo_exchange(sim%topology, sim%decomposition, sim%f6d, sll_f_select_dim(6))
       !      call sll_s_advection_6d_lagrange_dd_slim_advect_eta6(sim%advector, -sim%ez*sim%delta_t*0.5_f64/sim%mesh6d%delta_eta(6), sim%f6d)
-
-      ! First time step (outside the loop to exclude first time step from timings)
-      itime = 1
-      if (sim%mpi_rank == 0 ) &
-           call sll_s_set_time_mark(t0_step)
-      select case( sim%advector_type )
-      case ( sll_p_lagrange_centered )
-         call sll_s_advection_6d_lagrange_dd_slim_fadvect_eta1(sim%ladvector, &
-              sim%topology, &
-              sim%decomposition, &
-              sim%f6d)
-         call sll_s_advection_6d_lagrange_dd_slim_fadvect_eta2(sim%ladvector, &
-              sim%topology, &
-              sim%decomposition, &
-              sim%f6d)
-         call sll_s_advection_6d_lagrange_dd_slim_fadvect_eta3(sim%ladvector, &
-              sim%topology, &
-              sim%decomposition, &
-              sim%f6d)
-
-      case ( sll_p_lagrange_fixed )
-         call sll_f_apply_halo_exchange(sim%topology, &
-              sim%decomposition, &
-              sim%f6d, &
-              1, &
-              sim%halo_width_per_dimension(1), &
-              sim%halo_width_per_dimension(1))
-
-         call sll_s_advection_6d_lagrange_dd_slim_advect_eta1(sim%ladvector, &
-              sim%decomposition, &
-              sim%disp_eta1, &
-              sim%f6d)
-
-         call sll_f_apply_halo_exchange(sim%topology, &
-              sim%decomposition, &
-              sim%f6d, &
-              2, &
-              sim%halo_width_per_dimension(2), &
-              sim%halo_width_per_dimension(2))
-
-         call sll_s_advection_6d_lagrange_dd_slim_advect_eta2(sim%ladvector, &
-              sim%decomposition, &
-              sim%disp_eta2, &
-              sim%f6d)
-
-         call sll_f_apply_halo_exchange(sim%topology, &
-              sim%decomposition, &
-              sim%f6d, &
-              3, &
-              sim%halo_width_per_dimension(3), &
-              sim%halo_width_per_dimension(3))
-         call sll_s_advection_6d_lagrange_dd_slim_advect_eta3(sim%ladvector, &
-              sim%decomposition, &
-              sim%disp_eta3, &
-              sim%f6d)
-
-      case ( sll_p_splines )
-         call sll_s_advection_6d_spline_dd_slim_fadvect_eta1(sim%sadvector, &
-              sim%topology, &
-              sim%decomposition, &
-              sim%f6d)
-         call sll_s_advection_6d_spline_dd_slim_fadvect_eta2(sim%sadvector, &
-              sim%topology, &
-              sim%decomposition, &
-              sim%f6d)
-         call sll_s_advection_6d_spline_dd_slim_fadvect_eta3(sim%sadvector, &
-              sim%topology, &
-              sim%decomposition, &
-              sim%f6d)
-      end select
-      call sll_s_compute_charge_density_6d_dd_slim(sim%f6d, &
-           sim%decomposition, &
-           sim%rho, &
-           sim%collective_3d_velocity, &
-           sim%mesh6d%volume_eta456)
-
-      ! Compute electric fields
-      !if (all(sim%topology_3d_velocity%coords == 1)) then
-      ! call the existing Poisson solver
-      call sll_s_poisson_3d_periodic_par_solve( sim%poisson, sim%rho, sim%phi )
-
-      call sll_s_poisson_3d_periodic_par_compute_e_from_phi( sim%poisson, sim%phi, &
-           sim%ex, sim%ey, sim%ez)
-      !end if
-
-      call sll_s_time_history_diagnostics(&
-           sim%decomposition%local%mn, &
-           sim%decomposition%local%mx, &
-           sim%decomposition%local%mn, &  ! previously: `sim%decomposition%local%lo`
-           real(itime, f64)*sim%delta_t, &
-           sim%mesh6d%volume, &
-           sim%mesh6d%volume_eta123, &
-           sim%etas,&
-           sim%f6d, &
-           sim%rho, &
-           sim%phi, &
-           sim%ex, &
-           sim%ey, &
-           sim%ez, &
-           sim%thdiag_file_id, &
-           sim%topology_3d_velocity%coords)
-
-
-      select case( sim%advector_type )
-      case ( sll_p_splines )
-         call sll_s_advection_6d_spline_dd_slim_advect_eta4(sim%sadvector, &
-              sim%topology, sim%decomposition, &
-              sim%ex*sim%delta_t/sim%mesh6d%delta_eta(4), &
-              sim%f6d)
-         call sll_s_advection_6d_spline_dd_slim_advect_eta5(sim%sadvector, &
-              sim%topology, sim%decomposition, &
-              sim%ey*sim%delta_t/sim%mesh6d%delta_eta(5), &
-              sim%f6d)
-         call sll_s_advection_6d_spline_dd_slim_advect_eta6(sim%sadvector, &
-              sim%topology, sim%decomposition, &
-              sim%ez*sim%delta_t/sim%mesh6d%delta_eta(6), &
-              sim%f6d)
-      case default
-         call sll_f_apply_halo_exchange(sim%topology, &
-              sim%decomposition, &
-              sim%f6d, &
-              4, &
-              sim%halo_width_per_dimension(4), &
-              sim%halo_width_per_dimension(4))
-         call sll_s_advection_6d_lagrange_dd_slim_advect_eta4(sim%ladvector, &
-              sim%decomposition, &
-              sim%ex*sim%delta_t/sim%mesh6d%delta_eta(4), &
-              sim%f6d)
-         call sll_f_apply_halo_exchange(sim%topology, &
-              sim%decomposition, &
-              sim%f6d, &
-              5, &
-              sim%halo_width_per_dimension(5), &
-              sim%halo_width_per_dimension(5))
-         call sll_s_advection_6d_lagrange_dd_slim_advect_eta5(sim%ladvector, &
-              sim%decomposition, &
-              sim%ey*sim%delta_t/sim%mesh6d%delta_eta(5), &
-              sim%f6d)
-         call sll_f_apply_halo_exchange(sim%topology, &
-              sim%decomposition, &
-              sim%f6d, &
-              6, &
-              sim%halo_width_per_dimension(6), &
-              sim%halo_width_per_dimension(6))
-         call sll_s_advection_6d_lagrange_dd_slim_advect_eta6(sim%ladvector, &
-              sim%decomposition, &
-              sim%ez*sim%delta_t/sim%mesh6d%delta_eta(6), &
-              sim%f6d)
-      end select
-
-      if (sim%mpi_rank == 0) then
-         call sll_s_set_time_mark(t1_step)
-         write (*, "(A, F7.3, A, F7.3, A, F7.3)") " Time ", real(itime,f64)*sim%delta_t, " of ", sim%time_final, &
-              " :: step run time [s] = ", sll_f_time_elapsed_between(t0_step, t1_step)
-#ifdef USE_FMEMPOOL
-         call mp_statistics()
-#endif
-      end if
-
 
 
       ! ------------------------------------------------------------------------
@@ -843,14 +684,12 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
       !
       ! ------------------------------------------------------------------------
 
-      call sll_s_collective_barrier(sll_v_world_collective)
-
       if (sim%mpi_rank == 0 ) then
          write(*,*) "Entering main loop ... "
          call sll_s_set_time_mark(t0)
       end if
 
-      do itime = 2, sim%n_iterations
+      do itime = sim%first_time_step, (sim%first_time_step + sim%n_iterations - 1)
         if (sim%mpi_rank == 0 ) &
           call sll_s_set_time_mark(t0_step)
 
@@ -1019,13 +858,6 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
 
         call sll_s_stop_clock(sim%clocks, 'D')
 
-!        if (nan_blowup) then
-!          if (sim%mpi_rank == 0) then
-!            write(*,*) "Fatal error: NaN detected, shutting down!"
-!          endif
-!          exit
-!        endif
-
         select case( sim%advector_type )
         case ( sll_p_splines )
            call sll_s_start_clock(sim%clocks, 'V')
@@ -1106,6 +938,7 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
           exit
         endif
       end do  ! time loop
+      sim%first_time_step = itime
 
       if (sim%mpi_rank == 0) then
          call sll_s_set_time_mark(t1)
