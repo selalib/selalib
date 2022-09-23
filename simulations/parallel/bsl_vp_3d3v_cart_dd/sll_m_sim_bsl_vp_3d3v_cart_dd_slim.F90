@@ -710,7 +710,7 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
 
         call sll_s_stop_clock(sim%clocks, 'D')
 
-        if ((sim%time_in_phase .eqv. .true.) and (itime == (sim%first_time_step + sim%n_iterations - 1)) ) then
+        if ((sim%time_in_phase .eqv. .true.) .and. (itime == (sim%first_time_step + sim%n_iterations - 1)) ) then
            call sim%advect_v(0.5_f64*sim%delta_t)
         else
            call sim%advect_v(sim%delta_t)

@@ -183,12 +183,8 @@ subroutine sim_bsl_vp_3d3v_cart_dd_slim_write_diagnostics_init(sim_cptr) bind(C,
 
     ! Compute electric fields
     if (all(sim%topology_3d_velocity%coords == 0)) then
-        if ( sim%poisson_solve .eqv. .true. ) then
         ! call the existing Poisson solver
         call sll_s_poisson_3d_periodic_par_solve( sim%poisson, sim%rho, sim%phi )
-        else
-        call sll_o_apply_remap_3d( sim%poisson%rmp_split_to_x1, sim%c_te * sim%rho, sim%phi )
-        end if
         call sll_s_poisson_3d_periodic_par_compute_e_from_phi( sim%poisson, sim%phi, &
             sim%ex, sim%ey, sim%ez)
     end if
@@ -200,40 +196,13 @@ subroutine sim_bsl_vp_3d3v_cart_dd_slim_write_diagnostics_init(sim_cptr) bind(C,
 !         sim%ey = 0.01*(erf(itime/1000.-2.)+1.)
 !         sim%ez = 0.
 
-    ! Construct E in direction of current v_1 and v_2
-
-
-    call sll_s_compute_momentum_energy_6d_dd(sim%f6d, &
-        sim%decomposition, &
-        sim%collective_3d_velocity, &
-        sim%mesh6d%volume_eta456,&
-        sim%etas, &
-        sim%momentum,&
-        sim%energy)
-
-    if (all(sim%topology%coords(4:6) == 0)) then
-
-!        call sll_s_plot_diagnostic_time_dd(&
-!                sim%rho, &
-!                sim%energy, &
-!                sim%momentum, &
-!                sim%ex, &
-!                sim%ey, &
-!                sim%ez, &
-!                int(sim%decomposition%local%mn(1:3)-1, i64), &
-!                int(sim%mesh6d%num_cells(1:3), i64), &
-!                0, &
-!                'diagnostics3d',&
-!                sim%collective_3d_spatial)
-    endif
-
     call sll_s_time_history_diagnostics(&
             sim%decomposition%local%mn, &
             sim%decomposition%local%mx, &
             sim%decomposition%local%mn, &  ! previously: `sim%decomposition%local%lo`
             real(sim%first_time_step-1, f64)*sim%delta_t, &
-            sim%volume, &
-            sim%volume_x, &
+            sim%mesh6d%volume, &
+            sim%mesh6d%volume_eta123, &
             sim%etas,&
             sim%f6d, &
             sim%rho, &
@@ -242,25 +211,6 @@ subroutine sim_bsl_vp_3d3v_cart_dd_slim_write_diagnostics_init(sim_cptr) bind(C,
             sim%ey, &
             sim%ez, &
             sim%thdiag_file_id, &
-            sim%topology_3d_velocity%coords)
-
-    call sll_s_additional_time_history_diagnostics_dd(&
-            sim%decomposition%local%mn, &
-            sim%decomposition%local%mx, &
-            sim%decomposition%local%mn, &  ! previously: `sim%decomposition%local%lo`
-            real(sim%first_time_step-1, f64)*sim%delta_t, &
-            sim%volume, &
-            sim%volume_x, &
-            sim%etas,&
-            sim%f6d, &
-            sim%rho, &
-            sim%phi, &
-            sim%energy, &
-            sim%momentum, &
-            sim%ex, &
-            sim%ey, &
-            sim%ez, &
-            sim%thdiag_add_file_id, &
             sim%topology_3d_velocity%coords)
 end subroutine sim_bsl_vp_3d3v_cart_dd_slim_write_diagnostics_init
 
@@ -279,12 +229,8 @@ subroutine sim_bsl_vp_3d3v_cart_dd_slim_write_diagnostics(sim_cptr, itime) bind(
 
     ! Compute electric fields
     if (all(sim%topology_3d_velocity%coords == 0)) then
-        if ( sim%poisson_solve .eqv. .true. ) then
         ! call the existing Poisson solver
         call sll_s_poisson_3d_periodic_par_solve( sim%poisson, sim%rho, sim%phi )
-        else
-        call sll_o_apply_remap_3d( sim%poisson%rmp_split_to_x1, sim%c_te * sim%rho, sim%phi )
-        end if
         call sll_s_poisson_3d_periodic_par_compute_e_from_phi( sim%poisson, sim%phi, &
             sim%ex, sim%ey, sim%ez)
     end if
@@ -293,35 +239,13 @@ subroutine sim_bsl_vp_3d3v_cart_dd_slim_write_diagnostics(sim_cptr, itime) bind(
     call sll_s_collective_bcast_3d_real64(sim%collective_3d_velocity, sim%ey, 0)
     call sll_s_collective_bcast_3d_real64(sim%collective_3d_velocity, sim%ez, 0)
 
-    call sll_s_compute_momentum_energy_6d_dd(sim%f6d, &
-                sim%decomposition, &
-                sim%collective_3d_velocity, &
-                sim%mesh6d%volume_eta456,&
-                sim%etas, &
-                sim%momentum,&
-                sim%energy)
-    if (all(sim%topology%coords(4:6) == 0)) then
-!        call sll_s_plot_diagnostic_time_dd(&
-!            sim%rho, &
-!            sim%energy, &
-!            sim%momentum, &
-!            sim%ex, &
-!            sim%ey, &
-!            sim%ez, &
-!            int(sim%decomposition%local%mn(1:3)-1, i64), &
-!            int(sim%mesh6d%num_cells(1:3), i64), &
-!            itime, &
-!            'diagnostics3d',&
-!            sim%collective_3d_spatial)
-    endif
-
     call sll_s_time_history_diagnostics(&
             sim%decomposition%local%mn, &
             sim%decomposition%local%mx, &
             sim%decomposition%local%mn, &  ! previously: `sim%decomposition%local%lo`
             real(itime, f64)*sim%delta_t, &
-            sim%volume, &
-            sim%volume_x, &
+            sim%mesh6d%volume, &
+            sim%mesh6d%volume_eta123, &
             sim%etas,&
             sim%f6d, &
             sim%rho, &
@@ -330,25 +254,6 @@ subroutine sim_bsl_vp_3d3v_cart_dd_slim_write_diagnostics(sim_cptr, itime) bind(
             sim%ey, &
             sim%ez, &
             sim%thdiag_file_id, &
-            sim%topology_3d_velocity%coords)
-
-    call sll_s_additional_time_history_diagnostics_dd(&
-            sim%decomposition%local%mn, &
-            sim%decomposition%local%mx, &
-            sim%decomposition%local%mn, &  ! previously: `sim%decomposition%local%lo`
-            real(itime, f64)*sim%delta_t, &
-            sim%volume, &
-            sim%volume_x, &
-            sim%etas,&
-            sim%f6d, &
-            sim%rho, &
-            sim%phi, &
-            sim%energy, &
-            sim%momentum, &
-            sim%ex, &
-            sim%ey, &
-            sim%ez, &
-            sim%thdiag_add_file_id, &
             sim%topology_3d_velocity%coords)
 
 end subroutine sim_bsl_vp_3d3v_cart_dd_slim_write_diagnostics
@@ -361,12 +266,12 @@ subroutine sim_bsl_vp_3d3v_cart_dd_slim_advect_v(sim_cptr, delta_t) bind(C,name=
     call sim%advect_v(delta_t)
 end subroutine sim_bsl_vp_3d3v_cart_dd_slim_advect_v
 
-subroutine sim_bsl_vp_3d3v_cart_dd_slim_advect_x(sim_cptr, delta_t) bind(C,name='sim_bsl_vp_3d3v_cart_dd_slim_advect_x')
+subroutine sim_bsl_vp_3d3v_cart_dd_slim_advect_x(sim_cptr) bind(C,name='sim_bsl_vp_3d3v_cart_dd_slim_advect_x')
     type(c_ptr), intent(in) :: sim_cptr
     type(sll_t_sim_bsl_vp_3d3v_cart_dd_slim), pointer :: sim
-    real(c_double), intent( in ) :: delta_t
+!    real(c_double), intent( in ) :: delta_t
     call c_f_pointer(sim_cptr, sim)
-    call sim%advect_x(delta_t)
+    call sim%advect_x()
 end subroutine sim_bsl_vp_3d3v_cart_dd_slim_advect_x
 
 end module sll_m_sim_bsl_vp_3d3v_cart_dd_slim_interface
