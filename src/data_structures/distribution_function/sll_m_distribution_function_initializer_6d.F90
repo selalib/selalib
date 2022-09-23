@@ -385,6 +385,9 @@ contains
     case ( "pslab2" )
        allocate( sll_t_pslab2_parameters_6d :: params )
        params%distrib_type = sll_p_pslab2
+    case ( "twogaussian_sum" )
+       allocate( sll_t_twogaussian_parameters_6d :: params )
+       params%distrib_type = sll_p_twogaussian_sum
     case default
        SLL_ERROR('Type of initial distribution not implemented.', 'sll_s_distribution_params_6d_new')
     end select
@@ -567,9 +570,14 @@ contains
     
     self%v_thermal(1,:) = v_thermal1
     self%v_thermal(2,:) = v_thermal2
+    self%v_mean(1,:) = v_mean1
+    self%v_mean(2,:) = v_mean2
     self%kx = kx
     self%alpha = alpha
-    self%delta = [1-portion, portion]
+!    self%delta = [1-portion, portion]
+    self%delta = [(1-portion)/sqrt(product(v_thermal1)), &
+         portion/sqrt(product(v_thermal2))]
+    self%factor = 1.0_f64/(sqrt(sll_p_twopi)**3)
     
   end subroutine init_twogaussian
 
