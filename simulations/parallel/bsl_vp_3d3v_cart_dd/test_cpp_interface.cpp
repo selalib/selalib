@@ -23,7 +23,7 @@ extern "C"
   void sim_bsl_vp_3d3v_cart_dd_slim_set_distribution(void** sim, double *& cPtr);
   void sim_bsl_vp_3d3v_cart_dd_slim_get_local_size(void** sim, int32_t *cPtr);
   void sim_bsl_vp_3d3v_cart_dd_slim_advect_v(void** sim, double *delta_t);
-  void sim_bsl_vp_3d3v_cart_dd_slim_advect_x(void** sim, double *delta_t);
+  void sim_bsl_vp_3d3v_cart_dd_slim_advect_x(void** sim);
   void sim_bsl_vp_3d3v_cart_dd_slim_print_etas(void** sim);
   void sim_bsl_vp_3d3v_cart_dd_slim_write_diagnostics_init(void** sim);
   void sim_bsl_vp_3d3v_cart_dd_slim_write_diagnostics(void** sim, int32_t* timeStepNumber);
