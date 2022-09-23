@@ -300,7 +300,7 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
       sll_int32 :: n_iterations
       sll_int32 :: n_diagnostics = 1
       sll_int32  :: n_blocks(nd), block_dim(nd), process_grid(nd)
-      logical   :: time_in_phase = .false.
+      logical   :: time_in_phase = .true.
 
       ! Define namelist for input files
       namelist /sim_params/ final_time, delta_t, ctest, ctest_ref_file, test_case
@@ -710,7 +710,7 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
 
         call sll_s_stop_clock(sim%clocks, 'D')
 
-        if ( itime == (sim%first_time_step + sim%n_iterations - 1) ) then
+        if ((sim%time_in_phase .eqv. .true.) and (itime == (sim%first_time_step + sim%n_iterations - 1)) ) then
            call sim%advect_v(0.5_f64*sim%delta_t)
         else
            call sim%advect_v(sim%delta_t)
