@@ -547,6 +547,7 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
 
       if(sll_f_get_collective_rank(sll_v_world_collective)==0) then
          call sll_s_ascii_file_create( trim(sim%out_file_prefix)//'.dat', sim%thdiag_file_id, ierr)
+         SLL_ASSERT( ierr == 0 )
       endif
 
 
