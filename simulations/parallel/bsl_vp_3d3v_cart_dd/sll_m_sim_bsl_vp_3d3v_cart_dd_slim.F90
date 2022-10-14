@@ -212,6 +212,9 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
      type(sll_t_clocks) :: clocks
      sll_int32 :: n_diagnostics
 
+     sll_real64 :: volume
+     sll_real64 :: volume_x
+
      logical :: time_in_phase = .false.
 
      contains
@@ -551,6 +554,10 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
       endif
 
 
+      ! Scale volume for output by Lx*Ly*Lz
+      sim%volume_x = product(sim%mesh6d%eta_max(1:3)-sim%mesh6d%eta_min(1:3))
+      sim%volume = sim%mesh6d%volume/sim%volume_x
+      sim%volume_x = sim%mesh6d%volume_eta123/sim%volume_x
 
       call sll_s_set_local_grid( sim%decomposition%local%nw, &
            sim%decomposition%local%mn, &
@@ -605,8 +612,8 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
                  sim%decomposition%local%mx, &
                  sim%decomposition%local%mn, &  ! previously: `sim%decomposition%local%lo`
                  0.0_f64, &
-                 sim%mesh6d%volume, &
-                 sim%mesh6d%volume_eta123, &
+                 sim%volume, &
+                 sim%volume_x, &
                  sim%etas,&
                  sim%f6d, &
                  sim%rho, &
@@ -695,8 +702,8 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
                     sim%decomposition%local%mx, &
                     sim%decomposition%local%mn, &  ! previously: `sim%decomposition%local%lo`
                     real(itime, f64)*sim%delta_t, &
-                    sim%mesh6d%volume, &
-                    sim%mesh6d%volume_eta123, &
+                    sim%volume, &
+                    sim%volume_x, &
                     sim%etas,&
                     sim%f6d, &
                     sim%rho, &
