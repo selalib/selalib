@@ -201,8 +201,8 @@ subroutine sim_bsl_vp_3d3v_cart_dd_slim_write_diagnostics_init(sim_cptr) bind(C,
             sim%decomposition%local%mx, &
             sim%decomposition%local%mn, &  ! previously: `sim%decomposition%local%lo`
             real(sim%first_time_step-1, f64)*sim%delta_t, &
-            sim%mesh6d%volume, &
-            sim%mesh6d%volume_eta123, &
+            sim%volume, &
+            sim%volume_x, &
             sim%etas,&
             sim%f6d, &
             sim%rho, &
@@ -244,8 +244,8 @@ subroutine sim_bsl_vp_3d3v_cart_dd_slim_write_diagnostics(sim_cptr, itime) bind(
             sim%decomposition%local%mx, &
             sim%decomposition%local%mn, &  ! previously: `sim%decomposition%local%lo`
             real(itime, f64)*sim%delta_t, &
-            sim%mesh6d%volume, &
-            sim%mesh6d%volume_eta123, &
+            sim%volume, &
+            sim%volume_x, &
             sim%etas,&
             sim%f6d, &
             sim%rho, &
