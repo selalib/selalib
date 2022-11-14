@@ -98,7 +98,7 @@ int main(int argc, char **argv)
   sim_bsl_vp_3d3v_cart_dd_slim_get_local_size(simPtrPtr, localSize.data());
   std::cout << localSize << std::endl;
 
-  bool doDiagnostics = true;
+  bool doDiagnostics = false;
   if (doDiagnostics) {
     // have a "diagnostics-only" simulation that does only diagnostics output (which should stay the same for all time steps)
     sim_bsl_vp_3d3v_cart_dd_slim_write_diagnostics_init(simPtrPtr);
@@ -108,28 +108,30 @@ int main(int argc, char **argv)
       sim_bsl_vp_3d3v_cart_dd_slim_write_diagnostics(simPtrPtr,iPtr);
     }
   } else{
-
     int32_t bufferSize = std::accumulate(localSize.begin(), localSize.end(), 1, std::multiplies<int32_t>());
 
-    std::vector<double> field (bufferSize, 1.);
-    for (int i=0; i<3; ++i){
+    std::vector<double> field(bufferSize, 1.);
+    for (int i = 0; i < 3; ++i)
+    {
       std::cout << "get distribution" << std::endl;
-      double * fieldAddress;
+      double *fieldAddress;
       sim_bsl_vp_3d3v_cart_dd_slim_get_distribution(simPtrPtr, fieldAddress);
-      field = std::vector<double>(fieldAddress, fieldAddress+bufferSize);
-      //std::cout << field << std::endl;
-      // std::cout << std::accumulate(field.begin(), field.end(), 0) << std::endl;
-      // // modify field
-      // for (auto & f: field){
-      //   f += 1.;
-      // }
-      // std::cout << std::accumulate(field.begin(), field.end(), 0) << std::endl;
+      field = std::vector<double>(fieldAddress, fieldAddress + bufferSize);
+      MPI_Barrier(mpi_world);
+      // std::cout << field << std::endl;
+      //  std::cout << std::accumulate(field.begin(), field.end(), 0) << std::endl;
+      //  // modify field
+      //  for (auto & f: field){
+      //    f += 1.;
+      //  }
+      //  std::cout << std::accumulate(field.begin(), field.end(), 0) << std::endl;
       auto fieldData = field.data();
       std::cout << "set distribution" << std::endl;
       // sim_bsl_vp_3d3v_cart_dd_slim_set_distribution(sim, fieldData);
-      std::memcpy(fieldAddress, fieldData, bufferSize*sizeof(double));
+      std::memcpy(fieldAddress, fieldData, bufferSize * sizeof(double));
 
-      std::cout << "run" << std::endl;
+      MPI_Barrier(mpi_world);
+      std::cout << "run " << i << std::endl;
       sim_bsl_vp_3d3v_cart_dd_slim_run(simPtrPtr);
     }
   }
