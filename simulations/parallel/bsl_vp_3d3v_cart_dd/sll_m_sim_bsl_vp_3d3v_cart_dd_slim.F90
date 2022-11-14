@@ -551,6 +551,7 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
       if(sll_f_get_collective_rank(sll_v_world_collective)==0) then
          call sll_s_ascii_file_create( trim(sim%out_file_prefix)//'.dat', sim%thdiag_file_id, ierr)
          SLL_ASSERT( ierr == 0 )
+         SLL_ASSERT( sim%thdiag_file_id .gt. -1 )
       endif
 
 
@@ -755,11 +756,7 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
               [sim%mpi_world_size], wall_time )
       end if
 
-      if (sim%mpi_rank == 0) then
-         close(sim%thdiag_file_id)
-      end if
-
-      if (sim%mpi_rank == 0 .and. sim%ctest .eqv. .true.) then
+      if (sll_f_get_collective_rank(sll_v_world_collective)==0 .and. sim%ctest .eqv. .true.) then
          call sll_s_check_diagnostics(trim(sim%ctest_ref_file), trim(sim%out_file_prefix)//'.dat')
       end if
 
@@ -771,6 +768,9 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
 
       sll_int32 :: ierr
 
+      if(sll_f_get_collective_rank(sll_v_world_collective)==0) then
+         close(sim%thdiag_file_id)
+      end if
 #ifdef USE_FMEMPOOL
       call mp_finalize()
 #endif
