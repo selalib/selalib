@@ -551,7 +551,6 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
       if(sim%mpi_rank==0) then
          call sll_s_ascii_file_create( trim(sim%out_file_prefix)//'.dat', sim%thdiag_file_id, ierr)
          SLL_ASSERT( ierr == 0 )
-         SLL_ASSERT( sim%thdiag_file_id .gt. -1 )
       endif
 
 
