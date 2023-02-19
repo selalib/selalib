@@ -269,10 +269,12 @@ contains
     sll_real64 :: vi(3), xi(3), x(3), wi(particle_group%n_weights)
     sll_int32  :: i_part, counter
     sll_real64 :: time0, Rx(3), q, m, g0, df_weight
-    logical :: delta_perturb
+    logical :: delta_perturb, lindf0
 
     time0 = 0.0_f64
+    lindf0 = .false.
     if( present(time) ) time0 = time
+    if( present(lindf) ) lindf0 = lindf
 
     delta_perturb = self%delta_perturb
     self%delta_perturb = .false.
@@ -337,7 +339,7 @@ contains
           end if
           call particle_group%set_v(i_part, vi)
        end if
-       if(lindf) then
+       if(lindf0) then
           wi(1) = df_weight
        else
           wi(2) = g0
