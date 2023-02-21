@@ -56,7 +56,8 @@ TARGET_LINK_LIBRARIES( sll_m_sim_bsl_vp_3d3v_cart_dd_slim_interface
   )
 
 INSTALL( TARGETS sll_m_sim_bsl_vp_3d3v_cart_dd_slim_interface
-  DESTINATION ${INSTALL_DIR_BASE}/sll_m_sim_bsl_vp_3d3v_cart_dd_slim_interface )
+  # DESTINATION ${INSTALL_DIR_BASE}/sll_m_sim_bsl_vp_3d3v_cart_dd_slim_interface 
+)
 
 # build a test that checks if the simulation's functions (exported via _interface module)
 # can be called from a C++ program
@@ -98,7 +99,7 @@ target_link_libraries(
 #  "-nofor_main"
 )
 INSTALL( TARGETS test_cpp_interface
-  DESTINATION ${INSTALL_DIR_BASE}/test_cpp_interface
+  # DESTINATION ${INSTALL_DIR_BASE}/test_cpp_interface
 )
 
 TARGET_LINK_LIBRARIES( ${EXECUTABLE_SLIM} ${SLL_LIB} ${SLL_EXT} ${SLL_DEPS} ${FMEMPOOL} )
