@@ -1,4 +1,11 @@
 
+!> @ingroup distribution_function
+!> @brief
+!> Data types that collect the parameters for various types of initial distributions and define the corresponding functions. This module takes care of the 6d case.
+!> 
+!> @author
+!> Katharina Kormann
+!>
 module sll_m_distribution_function_initializer_6d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
@@ -44,6 +51,7 @@ module sll_m_distribution_function_initializer_6d
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+  !> Parameters describing various types of initial conditions
   sll_int32, parameter :: sll_p_landau_prod = 0
   sll_int32, parameter :: sll_p_landau_sum = 1
   sll_int32, parameter :: sll_p_landau_diag = 2
@@ -66,9 +74,9 @@ module sll_m_distribution_function_initializer_6d
      sll_int32 :: distrib_type
 
    contains
-     procedure( signature_init   ), deferred  :: init
-     procedure( signature_eval   ), deferred  :: eval
-     procedure( signature_eval_v ), deferred  :: eval_v
+     procedure( signature_init   ), deferred  :: init !< initialize the parameters
+     procedure( signature_eval   ), deferred  :: eval !< Evaluation of the distribution function
+     procedure( signature_eval_v ), deferred  :: eval_v !< Evaluation fo the v dependent part (for products)
 
   end type sll_c_distribution_params_6d
 
@@ -141,7 +149,7 @@ module sll_m_distribution_function_initializer_6d
      
   end type sll_t_twogaussian_parameters_6d
 
-  !> Type
+  !> Type for a ITG simulation
   type :: sll_t_itg_parameters_6d
      sll_real64 :: v_thermal(3)
      sll_real64 :: kappa_n0
@@ -157,6 +165,7 @@ module sll_m_distribution_function_initializer_6d
      sll_real64 :: rp
   end type sll_t_itg_parameters_6d
 
+  !> Type for a periodic slab
   type, extends(sll_c_distribution_params_6d) :: sll_t_pslab_parameters_6d
      sll_real64 :: kappa_Ti
      sll_real64 :: kx(3)
@@ -177,6 +186,7 @@ module sll_m_distribution_function_initializer_6d
   
 
 
+  !> Type for a periodic slab
  type, extends(sll_t_pslab_parameters_6d) :: sll_t_pslab2_parameters_6d
       
   sll_real64 :: randArray(509)= (/-0.2664, 0.014, -0.3229, -0.3171, -0.0291, -0.0062, -0.4745, 0.4168, &
@@ -250,6 +260,8 @@ module sll_m_distribution_function_initializer_6d
  
      
   end type sll_t_pslab2_parameters_6d
+
+  
  type, extends(sll_t_pslab2_parameters_6d) :: sll_t_delta_parameters_6d
 
    contains

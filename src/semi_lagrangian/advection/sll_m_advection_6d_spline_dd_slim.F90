@@ -1,3 +1,10 @@
+!> @ingroup advection
+!> @brief
+!> Module implementing spline advection for the setting of a domain decomposition in 6d with extra buffers for the halo cells. The spline calculations are localized by an algorithm from signal processing.
+!> @author
+!> Katharina Kormann
+!> Klaus Reuter, Max Planck Computing and Data Facility (MPCDF)
+
 !  Note:  This module was (partly) rewritten such that Fortran range operators ":"
 !  are avoided wherever possible.  These operators slow down the code a lot.
 
