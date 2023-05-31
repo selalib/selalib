@@ -1,3 +1,17 @@
+!------------------------------------------------------------------------------!
+! Implementation of a semi-Lagrangian solver for 6D Vlasov-Poisson
+! The implementation is based on a domain decomposition and uses lagrange or
+! localized spline interpolation for the advection step
+! The implementation is optimized and the details of the implementation can be
+! found in
+! Kormann K, Reuter K, Rampp M. A massively parallel semi-Lagrangian solver for
+! the six-dimensional Vlasov–Poisson equation. The International Journal of
+! High Performance Computing Applications. 2019;33(5):924-947.
+! doi:10.1177/1094342019834644
+!
+! authors: Katharina Kormann, Klaus Reuter
+!------------------------------------------------------------------------------
+
 module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
@@ -33,7 +47,7 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
        sll_s_advection_6d_spline_dd_slim_advect_eta6
 
   use sll_m_ascii_io, only: &
-    sll_s_ascii_file_create
+     sll_s_ascii_file_create
 
   use sll_m_collective, only : &
        sll_f_create_collective, &
@@ -79,7 +93,6 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
        sll_p_lagrange_centered
 
   use sll_m_sim_6d_utilities, only : &
-       sll_s_compute_charge_density_6d_dd, &
        sll_s_compute_charge_density_6d_dd_slim, &
        sll_s_time_history_diagnostics, &
        sll_s_check_diagnostics, &
@@ -87,9 +100,9 @@ module sll_m_sim_bsl_vp_3d3v_cart_dd_slim
        sll_f_check_triggered_shutdown
 
   use sll_m_sim_6d_utilities, only : &
-       sll_t_clocks, sll_t_stopwatch, &
-       sll_s_init_clocks, sll_s_finalize_clocks, &
-       sll_s_start_clock, sll_s_stop_clock
+       sll_t_clocks, sll_s_init_clocks, &
+       sll_s_finalize_clocks, sll_s_start_clock, &
+       sll_s_stop_clock
 
   use sll_m_distribution_function_initializer_6d, only: &
        sll_s_set_local_grid,  &

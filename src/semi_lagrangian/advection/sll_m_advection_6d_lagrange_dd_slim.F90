@@ -1,3 +1,12 @@
+
+!> @ingroup advection
+!> @brief
+!> Module implementing Lagrange advection for the setting of a domain decomposition in 6d with extra buffers for the halo cells.
+!> @author
+!> Katharina Kormann
+!> Klaus Reuter, Max Planck Computing and Data Facility (MPCDF)
+
+
 #ifdef USE_HALO_REAL32
 #define HALO_DTYPE sll_real32
 #else

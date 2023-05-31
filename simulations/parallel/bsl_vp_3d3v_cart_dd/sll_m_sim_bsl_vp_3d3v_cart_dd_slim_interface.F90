@@ -1,3 +1,15 @@
+!------------------------------------------------------------------------------!
+! Interface to the bsl_vp_3d3v_cart_dd_slim simulation for the use with the
+! combination technique. The details can be found in
+!
+! Pollinger, T., Rentrop, J., Pflüger, D., & Kormann, K. (2022).
+!  A mass-conserving sparse grid combination technique with biorthogonal
+! hierarchical basis functions for kinetic simulations.
+! arXiv preprint arXiv:2209.14064.
+!
+! authors: Katharina Kormann, Theresa Pollinger
+!------------------------------------------------------------------------------
+
 module sll_m_sim_bsl_vp_3d3v_cart_dd_slim_interface
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -9,11 +21,7 @@ use sll_m_sim_bsl_vp_3d3v_cart_dd_slim, only: &
 
 use sll_m_sim_6d_utilities, only : &
     sll_s_compute_charge_density_6d_dd_slim, &
-    sll_s_time_history_diagnostics, &
-    sll_s_additional_time_history_diagnostics_dd,&
-    sll_s_compute_momentum_energy_6d_dd, &
-    sll_s_plot_diagnostic_time, &
-    sll_s_plot_diagnostic_time_dd
+    sll_s_time_history_diagnostics
 
 use sll_m_poisson_3d_periodic_par, only : &
     sll_s_poisson_3d_periodic_par_compute_e_from_phi, &
