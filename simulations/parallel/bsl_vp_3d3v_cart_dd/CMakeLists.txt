@@ -4,8 +4,7 @@ set(TEST_NAME_SLIM "sim_${SIM_NAME_SLIM}")
 set(EXECUTABLE_SLIM "${TEST_NAME_SLIM}")
 
 add_executable(
-  ${EXECUTABLE_SLIM} sll_m_sim_${SIM_NAME_SLIM}.F90 ${TEST_NAME_SLIM}.F90
-                     sll_m_sim_6d_utilities.F90)
+  ${EXECUTABLE_SLIM} sll_m_sim_${SIM_NAME_SLIM}.F90 ${TEST_NAME_SLIM}.F90 )
 
 if(USE_FMEMPOOL)
   set(FMEMPOOL "fmempool")
@@ -62,7 +61,8 @@ target_link_libraries(test_cpp_interface
 	sll_m_sim_bsl_vp_3d3v_cart_dd_slim_interface ${MPI_CXX_LIBRARIES})
 install(TARGETS test_cpp_interface DESTINATION ${INSTALL_DIR})
 
-target_link_libraries(${EXECUTABLE_SLIM} ${SLL_LIB} ${SLL_EXT} ${SLL_DEPS}
+target_link_libraries(${EXECUTABLE_SLIM} sll_m_sim_bsl_vp_3d3v_cart_dd_slim_interface
+	${SLL_LIB} ${SLL_EXT} ${SLL_DEPS}
                       ${FMEMPOOL})
 install(TARGETS ${EXECUTABLE_SLIM} DESTINATION ${INSTALL_DIR})
 
