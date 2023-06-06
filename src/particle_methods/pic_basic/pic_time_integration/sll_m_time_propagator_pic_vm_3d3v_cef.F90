@@ -189,11 +189,9 @@ contains
           call self%particle_group%group(i_sp)%set_v(i_part, vi)
           ! Update particle weights
           if (self%particle_group%group(i_sp)%n_weights == 3 ) then
-             if( self%lindf .eqv. .false.) then
-                wall = self%particle_group%group(i_sp)%get_weights(i_part)
-                wall(3) = self%control_variate%cv(i_sp)%update_df_weight( xnew, vi, 0.0_f64, wall(1), wall(2) )
-                call self%particle_group%group(i_sp)%set_weights( i_part, wall )
-             end if
+             wall = self%particle_group%group(i_sp)%get_weights(i_part)
+             wall(3) = self%control_variate%cv(i_sp)%update_df_weight( xnew, vi, 0.0_f64, wall(1), wall(2) )
+             call self%particle_group%group(i_sp)%set_weights( i_part, wall )
           end if
        end do
     end do
@@ -307,11 +305,9 @@ contains
           call self%particle_group%group(i_sp)%set_v( i_part, vnew )
           ! Update particle weights
           if (self%particle_group%group(i_sp)%n_weights == 3 ) then
-             if( self%lindf .eqv. .false.) then
-                wall = self%particle_group%group(i_sp)%get_weights(i_part)
-                wall(3) = self%control_variate%cv(i_sp)%update_df_weight( xi, vnew, 0.0_f64, wall(1), wall(2) )
-                call self%particle_group%group(i_sp)%set_weights( i_part, wall )
-             end if
+             wall = self%particle_group%group(i_sp)%get_weights(i_part)
+             wall(3) = self%control_variate%cv(i_sp)%update_df_weight( xi, vnew, 0.0_f64, wall(1), wall(2) )
+             call self%particle_group%group(i_sp)%set_weights( i_part, wall )
           end if
        end do
     end do
@@ -333,7 +329,7 @@ contains
     sll_real64,                                     intent(in)    :: dt   !< time step
     !local variables
     sll_int32 :: i_part, i_sp
-    sll_real64 :: vnew(3), xi(3), wall(3), Rx(3)
+    sll_real64 :: vnew(3), xi(3), wall(self%i_weight), Rx(3)
     sll_real64 :: efield(3)
     sll_real64 :: qoverm, q, m
     sll_int32 :: i_weight
@@ -374,15 +370,15 @@ contains
                 Rx(1) = Rx(1) + m*vnew(2)/q
                 Rx = (Rx-self%x_min)/self%Lx
 
-                wall(3) = wall(3) + dt* (q/p%profile%T_i(Rx(1)) * sum(efield * vnew)-&
+                wall(1) = wall(1) + dt* (q/p%profile%T_i(Rx(1)) * sum(efield * vnew)-&
                      efield(2)*(p%profile%drho_0(Rx(1))/p%profile%rho_0(Rx(1))+(0.5_f64*m*sum(vnew**2)/p%profile%T_i(Rx(1)) - 1.5_f64)* p%profile%dT_i(Rx(1))/p%profile%T_i(Rx(1))  ) ) *&
-                     p%eval_v_density(vnew, Rx, m)/p%eval_v_density(vnew, xi, m)*product(self%Lx)
+                     self%control_variate%cv(i_sp)%control_variate(Rx, vnew, 0._f64)/p%eval_v_density(vnew, xi, m)*product(self%Lx)
              type is(sll_t_params_noise_gaussian)
                 Rx = xi
-                wall(3) = wall(3) + dt* (q/p%profile%T_i(Rx(1)) * sum(efield * vnew)-&
+                wall(1) = wall(1) + dt* (q/p%profile%T_i(Rx(1)) * sum(efield * vnew)-&
                      efield(2)*(p%profile%drho_0(Rx(1))/p%profile%rho_0(Rx(1))+(0.5_f64*m*sum(vnew**2)/p%profile%T_i(Rx(1)) - 1.5_f64)* p%profile%dT_i(Rx(1))/p%profile%T_i(Rx(1))  ) ) *product(self%Lx)
              class default
-                wall(3) = wall(3) + dt* qoverm* sum(efield * vnew) *product(self%Lx)
+                wall(1) = wall(1) + dt* qoverm* sum(efield * vnew) *product(self%Lx)
              end select
              call self%particle_group%group(i_sp)%set_weights( i_part, wall )
           end if
@@ -413,8 +409,7 @@ contains
        betar, &
        electrostatic, &
        rhob, &
-       control_variate, &
-       lindf)
+       control_variate)
     class(sll_t_time_propagator_pic_vm_3d3v_cef), intent(out) :: self !< time propagator object 
     class(sll_c_maxwell_3d_base), target,           intent(in)  :: maxwell_solver !< Maxwell solver
     class(sll_c_particle_mesh_coupling_3d), target,   intent(in)  :: particle_mesh_coupling !< Particle mesh coupling
@@ -429,7 +424,6 @@ contains
     logical, optional, intent(in)   :: electrostatic !< true for electrostatic simulation
     sll_real64, optional, target, intent( in ) :: rhob(:) !< charge at the boundary
     class(sll_t_control_variates), optional, target, intent(in) :: control_variate !< Control variate (if delta f)
-    logical, optional, intent(in) :: lindf !< true for linear delta f method
     !local variables
     sll_int32 :: ierr
 
@@ -470,10 +464,8 @@ contains
        allocate(self%control_variate )
        allocate(self%control_variate%cv(self%particle_group%n_species) )
        self%control_variate => control_variate
-       self%i_weight = 3
-       if (present(lindf)) then
-          self%lindf = lindf
-       end if
+       if(self%particle_group%group(1)%n_weights == 1 ) self%lindf = .true.
+       self%i_weight = self%particle_group%group(1)%n_weights
     end if
 
     if (present(betar)) then

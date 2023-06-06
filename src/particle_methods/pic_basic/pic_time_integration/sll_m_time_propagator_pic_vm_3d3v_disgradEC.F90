@@ -167,7 +167,7 @@ contains
     class(sll_c_filter_base_3d), target :: filter !< filter
     sll_int32, optional,                           intent( in ) :: boundary_particles !< particle boundary conditions
     sll_real64, optional,                          intent( in ) :: solver_tolerance !< solver tolerance
-     sll_real64, optional,                          intent( in ) :: iter_tolerance !< iteration tolerance
+    sll_real64, optional,                          intent( in ) :: iter_tolerance !< iteration tolerance
     sll_int32,  optional,                          intent( in ) :: max_iter !< maximal number of iterations
     sll_real64, optional, intent(in) :: betar(2) !< reciprocal plasma beta
     sll_real64, optional, intent(in) :: force_sign !< sign of particle force

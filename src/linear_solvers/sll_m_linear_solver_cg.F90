@@ -314,7 +314,7 @@ contains
 
     niterx = 1
     do k = 1, niterxmax
-       
+
        v = 0.0_f64
        !v_j=A p_j
        call self%ptr_linear_operator%dot (p, v)
@@ -345,7 +345,7 @@ contains
        p = z + w1/alpha * p
        alpha = w1
 
-       niterx    = k +1
+       niterx = k + 1
 
     end do
 
