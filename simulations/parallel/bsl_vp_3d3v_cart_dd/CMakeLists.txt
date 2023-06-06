@@ -23,21 +23,21 @@ include(FortranCInterface)
 
 #TODO have this detected
 SET(CMAKE_CXX_COMPILER ${MPI_CXX_COMPILER})
-# FortranCInterface_VERIFY(CXX)
-Message("fortran mpi libs " ${MPI_Fortran_LIBRARIES} )
-Message("fortran flags " ${MPI_Fortran_LINK_FLAGS} )
-Message("fortran cmake libs " ${CMAKE_Fortran_LIBRARIES} )
-# string(STRIP ${MPI_Fortran_LIBRARIES} strippedinput)
-string(REPLACE
-  "mpifh" "cxx" CXX_ADD_LIBRARIES_PRE
-  "${MPI_Fortran_LIBRARIES}")
-string(REPLACE
-  "fort" "cxx" CXX_ADD_LIBRARIES
-  "${CXX_ADD_LIBRARIES_PRE}")
-set ( CMAKE_CXX_LIBRARIES ${CMAKE_CXX_LIBRARIES} ${CXX_ADD_LIBRARIES})
-
-# we need /usr/lib/x86_64-linux-gnu/openmpi/lib/libmpi_cxx.so here or similar
-Message("cxx libs " ${CMAKE_CXX_LIBRARIES} )
+# # FortranCInterface_VERIFY(CXX)
+# Message("fortran mpi libs " ${MPI_Fortran_LIBRARIES} )
+# Message("fortran flags " ${MPI_Fortran_LINK_FLAGS} )
+# Message("fortran cmake libs " ${CMAKE_Fortran_LIBRARIES} )
+# # string(STRIP ${MPI_Fortran_LIBRARIES} strippedinput)
+# string(REPLACE
+#   "mpifh" "cxx" CXX_ADD_LIBRARIES_PRE
+#   "${MPI_Fortran_LIBRARIES}")
+# string(REPLACE
+#   "fort" "cxx" CXX_ADD_LIBRARIES
+#   "${CXX_ADD_LIBRARIES_PRE}")
+# set ( CMAKE_CXX_LIBRARIES ${CMAKE_CXX_LIBRARIES} ${CXX_ADD_LIBRARIES})
+# 
+# # we need /usr/lib/x86_64-linux-gnu/openmpi/lib/libmpi_cxx.so here or similar
+# Message("cxx libs " ${CMAKE_CXX_LIBRARIES} )
 
 # our interface library
 ADD_LIBRARY( sll_m_sim_bsl_vp_3d3v_cart_dd_slim_interface
@@ -45,19 +45,18 @@ ADD_LIBRARY( sll_m_sim_bsl_vp_3d3v_cart_dd_slim_interface
               sll_m_sim_bsl_vp_3d3v_cart_dd_slim_interface.F90
               sll_m_sim_bsl_vp_3d3v_cart_dd_slim.F90
               sll_m_sim_6d_utilities.F90
-              ../../../src/parallelization/collective/sll_m_collective.F90
               )
 TARGET_LINK_LIBRARIES( sll_m_sim_bsl_vp_3d3v_cart_dd_slim_interface
   sll_working_precision
   sll_memory
   ${SLL_LIB} ${SLL_EXT} ${SLL_DEPS}
   stdc++
-  ${CMAKE_CXX_LIBRARIES}
+  ${MPI_CXX_LIBRARIES}
   )
 
-INSTALL( TARGETS sll_m_sim_bsl_vp_3d3v_cart_dd_slim_interface
-  # DESTINATION ${INSTALL_DIR_BASE}/sll_m_sim_bsl_vp_3d3v_cart_dd_slim_interface 
-)
+#INSTALL( TARGETS sll_m_sim_bsl_vp_3d3v_cart_dd_slim_interface
+#  # DESTINATION ${INSTALL_DIR_BASE}/sll_m_sim_bsl_vp_3d3v_cart_dd_slim_interface 
+#)
 
 # build a test that checks if the simulation's functions (exported via _interface module)
 # can be called from a C++ program
@@ -95,15 +94,14 @@ remove_flag_from_target(test_cpp_interface -ipo-separate)
 target_link_libraries(
   test_cpp_interface
   sll_m_sim_bsl_vp_3d3v_cart_dd_slim_interface
-  ${CMAKE_CXX_LIBRARIES}
+  ${MPI_CXX_LIBRARIES}
 #  "-nofor_main"
 )
-INSTALL( TARGETS test_cpp_interface
-  # DESTINATION ${INSTALL_DIR_BASE}/test_cpp_interface
-)
+install(TARGETS test_cpp_interface DESTINATION ${INSTALL_DIR})
 
 TARGET_LINK_LIBRARIES( ${EXECUTABLE_SLIM} ${SLL_LIB} ${SLL_EXT} ${SLL_DEPS} ${FMEMPOOL} )
-INSTALL( TARGETS ${EXECUTABLE_SLIM} DESTINATION ${INSTALL_DIR_BASE}/${EXECUTABLE_SLIM} )
+install(TARGETS ${EXECUTABLE_SLIM} DESTINATION ${INSTALL_DIR})
+
 
 file( GLOB INPUT_FILES "*.nml" )
 file( GLOB REFERENCE_FILES "reffile_*.dat" )
