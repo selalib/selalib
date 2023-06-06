@@ -14,7 +14,9 @@ set(ADVECTION_SRC_FILES
     sll_m_advection_2d_base.F90
     sll_m_advection_1d_spectral.F90
     sll_m_advection_1d_ampere.F90
-    sll_m_advection_2d_tri_mesh.F90)
+    sll_m_advection_2d_tri_mesh.F90
+    sll_m_advection_6d_lagrange_dd_slim.F90
+    sll_m_advection_6d_spline_dd_slim.F90)
 
 add_library(sll_advection STATIC ${ADVECTION_SRC_FILES})
 
@@ -24,6 +26,7 @@ target_link_libraries(
   sll_characteristics
   sll_quadrature
   sll_periodic_interpolation
+  sll_distribution_function
   sll_splines
   sll_fft
   sll_utilities)

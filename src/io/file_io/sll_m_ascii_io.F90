@@ -61,23 +61,23 @@ contains
 
       error = 0
 
-      do 100 file_id = 20, 99
+!       do 100 file_id = 20, 99
+!
+!          inquire (unit=file_id, opened=lopen)
+!          if (lopen) then
+!             cycle
+!          else
+!             open (file_id, status='SCRATCH', err=100)
+!             close (file_id, status='DELETE', err=100)
+!             goto 200
+!          end if
+!
+! 100      continue
+!          error = 1
+! 200      continue
+!          error = 0
 
-         inquire (unit=file_id, opened=lopen)
-         if (lopen) then
-            cycle
-         else
-            open (file_id, status='SCRATCH', err=100)
-            close (file_id, status='DELETE', err=100)
-            goto 200
-         end if
-
-100      continue
-         error = 1
-200      continue
-         error = 0
-
-         open (file_id, FILE=file_name, FORM='FORMATTED', IOSTAT=error)
+         open(newunit=file_id,FILE=file_name,FORM='FORMATTED',IOSTAT=error)
          rewind (file_id)
 
          end subroutine sll_s_ascii_file_create
