@@ -1,5 +1,3 @@
-
-
 # DD version with dynamic halos
 set( SIM_NAME_SLIM bsl_vp_3d3v_cart_dd_slim )
 set( TEST_NAME_SLIM "sim_${SIM_NAME_SLIM}" )
@@ -21,42 +19,22 @@ ENABLE_LANGUAGE(CXX)
 
 include(FortranCInterface)
 
-#TODO have this detected
 SET(CMAKE_CXX_COMPILER ${MPI_CXX_COMPILER})
-# # FortranCInterface_VERIFY(CXX)
-# Message("fortran mpi libs " ${MPI_Fortran_LIBRARIES} )
-# Message("fortran flags " ${MPI_Fortran_LINK_FLAGS} )
-# Message("fortran cmake libs " ${CMAKE_Fortran_LIBRARIES} )
-# # string(STRIP ${MPI_Fortran_LIBRARIES} strippedinput)
-# string(REPLACE
-#   "mpifh" "cxx" CXX_ADD_LIBRARIES_PRE
-#   "${MPI_Fortran_LIBRARIES}")
-# string(REPLACE
-#   "fort" "cxx" CXX_ADD_LIBRARIES
-#   "${CXX_ADD_LIBRARIES_PRE}")
-# set ( CMAKE_CXX_LIBRARIES ${CMAKE_CXX_LIBRARIES} ${CXX_ADD_LIBRARIES})
-# 
-# # we need /usr/lib/x86_64-linux-gnu/openmpi/lib/libmpi_cxx.so here or similar
-# Message("cxx libs " ${CMAKE_CXX_LIBRARIES} )
 
-# our interface library
 ADD_LIBRARY( sll_m_sim_bsl_vp_3d3v_cart_dd_slim_interface
               STATIC
               sll_m_sim_bsl_vp_3d3v_cart_dd_slim_interface.F90
               sll_m_sim_bsl_vp_3d3v_cart_dd_slim.F90
               sll_m_sim_6d_utilities.F90
               )
+
 TARGET_LINK_LIBRARIES( sll_m_sim_bsl_vp_3d3v_cart_dd_slim_interface
-  sll_working_precision
-  sll_memory
   ${SLL_LIB} ${SLL_EXT} ${SLL_DEPS}
   stdc++
   ${MPI_CXX_LIBRARIES}
   )
 
-#INSTALL( TARGETS sll_m_sim_bsl_vp_3d3v_cart_dd_slim_interface
-#  # DESTINATION ${INSTALL_DIR_BASE}/sll_m_sim_bsl_vp_3d3v_cart_dd_slim_interface 
-#)
+INSTALL( TARGETS sll_m_sim_bsl_vp_3d3v_cart_dd_slim_interface DESTINATION ${INSTALL_DIR})
 
 # build a test that checks if the simulation's functions (exported via _interface module)
 # can be called from a C++ program
@@ -75,6 +53,7 @@ add_executable(
   test_cpp_interface
   test_cpp_interface.cpp
     )
+
 SET_TARGET_PROPERTIES(test_cpp_interface
   PROPERTIES
   LINKER_LANGUAGE Fortran
