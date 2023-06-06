@@ -5,6 +5,7 @@ add_subdirectory(general_coordinate_elliptic_solvers)
 add_subdirectory(poisson_solvers)
 add_subdirectory(gyroaverage)
 add_subdirectory(quasi_neutral_solvers)
+add_subdirectory(curl_curl_solvers)
 
 if(MPI_ENABLED)
   add_subdirectory(poisson_solvers_parallel)

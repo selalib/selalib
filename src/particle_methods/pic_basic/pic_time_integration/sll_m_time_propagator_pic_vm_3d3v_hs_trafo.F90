@@ -335,11 +335,9 @@ contains
           call self%particle_group%group(i_sp)%set_v( i_part, vnew )
           ! Update particle weights
           if (self%particle_group%group(i_sp)%n_weights == 3 ) then
-             if( self%lindf .eqv. .false.) then
-                wall = self%particle_group%group(i_sp)%get_weights(i_part)
-                wall(3) = self%control_variate%cv(i_sp)%update_df_weight( xnew, vnew, 0.0_f64, wall(1), wall(2) )
-                call self%particle_group%group(i_sp)%set_weights( i_part, wall )
-             end if
+             wall = self%particle_group%group(i_sp)%get_weights(i_part)
+             wall(3) = self%control_variate%cv(i_sp)%update_df_weight( xnew, vnew, 0.0_f64, wall(1), wall(2) )
+             call self%particle_group%group(i_sp)%set_weights( i_part, wall )
           end if
        end do
     end do
@@ -380,7 +378,7 @@ contains
     !local variables
     sll_int32 :: i_part, j, i_sp
     sll_real64 :: xi(3), vi(3), jmat(3,3)
-    sll_real64 :: efield(3), ephys(3), wall(3), Rx(3)
+    sll_real64 :: efield(3), ephys(3), wall(self%i_weight), Rx(3)
     sll_real64 :: qoverm, q, m
 
     do i_sp = 1, self%particle_group%n_species
@@ -425,11 +423,11 @@ contains
                 Rx(1) = self%map%get_x1(xi) + m*vi(2)/q
                 Rx(1) = (Rx(1)-self%x_min(1))/self%Lx(1)
 
-                wall(3) = wall(3) + dt* (q/p%profile%T_i(Rx(1)) *sum(ephys*vi) -&
+                wall(1) = wall(1) + dt* (q/p%profile%T_i(Rx(1)) *sum(ephys*vi) -&
                      ephys(2)*(p%profile%drho_0(Rx(1))/p%profile%rho_0(Rx(1))+(0.5_f64*m*sum(vi**2)/p%profile%T_i(Rx(1)) - 1.5_f64)* p%profile%dT_i(Rx(1))/p%profile%T_i(Rx(1)) )  ) *&
-                     p%eval_v_density(vi, Rx, m)/p%eval_v_density(vi, xi, m)* self%map%jacobian(xi)
+                     self%control_variate%cv(i_sp)%control_variate(Rx, vi, 0._f64)/p%eval_v_density(vi, xi, m)* self%map%jacobian(xi)
              class default
-                wall(3) = wall(3) + dt* qoverm* sum(ephys*vi) * self%map%jacobian(xi)
+                wall(1) = wall(1) + dt* qoverm* sum(ephys*vi) * self%map%jacobian(xi)
              end select
              call self%particle_group%group(i_sp)%set_weights( i_part, wall )
           end if
@@ -461,8 +459,7 @@ contains
        betar, &
        electrostatic, &
        rhob, &
-       control_variate, &
-       lindf) 
+       control_variate) 
     class(sll_t_time_propagator_pic_vm_3d3v_hs_trafo), intent( out ) :: self !< time propagator object 
     class(sll_c_maxwell_3d_base), target,          intent( in ) :: maxwell_solver      !< Maxwell solver
     class(sll_c_particle_mesh_coupling_3d), target, intent(in) :: particle_mesh_coupling !< Particle mesh coupling
@@ -480,7 +477,6 @@ contains
     logical, optional,                             intent( in ) :: electrostatic !< true for electrostatic simulation
     sll_real64, optional, target,                  intent( in ) :: rhob(:) !< charge at the boundary
     class(sll_t_control_variates), optional, target, intent(in) :: control_variate !< Control variate (if delta f)
-    logical, optional, intent(in) :: lindf !< true for linear delta f method
     !local variables
     sll_int32 :: ierr
 
@@ -535,10 +531,8 @@ contains
        allocate(self%control_variate )
        allocate(self%control_variate%cv(self%particle_group%n_species) )
        self%control_variate => control_variate
-       self%i_weight = 3
-       if (present(lindf)) then
-          self%lindf = lindf
-       end if
+       if(self%particle_group%group(1)%n_weights == 1 ) self%lindf = .true.
+       self%i_weight = self%particle_group%group(1)%n_weights
     end if
 
   end subroutine initialize_pic_vm_3d3v_hs_trafo
@@ -561,8 +555,7 @@ contains
        betar, &
        electrostatic, &
        rhob, &
-       control_variate, &
-       lindf) 
+       control_variate) 
     class(sll_t_time_propagator_pic_vm_3d3v_hs_trafo), intent( out ) :: self !< time propagator object 
     class(sll_c_maxwell_3d_base), target,          intent( in ) :: maxwell_solver      !< Maxwell solver
     class(sll_c_particle_mesh_coupling_3d), target, intent(in) :: particle_mesh_coupling !< Particle mesh coupling
@@ -579,14 +572,12 @@ contains
     logical, optional    :: electrostatic !< true for electrostatic simulation
     sll_real64, optional, target,                  intent( in ) :: rhob(:) !< charge at the boundary
     class(sll_t_control_variates), optional, target, intent(in) :: control_variate !< Control variate (if delta f)
-    logical, optional, intent(in) :: lindf !< true for linear delta f method
     !local variables
     sll_int32 :: input_file
     sll_int32 :: io_stat
     sll_real64 :: iter_tolerance
     sll_int32 :: max_iter, boundary_particles_set
     logical :: electrostatic_set
-    logical :: lindf_set
     sll_real64 :: betar_set(2)
 
     namelist /time_iterate/ iter_tolerance, max_iter
@@ -601,12 +592,6 @@ contains
        electrostatic_set = electrostatic
     else
        electrostatic_set = .false.
-    end if
-
-    if( present(lindf) )then
-       lindf_set = lindf
-    else
-       lindf_set = .false.
     end if
 
     if( present(betar) )then
@@ -633,8 +618,7 @@ contains
                betar=betar_set,&
                electrostatic = electrostatic_set, &
                rhob = rhob, &
-               control_variate = control_variate, &
-               lindf=lindf_set)
+               control_variate = control_variate)
        else
           call self%init( maxwell_solver, &
                particle_mesh_coupling, &
@@ -667,8 +651,7 @@ contains
                   betar=betar_set,&
                   electrostatic = electrostatic_set, &
                   rhob = rhob, &
-                  control_variate = control_variate, &
-                  lindf=lindf_set)
+                  control_variate = control_variate)
           else
              call self%init( maxwell_solver, &
                   particle_mesh_coupling, &
@@ -700,8 +683,7 @@ contains
                   betar=betar_set,&
                   electrostatic = electrostatic_set, &
                   rhob = rhob, &
-                  control_variate = control_variate, &
-                  lindf=lindf_set)
+                  control_variate = control_variate)
           else
              call self%init(   maxwell_solver, &
                   particle_mesh_coupling, &

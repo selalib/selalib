@@ -40,7 +40,6 @@
         splitting_case = "splitting_cef"
         spline_degree = 3 3 3
 	splitting_type = "strang"
-        with_control_variate = .false.
 	
 /
 
