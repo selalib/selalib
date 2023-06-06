@@ -22,7 +22,7 @@ ENABLE_LANGUAGE(CXX)
 include(FortranCInterface)
 
 #TODO have this detected
-SET(CMAKE_CXX_COMPILER mpicxx)
+SET(CMAKE_CXX_COMPILER ${MPI_CXX_COMPILER})
 # FortranCInterface_VERIFY(CXX)
 Message("fortran mpi libs " ${MPI_Fortran_LIBRARIES} )
 Message("fortran flags " ${MPI_Fortran_LINK_FLAGS} )

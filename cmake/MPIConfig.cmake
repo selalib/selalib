@@ -3,7 +3,7 @@ if($ENV{HOSTNAME} MATCHES "hydra*")
 endif()
 
 if(MPI_ENABLED)
-  find_package(MPI REQUIRED Fortran)
+  find_package(MPI REQUIRED Fortran CXX)
 endif(MPI_ENABLED)
 
 if(MPI_FOUND)
