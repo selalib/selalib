@@ -1,0 +1,50 @@
+&sim_params
+        final_time = 0.02
+        delta_t = 0.01
+        max_disp = 1
+        ctest = .true.
+        ctest_ref_file = "reffile_bsl_vp_3d3v_cart_dd.dat"
+        test_case = "landau_prod"
+/
+
+&grid_dims
+        num_cells_x1 = 16
+        num_cells_x2 = 16
+        num_cells_x3 = 16
+        num_cells_x4 = 16
+        num_cells_x5 = 16
+        num_cells_x6 = 16
+/
+
+&domain_dims
+        v_max = 6.0
+        x1_max = 12.5663706144
+        x2_max = 12.5663706144
+        x3_max = 12.5663706144
+/
+
+&advect_params
+        bc_type = "sll_p_periodic"
+        stencil = 3
+        interpolator_type = "fixed"
+        stencil_x = 3
+/
+
+&output
+       file_prefix = "vp_3d3v_dd"
+/
+
+&phys_params
+        B0 = 1.0
+/
+
+&parallel_params
+       n_blocks = 4 4 4 4 4 4
+       process_grid = 0 0 0 0 0 0  ! default: determine values automatically
+/
+
+&landau_params
+        v_thermal = 1.0 1.0 1.0
+        alpha = 0.01
+        kx = 0.499999999998376 0.499999999998376 0.499999999998376
+/

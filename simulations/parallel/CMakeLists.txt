@@ -33,6 +33,7 @@ if(HDF5_ENABLED
   if(NOT (FFT_LIB STREQUAL "SLLFFT"))
     add_subdirectory(bsl_vp_3d3v_cart_sparsegrid)
   endif()
+  add_subdirectory(bsl_vp_3d3v_cart_dd)
 
   # Drift/gyro-kinetic 3Dx1D
   add_subdirectory(bsl_dk_3d1v_polar)
