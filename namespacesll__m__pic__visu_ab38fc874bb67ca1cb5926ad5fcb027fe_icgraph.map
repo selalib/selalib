@@ -1,4 +1,5 @@
 <map id="f_m4" name="f_m4">
-<area shape="rect" id="node2" href="$namespacesll__m__pic__visu.html#a536ad033c27e9d151e7c07367db381df" title="compute_df_m4" alt="" coords="108,13,235,39"/>
-<area shape="rect" id="node3" href="$namespacesll__m__pic__visu.html#a14aa36f9d4246473bb7227b47a663adf" title="GNUplot readable output for particles density. " alt="" coords="283,5,415,47"/>
+<area shape="rect" id="node1" title="M4 function from Monhagan (SPH method)" alt="" coords="360,13,415,39"/>
+<area shape="rect" id="node2" href="$namespacesll__m__pic__visu.html#a536ad033c27e9d151e7c07367db381df" title=" " alt="" coords="185,13,312,39"/>
+<area shape="rect" id="node3" href="$namespacesll__m__pic__visu.html#a14aa36f9d4246473bb7227b47a663adf" title="GNUplot readable output for particles density." alt="" coords="5,5,137,47"/>
 </map>

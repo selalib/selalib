@@ -1,6 +1,7 @@
 <map id="compute_phi_from_j_1d_fem_sm" name="compute_phi_from_j_1d_fem_sm">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__clamped__1d__fem__sm.html#a295adaa51397d56b8d34d4e8f95ef5fb" title="Multiply by transpose of dicrete gradient matrix. " alt="" coords="208,28,304,55"/>
-<area shape="rect" id="node4" href="$namespacesll__m__maxwell__clamped__1d__fem__sm.html#a0615d69c6c8cd94ddc01e9bf72a2c22a" title="Multiply by dicrete gradient matrix. " alt="" coords="211,85,301,112"/>
-<area shape="rect" id="node3" href="$namespacesll__m__spline__fem__utilities__3d__clamped.html#a6ae5272825c9bf38331b26ebffaa115f" title="Multiplication of the input vector in by the transposed clamped derivative matrix G^T..." alt="" coords="352,5,559,61"/>
-<area shape="rect" id="node5" href="$namespacesll__m__spline__fem__utilities__3d__clamped.html#ad4e7ae8afab3728922de98d2ce93989e" title="Multiplication of the input vector in by the clamped derivative matrix G. " alt="" coords="352,85,559,141"/>
+<area shape="rect" id="node1" title="For model with adiabatic electrons." alt="" coords="5,53,160,94"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__clamped__1d__fem__sm.html#a0615d69c6c8cd94ddc01e9bf72a2c22a" title="Multiply by dicrete gradient matrix." alt="" coords="211,28,301,55"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__clamped__1d__fem__sm.html#a295adaa51397d56b8d34d4e8f95ef5fb" title="Multiply by transpose of dicrete gradient matrix." alt="" coords="208,85,304,112"/>
+<area shape="rect" id="node3" href="$namespacesll__m__spline__fem__utilities__3d__clamped.html#ad4e7ae8afab3728922de98d2ce93989e" title="Multiplication of the input vector in by the clamped derivative matrix G." alt="" coords="352,5,559,61"/>
+<area shape="rect" id="node5" href="$namespacesll__m__spline__fem__utilities__3d__clamped.html#a6ae5272825c9bf38331b26ebffaa115f" title="Multiplication of the input vector in by the transposed clamped derivative matrix G^T." alt="" coords="352,85,559,141"/>
 </map>

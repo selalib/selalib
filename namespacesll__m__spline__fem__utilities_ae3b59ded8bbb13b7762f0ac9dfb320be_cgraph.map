@@ -1,3 +1,4 @@
 <map id="sll_s_spline_fem_mass_line" name="sll_s_spline_fem_mass_line">
+<area shape="rect" id="node1" title="Computes the mass line for a mass matrix with degree splines." alt="" coords="5,20,208,47"/>
 <area shape="rect" id="node2" href="$namespacesll__m__gauss__legendre__integration.html#a0df63a9e8ee884c2d4a0d1f53602a949" title="Returns a 2d array of size (2,npoints) containing gauss&#45;legendre points and weights in the interval [..." alt="" coords="256,5,479,61"/>
 </map>

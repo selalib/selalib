@@ -1,3 +1,4 @@
 <map id="sll_get_collective_color" name="sll_get_collective_color">
-<area shape="rect" id="node2" href="$namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" title="Checks if the pointer ptr is associated to an object. " alt="" coords="188,13,365,39"/>
+<area shape="rect" id="node1" title="Determines the color of the calling process in the communicator." alt="" coords="5,5,140,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" title="Checks if the pointer ptr is associated to an object." alt="" coords="188,13,365,39"/>
 </map>

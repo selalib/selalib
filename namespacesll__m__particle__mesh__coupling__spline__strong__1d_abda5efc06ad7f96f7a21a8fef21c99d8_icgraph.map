@@ -1,3 +1,4 @@
 <map id="current_v_local" name="current_v_local">
-<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__strong__1d.html#a7e2bf04a4b806d7d305b230b088ed047" title="Add current for one particle and update v (according to H_p1 part in Hamiltonian splitting). Implementation based on quadrature rather than the primitive. " alt="" coords="175,5,329,61"/>
+<area shape="rect" id="node1" title=" " alt="" coords="208,20,329,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__strong__1d.html#a7e2bf04a4b806d7d305b230b088ed047" title="Add current for one particle and update v (according to H_p1 part in Hamiltonian splitting)...." alt="" coords="5,5,160,61"/>
 </map>

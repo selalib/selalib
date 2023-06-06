@@ -1,5 +1,10 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$structsll__m__scalar__field__2d__base_1_1sll__c__scalar__field__2d__base.html" title="Fundamental field type. " alt="" coords="5,39,137,80"/>
-<area shape="rect" id="node2" href="$structsll__m__scalar__field__2d_1_1sll__t__scalar__field__2d__analytic.html" title="sll_t_scalar_field\l_2d_analytic" alt="" coords="185,5,316,47"/>
-<area shape="rect" id="node3" href="$structsll__m__scalar__field__2d_1_1sll__t__scalar__field__2d__discrete.html" title="sll_t_scalar_field\l_2d_discrete" alt="" coords="185,71,316,112"/>
+<area shape="rect" id="node1" href="$structsll__m__particle__group__base_1_1sll__c__particle__group__base.html" title=" " alt="" coords="5,165,195,192"/>
+<area shape="rect" id="node2" href="$structsll__m__particle__group__1d1v_1_1sll__t__particle__group__1d1v.html" title="Simple version of a PIC particle group in 1d1v." alt="" coords="243,5,431,32"/>
+<area shape="rect" id="node3" href="$structsll__m__particle__group__1d2v_1_1sll__t__particle__group__1d2v.html" title="Simple version of a PIC particle group in 1d2v." alt="" coords="243,56,431,83"/>
+<area shape="rect" id="node4" href="$structsll__m__particle__group__2d2v_1_1sll__t__particle__group__2d2v.html" title="Simple version of a PIC particle group in 2d2v." alt="" coords="243,107,431,133"/>
+<area shape="rect" id="node5" href="$structsll__m__particle__group__2d2v__lbf_1_1sll__t__particle__group__2d2v__lbf.html" title="Group of sll_t_particle_group_2d2v_lbf." alt="" coords="262,158,411,199"/>
+<area shape="rect" id="node6" href="$structsll__m__particle__group__2d3v_1_1sll__t__particle__group__2d3v.html" title="Simple version of a PIC particle group in 2d3v." alt="" coords="243,224,431,251"/>
+<area shape="rect" id="node7" href="$structsll__m__particle__group__3d1v_1_1sll__t__particle__group__3d1v.html" title="Simple version of a PIC particle group in 3d1v." alt="" coords="243,275,431,301"/>
+<area shape="rect" id="node8" href="$structsll__m__particle__group__3d3v_1_1sll__t__particle__group__3d3v.html" title="Simple version of a PIC particle group in 2d2v." alt="" coords="243,325,431,352"/>
 </map>

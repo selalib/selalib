@@ -1,5 +1,6 @@
 <map id="operator_boris" name="operator_boris">
-<area shape="rect" id="node2" href="$namespacesll__m__time__propagator__pic__vm__1d2v__boris.html#a1e49b00e56f04e17e8eddccf49728899" title="Pusher for E &#160;part. " alt="" coords="196,5,305,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__time__propagator__pic__vm__1d2v__boris.html#a78c8a988bcec5f24980353d54084ce8b" title="Pusher for vxB part. " alt="" coords="196,56,305,83"/>
-<area shape="rect" id="node4" href="$namespacesll__m__time__propagator__pic__vm__1d2v__boris.html#a04789bf9ccc0cb3feda55ea6e137b7f1" title="Pusher for x and accumulate current densities. " alt="" coords="169,107,332,133"/>
+<area shape="rect" id="node1" title="Second order Boris pusher using staggered grid." alt="" coords="5,56,121,83"/>
+<area shape="rect" id="node2" href="$namespacesll__m__time__propagator__pic__vm__1d2v__boris.html#a78c8a988bcec5f24980353d54084ce8b" title="Pusher for vxB part." alt="" coords="196,5,305,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__time__propagator__pic__vm__1d2v__boris.html#a1e49b00e56f04e17e8eddccf49728899" title="Pusher for E \nabla_v part." alt="" coords="196,56,305,83"/>
+<area shape="rect" id="node4" href="$namespacesll__m__time__propagator__pic__vm__1d2v__boris.html#a04789bf9ccc0cb3feda55ea6e137b7f1" title="Pusher for x and accumulate current densities." alt="" coords="169,107,332,133"/>
 </map>

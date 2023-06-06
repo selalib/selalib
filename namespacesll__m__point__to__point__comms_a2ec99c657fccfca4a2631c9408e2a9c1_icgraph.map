@@ -1,11 +1,12 @@
 <map id="flip_bit" name="flip_bit">
-<area shape="rect" id="node2" href="$namespacesll__m__point__to__point__comms.html#a649d95ce15846973ed2e19fcf54b02fe" title="flip_buffer" alt="" coords="126,145,213,172"/>
-<area shape="rect" id="node9" href="$namespacesll__m__point__to__point__comms.html#a419cb5e1f63300697382a581bc8c7862" title="receive_tag" alt="" coords="120,93,219,120"/>
-<area shape="rect" id="node10" href="$namespacesll__m__point__to__point__comms.html#a1cf8ca814704f8d5263e1a13fc995c16" title="send_tag" alt="" coords="129,200,210,227"/>
-<area shape="rect" id="node3" href="$namespacesll__m__point__to__point__comms.html#a6848a4501521376f77d25cbcc09eb298" title="connect_ports" alt="" coords="307,35,421,61"/>
-<area shape="rect" id="node6" href="$namespacesll__m__point__to__point__comms.html#afbd46fb55887ffc3108f4889148bffaa" title="sll_s_comm_send_real64" alt="" coords="271,203,457,229"/>
-<area shape="rect" id="node7" href="$namespacesll__m__point__to__point__comms.html#ac3b701c44660ce387e7c0e50adfa8c8f" title="sll_s_comm_receive\l_real64" alt="" coords="287,86,441,127"/>
-<area shape="rect" id="node8" href="$namespacesll__m__point__to__point__comms.html#ab6f3256ff8c0bbee51626a7603f7ef6d" title="sll_s_delete_comm_real64" alt="" coords="267,152,461,179"/>
-<area shape="rect" id="node4" href="$namespacesll__m__point__to__point__comms.html#aa4b49425a11d8400f4c4e1009ccd7064" title="sll_s_create_comm_real64_ring" alt="" coords="509,5,736,32"/>
-<area shape="rect" id="node5" href="$namespacesll__m__point__to__point__comms.html#a7dcb12c869cca4261dda441bbf9fea98" title="sll_s_configure_comm\l_real64_torus_2d" alt="" coords="539,57,706,98"/>
+<area shape="rect" id="node1" title=" " alt="" coords="669,153,736,179"/>
+<area shape="rect" id="node2" href="$namespacesll__m__point__to__point__comms.html#a649d95ce15846973ed2e19fcf54b02fe" title=" " alt="" coords="529,153,615,179"/>
+<area shape="rect" id="node9" href="$namespacesll__m__point__to__point__comms.html#a419cb5e1f63300697382a581bc8c7862" title=" " alt="" coords="523,101,621,127"/>
+<area shape="rect" id="node10" href="$namespacesll__m__point__to__point__comms.html#a1cf8ca814704f8d5263e1a13fc995c16" title=" " alt="" coords="531,207,613,234"/>
+<area shape="rect" id="node3" href="$namespacesll__m__point__to__point__comms.html#a6848a4501521376f77d25cbcc09eb298" title=" " alt="" coords="321,42,434,69"/>
+<area shape="rect" id="node6" href="$namespacesll__m__point__to__point__comms.html#ac3b701c44660ce387e7c0e50adfa8c8f" title=" " alt="" coords="300,93,455,135"/>
+<area shape="rect" id="node7" href="$namespacesll__m__point__to__point__comms.html#afbd46fb55887ffc3108f4889148bffaa" title=" " alt="" coords="285,210,470,237"/>
+<area shape="rect" id="node8" href="$namespacesll__m__point__to__point__comms.html#ab6f3256ff8c0bbee51626a7603f7ef6d" title=" " alt="" coords="280,159,475,186"/>
+<area shape="rect" id="node4" href="$namespacesll__m__point__to__point__comms.html#a7dcb12c869cca4261dda441bbf9fea98" title=" " alt="" coords="35,5,202,47"/>
+<area shape="rect" id="node5" href="$namespacesll__m__point__to__point__comms.html#aa4b49425a11d8400f4c4e1009ccd7064" title=" " alt="" coords="5,71,232,98"/>
 </map>

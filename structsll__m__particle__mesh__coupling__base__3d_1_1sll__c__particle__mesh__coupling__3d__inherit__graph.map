@@ -1,4 +1,5 @@
 <map id="sll_c_particle_mesh_coupling_3d" name="sll_c_particle_mesh_coupling_3d">
-<area shape="rect" id="node2" href="$structsll__m__particle__mesh__coupling__spline__3d__feec_1_1sll__t__particle__mesh__coupling__spline__3d__feec.html" title="Particle mesh coupling in 3d based on (arbitrary degree) spline on a tensor product uniform mesh..." alt="" coords="204,5,392,47"/>
-<area shape="rect" id="node3" href="$structsll__m__particle__mesh__coupling__spline__cl__3d__feec_1_1sll__t__particle__mesh__coupling__spline__cl__3d__feec.html" title="Particle mesh coupling in 3d based on (arbitrary degree) spline on a tensor product uniform mesh..." alt="" coords="224,71,372,127"/>
+<area shape="rect" id="node1" title="Basic type of a kernel smoother used for PIC simulations." alt="" coords="5,43,156,84"/>
+<area shape="rect" id="node2" href="$structsll__m__particle__mesh__coupling__spline__3d__feec_1_1sll__t__particle__mesh__coupling__spline__3d__feec.html" title="Particle mesh coupling in 3d based on (arbitrary degree) spline on a tensor product uniform mesh." alt="" coords="204,5,392,47"/>
+<area shape="rect" id="node3" href="$structsll__m__particle__mesh__coupling__spline__cl__3d__feec_1_1sll__t__particle__mesh__coupling__spline__cl__3d__feec.html" title="Particle mesh coupling in 3d based on (arbitrary degree) spline on a tensor product uniform mesh." alt="" coords="224,71,372,127"/>
 </map>

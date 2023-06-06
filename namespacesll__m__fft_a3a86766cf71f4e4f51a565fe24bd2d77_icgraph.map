@@ -1,4 +1,5 @@
 <map id="sll_s_fft_exec_c2r_2d" name="sll_s_fft_exec_c2r_2d">
-<area shape="rect" id="node2" href="$namespacesll__m__poisson__2d__periodic.html#ad856faa6b680bb81e84cb8ddd506f428" title="sll_o_solve Poisson equation on 2D mesh with periodic boundary conditions. return potential..." alt="" coords="213,5,409,61"/>
-<area shape="rect" id="node3" href="$namespacesll__m__poisson__2d__periodic.html#a43066911ecf78310ffe0768a9f7204ca" title="sll_o_solve Poisson equation on 2D mesh with periodic boundary conditions. return electric fields..." alt="" coords="213,85,409,141"/>
+<area shape="rect" id="node1" title="Compute fast Fourier transform in complex to real mode." alt="" coords="277,60,436,87"/>
+<area shape="rect" id="node2" href="$interfacesll__m__poisson__2d__periodic_1_1sll__o__solve.html#a8571d1d3cca1b57ee563559320d1d293" title="sll_o_solve Poisson equation on 2D mesh with periodic boundary conditions. return electric fields." alt="" coords="5,5,229,61"/>
+<area shape="rect" id="node3" href="$interfacesll__m__poisson__2d__periodic_1_1sll__o__solve.html#a04ef96f19b60003e1578e563fdaf1610" title="sll_o_solve Poisson equation on 2D mesh with periodic boundary conditions. return potential." alt="" coords="12,85,223,141"/>
 </map>

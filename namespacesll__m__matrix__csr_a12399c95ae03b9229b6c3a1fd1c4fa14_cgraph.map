@@ -1,3 +1,4 @@
 <map id="create_matrix_csr" name="create_matrix_csr">
-<area shape="rect" id="node2" href="$namespacesll__m__matrix__csr.html#a58780bf28704e856250286f71b97db35" title="allocates a csr matrix " alt="" coords="192,5,343,32"/>
+<area shape="rect" id="node1" title="creates a csr matrix" alt="" coords="5,5,144,32"/>
+<area shape="rect" id="node2" href="$namespacesll__m__matrix__csr.html#a58780bf28704e856250286f71b97db35" title="allocates a csr matrix" alt="" coords="192,5,343,32"/>
 </map>

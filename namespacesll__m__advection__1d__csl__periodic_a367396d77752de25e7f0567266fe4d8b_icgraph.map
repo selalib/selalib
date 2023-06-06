@@ -1,6 +1,7 @@
 <map id="compute_quadrature" name="compute_quadrature">
-<area shape="rect" id="node2" href="$namespacesll__m__advection__1d__csl__periodic.html#ab62c2ae9c45f0025faa8373b875eb834" title="compute_csl_mat" alt="" coords="237,5,375,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__advection__1d__csl__periodic.html#af937e6876cc1afcbe583b713447017f2" title="compute_node_derivative\l_order3" alt="" coords="211,57,401,98"/>
-<area shape="rect" id="node4" href="$namespacesll__m__advection__1d__csl__periodic.html#aa0160216674adab2d9e9fc52c3c7dc53" title="csl_periodic_advect_1d" alt="" coords="648,64,821,91"/>
-<area shape="rect" id="node5" href="$namespacesll__m__advection__1d__csl__periodic.html#a0001d2864a9d6542865e9c16916d5b19" title="update_solution_csl\l_periodic" alt="" coords="449,86,600,127"/>
+<area shape="rect" id="node1" title=" " alt="" coords="664,35,821,61"/>
+<area shape="rect" id="node2" href="$namespacesll__m__advection__1d__csl__periodic.html#ab62c2ae9c45f0025faa8373b875eb834" title=" " alt="" coords="452,5,589,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__advection__1d__csl__periodic.html#af937e6876cc1afcbe583b713447017f2" title=" " alt="" coords="425,57,616,98"/>
+<area shape="rect" id="node4" href="$namespacesll__m__advection__1d__csl__periodic.html#aa0160216674adab2d9e9fc52c3c7dc53" title=" " alt="" coords="5,64,179,91"/>
+<area shape="rect" id="node5" href="$namespacesll__m__advection__1d__csl__periodic.html#a0001d2864a9d6542865e9c16916d5b19" title=" " alt="" coords="227,86,377,127"/>
 </map>

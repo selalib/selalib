@@ -1,8 +1,9 @@
 <map id="sll_f_interpolate2d_toroidal" name="sll_f_interpolate2d_toroidal">
-<area shape="rect" id="node2" href="$namespacesll__m__hermite__interpolation__2d.html#a698b10a27a24e25774e35bd0c19d5401" title="sll_m_hermite_interpolation\l_2d::sll_s_compute_hermite\l_derivatives_periodic1" alt="" coords="199,5,404,61"/>
-<area shape="rect" id="node4" href="$namespacesll__m__hermite__interpolation__2d.html#a364dee09eec5452a4cb49b3123ee3cf6" title="sll_m_hermite_interpolation\l_2d::sll_s_localize_per" alt="" coords="199,86,404,127"/>
-<area shape="rect" id="node5" href="$namespacesll__m__fcisl__toroidal.html#a556e07c9d3d54354b181c52b2212576a" title="sll_f_compute_invr\l_integral" alt="" coords="229,151,374,193"/>
-<area shape="rect" id="node6" href="$namespacesll__m__fcisl__toroidal.html#a4dc7dd846936845f6eb209074a211dd2" title="sll_f_compute_inverse\l_invr_integral" alt="" coords="217,217,385,258"/>
-<area shape="rect" id="node7" href="$namespacesll__m__lagrange__interpolation.html#a8408ec777b0a4163e8d141bd68ff7a0f" title="sll_m_lagrange_interpolation\l::sll_f_lagrange_interpolate" alt="" coords="196,282,407,323"/>
-<area shape="rect" id="node3" href="$namespacesll__m__hermite__interpolation__2d.html#addf0a862acbd92932b845d9938e544f0" title="sll_m_hermite_interpolation\l_2d::sll_s_compute_w_hermite" alt="" coords="455,13,677,54"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,136,148,177"/>
+<area shape="rect" id="node2" href="$namespacesll__m__fcisl__toroidal.html#a4dc7dd846936845f6eb209074a211dd2" title=" " alt="" coords="217,5,385,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__fcisl__toroidal.html#a556e07c9d3d54354b181c52b2212576a" title=" " alt="" coords="229,71,374,112"/>
+<area shape="rect" id="node4" href="$namespacesll__m__lagrange__interpolation.html#a8408ec777b0a4163e8d141bd68ff7a0f" title=" " alt="" coords="196,136,407,177"/>
+<area shape="rect" id="node5" href="$namespacesll__m__hermite__interpolation__2d.html#a698b10a27a24e25774e35bd0c19d5401" title=" " alt="" coords="199,202,404,258"/>
+<area shape="rect" id="node7" href="$namespacesll__m__hermite__interpolation__2d.html#a364dee09eec5452a4cb49b3123ee3cf6" title=" " alt="" coords="199,283,404,324"/>
+<area shape="rect" id="node6" href="$namespacesll__m__hermite__interpolation__2d.html#addf0a862acbd92932b845d9938e544f0" title=" " alt="" coords="455,209,677,251"/>
 </map>

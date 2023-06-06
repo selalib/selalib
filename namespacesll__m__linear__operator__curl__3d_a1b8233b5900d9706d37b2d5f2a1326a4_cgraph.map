@@ -1,6 +1,7 @@
 <map id="dot_curl_3d" name="dot_curl_3d">
-<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities.html#a723b8920db4bbeeff1b98b9dffdfa040" title="Multiply by discrete curl matrix. " alt="" coords="151,5,343,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__spline__fem__utilities.html#a83c1afceeaf9e57230dce58d1cb23f84" title="Multiply by transpose of discrete curl matrix. " alt="" coords="151,71,343,112"/>
-<area shape="rect" id="node4" href="$namespacesll__m__spline__fem__utilities.html#ab2d9661937b3bdb9799c3d8f2d0771c4" title="Multiply by transpose of dicrete gradient matrix (3d version) " alt="" coords="151,136,343,177"/>
-<area shape="rect" id="node5" href="$namespacesll__m__spline__fem__utilities.html#a143adbb273f0bd150b5d7061bdbecf8c" title="Multiply by dicrete gradient matrix (3d version) " alt="" coords="151,201,343,243"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,111,103,138"/>
+<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities.html#a723b8920db4bbeeff1b98b9dffdfa040" title="Multiply by discrete curl matrix." alt="" coords="151,5,343,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__spline__fem__utilities.html#a83c1afceeaf9e57230dce58d1cb23f84" title="Multiply by transpose of discrete curl matrix." alt="" coords="151,71,343,112"/>
+<area shape="rect" id="node4" href="$namespacesll__m__spline__fem__utilities.html#a143adbb273f0bd150b5d7061bdbecf8c" title="Multiply by dicrete gradient matrix (3d version)" alt="" coords="151,136,343,177"/>
+<area shape="rect" id="node5" href="$namespacesll__m__spline__fem__utilities.html#ab2d9661937b3bdb9799c3d8f2d0771c4" title="Multiply by transpose of dicrete gradient matrix (3d version)" alt="" coords="151,201,343,243"/>
 </map>

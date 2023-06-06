@@ -1,4 +1,5 @@
 <map id="sll_s_compute_stencil_plus" name="sll_s_compute_stencil_plus">
-<area shape="rect" id="node2" href="$namespacesll__m__lagrange__interpolation.html#a27f51409cf832abd1cdaf75122c60dad" title="compute_interpolants\l_hermite1d" alt="" coords="252,5,416,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__lagrange__interpolation.html#af35615b1645decdb973369f391cf2945" title="compute_interpolants\l_hermite2d" alt="" coords="464,5,628,47"/>
+<area shape="rect" id="node1" title=" " alt="" coords="429,13,628,39"/>
+<area shape="rect" id="node2" href="$namespacesll__m__lagrange__interpolation.html#a27f51409cf832abd1cdaf75122c60dad" title=" " alt="" coords="217,5,381,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__lagrange__interpolation.html#af35615b1645decdb973369f391cf2945" title=" " alt="" coords="5,5,169,47"/>
 </map>

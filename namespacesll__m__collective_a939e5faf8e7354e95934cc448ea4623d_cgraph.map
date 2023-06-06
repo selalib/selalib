@@ -1,3 +1,6 @@
 <map id="sll_s_boot_collective" name="sll_s_boot_collective">
-<area shape="rect" id="node2" href="$namespacesll__m__collective.html#a9a5729d7ca2e55890195f76c8a5cbd62" title="Checks the good execution of collective instruction. " alt="" coords="211,5,364,32"/>
+<area shape="rect" id="node1" title="Starts the paralell environment." alt="" coords="5,35,163,61"/>
+<area shape="rect" id="node2" href="$namespacesll__m__collective.html#af370573de68ca767e719916ac7a4e524" title=" " alt="" coords="211,5,391,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__collective.html#afe99ab5fb304ed4d0410f28673e27ece" title=" " alt="" coords="211,57,390,98"/>
+<area shape="rect" id="node4" href="$namespacesll__m__collective.html#a9a5729d7ca2e55890195f76c8a5cbd62" title="Checks the good execution of collective instruction." alt="" coords="439,64,592,91"/>
 </map>

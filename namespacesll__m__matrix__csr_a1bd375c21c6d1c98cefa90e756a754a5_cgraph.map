@@ -1,3 +1,4 @@
 <map id="dot_matrix_csr" name="dot_matrix_csr">
-<area shape="rect" id="node2" href="$namespacesll__m__matrix__csr.html#ab9d327b798792a1053f99e40f7e6d252" title="sequential dot operation " alt="" coords="172,5,316,32"/>
+<area shape="rect" id="node1" title="apply the dot operation of real vector" alt="" coords="5,5,124,32"/>
+<area shape="rect" id="node2" href="$namespacesll__m__matrix__csr.html#ab9d327b798792a1053f99e40f7e6d252" title="sequential dot operation" alt="" coords="172,5,316,32"/>
 </map>

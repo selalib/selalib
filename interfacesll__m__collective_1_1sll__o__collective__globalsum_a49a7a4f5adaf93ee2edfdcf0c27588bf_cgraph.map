@@ -1,0 +1,5 @@
+<map id="sll_s_collective_globalsum_array_real64" name="sll_s_collective_globalsum_array_real64">
+<area shape="rect" id="node1" title="Performs a global sum over an array and writes the result in the given node If no node in root_rank i..." alt="" coords="5,53,201,94"/>
+<area shape="rect" id="node2" href="$namespacesll__m__collective.html#ae2c911311879388b315ec2cb2d55ea36" title="Combines real values from all processes and distributes the result back to all processes." alt="" coords="249,5,408,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__collective.html#a7b5259be20c1cf061c6d97f243147eb3" title=" " alt="" coords="250,85,407,141"/>
+</map>

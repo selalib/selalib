@@ -1,3 +1,4 @@
 <map id="evaluate_int_linear_quad_subnewton_spline_1d" name="evaluate_int_linear_quad_subnewton_spline_1d">
-<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__1d.html#a3113f6c1bbb13f828c6399f51dbcee15" title="Helper function for evaluate_int_linear_quad_subnewton (takes care of the per cell computations) ..." alt="" coords="261,5,408,47"/>
+<area shape="rect" id="node1" title="For implicit subcycling propagator, evaluates the integral needed for Newtons&#39;s method in the evaluat..." alt="" coords="5,5,213,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__1d.html#a3113f6c1bbb13f828c6399f51dbcee15" title="Helper function for evaluate_int_linear_quad_subnewton (takes care of the per cell computations)" alt="" coords="261,5,408,47"/>
 </map>

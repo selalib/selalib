@@ -1,3 +1,4 @@
 <map id="operatorhp1_pic_vm_3d3v_hs" name="operatorhp1_pic_vm_3d3v_hs">
-<area shape="rect" id="node2" href="$namespacesll__m__time__propagator__pic__vm__3d3v__hs.html#ae2d46d0d6b8c411181f9a864bab1346a" title="Helper function for operatorHp1. " alt="" coords="208,5,411,47"/>
+<area shape="rect" id="node1" title="Push Hp1: Equations to solve are \partial_t f + v_1 \partial_{x_1} f = 0 &#45;&gt; xnew = xold + dt V_1 V_ne..." alt="" coords="5,5,160,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__time__propagator__pic__vm__3d3v__hs.html#ae2d46d0d6b8c411181f9a864bab1346a" title="Helper function for operatorHp1." alt="" coords="208,5,411,47"/>
 </map>

@@ -1,4 +1,5 @@
 <map id="rhs_zeroform" name="rhs_zeroform">
+<area shape="rect" id="node1" title="Compute $\int f(F(\xi)) N_i(\xi) J_F(\xi) d\xi$ for scalar function f, where $N_i$ is the B&#45;spline st..." alt="" coords="5,57,113,84"/>
 <area shape="rect" id="node2" href="$namespacesll__m__gauss__legendre__integration.html#a0df63a9e8ee884c2d4a0d1f53602a949" title="Returns a 2d array of size (2,npoints) containing gauss&#45;legendre points and weights in the interval [..." alt="" coords="161,5,384,61"/>
-<area shape="rect" id="node3" href="$namespacesll__m__splines__pp.html#ab63c3a25b861ed9b8701ae2f65942bcf" title="Perform a 1d hornerschema on the pp_coeffs at index. " alt="" coords="185,86,360,127"/>
+<area shape="rect" id="node3" href="$namespacesll__m__splines__pp.html#ab63c3a25b861ed9b8701ae2f65942bcf" title="Perform a 1d hornerschema on the pp_coeffs at index." alt="" coords="185,86,360,127"/>
 </map>

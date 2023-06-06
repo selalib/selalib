@@ -1,5 +1,6 @@
 <map id="sll_s_spline_fem_multiply_massmixed" name="sll_s_spline_fem_multiply_massmixed">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__2d__fem__fft.html#af393207108f2821b4bc4b6482d08af00" title="Multiply by the mass matrix. " alt="" coords="244,5,420,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__maxwell__3d__fem__fft.html#adfe47ed1031ee66fcc5fd98c5a939447" title="Multiply by the mass matrix. " alt="" coords="244,71,420,112"/>
-<area shape="rect" id="node4" href="$namespacesll__m__maxwell__3d__fem__fft.html#adf449c72634051c9778ba058092a3162" title="Multiply by the mass matrix. " alt="" coords="468,63,644,119"/>
+<area shape="rect" id="node1" title="Multiplication of the mix mass matrix given by a mass line mass." alt="" coords="453,39,644,80"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__2d__fem__fft.html#af393207108f2821b4bc4b6482d08af00" title="Multiply by the mass matrix." alt="" coords="229,5,405,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__3d__fem__fft.html#adfe47ed1031ee66fcc5fd98c5a939447" title="Multiply by the mass matrix." alt="" coords="229,71,405,112"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__3d__fem__fft.html#adf449c72634051c9778ba058092a3162" title="Multiply by the mass matrix." alt="" coords="5,63,181,119"/>
 </map>

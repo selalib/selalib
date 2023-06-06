@@ -1,4 +1,9 @@
 <map id="sll_t_linear_solver_spline_mass_2d_fft" name="sll_t_linear_solver_spline_mass_2d_fft">
-<area shape="rect" id="node2" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver " alt="" coords="306,168,446,209"/>
-<area shape="rect" id="node5" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib. " alt="" coords="206,175,277,202"/>
+<area shape="rect" id="node1" title="Data type for a linear solver inverting a 2d tensor product of circulant matrices based on FFT." alt="" coords="246,345,401,387"/>
+<area shape="rect" id="node2" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver" alt="" coords="173,197,313,239"/>
+<area shape="rect" id="node3" title=" " alt="" coords="331,20,396,47"/>
+<area shape="rect" id="node5" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib." alt="" coords="337,205,408,231"/>
+<area shape="rect" id="node4" title=" " alt="" coords="5,20,143,47"/>
+<area shape="rect" id="node6" title=" " alt="" coords="455,5,647,61"/>
+<area shape="rect" id="node7" title=" " alt="" coords="433,205,550,231"/>
 </map>

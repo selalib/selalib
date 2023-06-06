@@ -1,4 +1,5 @@
 <map id="sll_f_new_charge_accumulator_2d" name="sll_f_new_charge_accumulator_2d">
-<area shape="rect" id="node2" href="$namespacesll__m__accumulators.html#a55e4905e01d70552adcc277c997f84de" title="sll_s_charge_accumulator\l_2d_init" alt="" coords="299,5,489,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__accumulators.html#a54ee89e80f4c95305b9a6c741c7657c7" title="sll_s_reset_charge\l_accumulator_to_zero" alt="" coords="537,5,703,47"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,13,251,39"/>
+<area shape="rect" id="node2" href="$namespacesll__m__accumulators.html#a55e4905e01d70552adcc277c997f84de" title=" " alt="" coords="299,5,489,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__accumulators.html#a54ee89e80f4c95305b9a6c741c7657c7" title=" " alt="" coords="537,5,703,47"/>
 </map>

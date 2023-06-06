@@ -1,3 +1,4 @@
 <map id="sll_s_collective_alltoall_int" name="sll_s_collective_alltoall_int">
-<area shape="rect" id="node2" href="$namespacesll__m__collective.html#a2a65c91d2073effaff0fe89980a68103" title="sll_s_collective_alltoallv\l_int_simple" alt="" coords="251,5,432,47"/>
+<area shape="rect" id="node1" title="Sends integer data from all to all processes." alt="" coords="235,13,432,39"/>
+<area shape="rect" id="node2" href="$namespacesll__m__collective.html#a2a65c91d2073effaff0fe89980a68103" title=" " alt="" coords="5,5,187,47"/>
 </map>

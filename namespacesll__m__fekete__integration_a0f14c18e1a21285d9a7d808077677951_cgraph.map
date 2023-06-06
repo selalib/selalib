@@ -1,4 +1,5 @@
 <map id="sll_s_fekete_order_num" name="sll_s_fekete_order_num">
-<area shape="rect" id="node2" href="$namespacesll__m__fekete__integration.html#aa2915462263d3b13d58e9538bc87d2a8" title="returns the number of suborders for a Fekete rule. " alt="" coords="231,5,395,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__fekete__integration.html#ac49d3ac7ddf882cf310aa5ec0e1cb251" title="returns the suborders for a Fekete rule. " alt="" coords="249,56,377,83"/>
+<area shape="rect" id="node1" title="returns the order of a Fekete rule for the triangle." alt="" coords="5,31,181,57"/>
+<area shape="rect" id="node2" href="$namespacesll__m__fekete__integration.html#ac49d3ac7ddf882cf310aa5ec0e1cb251" title="returns the suborders for a Fekete rule." alt="" coords="247,5,374,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__fekete__integration.html#aa2915462263d3b13d58e9538bc87d2a8" title="returns the number of suborders for a Fekete rule." alt="" coords="229,56,392,83"/>
 </map>

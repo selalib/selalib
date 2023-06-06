@@ -1,6 +1,7 @@
 <map id="sll_s_xdmf_close" name="sll_s_xdmf_close">
-<area shape="rect" id="node2" href="$namespacesll__m__xdmf.html#a1b701028e1b98ee4006acff3c3468459" title="Plot 2d distribution function for VisIt. " alt="" coords="227,5,390,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__xdmf.html#a13210eee7926f60557ab641a81588823" title="Plot 2d distribution function for VisIt. " alt="" coords="261,56,356,83"/>
-<area shape="rect" id="node4" href="$namespacesll__m__coordinate__transformations__2d.html#ace62a1795cadabf80eacbaf707b86994" title="sll_m_coordinate_transformations\l_2d::write_to_file_2d_analytic" alt="" coords="187,107,431,149"/>
-<area shape="rect" id="node5" href="$namespacesll__m__coordinate__transformations__2d.html#a37751fa5c73db9811205b0bc8f1d886b" title="sll_m_coordinate_transformations\l_2d::write_to_file_2d_discrete" alt="" coords="187,173,431,214"/>
+<area shape="rect" id="node1" title="Close the XML file and finish to write last lines." alt="" coords="297,85,431,112"/>
+<area shape="rect" id="node2" href="$namespacesll__m__xdmf.html#a13210eee7926f60557ab641a81588823" title="Plot 2d distribution function for VisIt." alt="" coords="80,5,175,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__xdmf.html#a1b701028e1b98ee4006acff3c3468459" title="Plot 2d distribution function for VisIt." alt="" coords="46,56,209,83"/>
+<area shape="rect" id="node4" href="$namespacesll__m__coordinate__transformations__2d.html#ace62a1795cadabf80eacbaf707b86994" title=" " alt="" coords="5,107,249,149"/>
+<area shape="rect" id="node5" href="$namespacesll__m__coordinate__transformations__2d.html#a37751fa5c73db9811205b0bc8f1d886b" title=" " alt="" coords="5,173,249,214"/>
 </map>

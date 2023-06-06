@@ -1,3 +1,4 @@
 <map id="insert_fourier_real" name="insert_fourier_real">
+<area shape="rect" id="node1" title="Helper function to insert the real Fourier coefficient into the sparse grid data structure." alt="" coords="5,5,147,32"/>
 <area shape="rect" id="node2" href="$namespacesll__m__poisson__2d__sparse__grid__fft.html#a7e5ad72a2596393d3ae6322503172b58" title="Helper function to insert the real Fourier coefficients into the sparse grid data structure (recursiv..." alt="" coords="195,5,403,32"/>
 </map>

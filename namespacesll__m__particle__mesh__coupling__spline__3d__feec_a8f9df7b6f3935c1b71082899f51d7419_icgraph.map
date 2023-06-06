@@ -1,3 +1,4 @@
 <map id="point_add_eval_subcyc" name="point_add_eval_subcyc">
-<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__3d__feec.html#a66b7b42c89a2949f004571f1deef0161" title="Evaluates the integral int_{poisition_old}^{position_new} field(x) d x and the integrated current..." alt="" coords="227,5,413,32"/>
+<area shape="rect" id="node1" title="Helper function for add_current_evaluate_int, takes care of per cell computations." alt="" coords="240,5,413,32"/>
+<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__3d__feec.html#a66b7b42c89a2949f004571f1deef0161" title="Evaluates the integral int_{poisition_old}^{position_new} field(x) d x and the integrated current." alt="" coords="5,5,192,32"/>
 </map>

@@ -1,4 +1,5 @@
 <map id="sll_s_spline_fem_sparsity_mass3d_clamped" name="sll_s_spline_fem_sparsity_mass3d_clamped">
-<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities__3d__helper.html#abca14330dede016f8219ca37f8f1d538" title="loop2_clamped" alt="" coords="243,13,364,39"/>
-<area shape="rect" id="node3" href="$namespacesll__m__spline__fem__utilities__3d__helper.html#a4d35e85f4e35c1fee94adab95f84bb46" title="loop1_clamped" alt="" coords="412,13,533,39"/>
+<area shape="rect" id="node1" title="Helper function to create sparsity pattern of the 3d clamped mass matrix." alt="" coords="5,5,195,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities__3d__helper.html#abca14330dede016f8219ca37f8f1d538" title=" " alt="" coords="243,13,364,39"/>
+<area shape="rect" id="node3" href="$namespacesll__m__spline__fem__utilities__3d__helper.html#a4d35e85f4e35c1fee94adab95f84bb46" title=" " alt="" coords="412,13,533,39"/>
 </map>

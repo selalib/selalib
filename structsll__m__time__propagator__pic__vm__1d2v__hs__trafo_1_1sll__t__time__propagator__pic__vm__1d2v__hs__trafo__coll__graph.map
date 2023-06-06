@@ -1,8 +1,16 @@
 <map id="sll_t_time_propagator_pic_vm_1d2v_hs_trafo" name="sll_t_time_propagator_pic_vm_1d2v_hs_trafo">
-<area shape="rect" id="node2" href="$structsll__m__time__propagator__base_1_1sll__c__time__propagator__base.html" title="Type for Hamiltonian splittings. " alt="" coords="1020,13,1224,40"/>
-<area shape="rect" id="node3" href="$structsll__m__hamiltonian__splitting__base_1_1sll__c__hamiltonian__splitting__base.html" title="Type for Hamiltonian splittings. " alt="" coords="668,5,903,32"/>
-<area shape="rect" id="node6" href="$structsll__m__mapping__3d_1_1sll__t__mapping__3d.html" title="type collecting functions for analytical coordinate mapping " alt="" coords="1054,335,1190,361"/>
-<area shape="rect" id="node12" href="$structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html" title="arbitrary degree 1d spline " alt="" coords="359,499,501,525"/>
-<area shape="rect" id="node8" href="$structsll__m__mapping__3d_1_1matrix__element.html" title="matrix_element" alt="" coords="722,335,849,361"/>
-<area shape="rect" id="node11" href="$structsll__m__splines__pp_1_1sll__t__spline__pp__3d.html" title="arbitrary degree 3d spline " alt="" coords="715,436,856,463"/>
+<area shape="rect" id="node1" title="Hamiltonian splitting type for Vlasov&#45;Maxwell 1d2v." alt="" coords="1400,219,1575,261"/>
+<area shape="rect" id="node2" href="$structsll__m__time__propagator__base_1_1sll__c__time__propagator__base.html" title="Type for Hamiltonian splittings." alt="" coords="1016,13,1220,40"/>
+<area shape="rect" id="node3" href="$structsll__m__hamiltonian__splitting__base_1_1sll__c__hamiltonian__splitting__base.html" title="Type for Hamiltonian splittings." alt="" coords="664,5,899,32"/>
+<area shape="rect" id="node4" title=" " alt="" coords="749,133,814,160"/>
+<area shape="rect" id="node6" href="$structsll__m__mapping__3d_1_1sll__t__mapping__3d.html" title="type collecting functions for analytical coordinate mapping" alt="" coords="1050,335,1186,361"/>
+<area shape="rect" id="node5" title=" " alt="" coords="1042,123,1194,165"/>
+<area shape="rect" id="node7" title=" " alt="" coords="5,312,143,339"/>
+<area shape="rect" id="node12" href="$structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html" title="arbitrary degree 1d spline" alt="" coords="359,499,501,525"/>
+<area shape="rect" id="node8" href="$structsll__m__mapping__3d_1_1matrix__element.html" title=" " alt="" coords="718,335,845,361"/>
+<area shape="rect" id="node9" title=" " alt="" coords="353,259,507,315"/>
+<area shape="rect" id="node10" title=" " alt="" coords="15,696,133,723"/>
+<area shape="rect" id="node11" href="$structsll__m__splines__pp_1_1sll__t__spline__pp__3d.html" title="arbitrary degree 3d spline" alt="" coords="711,436,852,463"/>
+<area shape="rect" id="node13" title=" " alt="" coords="1047,803,1189,845"/>
+<area shape="rect" id="node14" title=" " alt="" coords="1013,869,1223,910"/>
 </map>

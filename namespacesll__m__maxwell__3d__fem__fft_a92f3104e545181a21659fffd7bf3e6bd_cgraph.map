@@ -1,5 +1,6 @@
 <map id="sll_s_compute_curl_part_3d_fem_fft" name="sll_s_compute_curl_part_3d_fem_fft">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__fem__fft.html#a13ab31c6639d576f0086381c07ea33f5" title="Helper function for multiply_mass. " alt="" coords="200,13,364,39"/>
-<area shape="rect" id="node3" href="$namespacesll__m__maxwell__3d__fem__fft.html#af661de8498b97c6bb3b0549168a27a7e" title="Multiply by the mass matrix. " alt="" coords="412,13,583,39"/>
-<area shape="rect" id="node4" href="$namespacesll__m__spline__fem__utilities.html#a528fc7241e39fd979bd521f0c2d7b350" title="Multiply the vector invec with the spline FEM mass matrix with mass line mass. " alt="" coords="631,5,872,47"/>
+<area shape="rect" id="node1" title="Solve curl part of Maxwell&#39;s equations." alt="" coords="5,5,152,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__fem__fft.html#a13ab31c6639d576f0086381c07ea33f5" title="Helper function for multiply_mass." alt="" coords="200,13,364,39"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__3d__fem__fft.html#af661de8498b97c6bb3b0549168a27a7e" title="Multiply by the mass matrix." alt="" coords="412,13,583,39"/>
+<area shape="rect" id="node4" href="$namespacesll__m__spline__fem__utilities.html#a528fc7241e39fd979bd521f0c2d7b350" title="Multiply the vector invec with the spline FEM mass matrix with mass line mass." alt="" coords="631,5,872,47"/>
 </map>

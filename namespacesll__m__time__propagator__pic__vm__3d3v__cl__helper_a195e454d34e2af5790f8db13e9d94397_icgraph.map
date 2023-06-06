@@ -1,4 +1,5 @@
 <map id="sll_s_compute_particle_boundary_trafo_current" name="sll_s_compute_particle_boundary_trafo_current">
-<area shape="rect" id="node2" href="$namespacesll__m__time__propagator__pic__vm__3d3v__cef__trafo.html#a30e9c8a6eb79499c22cf997d695ce38c" title="Push H_p: Equations to be solved $^{n+1}=^n+ t DF^{&#45;1}({}) V^n$ $M_1 e^n= M_1 e^n&#45; {t^n}^{t^{n+1}} {}..." alt="" coords="235,5,429,76"/>
-<area shape="rect" id="node3" href="$namespacesll__m__time__propagator__pic__vm__3d3v__hs__trafo.html#afd661219d6b425bf8e22cec62fc8af93" title="Push H_p: Equations to be solved $^{n+1}=^n+ &#160;t DF^{&#45;1}({}){V}$, $V^{n+1}=V^{n}+ &#160;t &#160;{W}_{{q}{m}} DF^..." alt="" coords="235,100,429,171"/>
+<area shape="rect" id="node1" title="Compute particle boundary and current with coordinate transformation." alt="" coords="248,68,429,109"/>
+<area shape="rect" id="node2" href="$namespacesll__m__time__propagator__pic__vm__3d3v__cef__trafo.html#a30e9c8a6eb79499c22cf997d695ce38c" title="Push H_p: Equations to be solved $\Xi^{n+1}=\Xi^n+\Delta t DF^{&#45;1}(\bar{\Xi}) V^n$ $M_1 e^n= M_1 e^n&#45;..." alt="" coords="5,5,200,76"/>
+<area shape="rect" id="node3" href="$namespacesll__m__time__propagator__pic__vm__3d3v__hs__trafo.html#afd661219d6b425bf8e22cec62fc8af93" title="Push H_p: Equations to be solved $\Xi^{n+1}=\Xi^n+ \Delta t DF^{&#45;1}(\overline{\Xi})\overline{V}$,..." alt="" coords="5,100,200,171"/>
 </map>

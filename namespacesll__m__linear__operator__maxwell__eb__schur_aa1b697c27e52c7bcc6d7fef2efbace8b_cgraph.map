@@ -1,6 +1,7 @@
 <map id="inverse_dot_maxwell_eb_fourier" name="inverse_dot_maxwell_eb_fourier">
-<area shape="rect" id="node2" href="$namespacesll__m__linear__operator__maxwell__eb__schur.html#a4bf122119c2ace522a97caa9b7281ff8" title="Helper function. " alt="" coords="227,5,279,32"/>
-<area shape="rect" id="node4" href="$namespacesll__m__linear__operator__maxwell__eb__schur.html#ad8dce34bc099f4fcfb07bd071a34834f" title="Helper function to invert 3x3 matrix. " alt="" coords="215,56,291,83"/>
-<area shape="rect" id="node5" href="$namespacesll__m__linear__operator__maxwell__eb__schur.html#aa4fb4b97759bab4e9cfd6bc5a3c6a2d0" title="Helper function. " alt="" coords="225,107,281,133"/>
-<area shape="rect" id="node3" href="$namespacesll__m__fft.html#a98e3ba2b5431c58a3f5100ac171616a5" title="Compute fast Fourier transform in complex to complex mode. " alt="" coords="339,49,475,90"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,49,167,90"/>
+<area shape="rect" id="node2" href="$namespacesll__m__linear__operator__maxwell__eb__schur.html#a4bf122119c2ace522a97caa9b7281ff8" title="Helper function." alt="" coords="227,5,279,32"/>
+<area shape="rect" id="node4" href="$namespacesll__m__linear__operator__maxwell__eb__schur.html#aa4fb4b97759bab4e9cfd6bc5a3c6a2d0" title="Helper function." alt="" coords="225,56,281,83"/>
+<area shape="rect" id="node5" href="$namespacesll__m__linear__operator__maxwell__eb__schur.html#ad8dce34bc099f4fcfb07bd071a34834f" title="Helper function to invert 3x3 matrix." alt="" coords="215,107,291,133"/>
+<area shape="rect" id="node3" href="$namespacesll__m__fft.html#a98e3ba2b5431c58a3f5100ac171616a5" title="Compute fast Fourier transform in complex to complex mode." alt="" coords="339,23,475,65"/>
 </map>

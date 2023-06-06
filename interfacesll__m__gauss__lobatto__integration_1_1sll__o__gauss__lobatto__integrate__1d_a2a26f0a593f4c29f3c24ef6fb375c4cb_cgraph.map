@@ -1,0 +1,6 @@
+<map id="gauss_lobatto_integral_1d" name="gauss_lobatto_integral_1d">
+<area shape="rect" id="node1" title="Gauss&#45;Lobatto Quadrature." alt="" coords="5,50,199,77"/>
+<area shape="rect" id="node2" href="$namespacesll__m__gauss__lobatto__integration.html#aef28cd44b846400f5133a0ee289babbc" title="This comes from http://dl.acm.org, Algorithme 726 : ORTHPOL, appendices and supplements To use those ..." alt="" coords="247,5,401,47"/>
+<area shape="rect" id="node4" href="$namespacesll__m__gauss__lobatto__integration.html#aff7a4b25544863e1049ea290d0c11db1" title="Gauss&#45;Lobatto Quadrature." alt="" coords="247,71,401,127"/>
+<area shape="rect" id="node3" href="$namespacesll__m__gauss__lobatto__integration.html#a20a90d157ba32cd27c5d6f89eccf3735" title="Given n and a measure dlambda, this routine generates the n&#45;point Gaussian quadrature formula." alt="" coords="449,5,604,47"/>
+</map>

@@ -1,3 +1,4 @@
 <map id="sll_s_set_time_mark" name="sll_s_set_time_mark">
-<area shape="rect" id="node2" href="$particle__fourier__modes__test_8_f90.html#a55b580dbd8063881e82687055950b79c" title="particle_fourier_modes_test" alt="" coords="209,5,413,32"/>
+<area shape="rect" id="node1" title="reads time parameters from system and stores in its argument. param timer_obj an object of type sll_t..." alt="" coords="257,5,413,32"/>
+<area shape="rect" id="node2" href="$particle__fourier__modes__test_8_f90.html#a55b580dbd8063881e82687055950b79c" title=" " alt="" coords="5,5,209,32"/>
 </map>

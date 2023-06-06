@@ -1,5 +1,6 @@
 <map id="sll_s_get_triangle_index" name="sll_s_get_triangle_index">
-<area shape="rect" id="node2" href="$namespacesll__m__hexagonal__meshes.html#a4f66e0c718eda16377ca26d5c95b419f" title="Transform hexagonal coordinates to global index. " alt="" coords="189,31,303,57"/>
-<area shape="rect" id="node3" href="$namespacesll__m__hexagonal__meshes.html#a8bed234b81efa9e2e353c3f594c104e3" title="Computes the number of cell from point to origin. " alt="" coords="353,5,504,32"/>
-<area shape="rect" id="node4" href="$namespacesll__m__hexagonal__meshes.html#a47f7a419f8f8904d408ad3a630612ee4" title="Finds the index in the global array of the point which coordinates where passed as parameter..." alt="" coords="351,56,507,83"/>
+<area shape="rect" id="node1" title="Given a mesh point and the first cartesian coordinate of a point (that is not on the mesh) we return ..." alt="" coords="5,23,141,65"/>
+<area shape="rect" id="node2" href="$namespacesll__m__hexagonal__meshes.html#a4f66e0c718eda16377ca26d5c95b419f" title="Transform hexagonal coordinates to global index." alt="" coords="189,31,303,57"/>
+<area shape="rect" id="node3" href="$namespacesll__m__hexagonal__meshes.html#a47f7a419f8f8904d408ad3a630612ee4" title="Finds the index in the global array of the point which coordinates where passed as parameter." alt="" coords="351,5,507,32"/>
+<area shape="rect" id="node4" href="$namespacesll__m__hexagonal__meshes.html#a8bed234b81efa9e2e353c3f594c104e3" title="Computes the number of cell from point to origin." alt="" coords="353,56,504,83"/>
 </map>

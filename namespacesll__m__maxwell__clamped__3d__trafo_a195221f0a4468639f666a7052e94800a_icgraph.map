@@ -1,3 +1,4 @@
 <map id="sll_s_compute_rhs_trafo" name="sll_s_compute_rhs_trafo">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__clamped__3d__trafo.html#aee0db897e7eb6c63de33fcec035f046a" title="Compute the L2 projection of a given function f on periodic splines of given degree. " alt="" coords="233,5,393,32"/>
+<area shape="rect" id="node1" title="Compute the FEM right&#45;hand&#45;side for a given function f and periodic splines of given degree Its compo..." alt="" coords="213,5,393,32"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__clamped__3d__trafo.html#aee0db897e7eb6c63de33fcec035f046a" title="Compute the L2 projection of a given function f on periodic splines of given degree." alt="" coords="5,5,165,32"/>
 </map>

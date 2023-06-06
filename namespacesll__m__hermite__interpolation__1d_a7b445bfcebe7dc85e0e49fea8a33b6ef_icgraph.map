@@ -1,8 +1,9 @@
 <map id="sll_s_compute_w_hermite_1d" name="sll_s_compute_w_hermite_1d">
-<area shape="rect" id="node2" href="$namespacesll__m__hermite__interpolation__1d.html#a6800c5380b85db2be3c9f8bdefc3c0f7" title="hermite_coef_per_1d" alt="" coords="274,35,433,61"/>
-<area shape="rect" id="node6" href="$namespacesll__m__hermite__interpolation__1d.html#a9e55ec90d8f8f803dcd2e2f7cc473079" title="hermite_coef_nat_1d" alt="" coords="274,85,433,112"/>
-<area shape="rect" id="node7" href="$namespacesll__m__advection__1d__csl__periodic.html#a14b30a9dd8f4398d657ede489c08da70" title="sll_m_advection_1d\l_csl_periodic::compute\l_csl_hermite_mat" alt="" coords="268,136,439,192"/>
-<area shape="rect" id="node3" href="$namespacesll__m__hermite__interpolation__1d.html#abc1f727a842ed19034c42d0c6ed6cc86" title="sll_s_compute_interpolants\l_hermite_1d" alt="" coords="487,53,687,94"/>
-<area shape="rect" id="node4" href="$namespacesll__m__hermite__interpolator__1d.html#a5fbe999982b18a8cc1e98cc0d6338810" title="sll_m_hermite_interpolator\l_1d::wrap_compute_interpolants\l_hermite_1d" alt="" coords="735,5,969,61"/>
-<area shape="rect" id="node5" href="$namespacesll__m__hermite__interpolator__1d.html#ae3465f0eb3a733de300d999d687311b3" title="sll_m_hermite_interpolator\l_1d::wrap_interpolate_array\l_hermite_1d" alt="" coords="750,85,954,141"/>
+<area shape="rect" id="node1" title=" " alt="" coords="755,85,969,112"/>
+<area shape="rect" id="node2" href="$namespacesll__m__advection__1d__csl__periodic.html#a14b30a9dd8f4398d657ede489c08da70" title=" " alt="" coords="536,5,707,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__hermite__interpolation__1d.html#a9e55ec90d8f8f803dcd2e2f7cc473079" title=" " alt="" coords="542,85,701,112"/>
+<area shape="rect" id="node7" href="$namespacesll__m__hermite__interpolation__1d.html#a6800c5380b85db2be3c9f8bdefc3c0f7" title=" " alt="" coords="542,136,701,163"/>
+<area shape="rect" id="node4" href="$namespacesll__m__hermite__interpolation__1d.html#abc1f727a842ed19034c42d0c6ed6cc86" title=" " alt="" coords="288,103,488,145"/>
+<area shape="rect" id="node5" href="$namespacesll__m__hermite__interpolator__1d.html#a5fbe999982b18a8cc1e98cc0d6338810" title=" " alt="" coords="5,56,240,112"/>
+<area shape="rect" id="node6" href="$namespacesll__m__hermite__interpolator__1d.html#ae3465f0eb3a733de300d999d687311b3" title=" " alt="" coords="21,136,225,192"/>
 </map>

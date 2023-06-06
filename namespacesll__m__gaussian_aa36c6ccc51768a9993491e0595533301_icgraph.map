@@ -1,3 +1,4 @@
 <map id="sll_s_gaussian_deviate_2d" name="sll_s_gaussian_deviate_2d">
-<area shape="rect" id="node2" href="$namespacesll__m__particle__initializers__4d.html#a60cb60dd01682868a91c026ac3ffcb33" title="The Landau damping case with a perturbation in BOTH directions of the physical space: (x..." alt="" coords="248,5,436,61"/>
+<area shape="rect" id="node1" title="Returns a value of a random variable in TWO dimensions following the Gaussian probability density wit..." alt="" coords="241,20,436,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__particle__initializers__4d.html#a60cb60dd01682868a91c026ac3ffcb33" title="The Landau damping case with a perturbation in BOTH directions of the physical space: (x,..." alt="" coords="5,5,193,61"/>
 </map>

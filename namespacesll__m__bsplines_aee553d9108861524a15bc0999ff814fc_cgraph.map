@@ -1,3 +1,4 @@
 <map id="sll_s_bsplines_new_2d_polar" name="sll_s_bsplines_new_2d_polar">
-<area shape="rect" id="node2" href="$namespacesll__m__bsplines.html#ae01f3c92800bd791019d211054492a14" title="Allocate and initialize uniform or non&#45;uniform B&#45;splines. " alt="" coords="200,13,347,39"/>
+<area shape="rect" id="node1" title="Allocate and initialize two B&#45;splines for use on polar grid." alt="" coords="5,5,152,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__bsplines.html#ae01f3c92800bd791019d211054492a14" title="Allocate and initialize uniform or non&#45;uniform B&#45;splines." alt="" coords="200,13,347,39"/>
 </map>

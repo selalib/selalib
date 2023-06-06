@@ -1,4 +1,5 @@
 <map id="dehierarchical_part" name="dehierarchical_part">
-<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__interpolator.html#ada6560fddb123d6ef7b00b5397918de2" title="interpolate_disp" alt="" coords="221,5,348,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__sparse__grid__interpolator.html#a45962688567bd69e4a9e9f8376ad35a5" title="integrate_trapezoidal2" alt="" coords="200,56,369,83"/>
+<area shape="rect" id="node1" title=" " alt="" coords="223,31,369,57"/>
+<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__interpolator.html#a45962688567bd69e4a9e9f8376ad35a5" title=" " alt="" coords="5,5,175,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__sparse__grid__interpolator.html#ada6560fddb123d6ef7b00b5397918de2" title=" " alt="" coords="27,56,153,83"/>
 </map>

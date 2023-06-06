@@ -1,3 +1,4 @@
 <map id="multiply_ct" name="multiply_ct">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__fem__fft.html#a01c619d73d2b079d62d58e5d7b18f07a" title="compute Ey from Bz using weak Ampere formulation " alt="" coords="148,5,316,47"/>
+<area shape="rect" id="node1" title="Multiply by transpose of discrete curl matrix." alt="" coords="221,13,316,39"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__fem__fft.html#a01c619d73d2b079d62d58e5d7b18f07a" title="compute Ey from Bz using weak Ampere formulation" alt="" coords="5,5,173,47"/>
 </map>

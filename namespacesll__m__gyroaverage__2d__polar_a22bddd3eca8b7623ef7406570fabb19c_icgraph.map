@@ -1,7 +1,8 @@
 <map id="splcoefnat1dold" name="splcoefnat1dold">
-<area shape="rect" id="node2" href="$namespacesll__m__gyroaverage__2d__polar.html#aa3be680ae583d97a373f0e422866a37b" title="splcoefnatper2d" alt="" coords="180,78,307,105"/>
-<area shape="rect" id="node3" href="$namespacesll__m__gyroaverage__2d__polar.html#a2179cb107521617ad7f43d8150ee7ea9" title="sll_s_compute_gyroaverage\l_points_polar_spl" alt="" coords="355,5,559,47"/>
-<area shape="rect" id="node5" href="$namespacesll__m__gyroaverage__2d__polar.html#a4e89056071a65026b5e8816c6764df4f" title="sll_s_compute_gyroaverage\l_pre_compute_polar_spl" alt="" coords="355,71,559,112"/>
-<area shape="rect" id="node6" href="$namespacesll__m__gyroaverage__2d__polar.html#adf408663e066fc8c157b546629468f80" title="sll_s_compute_gyroaverage\l_pre_compute_polar_spl_fft" alt="" coords="355,136,559,177"/>
-<area shape="rect" id="node4" href="$namespacesll__m__gyroaverage__2d__polar__splines__solver.html#a2027a05dfe7a379899c5e06c046d0a95" title="sll_m_gyroaverage_2d\l_polar_splines_solver\l::compute_gyroaverage\l_2d_polar_splines" alt="" coords="607,56,783,127"/>
+<area shape="rect" id="node1" title=" " alt="" coords="656,78,783,105"/>
+<area shape="rect" id="node2" href="$namespacesll__m__gyroaverage__2d__polar.html#aa3be680ae583d97a373f0e422866a37b" title=" " alt="" coords="481,78,608,105"/>
+<area shape="rect" id="node3" href="$namespacesll__m__gyroaverage__2d__polar.html#a2179cb107521617ad7f43d8150ee7ea9" title=" " alt="" coords="229,5,433,47"/>
+<area shape="rect" id="node5" href="$namespacesll__m__gyroaverage__2d__polar.html#a4e89056071a65026b5e8816c6764df4f" title=" " alt="" coords="229,71,433,112"/>
+<area shape="rect" id="node6" href="$namespacesll__m__gyroaverage__2d__polar.html#adf408663e066fc8c157b546629468f80" title=" " alt="" coords="229,136,433,177"/>
+<area shape="rect" id="node4" href="$namespacesll__m__gyroaverage__2d__polar__splines__solver.html#a2027a05dfe7a379899c5e06c046d0a95" title=" " alt="" coords="5,56,181,127"/>
 </map>

@@ -1,5 +1,9 @@
 <map id="sll_cubic_spline_interpolator_2d_ptr" name="sll_cubic_spline_interpolator_2d_ptr">
-<area shape="rect" id="node2" href="$structsll__m__cubic__spline__interpolator__2d_1_1sll__t__cubic__spline__interpolator__2d.html" title="The spline&#45;based interpolator is only a wrapper around the capabilities of the cubic splines..." alt="" coords="196,377,332,419"/>
-<area shape="rect" id="node3" href="$structsll__m__interpolators__2d__base_1_1sll__c__interpolator__2d.html" title="Base class/basic interface for 2D interpolators. " alt="" coords="5,272,163,299"/>
-<area shape="rect" id="node4" href="$structsll__m__cubic__splines_1_1sll__t__cubic__spline__2d.html" title="Basic type for one&#45;dimensional cubic spline data. " alt="" coords="299,272,458,299"/>
+<area shape="rect" id="node1" title="Pointer to this interpolator derived type." alt="" coords="161,481,367,523"/>
+<area shape="rect" id="node2" href="$structsll__m__cubic__spline__interpolator__2d_1_1sll__t__cubic__spline__interpolator__2d.html" title="The spline&#45;based interpolator is only a wrapper around the capabilities of the cubic splines." alt="" coords="196,377,332,419"/>
+<area shape="rect" id="node3" href="$structsll__m__interpolators__2d__base_1_1sll__c__interpolator__2d.html" title="Base class/basic interface for 2D interpolators." alt="" coords="5,272,163,299"/>
+<area shape="rect" id="node4" href="$structsll__m__cubic__splines_1_1sll__t__cubic__spline__2d.html" title="Basic type for one&#45;dimensional cubic spline data." alt="" coords="299,272,458,299"/>
+<area shape="rect" id="node5" title=" " alt="" coords="337,5,402,32"/>
+<area shape="rect" id="node6" title=" " alt="" coords="159,5,297,32"/>
+<area shape="rect" id="node7" title=" " alt="" coords="571,5,688,32"/>
 </map>

@@ -1,5 +1,6 @@
 <map id="sll_s_cubic_spline_2d_init" name="sll_s_cubic_spline_2d_init">
-<area shape="rect" id="node2" href="$namespacesll__m__fdistribu4d__dk.html#adf8cc4ba8aba42290c788f697de79f42" title="sll_m_fdistribu4d_dk\l::sll_s_function_xy_from\l_rtheta" alt="" coords="199,5,379,61"/>
-<area shape="rect" id="node3" href="$namespacesll__m__cubic__spline__interpolator__2d.html#a6738a0a630445eded7496b8c3d32cc13" title="sll_m_cubic_spline\l_interpolator_2d::initialize\l_cs2d_interpolator" alt="" coords="193,85,385,141"/>
-<area shape="rect" id="node4" href="$namespacesll__m__cubic__splines.html#aef2643d65a84d6793c4f86b9b5f6f6ce" title="Returns a pointer to a heap&#45;allocated 2D cubic spline object. " alt="" coords="192,165,385,192"/>
+<area shape="rect" id="node1" title=" " alt="" coords="247,78,385,119"/>
+<area shape="rect" id="node2" href="$namespacesll__m__cubic__spline__interpolator__2d.html#a6738a0a630445eded7496b8c3d32cc13" title=" " alt="" coords="6,5,198,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__cubic__splines.html#aef2643d65a84d6793c4f86b9b5f6f6ce" title="Returns a pointer to a heap&#45;allocated 2D cubic spline object." alt="" coords="5,85,199,112"/>
+<area shape="rect" id="node4" href="$namespacesll__m__fdistribu4d__dk.html#adf8cc4ba8aba42290c788f697de79f42" title=" " alt="" coords="12,136,192,192"/>
 </map>

@@ -1,6 +1,13 @@
 <map id="sll_t_maxwell_2d_fem_fft" name="sll_t_maxwell_2d_fem_fft">
-<area shape="rect" id="node2" href="$structsll__m__poisson__2d__fem__fft_1_1sll__t__poisson__2d__fem__fft.html" title="sll_t_poisson_2d_fem_fft" alt="" coords="589,353,772,379"/>
-<area shape="rect" id="node3" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib. " alt="" coords="356,175,427,202"/>
-<area shape="rect" id="node7" href="$structsll__m__linear__solver__spline__mass__2d__fft_1_1sll__t__linear__solver__spline__mass__2d__fft.html" title="Data type for a linear solver inverting a 2d tensor product of circulant matrices based on FFT..." alt="" coords="397,345,551,387"/>
-<area shape="rect" id="node8" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver " alt="" coords="172,168,312,209"/>
+<area shape="rect" id="node1" title=" " alt="" coords="1073,453,1263,480"/>
+<area shape="rect" id="node2" href="$structsll__m__poisson__2d__fem__fft_1_1sll__t__poisson__2d__fem__fft.html" title=" " alt="" coords="733,243,916,269"/>
+<area shape="rect" id="node3" title=" " alt="" coords="347,123,543,165"/>
+<area shape="rect" id="node4" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib." alt="" coords="409,220,480,247"/>
+<area shape="rect" id="node10" href="$structsll__m__linear__solver__spline__mass__2d__fft_1_1sll__t__linear__solver__spline__mass__2d__fft.html" title="Data type for a linear solver inverting a 2d tensor product of circulant matrices based on FFT." alt="" coords="747,558,902,599"/>
+<area shape="rect" id="node5" title=" " alt="" coords="69,159,134,185"/>
+<area shape="rect" id="node11" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver" alt="" coords="375,453,515,494"/>
+<area shape="rect" id="node6" title=" " alt="" coords="33,365,170,392"/>
+<area shape="rect" id="node7" title=" " alt="" coords="5,59,197,115"/>
+<area shape="rect" id="node8" title=" " alt="" coords="351,49,539,90"/>
+<area shape="rect" id="node9" title=" " alt="" coords="386,401,503,428"/>
 </map>

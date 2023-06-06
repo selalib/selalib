@@ -1,4 +1,4 @@
 <map id="sll_collective_allreduce_comp64" name="sll_collective_allreduce_comp64">
-<area shape="rect" id="node2" href="$namespacesll__m__collective.html#af068426dbec67186132d5acaefd50d75" title="Performs a global sum over an array and writes the result in the given node If no node in root_rank i..." alt="" coords="228,5,424,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__collective.html#a9116799d41502615ecd359453e90a1be" title="Performs a global sum and writes the result in the given node. " alt="" coords="472,5,655,47"/>
+<area shape="rect" id="node1" title="Combines complex values from all processes and distributes the result back to all processes." alt="" coords="257,20,432,61"/>
+<area shape="rect" id="node2" href="$interfacesll__m__collective_1_1sll__o__collective__globalsum.html#a390a70af288ea9cc71befcea4e323c0b" title="Performs a global sum over an array and writes the result in the given node If no node in root_rank i..." alt="" coords="5,5,209,76"/>
 </map>

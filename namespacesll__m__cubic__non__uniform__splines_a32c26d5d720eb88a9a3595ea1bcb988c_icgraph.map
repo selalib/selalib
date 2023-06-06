@@ -1,4 +1,5 @@
 <map id="sll_f_new_cubic_nonunif_spline_1d" name="sll_f_new_cubic_nonunif_spline_1d">
-<area shape="rect" id="node2" href="$namespacesll__m__split__advection__2d.html#a1779def1dcba039e8d5679c8d2baf4b1" title="Initialise advection_2d object. " alt="" coords="233,5,396,61"/>
-<area shape="rect" id="node3" href="$namespacesll__m__split__advection__2d.html#a2e5d09cb971d667d21ca33e46011411d" title="sll_m_split_advection\l_2d::sll_f_new_split\l_advection_2d" alt="" coords="444,5,607,61"/>
+<area shape="rect" id="node1" title="create new spline object" alt="" coords="427,13,607,54"/>
+<area shape="rect" id="node2" href="$namespacesll__m__split__advection__2d.html#a1779def1dcba039e8d5679c8d2baf4b1" title="Initialise advection_2d object." alt="" coords="216,5,379,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__split__advection__2d.html#a2e5d09cb971d667d21ca33e46011411d" title=" " alt="" coords="5,5,168,61"/>
 </map>

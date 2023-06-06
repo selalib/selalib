@@ -1,3 +1,4 @@
 <map id="advect_e_sub_pic_vm_1d2v_helper" name="advect_e_sub_pic_vm_1d2v_helper">
-<area shape="rect" id="node2" href="$namespacesll__m__time__propagator__pic__vm__1d2v__helper.html#a1f2e3edda5d2fc8b44b8d7e6e84beb64" title="Helper function for subcycle (using Picard iteration) " alt="" coords="219,13,321,39"/>
+<area shape="rect" id="node1" title="Operator for e,x&#45;part with subcycling." alt="" coords="5,5,171,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__time__propagator__pic__vm__1d2v__helper.html#a1f2e3edda5d2fc8b44b8d7e6e84beb64" title="Helper function for subcycle (using Picard iteration)" alt="" coords="219,13,321,39"/>
 </map>

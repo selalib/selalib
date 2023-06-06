@@ -1,7 +1,8 @@
 <map id="sll_s_multiply_gt_clamped" name="sll_s_multiply_gt_clamped">
-<area shape="rect" id="node2" href="$namespacesll__m__linear__operator__curl__cl__3d.html#a8e701a07de96c14937a04ca667d6e07a" title="sll_m_linear_operator\l_curl_cl_3d::dot_curl_cl_3d" alt="" coords="248,5,443,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__linear__operator__gtm__cl.html#ae7aa68505d31d562e159bb32ce22f99d" title="sll_m_linear_operator\l_gtm_cl::dot_gtm_cl" alt="" coords="264,71,427,112"/>
-<area shape="rect" id="node4" href="$namespacesll__m__linear__operator__poisson__clamped__3d.html#aab87c55f973bfedf708f880408e3b69a" title="sll_m_linear_operator\l_poisson_clamped_3d::\ldot_poisson_clamped_3d" alt="" coords="252,137,439,193"/>
-<area shape="rect" id="node5" href="$namespacesll__m__maxwell__clamped__3d__fem.html#a1d95ddf29a4c02ab69357a8d56c550e2" title="Multiply by transpose of dicrete gradient matrix. " alt="" coords="254,217,437,259"/>
-<area shape="rect" id="node6" href="$namespacesll__m__maxwell__clamped__3d__trafo.html#a2b1b85ba98b1b7f1edcb393f76ba2abc" title="Multiply by transpose of dicrete gradient matrix. " alt="" coords="254,283,437,324"/>
+<area shape="rect" id="node1" title="Multiply by transpose of dicrete gradient matrix." alt="" coords="248,151,443,178"/>
+<area shape="rect" id="node2" href="$namespacesll__m__linear__operator__curl__cl__3d.html#a8e701a07de96c14937a04ca667d6e07a" title=" " alt="" coords="5,5,200,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__linear__operator__gtm__cl.html#ae7aa68505d31d562e159bb32ce22f99d" title=" " alt="" coords="21,71,184,112"/>
+<area shape="rect" id="node4" href="$namespacesll__m__linear__operator__poisson__clamped__3d.html#aab87c55f973bfedf708f880408e3b69a" title=" " alt="" coords="9,137,196,193"/>
+<area shape="rect" id="node5" href="$namespacesll__m__maxwell__clamped__3d__fem.html#a1d95ddf29a4c02ab69357a8d56c550e2" title="Multiply by transpose of dicrete gradient matrix." alt="" coords="11,217,194,259"/>
+<area shape="rect" id="node6" href="$namespacesll__m__maxwell__clamped__3d__trafo.html#a2b1b85ba98b1b7f1edcb393f76ba2abc" title="Multiply by transpose of dicrete gradient matrix." alt="" coords="11,283,194,324"/>
 </map>

@@ -1,3 +1,4 @@
 <map id="update_v_partial" name="update_v_partial">
-<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__1d.html#a4e84a7a123785eb90309db9515c7be4d" title="Evaluates an integrated field (between position_old and position_new) but with a quadrature formula f..." alt="" coords="184,5,395,32"/>
+<area shape="rect" id="node1" title="Helper function for evaluate_int_quad (despite the name it evaluates a field and does not update v)" alt="" coords="264,5,395,32"/>
+<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__1d.html#a4e84a7a123785eb90309db9515c7be4d" title="Evaluates an integrated field (between position_old and position_new) but with a quadrature formula f..." alt="" coords="5,5,216,32"/>
 </map>

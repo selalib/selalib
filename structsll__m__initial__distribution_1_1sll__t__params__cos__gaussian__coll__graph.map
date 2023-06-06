@@ -1,3 +1,6 @@
 <map id="sll_t_params_cos_gaussian" name="sll_t_params_cos_gaussian">
-<area shape="rect" id="node2" href="$structsll__m__initial__distribution_1_1sll__c__distribution__params.html" title="Abstract data type for parameters of initial distribution. " alt="" coords="117,147,249,189"/>
+<area shape="rect" id="node1" title="Data type for distribution function with (multiple) Gaussians in v and one plus cosine perturbations ..." alt="" coords="81,247,280,273"/>
+<area shape="rect" id="node2" href="$structsll__m__initial__distribution_1_1sll__c__distribution__params.html" title="Abstract data type for parameters of initial distribution." alt="" coords="115,147,247,189"/>
+<area shape="rect" id="node3" title=" " alt="" coords="5,5,143,32"/>
+<area shape="rect" id="node4" title=" " alt="" coords="169,5,286,32"/>
 </map>

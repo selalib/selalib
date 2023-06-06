@@ -1,4 +1,7 @@
 <map id="gyroaverage_2d_polar_pade_solver" name="gyroaverage_2d_polar_pade_solver">
-<area shape="rect" id="node2" href="$structsll__m__gyroaverage__2d__base_1_1sll__c__gyroaverage__2d__base.html" title="sll_c_gyroaverage_2d_base" alt="" coords="5,249,207,275"/>
-<area shape="rect" id="node4" href="$structsll__m__gyroaverage__2d__polar_1_1sll__t__plan__gyroaverage__polar.html" title="sll_t_plan_gyroaverage\l_polar" alt="" coords="353,241,526,283"/>
+<area shape="rect" id="node1" title=" " alt="" coords="172,345,339,387"/>
+<area shape="rect" id="node2" href="$structsll__m__gyroaverage__2d__base_1_1sll__c__gyroaverage__2d__base.html" title=" " alt="" coords="5,249,207,275"/>
+<area shape="rect" id="node3" title=" " alt="" coords="203,5,340,32"/>
+<area shape="rect" id="node4" href="$structsll__m__gyroaverage__2d__polar_1_1sll__t__plan__gyroaverage__polar.html" title=" " alt="" coords="353,241,526,283"/>
+<area shape="rect" id="node5" title=" " alt="" coords="381,5,498,32"/>
 </map>

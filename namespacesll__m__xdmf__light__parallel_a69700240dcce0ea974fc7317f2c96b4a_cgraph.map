@@ -1,4 +1,5 @@
 <map id="t_xdmf_parallel__init" name="t_xdmf_parallel__init">
-<area shape="rect" id="node2" href="$namespacesll__m__collective.html#a396122f49340f0778eb448430d865b4e" title="Determines the rank of the calling process in the communicator. " alt="" coords="212,5,380,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" title="Checks if the pointer ptr is associated to an object. " alt="" coords="428,5,591,47"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,13,164,39"/>
+<area shape="rect" id="node2" href="$namespacesll__m__collective.html#a396122f49340f0778eb448430d865b4e" title="Determines the rank of the calling process in the communicator." alt="" coords="212,5,380,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" title="Checks if the pointer ptr is associated to an object." alt="" coords="428,5,591,47"/>
 </map>

@@ -1,5 +1,6 @@
 <map id="initialize_poisson_1d_periodic" name="initialize_poisson_1d_periodic">
-<area shape="rect" id="node2" href="$namespacesll__m__poisson__1d__periodic.html#a5e799bc960e9bcd6e5a81efe076b44f9" title="Create a sll_o_new solver. " alt="" coords="188,5,376,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__poisson__1d__periodic.html#af90cec30174db5b250b0d6a711cd0b20" title="initialize_poisson\l_1d_periodic_wrapper" alt="" coords="200,57,364,98"/>
-<area shape="rect" id="node4" href="$namespacesll__m__poisson__1d__periodic.html#a4cbc70f2b4c7f085c855239d7362b1d1" title="sll_f_new_poisson_1d\l_periodic" alt="" coords="424,57,587,98"/>
+<area shape="rect" id="node1" title="sll_o_initialize the solver" alt="" coords="460,43,595,84"/>
+<area shape="rect" id="node2" href="$namespacesll__m__poisson__1d__periodic.html#af90cec30174db5b250b0d6a711cd0b20" title=" " alt="" coords="232,5,396,47"/>
+<area shape="rect" id="node4" href="$interfacesll__m__poisson__1d__periodic_1_1sll__o__new.html#a64743d704d91e97e0a02ec39ee4d89ba" title="Create a sll_o_new solver." alt="" coords="216,71,412,127"/>
+<area shape="rect" id="node3" href="$namespacesll__m__poisson__1d__periodic.html#a4cbc70f2b4c7f085c855239d7362b1d1" title=" " alt="" coords="5,5,168,47"/>
 </map>

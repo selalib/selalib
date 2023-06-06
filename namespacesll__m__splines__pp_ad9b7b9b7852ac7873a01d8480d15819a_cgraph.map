@@ -1,3 +1,4 @@
 <map id="sll_s_spline_pp_b_to_pp_2d" name="sll_s_spline_pp_b_to_pp_2d">
+<area shape="rect" id="node1" title="Convert 2d spline in B form to spline in pp form." alt="" coords="5,5,160,47"/>
 <area shape="rect" id="node2" href="$namespacesll__m__splines__pp.html#a411f7e3b4a4df46ddc89167ca33258dd" title="Convert 1d spline in B form in a cell to spline in pp form for specified pp_coefficients of the b_spl..." alt="" coords="208,5,363,47"/>
 </map>

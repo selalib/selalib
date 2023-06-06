@@ -1,8 +1,13 @@
 <map id="sll_t_polar_bsplines_2d" name="sll_t_polar_bsplines_2d">
-<area shape="rect" id="node2" href="$structsll__m__spline__2d_1_1sll__t__spline__2d.html" title="2D tensor&#45;product spline " alt="" coords="508,211,627,237"/>
-<area shape="rect" id="node5" href="$structsll__m__singular__mapping__discrete_1_1sll__t__singular__mapping__discrete.html" title="Concrete type, discrete singular mapping. " alt="" coords="1033,299,1205,341"/>
-<area shape="rect" id="node7" href="$structsll__m__spline__interpolator__2d_1_1sll__t__spline__interpolator__2d.html" title="2D tensor&#45;product spline interpolator " alt="" coords="651,457,852,484"/>
-<area shape="rect" id="node8" href="$structsll__m__spline__1d_1_1sll__t__spline__1d.html" title="1D spline " alt="" coords="324,424,443,451"/>
-<area shape="rect" id="node9" href="$structsll__m__spline__interpolator__1d_1_1sll__t__spline__interpolator__1d.html" title="1D spline interpolator " alt="" coords="283,552,484,579"/>
-<area shape="rect" id="node6" href="$structsll__m__singular__mapping__base_1_1sll__c__singular__mapping.html" title="Abstract type, singular mapping. " alt="" coords="664,337,839,364"/>
+<area shape="rect" id="node1" title="Type containing new 2D polar basis functions." alt="" coords="1315,209,1488,236"/>
+<area shape="rect" id="node2" href="$structsll__m__spline__2d_1_1sll__t__spline__2d.html" title="2D tensor&#45;product spline" alt="" coords="508,211,627,237"/>
+<area shape="rect" id="node5" href="$structsll__m__singular__mapping__discrete_1_1sll__t__singular__mapping__discrete.html" title="Concrete type, discrete singular mapping." alt="" coords="1033,299,1205,341"/>
+<area shape="rect" id="node3" title=" " alt="" coords="48,221,124,248"/>
+<area shape="rect" id="node7" href="$structsll__m__spline__interpolator__2d_1_1sll__t__spline__interpolator__2d.html" title="2D tensor&#45;product spline interpolator" alt="" coords="651,457,852,484"/>
+<area shape="rect" id="node8" href="$structsll__m__spline__1d_1_1sll__t__spline__1d.html" title="1D spline" alt="" coords="324,424,443,451"/>
+<area shape="rect" id="node9" href="$structsll__m__spline__interpolator__1d_1_1sll__t__spline__interpolator__1d.html" title="1D spline interpolator" alt="" coords="283,552,484,579"/>
+<area shape="rect" id="node4" title=" " alt="" coords="9,461,163,502"/>
+<area shape="rect" id="node6" href="$structsll__m__singular__mapping__base_1_1sll__c__singular__mapping.html" title="Abstract type, singular mapping." alt="" coords="664,337,839,364"/>
+<area shape="rect" id="node10" title=" " alt="" coords="5,556,167,612"/>
+<area shape="rect" id="node11" title=" " alt="" coords="52,733,120,760"/>
 </map>

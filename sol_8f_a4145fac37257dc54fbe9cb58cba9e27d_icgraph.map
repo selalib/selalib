@@ -1,11 +1,13 @@
 <map id="sol" name="sol">
-<area shape="rect" id="node2" href="$namespacesll__m__lobalap.html#a39ed223152db8fd09d58d455f85e6232" title="sll_m_lobalap::sll\l_s_computelu" alt="" coords="115,17,249,58"/>
-<area shape="rect" id="node4" href="$namespacesll__m__lobalap.html#aa106c71651d7e33a3104c8a62ca33666" title="sll_m_lobalap::sll\l_s_compute_phi" alt="" coords="115,86,249,127"/>
-<area shape="rect" id="node6" href="$namespacesll__m__qn__2d__polar.html#aa95847c3b2595b8fe8221ed6e58caf9f" title="sll_m_qn_2d_polar::\lsolve_circulant_system" alt="" coords="95,151,269,193"/>
-<area shape="rect" id="node8" href="$namespacesll__m__mumps.html#a60fc64f2a49ba61147cfee6857882cc1" title="sll_m_mumps::solve\l_mumps_without_rhs" alt="" coords="101,217,263,258"/>
-<area shape="rect" id="node9" href="$namespacesll__m__pastix.html#aa5bc41bb3cbc9eeb04aa1115e210d3cf" title="sll_m_pastix::solve\l_pastix_without_rhs" alt="" coords="106,282,258,323"/>
-<area shape="rect" id="node10" href="$namespacesll__m__pastix.html#ac1e1c76e966cfdba493b7dc5655605ec" title="sll_m_pastix::solve\l_pastix_with_rhs" alt="" coords="109,347,255,389"/>
-<area shape="rect" id="node3" href="$namespacesll__m__lobatto__poisson.html#ade8d9828f8cfb56297d7d3ca1c09809e" title="sll_m_lobatto_poisson\l::initialize_lobatto\l_poisson" alt="" coords="321,5,488,61"/>
-<area shape="rect" id="node5" href="$namespacesll__m__lobatto__poisson.html#a9c5866187baac222bbdcdb355c578fcb" title="sll_m_lobatto_poisson\l::solve_lobatto_poisson" alt="" coords="317,86,492,127"/>
-<area shape="rect" id="node7" href="$namespacesll__m__qn__2d__polar.html#aee9a3432a9b69122fcb85403b3960ca6" title="sll_m_qn_2d_polar::\ltest_solve_circulant\l_system" alt="" coords="329,152,481,208"/>
+<area shape="rect" id="node1" title=" " alt="" coords="477,231,519,257"/>
+<area shape="rect" id="node2" href="$namespacesll__m__lobalap.html#aa106c71651d7e33a3104c8a62ca33666" title=" " alt="" coords="260,21,395,62"/>
+<area shape="rect" id="node4" href="$namespacesll__m__lobalap.html#a39ed223152db8fd09d58d455f85e6232" title=" " alt="" coords="260,93,395,134"/>
+<area shape="rect" id="node6" href="$namespacesll__m__qn__2d__polar.html#aa95847c3b2595b8fe8221ed6e58caf9f" title=" " alt="" coords="240,158,415,199"/>
+<area shape="rect" id="node8" href="$interfacesll__m__mumps_1_1solve.html#ad768d65e2eec7cbf1289ba9728f7f888" title=" " alt="" coords="225,223,429,265"/>
+<area shape="rect" id="node9" href="$interfacesll__m__paralution_1_1solve.html#af5c12acdc59466a6eb5f65e605999744" title=" " alt="" coords="227,289,427,330"/>
+<area shape="rect" id="node10" href="$interfacesll__m__pastix_1_1solve.html#a81e1170168cb91c2e3d75b421881c7c4" title=" " alt="" coords="240,354,415,395"/>
+<area shape="rect" id="node11" href="$interfacesll__m__pastix_1_1solve.html#a6eca64d07057951fc6efc0f1ba9a60b1" title=" " alt="" coords="230,419,425,461"/>
+<area shape="rect" id="node3" href="$interfacesll__m__lobatto__poisson_1_1sll__o__solve.html#ab1781bbf9be1b6fae88bc61ceda525c4" title=" " alt="" coords="8,5,175,61"/>
+<area shape="rect" id="node5" href="$interfacesll__m__lobatto__poisson_1_1sll__o__create.html#a0614e36f77c5cf5049ec4c5147f4f9b8" title=" " alt="" coords="5,85,177,141"/>
+<area shape="rect" id="node7" href="$namespacesll__m__qn__2d__polar.html#aee9a3432a9b69122fcb85403b3960ca6" title=" " alt="" coords="15,165,167,221"/>
 </map>

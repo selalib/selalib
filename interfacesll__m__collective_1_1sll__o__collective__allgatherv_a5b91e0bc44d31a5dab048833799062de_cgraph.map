@@ -1,0 +1,4 @@
+<map id="sll_collective_allgatherv_real32" name="sll_collective_allgatherv_real32">
+<area shape="rect" id="node1" title="Gathers real data from all tasks and deliver the combined data to all tasks." alt="" coords="5,5,185,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__collective.html#a9a5729d7ca2e55890195f76c8a5cbd62" title="Checks the good execution of collective instruction." alt="" coords="233,5,384,47"/>
+</map>

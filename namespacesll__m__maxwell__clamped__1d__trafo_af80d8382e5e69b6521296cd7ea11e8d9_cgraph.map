@@ -1,3 +1,4 @@
 <map id="multiply_gt" name="multiply_gt">
-<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities__3d__clamped.html#a6ae5272825c9bf38331b26ebffaa115f" title="Multiplication of the input vector in by the transposed clamped derivative matrix G^T..." alt="" coords="149,5,356,61"/>
+<area shape="rect" id="node1" title="Multiply by transpose of dicrete gradient matrix." alt="" coords="5,20,101,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities__3d__clamped.html#a6ae5272825c9bf38331b26ebffaa115f" title="Multiplication of the input vector in by the transposed clamped derivative matrix G^T." alt="" coords="149,5,356,61"/>
 </map>

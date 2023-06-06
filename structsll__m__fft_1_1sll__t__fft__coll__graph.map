@@ -1,2 +1,6 @@
 <map id="sll_t_fft" name="sll_t_fft">
+<area shape="rect" id="node1" title="Type for FFT plan in SeLaLib." alt="" coords="128,168,199,195"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,20,71,47"/>
+<area shape="rect" id="node3" title=" " alt="" coords="95,20,232,47"/>
+<area shape="rect" id="node4" title=" " alt="" coords="257,5,449,61"/>
 </map>

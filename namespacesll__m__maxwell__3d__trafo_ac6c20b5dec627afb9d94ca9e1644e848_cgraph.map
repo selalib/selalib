@@ -1,4 +1,5 @@
 <map id="sll_s_compute_e_from_rho_3d_trafo" name="sll_s_compute_e_from_rho_3d_trafo">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__trafo.html#a56c05c8453d3e51ace24968645af63af" title="Multiply by dicrete gradient matrix. " alt="" coords="221,13,312,39"/>
-<area shape="rect" id="node3" href="$namespacesll__m__spline__fem__utilities.html#a143adbb273f0bd150b5d7061bdbecf8c" title="Multiply by dicrete gradient matrix (3d version) " alt="" coords="360,5,552,47"/>
+<area shape="rect" id="node1" title="Compute E_i from rho_i integrated over the time interval using weak Poisson&#39;s equation." alt="" coords="5,5,173,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__trafo.html#a56c05c8453d3e51ace24968645af63af" title="Multiply by dicrete gradient matrix." alt="" coords="221,13,312,39"/>
+<area shape="rect" id="node3" href="$namespacesll__m__spline__fem__utilities.html#a143adbb273f0bd150b5d7061bdbecf8c" title="Multiply by dicrete gradient matrix (3d version)" alt="" coords="360,5,552,47"/>
 </map>

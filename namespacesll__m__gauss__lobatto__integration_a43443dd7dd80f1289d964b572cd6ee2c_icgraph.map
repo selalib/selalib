@@ -1,11 +1,12 @@
 <map id="sll_f_gauss_lobatto_points" name="sll_f_gauss_lobatto_points">
-<area shape="rect" id="node2" href="$namespacesll__m__dg__fields.html#a66ffd9f6cf3e20a707f967e4cb457d30" title="sll_m_dg_fields::sll\l_s_dg_field_2d_init" alt="" coords="229,5,374,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__maxwell__2d__diga.html#aea7962198b6305c1256087d5a9e5c8fe" title="Initialize Maxwell solver object using DG method. " alt="" coords="451,159,659,200"/>
-<area shape="rect" id="node5" href="$namespacesll__m__dg__fields.html#afd907112b47b1a216f2bc3af0bdc9e44" title="sll_m_dg_fields::sll\l_f_new_dg_field_2d" alt="" coords="227,123,376,164"/>
-<area shape="rect" id="node6" href="$namespacesll__m__gyroaverage__utilities.html#ace9ca74c71712dea32a595db9b2585fa" title="sll_m_gyroaverage_utilities\l::sll_s_compute_mu" alt="" coords="200,188,403,229"/>
-<area shape="rect" id="node7" href="$namespacesll__m__maxwell__2d__diga.html#aaf2e3de1e3a109d93be64114e8abeb03" title="Compute cell normals. " alt="" coords="212,253,391,295"/>
-<area shape="rect" id="node8" href="$namespacesll__m__dg__interpolator__1d.html#aab53d5893320fe81960e78fc061d7239" title="sll_m_dg_interpolator\l_1d::sll_s_dg_interpolator\l_1d_init" alt="" coords="207,319,395,375"/>
-<area shape="rect" id="node9" href="$namespacesll__m__gauss__lobatto__integration.html#abde325bec9e6c51c78f56ecc3bb075d5" title="Returns a 2d array of size (2,n) containing gauss&#45;lobatto points and weights in the interval [a..." alt="" coords="222,400,381,441"/>
-<area shape="rect" id="node10" href="$namespacesll__m__gauss__lobatto__integration.html#a094e30fa9676b7845eb9d5bb58451496" title="Construction of the derivative matrix for Gauss&#45;Lobatto, The matrix must be already allocated of size..." alt="" coords="228,465,375,507"/>
-<area shape="rect" id="node4" href="$namespacesll__m__maxwell__2d__diga.html#a757b8a57dde51f462e899778a250a81d" title="sll_m_maxwell_2d_diga\l::sll_f_new_maxwell_2d_diga" alt="" coords="707,159,919,200"/>
+<area shape="rect" id="node1" title="Returns a 1d array of size (n) containing gauss&#45;lobatto points in the interval [a,..." alt="" coords="772,221,919,263"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__2d__diga.html#aaf2e3de1e3a109d93be64114e8abeb03" title="Compute cell normals." alt="" coords="533,5,712,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__2d__diga.html#aea7962198b6305c1256087d5a9e5c8fe" title="Initialize Maxwell solver object using DG method." alt="" coords="265,93,473,135"/>
+<area shape="rect" id="node5" href="$namespacesll__m__gauss__lobatto__integration.html#a094e30fa9676b7845eb9d5bb58451496" title="Construction of the derivative matrix for Gauss&#45;Lobatto, The matrix must be already allocated of size..." alt="" coords="549,123,696,164"/>
+<area shape="rect" id="node6" href="$namespacesll__m__gauss__lobatto__integration.html#abde325bec9e6c51c78f56ecc3bb075d5" title="Returns a 2d array of size (2,n) containing gauss&#45;lobatto points and weights in the interval [a,..." alt="" coords="543,188,702,229"/>
+<area shape="rect" id="node7" href="$namespacesll__m__dg__fields.html#afd907112b47b1a216f2bc3af0bdc9e44" title=" " alt="" coords="548,253,697,295"/>
+<area shape="rect" id="node8" href="$namespacesll__m__gyroaverage__utilities.html#ace9ca74c71712dea32a595db9b2585fa" title=" " alt="" coords="521,319,724,360"/>
+<area shape="rect" id="node9" href="$namespacesll__m__dg__fields.html#a66ffd9f6cf3e20a707f967e4cb457d30" title=" " alt="" coords="550,384,695,425"/>
+<area shape="rect" id="node10" href="$namespacesll__m__dg__interpolator__1d.html#aab53d5893320fe81960e78fc061d7239" title=" " alt="" coords="529,450,717,506"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__2d__diga.html#a757b8a57dde51f462e899778a250a81d" title=" " alt="" coords="5,93,217,135"/>
 </map>

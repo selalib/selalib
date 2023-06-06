@@ -1,6 +1,14 @@
 <map id="sll_t_split_advection_2d" name="sll_t_split_advection_2d">
-<area shape="rect" id="node2" href="$structsll__m__operator__splitting_1_1sll__t__operator__splitting.html" title="operator splitting object " alt="" coords="317,99,488,125"/>
-<area shape="rect" id="node11" href="$structsll__m__cubic__non__uniform__splines_1_1sll__t__cubic__nonunif__spline__1d.html" title="Spline object. " alt="" coords="329,246,476,287"/>
-<area shape="rect" id="node6" href="$structsll__m__cartesian__meshes_1_1sll__t__cartesian__mesh__2d.html" title="2D cartesian mesh " alt="" coords="311,312,494,339"/>
-<area shape="rect" id="node7" href="$structsll__m__meshes__base_1_1sll__c__mesh__2d__base.html" title="2D logical mesh " alt="" coords="5,756,160,783"/>
+<area shape="rect" id="node1" title="Simple operator splitting type for 2D advection Extends operator splitting." alt="" coords="704,345,883,372"/>
+<area shape="rect" id="node2" href="$structsll__m__operator__splitting_1_1sll__t__operator__splitting.html" title="operator splitting object" alt="" coords="317,99,488,125"/>
+<area shape="rect" id="node3" title=" " alt="" coords="50,20,115,47"/>
+<area shape="rect" id="node11" href="$structsll__m__cubic__non__uniform__splines_1_1sll__t__cubic__nonunif__spline__1d.html" title="Spline object." alt="" coords="329,246,476,287"/>
+<area shape="rect" id="node4" title=" " alt="" coords="14,261,151,288"/>
+<area shape="rect" id="node6" href="$structsll__m__cartesian__meshes_1_1sll__t__cartesian__mesh__2d.html" title="2D cartesian mesh" alt="" coords="311,312,494,339"/>
+<area shape="rect" id="node5" title=" " alt="" coords="24,560,141,587"/>
+<area shape="rect" id="node7" href="$structsll__m__meshes__base_1_1sll__c__mesh__2d__base.html" title="2D logical mesh" alt="" coords="5,756,160,783"/>
+<area shape="rect" id="node8" title=" " alt="" coords="307,363,499,419"/>
+<area shape="rect" id="node9" title=" " alt="" coords="307,443,498,485"/>
+<area shape="rect" id="node10" title=" " alt="" coords="317,509,489,550"/>
+<area shape="rect" id="node12" title=" " alt="" coords="309,784,496,840"/>
 </map>

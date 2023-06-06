@@ -1,4 +1,5 @@
 <map id="sll_s_compute_interpolants_hermite_1d" name="sll_s_compute_interpolants_hermite_1d">
-<area shape="rect" id="node2" href="$namespacesll__m__hermite__interpolator__1d.html#a5fbe999982b18a8cc1e98cc0d6338810" title="sll_m_hermite_interpolator\l_1d::wrap_compute_interpolants\l_hermite_1d" alt="" coords="253,5,488,61"/>
-<area shape="rect" id="node3" href="$namespacesll__m__hermite__interpolator__1d.html#ae3465f0eb3a733de300d999d687311b3" title="sll_m_hermite_interpolator\l_1d::wrap_interpolate_array\l_hermite_1d" alt="" coords="269,85,473,141"/>
+<area shape="rect" id="node1" title=" " alt="" coords="288,53,488,94"/>
+<area shape="rect" id="node2" href="$namespacesll__m__hermite__interpolator__1d.html#a5fbe999982b18a8cc1e98cc0d6338810" title=" " alt="" coords="5,5,240,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__hermite__interpolator__1d.html#ae3465f0eb3a733de300d999d687311b3" title=" " alt="" coords="21,85,225,141"/>
 </map>

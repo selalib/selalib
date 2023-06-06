@@ -1,4 +1,5 @@
 <map id="add_current_evaluate_smoothened_spline_1d" name="add_current_evaluate_smoothened_spline_1d">
-<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__smooth__1d.html#acdea933147e213fd06106118c3cdb29c" title="Add current for one particle and update v (according to H_p1 part in Hamiltonian splitting) ..." alt="" coords="232,5,427,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__particle__mesh__coupling__spline__smooth__1d.html#a4d758ff3ff271c580569e6584642c907" title="Integration over the prime function of the smoothing kernel S (for v update and j accumulation) ..." alt="" coords="475,5,676,47"/>
+<area shape="rect" id="node1" title="Add current for one particle and evaluate the field (according to iterative part in discrete gradient..." alt="" coords="5,5,184,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__smooth__1d.html#acdea933147e213fd06106118c3cdb29c" title="Add current for one particle and update v (according to H_p1 part in Hamiltonian splitting)" alt="" coords="232,5,427,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__particle__mesh__coupling__spline__smooth__1d.html#a4d758ff3ff271c580569e6584642c907" title="Integration over the prime function of the smoothing kernel S (for v update and j accumulation)" alt="" coords="475,5,676,47"/>
 </map>

@@ -1,5 +1,10 @@
 <map id="sll_t_preconditioner_singular" name="sll_t_preconditioner_singular">
-<area shape="rect" id="node2" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver " alt="" coords="5,191,145,233"/>
-<area shape="rect" id="node5" href="$structsll__m__linear__solver__block_1_1sll__t__linear__solver__block.html" title="class for a linear solver_block " alt="" coords="159,304,299,345"/>
-<area shape="rect" id="node7" href="$structsll__m__linear__solver__block_1_1jrk__t__linear__solver__pointer.html" title="class that contains a pointer to a linear solver " alt="" coords="453,191,596,233"/>
+<area shape="rect" id="node1" title=" " alt="" coords="44,408,195,449"/>
+<area shape="rect" id="node2" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver" alt="" coords="5,191,145,233"/>
+<area shape="rect" id="node5" href="$structsll__m__linear__solver__block_1_1sll__t__linear__solver__block.html" title="class for a linear solver_block" alt="" coords="159,304,299,345"/>
+<area shape="rect" id="node3" title=" " alt="" coords="43,13,108,39"/>
+<area shape="rect" id="node4" title=" " alt="" coords="204,13,341,39"/>
+<area shape="rect" id="node6" title=" " alt="" coords="170,199,287,225"/>
+<area shape="rect" id="node7" href="$structsll__m__linear__solver__block_1_1jrk__t__linear__solver__pointer.html" title="class that contains a pointer to a linear solver" alt="" coords="449,191,592,233"/>
+<area shape="rect" id="node8" title=" " alt="" coords="427,5,615,47"/>
 </map>

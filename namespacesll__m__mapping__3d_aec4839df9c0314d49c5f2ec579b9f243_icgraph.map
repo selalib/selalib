@@ -1,3 +1,4 @@
 <map id="calculate_interpolation_matrix_1d" name="calculate_interpolation_matrix_1d">
-<area shape="rect" id="node2" href="$namespacesll__m__mapping__3d.html#a60939a1ce730d16e9922bcf50cb7f27d" title="Initialize the coordinate transformation. " alt="" coords="224,13,267,39"/>
+<area shape="rect" id="node1" title="Helper function for spline mapping." alt="" coords="96,5,267,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__mapping__3d.html#a60939a1ce730d16e9922bcf50cb7f27d" title="Initialize the coordinate transformation." alt="" coords="5,13,48,39"/>
 </map>

@@ -1,6 +1,7 @@
 <map id="compute_phi_from_j_1d_fem_sm" name="compute_phi_from_j_1d_fem_sm">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__1d__fem__sm.html#ae5d6f36942ad1f3390025da81662e1c4" title="Multiply by transpose of dicrete gradient matrix. " alt="" coords="208,17,304,43"/>
-<area shape="rect" id="node4" href="$namespacesll__m__maxwell__1d__fem__sm.html#abcef6d11f5385de6b19bdd2d9f884e8c" title="Multiply by dicrete gradient matrix. " alt="" coords="211,71,301,98"/>
-<area shape="rect" id="node3" href="$namespacesll__m__spline__fem__utilities.html#aba0cb18b680186b2cd8bf714527fe4a7" title="Multiplication of the input vector in by the transposed derivative matrix G^T. " alt="" coords="352,5,544,47"/>
-<area shape="rect" id="node5" href="$namespacesll__m__spline__fem__utilities.html#a249985cbe30c29c9e949f668c82d2e88" title="Multiplication of the input vector in by the derivative matrix G. " alt="" coords="352,71,544,112"/>
+<area shape="rect" id="node1" title="For model with adiabatic electrons." alt="" coords="5,39,160,80"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__1d__fem__sm.html#abcef6d11f5385de6b19bdd2d9f884e8c" title="Multiply by dicrete gradient matrix." alt="" coords="211,17,301,43"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__1d__fem__sm.html#ae5d6f36942ad1f3390025da81662e1c4" title="Multiply by transpose of dicrete gradient matrix." alt="" coords="208,71,304,98"/>
+<area shape="rect" id="node3" href="$namespacesll__m__spline__fem__utilities.html#a249985cbe30c29c9e949f668c82d2e88" title="Multiplication of the input vector in by the derivative matrix G." alt="" coords="352,5,544,47"/>
+<area shape="rect" id="node5" href="$namespacesll__m__spline__fem__utilities.html#aba0cb18b680186b2cd8bf714527fe4a7" title="Multiplication of the input vector in by the transposed derivative matrix G^T" alt="" coords="352,71,544,112"/>
 </map>

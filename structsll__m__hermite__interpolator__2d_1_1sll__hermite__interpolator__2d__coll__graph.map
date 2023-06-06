@@ -1,4 +1,7 @@
 <map id="sll_hermite_interpolator_2d" name="sll_hermite_interpolator_2d">
-<area shape="rect" id="node2" href="$structsll__m__interpolators__2d__base_1_1sll__c__interpolator__2d.html" title="Base class/basic interface for 2D interpolators. " alt="" coords="5,155,163,181"/>
-<area shape="rect" id="node4" href="$structsll__m__hermite__interpolation__2d_1_1sll__t__hermite__interpolation__2d.html" title="sll_t_hermite_interpolation_2d" alt="" coords="277,155,497,181"/>
+<area shape="rect" id="node1" title="The hermite&#45;based interpolator is only a wrapper around the capabilities of the hermite interpolation..." alt="" coords="110,245,311,272"/>
+<area shape="rect" id="node2" href="$structsll__m__interpolators__2d__base_1_1sll__c__interpolator__2d.html" title="Base class/basic interface for 2D interpolators." alt="" coords="5,155,163,181"/>
+<area shape="rect" id="node3" title=" " alt="" coords="154,5,291,32"/>
+<area shape="rect" id="node4" href="$structsll__m__hermite__interpolation__2d_1_1sll__t__hermite__interpolation__2d.html" title=" " alt="" coords="277,155,497,181"/>
+<area shape="rect" id="node5" title=" " alt="" coords="328,5,445,32"/>
 </map>

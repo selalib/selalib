@@ -1,3 +1,4 @@
 <map id="multiply_ct" name="multiply_ct">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__trafo.html#a9c8bd7548ed7595bd9cd363c9bc945f7" title="compute E from B using weak Ampere formulation " alt="" coords="148,5,316,47"/>
+<area shape="rect" id="node1" title="Multiply by transpose of discrete curl matrix." alt="" coords="221,13,316,39"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__trafo.html#a9c8bd7548ed7595bd9cd363c9bc945f7" title="compute E from B using weak Ampere formulation" alt="" coords="5,5,173,47"/>
 </map>

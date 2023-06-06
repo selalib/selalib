@@ -1,0 +1,7 @@
+<map id="sll_s_set_communicator_collective" name="sll_s_set_communicator_collective">
+<area shape="rect" id="node1" title=" " alt="" coords="436,71,615,112"/>
+<area shape="rect" id="node2" href="$namespacesll__m__collective.html#a939e5faf8e7354e95934cc448ea4623d" title="Starts the paralell environment." alt="" coords="231,78,388,105"/>
+<area shape="rect" id="node3" href="$interfacesll__m__mumps_1_1initialize.html#abe4c6becf8b79f9514e2a3417987913c" title=" " alt="" coords="5,5,183,47"/>
+<area shape="rect" id="node4" href="$interfacesll__m__pastix_1_1initialize.html#a278004cee84205bf5f2b1230eb4d3970" title=" " alt="" coords="10,71,178,112"/>
+<area shape="rect" id="node5" href="$sll__pif__general_8_f90.html#a5644387f046c7037e67670471428e232" title=" " alt="" coords="35,137,153,163"/>
+</map>

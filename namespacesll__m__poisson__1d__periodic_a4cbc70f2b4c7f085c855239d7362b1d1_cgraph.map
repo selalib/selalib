@@ -1,4 +1,5 @@
 <map id="sll_f_new_poisson_1d_periodic" name="sll_f_new_poisson_1d_periodic">
-<area shape="rect" id="node2" href="$namespacesll__m__poisson__1d__periodic.html#af90cec30174db5b250b0d6a711cd0b20" title="initialize_poisson\l_1d_periodic_wrapper" alt="" coords="216,5,380,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__poisson__1d__periodic.html#ab23c73d4907f7ab6e88e5085381c9e46" title="sll_o_initialize the solver " alt="" coords="428,5,563,47"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,5,168,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__poisson__1d__periodic.html#af90cec30174db5b250b0d6a711cd0b20" title=" " alt="" coords="216,5,380,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__poisson__1d__periodic.html#ab23c73d4907f7ab6e88e5085381c9e46" title="sll_o_initialize the solver" alt="" coords="428,5,563,47"/>
 </map>

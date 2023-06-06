@@ -1,6 +1,7 @@
 <map id="sll_s_pre_compute_gyroaverage_polar_spl_fft" name="sll_s_pre_compute_gyroaverage_polar_spl_fft">
-<area shape="rect" id="node2" href="$namespacesll__m__gyroaverage__2d__polar.html#a286786970fc94c7e62732e2f3883c034" title="localize_polar" alt="" coords="293,31,405,57"/>
-<area shape="rect" id="node5" href="$namespacesll__m__gyroaverage__2d__polar.html#af00450918660a74ebe32447e6326da3e" title="contribution_spl" alt="" coords="285,81,412,108"/>
-<area shape="rect" id="node3" href="$namespacesll__m__gyroaverage__2d__polar.html#a4f0e92fea34e0d1352d4d6326dd1eb94" title="localize_nat" alt="" coords="460,5,560,32"/>
-<area shape="rect" id="node4" href="$namespacesll__m__gyroaverage__2d__polar.html#af1effd049b177ea89d86d58f6cb1ced6" title="localize_per" alt="" coords="460,56,560,83"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,23,237,65"/>
+<area shape="rect" id="node2" href="$namespacesll__m__gyroaverage__2d__polar.html#af00450918660a74ebe32447e6326da3e" title=" " alt="" coords="285,5,412,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__gyroaverage__2d__polar.html#a286786970fc94c7e62732e2f3883c034" title=" " alt="" coords="293,56,405,83"/>
+<area shape="rect" id="node4" href="$namespacesll__m__gyroaverage__2d__polar.html#a4f0e92fea34e0d1352d4d6326dd1eb94" title=" " alt="" coords="460,31,560,57"/>
+<area shape="rect" id="node5" href="$namespacesll__m__gyroaverage__2d__polar.html#af1effd049b177ea89d86d58f6cb1ced6" title=" " alt="" coords="460,81,560,108"/>
 </map>

@@ -1,4 +1,9 @@
 <map id="sll_t_linear_solver_block" name="sll_t_linear_solver_block">
-<area shape="rect" id="node2" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver " alt="" coords="356,61,496,102"/>
-<area shape="rect" id="node6" href="$structsll__m__linear__solver__block_1_1jrk__t__linear__solver__pointer.html" title="class that contains a pointer to a linear solver " alt="" coords="355,285,497,326"/>
+<area shape="rect" id="node1" title="class for a linear solver_block" alt="" coords="641,195,781,237"/>
+<area shape="rect" id="node2" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver" alt="" coords="356,61,496,102"/>
+<area shape="rect" id="node3" title=" " alt="" coords="67,9,132,36"/>
+<area shape="rect" id="node4" title=" " alt="" coords="31,149,168,176"/>
+<area shape="rect" id="node5" title=" " alt="" coords="367,233,485,260"/>
+<area shape="rect" id="node6" href="$structsll__m__linear__solver__block_1_1jrk__t__linear__solver__pointer.html" title="class that contains a pointer to a linear solver" alt="" coords="355,285,497,326"/>
+<area shape="rect" id="node7" title=" " alt="" coords="5,285,193,326"/>
 </map>

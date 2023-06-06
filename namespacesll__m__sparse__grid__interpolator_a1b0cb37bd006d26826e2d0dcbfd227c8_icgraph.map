@@ -1,4 +1,5 @@
 <map id="extract_recursive_real_to_comp" name="extract_recursive_real_to_comp">
-<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__interpolator.html#a6ebda5904ea2dfeffa636abbf204cc9e" title="extract_real_to_comp" alt="" coords="220,13,383,39"/>
-<area shape="rect" id="node3" href="$namespacesll__m__sparse__grid__interpolator.html#aed35bcf2b06e817253fd75cdeeb0f63e" title="Compute Fourier coefficients on sparse grid along dimension dim. " alt="" coords="431,13,557,39"/>
+<area shape="rect" id="node1" title=" " alt="" coords="391,5,557,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__interpolator.html#a6ebda5904ea2dfeffa636abbf204cc9e" title=" " alt="" coords="180,13,343,39"/>
+<area shape="rect" id="node3" href="$namespacesll__m__sparse__grid__interpolator.html#aed35bcf2b06e817253fd75cdeeb0f63e" title="Compute Fourier coefficients on sparse grid along dimension dim." alt="" coords="5,13,132,39"/>
 </map>

@@ -1,4 +1,5 @@
 <map id="interpolate_deriv1_cs2d" name="interpolate_deriv1_cs2d">
-<area shape="rect" id="node2" href="$namespacesll__m__cubic__splines.html#a9f207e5c634fc68284cb6f28aee7cef8" title="Returns the interpolated value of the derivative in the x1 direction at the point (x1..." alt="" coords="232,5,383,61"/>
-<area shape="rect" id="node3" href="$namespacesll__m__cubic__splines.html#a575c8a1996272528d087f3a83f79fccb" title="sll_m_cubic_splines\l::interpolate_derivative_aux" alt="" coords="431,13,636,54"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,20,184,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__cubic__splines.html#a9f207e5c634fc68284cb6f28aee7cef8" title="Returns the interpolated value of the derivative in the x1 direction at the point (x1,..." alt="" coords="232,5,383,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__cubic__splines.html#a575c8a1996272528d087f3a83f79fccb" title=" " alt="" coords="431,13,636,54"/>
 </map>

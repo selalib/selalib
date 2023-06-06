@@ -1,3 +1,4 @@
 <map id="point_add_eval" name="point_add_eval">
-<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__3d__feec.html#ac7566abd69c5bb038009fab3e9939984" title="Add current via line integral and evaluate spline. " alt="" coords="175,5,337,32"/>
+<area shape="rect" id="node1" title="Helper function for add_current_evaluate that takes care of the per&#45;cell computations." alt="" coords="216,5,337,32"/>
+<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__3d__feec.html#ac7566abd69c5bb038009fab3e9939984" title="Add current via line integral and evaluate spline." alt="" coords="5,5,168,32"/>
 </map>

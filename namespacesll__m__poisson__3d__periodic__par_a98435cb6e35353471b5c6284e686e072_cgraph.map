@@ -1,3 +1,4 @@
 <map id="sll_s_poisson_3d_periodic_par_solve_e" name="sll_s_poisson_3d_periodic_par_solve_e">
-<area shape="rect" id="node2" href="$namespacesll__m__fft.html#a98e3ba2b5431c58a3f5100ac171616a5" title="Compute fast Fourier transform in complex to complex mode. " alt="" coords="244,5,380,47"/>
+<area shape="rect" id="node1" title="Compute the electric fields from the potential (phi sequential along x1) Compute the 3d potential fro..." alt="" coords="5,5,196,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__fft.html#a98e3ba2b5431c58a3f5100ac171616a5" title="Compute fast Fourier transform in complex to complex mode." alt="" coords="244,5,380,47"/>
 </map>

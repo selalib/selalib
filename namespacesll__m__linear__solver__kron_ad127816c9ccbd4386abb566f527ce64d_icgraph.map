@@ -1,3 +1,4 @@
 <map id="sll_create_linear_solver_with_name" name="sll_create_linear_solver_with_name">
-<area shape="rect" id="node2" href="$namespacesll__m__linear__solver__kron.html#aab06cdc75df8182a064714fbcd95871c" title="creates a kronecker linear solver the user must provide " alt="" coords="229,13,420,39"/>
+<area shape="rect" id="node1" title="create an linear solver using its name and a linear operator" alt="" coords="244,5,420,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__linear__solver__kron.html#aab06cdc75df8182a064714fbcd95871c" title="creates a kronecker linear solver the user must provide" alt="" coords="5,13,196,39"/>
 </map>

@@ -1,4 +1,5 @@
 <map id="connect_ports" name="connect_ports">
-<area shape="rect" id="node2" href="$namespacesll__m__point__to__point__comms.html#aa4b49425a11d8400f4c4e1009ccd7064" title="sll_s_create_comm_real64_ring" alt="" coords="167,5,393,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__point__to__point__comms.html#a7dcb12c869cca4261dda441bbf9fea98" title="sll_s_configure_comm\l_real64_torus_2d" alt="" coords="197,57,363,98"/>
+<area shape="rect" id="node1" title=" " alt="" coords="280,42,393,69"/>
+<area shape="rect" id="node2" href="$namespacesll__m__point__to__point__comms.html#a7dcb12c869cca4261dda441bbf9fea98" title=" " alt="" coords="35,5,202,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__point__to__point__comms.html#aa4b49425a11d8400f4c4e1009ccd7064" title=" " alt="" coords="5,71,232,98"/>
 </map>

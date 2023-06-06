@@ -1,8 +1,9 @@
 <map id="sll_s_operator_splitting_init" name="sll_s_operator_splitting_init">
-<area shape="rect" id="node2" href="$namespacesll__m__const__coef__advection__2d.html#a009b63532c5609864f3f881aa540cd5d" title="Initialise sll_t_const_coef_advection_2d object. " alt="" coords="259,5,465,61"/>
-<area shape="rect" id="node4" href="$namespacesll__m__linear__pendulum__operators.html#a605162229aac75b9225d219fdc47fa1e" title="checks the order of a splitting method on the linear pendulum. used for unit testing. " alt="" coords="255,86,469,127"/>
-<area shape="rect" id="node5" href="$namespacesll__m__operator__splitting.html#a471fc44bba6cbfe29dca48ba6ee9ac48" title="Returns a pointer to a heap&#45;allocated sll_t_operator_splitting object. " alt="" coords="277,152,447,179"/>
-<area shape="rect" id="node6" href="$namespacesll__m__split__advection__2d.html#a1779def1dcba039e8d5679c8d2baf4b1" title="Initialise advection_2d object. " alt="" coords="281,203,443,259"/>
-<area shape="rect" id="node3" href="$namespacesll__m__const__coef__advection__2d.html#a4fa18df5c2a8d649de2e63e87b9f777e" title="sll_m_const_coef_advection\l_2d::sll_f_new_const_coef\l_advection_2d" alt="" coords="517,5,723,61"/>
-<area shape="rect" id="node7" href="$namespacesll__m__split__advection__2d.html#a2e5d09cb971d667d21ca33e46011411d" title="sll_m_split_advection\l_2d::sll_f_new_split\l_advection_2d" alt="" coords="539,203,701,259"/>
+<area shape="rect" id="node1" title="Initialises data for operator splitting." alt="" coords="521,133,723,160"/>
+<area shape="rect" id="node2" href="$namespacesll__m__const__coef__advection__2d.html#a009b63532c5609864f3f881aa540cd5d" title="Initialise sll_t_const_coef_advection_2d object." alt="" coords="263,5,469,61"/>
+<area shape="rect" id="node4" href="$namespacesll__m__split__advection__2d.html#a1779def1dcba039e8d5679c8d2baf4b1" title="Initialise advection_2d object." alt="" coords="285,85,447,141"/>
+<area shape="rect" id="node6" href="$namespacesll__m__operator__splitting.html#a471fc44bba6cbfe29dca48ba6ee9ac48" title="Returns a pointer to a heap&#45;allocated sll_t_operator_splitting object." alt="" coords="281,165,451,192"/>
+<area shape="rect" id="node7" href="$namespacesll__m__linear__pendulum__operators.html#a605162229aac75b9225d219fdc47fa1e" title="checks the order of a splitting method on the linear pendulum. used for unit testing." alt="" coords="259,217,473,258"/>
+<area shape="rect" id="node3" href="$namespacesll__m__const__coef__advection__2d.html#a4fa18df5c2a8d649de2e63e87b9f777e" title=" " alt="" coords="5,5,211,61"/>
+<area shape="rect" id="node5" href="$namespacesll__m__split__advection__2d.html#a2e5d09cb971d667d21ca33e46011411d" title=" " alt="" coords="27,85,189,141"/>
 </map>

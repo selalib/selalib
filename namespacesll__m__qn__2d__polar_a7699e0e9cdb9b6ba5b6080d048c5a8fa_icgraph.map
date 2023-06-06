@@ -1,4 +1,5 @@
 <map id="solution_polar_circle" name="solution_polar_circle">
-<area shape="rect" id="node2" href="$namespacesll__m__qn__2d__polar.html#ad0d1eec9ba7cbee1593794e1c1deb817" title="sll_s_qn_2d_polar_test\l_solve" alt="" coords="214,5,383,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__qn__2d__polar.html#af920031d57c0331ef9d834c4f44925cf" title="sll_f_compute_gamma0\l_quadrature" alt="" coords="209,71,388,112"/>
+<area shape="rect" id="node1" title=" " alt="" coords="232,46,388,73"/>
+<area shape="rect" id="node2" href="$namespacesll__m__qn__2d__polar.html#af920031d57c0331ef9d834c4f44925cf" title=" " alt="" coords="5,5,184,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__qn__2d__polar.html#ad0d1eec9ba7cbee1593794e1c1deb817" title=" " alt="" coords="10,71,179,112"/>
 </map>

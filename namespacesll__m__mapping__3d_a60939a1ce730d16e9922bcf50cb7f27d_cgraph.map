@@ -1,11 +1,12 @@
 <map id="init" name="init">
-<area shape="rect" id="node2" href="$namespacesll__m__splines__pp.html#a05168b8afdfed2b282ee242d8d2a2225" title="Initialize sll_t_spline_pp_3d object. " alt="" coords="103,5,259,47"/>
-<area shape="rect" id="node4" href="$namespacesll__m__mapping__3d.html#aec4839df9c0314d49c5f2ec579b9f243" title="Helper function for spline mapping. " alt="" coords="96,71,267,112"/>
-<area shape="rect" id="node6" href="$namespacesll__m__mapping__3d.html#a93406096697e508ee9f0dc629c1553d0" title="Helper function for spline mapping. " alt="" coords="96,136,267,177"/>
-<area shape="rect" id="node7" href="$namespacesll__m__splines__pp.html#a033f4f58d0202d7d899c86e4329336ca" title="Convert 3d spline in B form to spline in pp form for clamped spline. " alt="" coords="100,202,263,258"/>
-<area shape="rect" id="node3" href="$namespacesll__m__splines__pp.html#a7e2a3943e2c330a0a9597b535ce259b3" title="Initialize sll_t_spline_pp_1d object (Set poly_coeffs depending on degree) " alt="" coords="324,5,480,47"/>
-<area shape="rect" id="node5" href="$namespacesll__m__splines__pp.html#ab63c3a25b861ed9b8701ae2f65942bcf" title="Perform a 1d hornerschema on the pp_coeffs at index. " alt="" coords="315,103,489,144"/>
-<area shape="rect" id="node8" href="$namespacesll__m__splines__pp.html#a1e67da5c2dc436b0b8cbd874575e4631" title="Convert 3d spline in B form in a cell to spline in pp form with clamped boundary in all three directi..." alt="" coords="321,202,483,258"/>
-<area shape="rect" id="node9" href="$namespacesll__m__splines__pp.html#a1a051605f297f81093a1ff7008bd4143" title="Convert 1d spline in B form in a cell to spline in pp form with periodic boundary conditions..." alt="" coords="537,162,700,218"/>
-<area shape="rect" id="node10" href="$namespacesll__m__splines__pp.html#a411f7e3b4a4df46ddc89167ca33258dd" title="Convert 1d spline in B form in a cell to spline in pp form for specified pp_coefficients of the b_spl..." alt="" coords="537,242,700,298"/>
+<area shape="rect" id="node1" title="Initialize the coordinate transformation." alt="" coords="5,115,48,142"/>
+<area shape="rect" id="node2" href="$namespacesll__m__mapping__3d.html#aec4839df9c0314d49c5f2ec579b9f243" title="Helper function for spline mapping." alt="" coords="96,5,267,47"/>
+<area shape="rect" id="node4" href="$namespacesll__m__mapping__3d.html#a93406096697e508ee9f0dc629c1553d0" title="Helper function for spline mapping." alt="" coords="96,71,267,112"/>
+<area shape="rect" id="node5" href="$namespacesll__m__splines__pp.html#a033f4f58d0202d7d899c86e4329336ca" title="Convert 3d spline in B form to spline in pp form for clamped spline." alt="" coords="100,137,263,193"/>
+<area shape="rect" id="node9" href="$namespacesll__m__splines__pp.html#a05168b8afdfed2b282ee242d8d2a2225" title="Initialize sll_t_spline_pp_3d object." alt="" coords="103,217,259,259"/>
+<area shape="rect" id="node3" href="$namespacesll__m__splines__pp.html#ab63c3a25b861ed9b8701ae2f65942bcf" title="Perform a 1d hornerschema on the pp_coeffs at index." alt="" coords="315,39,489,80"/>
+<area shape="rect" id="node6" href="$namespacesll__m__splines__pp.html#a1e67da5c2dc436b0b8cbd874575e4631" title="Convert 3d spline in B form in a cell to spline in pp form with clamped boundary in all three directi..." alt="" coords="321,137,483,193"/>
+<area shape="rect" id="node7" href="$namespacesll__m__splines__pp.html#a1a051605f297f81093a1ff7008bd4143" title="Convert 1d spline in B form in a cell to spline in pp form with periodic boundary conditions." alt="" coords="537,97,700,153"/>
+<area shape="rect" id="node8" href="$namespacesll__m__splines__pp.html#a411f7e3b4a4df46ddc89167ca33258dd" title="Convert 1d spline in B form in a cell to spline in pp form for specified pp_coefficients of the b_spl..." alt="" coords="537,177,700,233"/>
+<area shape="rect" id="node10" href="$namespacesll__m__splines__pp.html#a7e2a3943e2c330a0a9597b535ce259b3" title="Initialize sll_t_spline_pp_1d object (Set poly_coeffs depending on degree)" alt="" coords="324,217,480,259"/>
 </map>

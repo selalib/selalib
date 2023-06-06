@@ -1,8 +1,9 @@
 <map id="multiply_mass_3d_fem_fft" name="multiply_mass_3d_fem_fft">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__fem__fft.html#af661de8498b97c6bb3b0549168a27a7e" title="Multiply by the mass matrix. " alt="" coords="474,24,645,51"/>
-<area shape="rect" id="node4" href="$namespacesll__m__maxwell__3d__fem__fft.html#ae07f9ed77d53f2f362a890d1023c22cf" title="Helper function for multiply_mass. " alt="" coords="248,24,412,51"/>
-<area shape="rect" id="node5" href="$namespacesll__m__maxwell__3d__fem__fft.html#a13ab31c6639d576f0086381c07ea33f5" title="Helper function for multiply_mass. " alt="" coords="248,75,412,101"/>
-<area shape="rect" id="node6" href="$namespacesll__m__maxwell__3d__fem__fft.html#adfe47ed1031ee66fcc5fd98c5a939447" title="Multiply by the mass matrix. " alt="" coords="259,125,401,152"/>
-<area shape="rect" id="node3" href="$namespacesll__m__spline__fem__utilities.html#a528fc7241e39fd979bd521f0c2d7b350" title="Multiply the vector invec with the spline FEM mass matrix with mass line mass. " alt="" coords="707,42,948,83"/>
-<area shape="rect" id="node7" href="$namespacesll__m__spline__fem__utilities.html#a3f3677fa99a937bfa78c0b087d694df1" title="Multiplication of the mix mass matrix given by a mass line mass. " alt="" coords="460,125,659,181"/>
+<area shape="rect" id="node1" title="Multiply by the mass matrix." alt="" coords="5,81,200,108"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__fem__fft.html#ae07f9ed77d53f2f362a890d1023c22cf" title="Helper function for multiply_mass." alt="" coords="248,5,412,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__3d__fem__fft.html#af661de8498b97c6bb3b0549168a27a7e" title="Multiply by the mass matrix." alt="" coords="474,56,645,83"/>
+<area shape="rect" id="node5" href="$namespacesll__m__maxwell__3d__fem__fft.html#a13ab31c6639d576f0086381c07ea33f5" title="Helper function for multiply_mass." alt="" coords="248,107,412,133"/>
+<area shape="rect" id="node6" href="$namespacesll__m__maxwell__3d__fem__fft.html#adfe47ed1031ee66fcc5fd98c5a939447" title="Multiply by the mass matrix." alt="" coords="259,157,401,184"/>
+<area shape="rect" id="node4" href="$namespacesll__m__spline__fem__utilities.html#a528fc7241e39fd979bd521f0c2d7b350" title="Multiply the vector invec with the spline FEM mass matrix with mass line mass." alt="" coords="707,74,948,115"/>
+<area shape="rect" id="node7" href="$namespacesll__m__spline__fem__utilities.html#a3f3677fa99a937bfa78c0b087d694df1" title="Multiplication of the mix mass matrix given by a mass line mass." alt="" coords="460,157,659,213"/>
 </map>

@@ -1,3 +1,4 @@
 <map id="sll_s_uniform_bsplines_eval_basis_clamped" name="sll_s_uniform_bsplines_eval_basis_clamped">
-<area shape="rect" id="node2" href="$namespacesll__m__splines__pp.html#ab63c3a25b861ed9b8701ae2f65942bcf" title="Perform a 1d hornerschema on the pp_coeffs at index. " alt="" coords="224,5,399,47"/>
+<area shape="rect" id="node1" title="Helper function to evaluate uniform clamped basis splines." alt="" coords="5,5,176,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__splines__pp.html#ab63c3a25b861ed9b8701ae2f65942bcf" title="Perform a 1d hornerschema on the pp_coeffs at index." alt="" coords="224,5,399,47"/>
 </map>

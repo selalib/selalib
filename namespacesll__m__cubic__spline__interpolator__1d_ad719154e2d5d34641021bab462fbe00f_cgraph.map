@@ -1,5 +1,6 @@
 <map id="sll_f_new_cubic_spline_interpolator_1d" name="sll_f_new_cubic_spline_interpolator_1d">
-<area shape="rect" id="node2" href="$namespacesll__m__cubic__spline__interpolator__1d.html#ab4aeb5dca8bc5be6fb404ac5e1ae7365" title="initialize cubic spline interpolator " alt="" coords="224,20,423,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__cubic__splines.html#a35f9f53695f916944ed2f72a49531560" title="Returns a pointer to a heap&#45;allocated cubic spline object. " alt="" coords="471,5,621,61"/>
-<area shape="rect" id="node4" href="$namespacesll__m__tridiagonal.html#a0eb4ec59f49ba01edaba9eca267d2a28" title="Give the factorization of the matrix in argument. " alt="" coords="669,13,856,54"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,13,176,54"/>
+<area shape="rect" id="node2" href="$namespacesll__m__cubic__spline__interpolator__1d.html#ab4aeb5dca8bc5be6fb404ac5e1ae7365" title="initialize cubic spline interpolator" alt="" coords="224,20,423,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__cubic__splines.html#a35f9f53695f916944ed2f72a49531560" title="Returns a pointer to a heap&#45;allocated cubic spline object." alt="" coords="471,5,621,61"/>
+<area shape="rect" id="node4" href="$namespacesll__m__tridiagonal.html#a0eb4ec59f49ba01edaba9eca267d2a28" title="Give the factorization of the matrix in argument." alt="" coords="669,13,856,54"/>
 </map>

@@ -1,3 +1,4 @@
 <map id="integrate_spline_cl_3d" name="integrate_spline_cl_3d">
-<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__cl__3d__feec.html#aef517b0d273cd95396b2c83e284b03b6" title="Add current with integration over x. " alt="" coords="221,5,361,32"/>
+<area shape="rect" id="node1" title="Helper function for add_current." alt="" coords="193,5,361,32"/>
+<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__cl__3d__feec.html#aef517b0d273cd95396b2c83e284b03b6" title="Add current with integration over x." alt="" coords="5,5,145,32"/>
 </map>

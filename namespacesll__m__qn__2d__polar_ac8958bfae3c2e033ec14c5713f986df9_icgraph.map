@@ -1,8 +1,9 @@
 <map id="localize_nat" name="localize_nat">
-<area shape="rect" id="node2" href="$namespacesll__m__qn__2d__polar.html#a883ba9879c02de46738128b2c58f4b30" title="sll_s_localize_polar" alt="" coords="153,93,301,120"/>
-<area shape="rect" id="node3" href="$namespacesll__m__qn__2d__polar.html#ab7df0b913d3a672e52e0856979998724" title="sll_s_precompute_gyroaverage\l_index" alt="" coords="375,13,600,54"/>
-<area shape="rect" id="node5" href="$namespacesll__m__qn__2d__polar__precompute.html#af5241a268657b5cb855bfc84e92f8643" title="sll_m_qn_2d_polar_precompute\l::pre_precompute_double_gyroaverage\l_coeff_polar_splines" alt="" coords="349,79,625,135"/>
-<area shape="rect" id="node7" href="$namespacesll__m__qn__2d__polar__precompute.html#a7ad60672f52b58e23fc83914c6fab721" title="sll_m_qn_2d_polar_precompute\l::precompute_double_gyroaverage\l_coeff_polar_splines" alt="" coords="363,159,611,215"/>
-<area shape="rect" id="node4" href="$namespacesll__m__qn__2d__polar__splines__solver.html#ad8c21089183e4a8bcdb6bd79c1e37a4b" title="sll_m_qn_2d_polar_splines\l_solver::precompute_qn\l_2d_polar_splines" alt="" coords="689,5,885,61"/>
-<area shape="rect" id="node6" href="$namespacesll__m__qn__2d__polar__precompute.html#a41d1928c191efdcfecf8bbb3688e7cee" title="sll_m_qn_2d_polar_precompute\l::sll_s_compute_qns_matrix\l_polar_splines" alt="" coords="673,121,901,177"/>
+<area shape="rect" id="node1" title=" " alt="" coords="801,100,901,127"/>
+<area shape="rect" id="node2" href="$namespacesll__m__qn__2d__polar.html#a883ba9879c02de46738128b2c58f4b30" title=" " alt="" coords="605,100,753,127"/>
+<area shape="rect" id="node3" href="$namespacesll__m__qn__2d__polar__precompute.html#af5241a268657b5cb855bfc84e92f8643" title=" " alt="" coords="281,5,557,61"/>
+<area shape="rect" id="node5" href="$namespacesll__m__qn__2d__polar__precompute.html#a7ad60672f52b58e23fc83914c6fab721" title=" " alt="" coords="295,85,543,141"/>
+<area shape="rect" id="node6" href="$namespacesll__m__qn__2d__polar.html#ab7df0b913d3a672e52e0856979998724" title=" " alt="" coords="307,166,532,207"/>
+<area shape="rect" id="node4" href="$namespacesll__m__qn__2d__polar__precompute.html#a41d1928c191efdcfecf8bbb3688e7cee" title=" " alt="" coords="5,43,233,99"/>
+<area shape="rect" id="node7" href="$namespacesll__m__qn__2d__polar__splines__solver.html#ad8c21089183e4a8bcdb6bd79c1e37a4b" title=" " alt="" coords="21,159,217,215"/>
 </map>

@@ -1,14 +1,15 @@
 <map id="sll_s_fft_init_c2c_1d" name="sll_s_fft_init_c2c_1d">
-<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__interpolator.html#aba310a580506ebd76f00591da61f21f6" title="sll_m_sparse_grid_interpolator\l::fft_initialize" alt="" coords="209,5,432,47"/>
-<area shape="rect" id="node4" href="$namespacesll__m__preconditioner__curl__solver__fft.html#a3b2fb1ca4c033320def7c3fd39a489a6" title="sll_m_preconditioner\l_curl_solver_fft::create\l_preconditioner" alt="" coords="235,71,406,127"/>
-<area shape="rect" id="node5" href="$namespacesll__m__linear__solver__spline__mass__2d__fft.html#aee0b3256b5e372ac879a51020f51f4fe" title="sll_m_linear_solver\l_spline_mass_2d_fft\l::create_mass1" alt="" coords="243,151,398,207"/>
-<area shape="rect" id="node6" href="$namespacesll__m__linear__solver__spline__mass__fft.html#a3b4678815ed23c7388aac13af80834ba" title="sll_m_linear_solver\l_spline_mass_fft::create_mass1" alt="" coords="205,232,436,273"/>
-<area shape="rect" id="node7" href="$namespacesll__m__linear__operator__maxwell__eb__schur.html#a4ad1ec2fb4345ad2c31847350dbba318" title="sll_m_linear_operator\l_maxwell_eb_schur::create\l_maxwell_eb" alt="" coords="221,298,420,354"/>
-<area shape="rect" id="node8" href="$namespacesll__m__poisson__2d__fem__fft.html#a199a25f8041eeff03305f97d0a00f1ab" title="sll_m_poisson_2d_fem\l_fft::init_fft" alt="" coords="235,379,406,420"/>
-<area shape="rect" id="node9" href="$namespacesll__m__poisson__3d__fem__fft.html#aa2a85fbbb889d7b8a70ead2138f48816" title="sll_m_poisson_3d_fem\l_fft::init_fft" alt="" coords="235,444,406,485"/>
-<area shape="rect" id="node10" href="$namespacesll__m__poisson__2d__periodic__par.html#ad41fe715bd84e1d002bbb219f4d68b46" title="Presently, this function receives the geometric information as individual arguments. We should consider passing the &#39;simple geometry&#39; object that we have for the cartesian cases. " alt="" coords="223,510,419,566"/>
-<area shape="rect" id="node11" href="$namespacesll__m__poisson__2d__periodic__par.html#aee4e39c0cd0cf732b793a92c368019bb" title="Presently, this function receives the geometric information as individual arguments. We should consider passing the &#39;simple geometry&#39; object that we have for the cartesian cases. The &#39;alt&#39; version does not consider the last point in the problem, the arrays involved and the layout that represents them should also not include this last point. " alt="" coords="223,590,419,646"/>
-<area shape="rect" id="node12" href="$namespacesll__m__poisson__3d__periodic__par.html#a709ec42fd1d3c83d3c036b4be76eadab" title="Allocate the structure for the 3d parallel Poisson solver. " alt="" coords="223,670,419,726"/>
-<area shape="rect" id="node13" href="$namespacesll__m__fft__filter__3d.html#ab4abe2b5bebe87a4adbc54c7ba690262" title="sll_m_fft_filter_3d\l::init_fft_3d" alt="" coords="251,751,390,792"/>
-<area shape="rect" id="node3" href="$namespacesll__m__sparse__grid__interpolator.html#a3fb5a2dabbb9b367be8955e16118eebc" title="sll_m_sparse_grid_interpolator\l::initialize_sg" alt="" coords="484,5,707,47"/>
+<area shape="rect" id="node1" title="Create new 1d complex to complex plan." alt="" coords="555,385,707,412"/>
+<area shape="rect" id="node2" href="$namespacesll__m__linear__solver__spline__mass__2d__fft.html#aee0b3256b5e372ac879a51020f51f4fe" title=" " alt="" coords="314,5,469,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__linear__solver__spline__mass__fft.html#a3b4678815ed23c7388aac13af80834ba" title=" " alt="" coords="276,86,507,127"/>
+<area shape="rect" id="node4" href="$namespacesll__m__linear__operator__maxwell__eb__schur.html#a4ad1ec2fb4345ad2c31847350dbba318" title=" " alt="" coords="292,152,491,208"/>
+<area shape="rect" id="node5" href="$namespacesll__m__preconditioner__curl__solver__fft.html#a3b2fb1ca4c033320def7c3fd39a489a6" title=" " alt="" coords="306,232,477,288"/>
+<area shape="rect" id="node6" href="$namespacesll__m__sparse__grid__interpolator.html#aba310a580506ebd76f00591da61f21f6" title=" " alt="" coords="280,313,503,354"/>
+<area shape="rect" id="node8" href="$namespacesll__m__poisson__2d__fem__fft.html#a199a25f8041eeff03305f97d0a00f1ab" title=" " alt="" coords="306,378,477,419"/>
+<area shape="rect" id="node9" href="$namespacesll__m__poisson__3d__fem__fft.html#aa2a85fbbb889d7b8a70ead2138f48816" title=" " alt="" coords="306,443,477,485"/>
+<area shape="rect" id="node10" href="$namespacesll__m__fft__filter__3d.html#ab4abe2b5bebe87a4adbc54c7ba690262" title=" " alt="" coords="322,509,461,550"/>
+<area shape="rect" id="node11" href="$namespacesll__m__poisson__2d__periodic__par.html#ad41fe715bd84e1d002bbb219f4d68b46" title="Presently, this function receives the geometric information as individual arguments...." alt="" coords="293,575,489,631"/>
+<area shape="rect" id="node12" href="$namespacesll__m__poisson__2d__periodic__par.html#aee4e39c0cd0cf732b793a92c368019bb" title="Presently, this function receives the geometric information as individual arguments...." alt="" coords="293,655,489,711"/>
+<area shape="rect" id="node13" href="$namespacesll__m__poisson__3d__periodic__par.html#a709ec42fd1d3c83d3c036b4be76eadab" title="Allocate the structure for the 3d parallel Poisson solver." alt="" coords="293,735,489,791"/>
+<area shape="rect" id="node7" href="$namespacesll__m__sparse__grid__interpolator.html#a3fb5a2dabbb9b367be8955e16118eebc" title=" " alt="" coords="5,313,228,354"/>
 </map>

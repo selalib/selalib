@@ -1,3 +1,4 @@
 <map id="sll_s_qn_solver_2d_polar_init" name="sll_s_qn_solver_2d_polar_init">
-<area shape="rect" id="node2" href="$namespacesll__m__utilities.html#a597cd0038286f2ca1fbeb97af32ba146" title="Equivalent to numpy.linspace &#160;Yaman Güçlü, IPP Garching. " alt="" coords="197,5,369,47"/>
+<area shape="rect" id="node1" title="Initialize the solver." alt="" coords="5,5,149,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__utilities.html#a597cd0038286f2ca1fbeb97af32ba146" title="Equivalent to numpy.linspace @contact Yaman Güçlü, IPP Garching." alt="" coords="197,5,369,47"/>
 </map>

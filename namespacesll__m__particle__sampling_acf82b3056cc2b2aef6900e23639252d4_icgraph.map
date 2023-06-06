@@ -1,3 +1,4 @@
 <map id="sample_particle_sampling_sym_3d3v_trafo" name="sample_particle_sampling_sym_3d3v_trafo">
-<area shape="rect" id="node2" href="$namespacesll__m__particle__sampling.html#ac9125c3951b3e700abe38fb493f1ca76" title="Sample from distribution defined by params. " alt="" coords="247,13,440,39"/>
+<area shape="rect" id="node1" title="Helper function for antithetic sampling in 1d2v." alt="" coords="247,5,440,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__particle__sampling.html#ac9125c3951b3e700abe38fb493f1ca76" title="Sample from distribution defined by params." alt="" coords="5,13,199,39"/>
 </map>

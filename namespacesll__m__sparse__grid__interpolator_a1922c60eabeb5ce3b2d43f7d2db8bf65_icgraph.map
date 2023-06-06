@@ -1,6 +1,7 @@
 <map id="dehierarchical_part_d_dimension" name="dehierarchical_part_d_dimension">
-<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__interpolator.html#a0f1a7c18559af8b9ee87e2a15b3a1dd4" title="dehierarchical_part" alt="" coords="200,5,347,32"/>
-<area shape="rect" id="node5" href="$namespacesll__m__sparse__grid__interpolator.html#a560a21107f02666d121ea200f0ec6e24" title="hierarchical_part" alt="" coords="208,56,339,83"/>
-<area shape="rect" id="node3" href="$namespacesll__m__sparse__grid__interpolator.html#ada6560fddb123d6ef7b00b5397918de2" title="interpolate_disp" alt="" coords="416,5,543,32"/>
-<area shape="rect" id="node4" href="$namespacesll__m__sparse__grid__interpolator.html#a45962688567bd69e4a9e9f8376ad35a5" title="integrate_trapezoidal2" alt="" coords="395,56,564,83"/>
+<area shape="rect" id="node1" title=" " alt="" coords="417,23,564,65"/>
+<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__interpolator.html#a0f1a7c18559af8b9ee87e2a15b3a1dd4" title=" " alt="" coords="223,56,369,83"/>
+<area shape="rect" id="node5" href="$namespacesll__m__sparse__grid__interpolator.html#a560a21107f02666d121ea200f0ec6e24" title=" " alt="" coords="231,5,361,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__sparse__grid__interpolator.html#a45962688567bd69e4a9e9f8376ad35a5" title=" " alt="" coords="5,5,175,32"/>
+<area shape="rect" id="node4" href="$namespacesll__m__sparse__grid__interpolator.html#ada6560fddb123d6ef7b00b5397918de2" title=" " alt="" coords="27,56,153,83"/>
 </map>

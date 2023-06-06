@@ -1,4 +1,5 @@
 <map id="add_current_update_v_spline_strong_1d_quadrature" name="add_current_update_v_spline_strong_1d_quadrature">
-<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__strong__1d.html#a9f30e84e3a4a46997c24e38e912cfd02" title="helper_normalized_position" alt="" coords="208,5,411,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__particle__mesh__coupling__spline__strong__1d.html#abda5efc06ad7f96f7a21a8fef21c99d8" title="current_v_local" alt="" coords="249,56,370,83"/>
+<area shape="rect" id="node1" title="Add current for one particle and update v (according to H_p1 part in Hamiltonian splitting)...." alt="" coords="5,16,160,72"/>
+<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__strong__1d.html#abda5efc06ad7f96f7a21a8fef21c99d8" title=" " alt="" coords="249,5,370,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__particle__mesh__coupling__spline__strong__1d.html#a9f30e84e3a4a46997c24e38e912cfd02" title=" " alt="" coords="208,56,411,83"/>
 </map>

@@ -1,5 +1,6 @@
 <map id="sll_s_fft_get_k_list_r2r_1d" name="sll_s_fft_get_k_list_r2r_1d">
-<area shape="rect" id="node2" href="$namespacesll__m__poisson__2d__polar__par.html#a0f1dc18ba51644f7472cbb9f2b9b87df" title="sll_o_initialize the Poisson solver in polar coordinates " alt="" coords="201,5,379,61"/>
-<area shape="rect" id="node3" href="$namespacesll__m__qn__solver__2d__polar__par.html#a469531318563d910cd216334ff4a1828" title="Initialize the solver. " alt="" coords="196,85,384,141"/>
-<area shape="rect" id="node4" href="$namespacesll__m__qn__solver__3d__polar__par.html#a2e6d1e5238b003c9d2a5bf33a11644d0" title="Initialize the 3D (wrapper) solver. " alt="" coords="432,85,620,141"/>
+<area shape="rect" id="node1" title="Get a list of the k modes in an r2r FFT k_list = [0, 1, 2, ..., n/2, (n+1)/2&#45;1, ....." alt="" coords="477,53,620,94"/>
+<area shape="rect" id="node2" href="$namespacesll__m__poisson__2d__polar__par.html#a0f1dc18ba51644f7472cbb9f2b9b87df" title="sll_o_initialize the Poisson solver in polar coordinates" alt="" coords="247,5,424,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__qn__solver__2d__polar__par.html#a469531318563d910cd216334ff4a1828" title="Initialize the solver." alt="" coords="241,85,429,141"/>
+<area shape="rect" id="node4" href="$namespacesll__m__qn__solver__3d__polar__par.html#a2e6d1e5238b003c9d2a5bf33a11644d0" title="Initialize the 3D (wrapper) solver." alt="" coords="5,85,193,141"/>
 </map>

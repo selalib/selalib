@@ -1,3 +1,4 @@
 <map id="sll_s_csr_matrix_mp_init" name="sll_s_csr_matrix_mp_init">
-<area shape="rect" id="node2" href="$namespacesll__m__sparse__matrix__mp.html#ab8ac37685dad402f808e43fd26578034" title="allocates the memory space for a new CSR type on the heap, " alt="" coords="236,5,423,32"/>
+<area shape="rect" id="node1" title="initialization of CSR matrix type" alt="" coords="240,5,423,32"/>
+<area shape="rect" id="node2" href="$namespacesll__m__sparse__matrix__mp.html#ab8ac37685dad402f808e43fd26578034" title="allocates the memory space for a new CSR type on the heap," alt="" coords="5,5,192,32"/>
 </map>

@@ -1,6 +1,15 @@
 <map id="lagr_8pt_coeff" name="lagr_8pt_coeff">
-<area shape="rect" id="node2" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#a28560081ce2fd963ba6b3ac9803fed0d" title="single point 8&#45;pt&#45;lagrange interpolation " alt="" coords="183,5,258,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#a8f01abf1bf21f68b575c46dd11507c63" title="vectorizable 6&#45;pt&#45;lagrange interpolation " alt="" coords="168,56,273,83"/>
-<area shape="rect" id="node4" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#acf928f88f9fe7cad7c9ee88b7526444d" title="sll_s_lagrange_interpolation\l_1d_fast_disp_centered_halo_cells" alt="" coords="321,15,568,57"/>
-<area shape="rect" id="node5" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#a69a39cf6e3124d0623dc09ab168e7bfc" title="Even Lagrange interpolation with halo cells and no interval shift, i.e. p must be between zero and on..." alt="" coords="333,81,556,122"/>
+<area shape="rect" id="node1" title="Compute coefficients for Lagrange interpolation for normalized displacement p." alt="" coords="947,239,1061,266"/>
+<area shape="rect" id="node2" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#a28560081ce2fd963ba6b3ac9803fed0d" title="single point 8&#45;pt&#45;lagrange interpolation" alt="" coords="809,214,883,241"/>
+<area shape="rect" id="node3" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#a8f01abf1bf21f68b575c46dd11507c63" title="vectorizable 6&#45;pt&#45;lagrange interpolation" alt="" coords="793,265,899,291"/>
+<area shape="rect" id="node4" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#acf928f88f9fe7cad7c9ee88b7526444d" title=" " alt="" coords="499,163,745,204"/>
+<area shape="rect" id="node11" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#a69a39cf6e3124d0623dc09ab168e7bfc" title="Even Lagrange interpolation with halo cells and no interval shift, i.e. p must be between zero and on..." alt="" coords="511,304,733,345"/>
+<area shape="rect" id="node5" href="$namespacesll__m__advection__6d__lagrange__dd__slim.html#a62cbea517fa78fb9692a0e2709736b61" title="Advection along eta1 with displacement dependent on eta4." alt="" coords="248,5,451,76"/>
+<area shape="rect" id="node7" href="$namespacesll__m__advection__6d__lagrange__dd__slim.html#a0904cd60998879cd173a09d56872f9a8" title="Advection along eta2 with displacement dependent on eta5." alt="" coords="248,100,451,171"/>
+<area shape="rect" id="node9" href="$namespacesll__m__advection__6d__lagrange__dd__slim.html#aade1dba92473114f13078d5d3e64cbc4" title="Advection along eta3 with displacement dependent on eta6." alt="" coords="248,195,451,265"/>
+<area shape="rect" id="node6" href="$namespacesll__m__advection__6d__lagrange__dd__slim.html#aac270d7c18a9013ff3f9001a4070abf6" title="Advection along eta1 with displacement dependent on eta4." alt="" coords="5,5,200,76"/>
+<area shape="rect" id="node8" href="$namespacesll__m__advection__6d__lagrange__dd__slim.html#ae540c5e85b1700905246d2bdeff8d2d8" title="Advection along eta2 with displacement dependent on eta5." alt="" coords="5,100,200,171"/>
+<area shape="rect" id="node10" href="$namespacesll__m__advection__6d__lagrange__dd__slim.html#a8e7657eabf3e2b64a4c1402e8a4dc8d3" title="Advection along eta3 with displacement dependent on eta6." alt="" coords="5,195,200,265"/>
+<area shape="rect" id="node12" href="$namespacesll__m__advection__6d__lagrange__dd__slim.html#aefb7f2423e3da917aea1b449c3a67bc0" title="Advection along eta1 with displacement dependent on eta4&#45;5." alt="" coords="249,289,450,360"/>
+<area shape="rect" id="node13" href="$namespacesll__m__advection__6d__lagrange__dd__slim.html#a70497b17d553f0ed66104b1230592120" title="Advection along eta2 with displacement dependent on eta4&#45;5." alt="" coords="249,384,450,455"/>
 </map>

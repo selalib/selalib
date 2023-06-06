@@ -1,8 +1,23 @@
 <map id="sll_t_time_propagator_pic_vm_1d2v_helper" name="sll_t_time_propagator_pic_vm_1d2v_helper">
-<area shape="rect" id="node4" href="$structsll__m__linear__operator__abstract_1_1sll__t__linear__operator__abstract.html" title="class for abstract linear operator " alt="" coords="305,311,459,353"/>
-<area shape="rect" id="node13" href="$structsll__m__linear__solver__iter__abstract_1_1sll__t__linear__solver__iter__abstract.html" title="class for abstract iterative linear solver " alt="" coords="661,755,801,797"/>
-<area shape="rect" id="node14" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver " alt="" coords="312,823,452,865"/>
-<area shape="rect" id="node3" href="$structsll__m__linear__operator__schur__phiv__1d_1_1sll__t__linear__operator__schur__phiv__1d.html" title="sll_t_linear_operator\l_schur_phiv_1d" alt="" coords="653,433,808,474"/>
-<area shape="rect" id="node21" href="$structsll__m__linear__operator__schur__ev__1d_1_1sll__t__linear__operator__schur__ev__1d.html" title="sll_t_linear_operator\l_schur_ev_1d" alt="" coords="653,263,808,305"/>
-<area shape="rect" id="node12" href="$structsll__m__linear__solver__cg_1_1sll__t__linear__solver__cg.html" title="class for the cg linear solver " alt="" coords="995,777,1157,804"/>
+<area shape="rect" id="node1" title="Hamiltonian splitting type for Vlasov&#45;Maxwell 1d2v." alt="" coords="1383,657,1547,698"/>
+<area shape="rect" id="node2" title=" " alt="" coords="41,504,107,531"/>
+<area shape="rect" id="node4" href="$structsll__m__linear__operator__abstract_1_1sll__t__linear__operator__abstract.html" title="class for abstract linear operator" alt="" coords="301,311,455,353"/>
+<area shape="rect" id="node13" href="$structsll__m__linear__solver__iter__abstract_1_1sll__t__linear__solver__iter__abstract.html" title="class for abstract iterative linear solver" alt="" coords="657,755,797,797"/>
+<area shape="rect" id="node14" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver" alt="" coords="308,823,448,865"/>
+<area shape="rect" id="node3" href="$structsll__m__linear__operator__schur__phiv__1d_1_1sll__t__linear__operator__schur__phiv__1d.html" title=" " alt="" coords="649,433,804,474"/>
+<area shape="rect" id="node21" href="$structsll__m__linear__operator__schur__ev__1d_1_1sll__t__linear__operator__schur__ev__1d.html" title=" " alt="" coords="649,263,804,305"/>
+<area shape="rect" id="node5" title=" " alt="" coords="5,613,143,640"/>
+<area shape="rect" id="node6" title=" " alt="" coords="302,237,454,278"/>
+<area shape="rect" id="node7" title=" " alt="" coords="286,395,470,437"/>
+<area shape="rect" id="node8" title=" " alt="" coords="319,563,437,589"/>
+<area shape="rect" id="node9" title=" " alt="" coords="997,591,1139,633"/>
+<area shape="rect" id="node10" title=" " alt="" coords="997,657,1139,698"/>
+<area shape="rect" id="node11" title=" " alt="" coords="997,722,1139,763"/>
+<area shape="rect" id="node12" href="$structsll__m__linear__solver__cg_1_1sll__t__linear__solver__cg.html" title="class for the cg linear solver" alt="" coords="987,788,1149,815"/>
+<area shape="rect" id="node15" title=" " alt="" coords="284,677,472,718"/>
+<area shape="rect" id="node16" title=" " alt="" coords="301,889,455,945"/>
+<area shape="rect" id="node17" title=" " alt="" coords="301,743,455,799"/>
+<area shape="rect" id="node18" title=" " alt="" coords="994,839,1142,865"/>
+<area shape="rect" id="node19" title=" " alt="" coords="963,890,1173,931"/>
+<area shape="rect" id="node20" title=" " alt="" coords="963,955,1173,997"/>
 </map>

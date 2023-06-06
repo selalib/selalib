@@ -1,3 +1,8 @@
 <map id="sll_t_const_coef_advection_2d" name="sll_t_const_coef_advection_2d">
-<area shape="rect" id="node2" href="$structsll__m__operator__splitting_1_1sll__t__operator__splitting.html" title="operator splitting object " alt="" coords="279,117,450,144"/>
+<area shape="rect" id="node1" title="Simple operator splitting type for 2D constant coefficient advection Extends operator splitting." alt="" coords="549,159,769,185"/>
+<area shape="rect" id="node2" href="$structsll__m__operator__splitting_1_1sll__t__operator__splitting.html" title="operator splitting object" alt="" coords="279,117,450,144"/>
+<area shape="rect" id="node3" title=" " alt="" coords="41,107,107,133"/>
+<area shape="rect" id="node4" title=" " alt="" coords="5,27,143,53"/>
+<area shape="rect" id="node5" title=" " alt="" coords="15,188,133,215"/>
+<area shape="rect" id="node6" title=" " alt="" coords="279,273,451,314"/>
 </map>

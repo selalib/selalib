@@ -1,9 +1,10 @@
 <map id="sll_s_maxwell_spline_fem_sparsity_mixedmass" name="sll_s_maxwell_spline_fem_sparsity_mixedmass">
-<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities__sparse.html#ab1ac1f6dcb1c4dfe4711711a3e89dbe6" title="sll_s_spline_fem_mixedmass1d" alt="" coords="265,143,494,170"/>
-<area shape="rect" id="node7" href="$namespacesll__m__spline__fem__utilities__sparse.html#a836d6dd47591a9908563b281f683ab2e" title="sll_s_spline_fem_mixedmass1d_full" alt="" coords="251,234,508,261"/>
-<area shape="rect" id="node3" href="$namespacesll__m__maxwell__1d__fem.html#a5b82c557e498ae59986631d0aea7ed63" title="sll_m_maxwell_1d_fem\l::init_1d_fem" alt="" coords="559,5,735,47"/>
-<area shape="rect" id="node4" href="$namespacesll__m__maxwell__1d__fem__sm.html#a45e52ba17b5b5af73732917939909d67" title="Initialization. " alt="" coords="559,71,735,112"/>
-<area shape="rect" id="node5" href="$namespacesll__m__maxwell__3d__fem.html#ab814bfc0f843c1a2b8fe485351798ca0" title="Initialization. " alt="" coords="559,136,735,177"/>
-<area shape="rect" id="node6" href="$namespacesll__m__maxwell__clamped__3d__fem.html#afadba212d3f01a688b12c751068d1707" title="Initialization. " alt="" coords="556,201,739,243"/>
-<area shape="rect" id="node8" href="$namespacesll__m__maxwell__1d__trafo.html#a379870fb13734539528b6b4fd558963f" title="Initialization. " alt="" coords="557,267,738,308"/>
+<area shape="rect" id="node1" title="Helper function to create sparsity pattern of the mass matrix with mixed degree deg1 and deg2." alt="" coords="540,201,736,243"/>
+<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities__sparse.html#ab1ac1f6dcb1c4dfe4711711a3e89dbe6" title=" " alt="" coords="250,143,478,170"/>
+<area shape="rect" id="node7" href="$namespacesll__m__spline__fem__utilities__sparse.html#a836d6dd47591a9908563b281f683ab2e" title=" " alt="" coords="236,234,492,261"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__1d__fem.html#a5b82c557e498ae59986631d0aea7ed63" title=" " alt="" coords="9,5,185,47"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__1d__fem__sm.html#a45e52ba17b5b5af73732917939909d67" title="Initialization." alt="" coords="9,71,185,112"/>
+<area shape="rect" id="node5" href="$namespacesll__m__maxwell__clamped__3d__fem.html#afadba212d3f01a688b12c751068d1707" title="Initialization." alt="" coords="5,136,188,177"/>
+<area shape="rect" id="node6" href="$namespacesll__m__maxwell__3d__fem.html#ab814bfc0f843c1a2b8fe485351798ca0" title="Initialization." alt="" coords="9,201,185,243"/>
+<area shape="rect" id="node8" href="$namespacesll__m__maxwell__1d__trafo.html#a379870fb13734539528b6b4fd558963f" title="Initialization." alt="" coords="6,267,187,308"/>
 </map>

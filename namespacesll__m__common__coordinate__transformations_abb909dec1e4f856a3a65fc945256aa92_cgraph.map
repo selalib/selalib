@@ -1,6 +1,7 @@
 <map id="sll_f_sinprod_gen_jac" name="sll_f_sinprod_gen_jac">
-<area shape="rect" id="node2" href="$namespacesll__m__common__coordinate__transformations.html#a1de07c8a495d9b0ccefea107292106f2" title="jacobian matrix " alt="" coords="215,5,392,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__common__coordinate__transformations.html#a529b5c9cf34d9bbb986acd05506264c0" title="jacobian matrix " alt="" coords="215,56,392,83"/>
-<area shape="rect" id="node4" href="$namespacesll__m__common__coordinate__transformations.html#ab696601447594433d005b58fc2df3b24" title="jacobian matrix " alt="" coords="215,107,392,133"/>
-<area shape="rect" id="node5" href="$namespacesll__m__common__coordinate__transformations.html#a4ca700102414d125255457e54bbd56c2" title="jacobian matrix " alt="" coords="215,157,392,184"/>
+<area shape="rect" id="node1" title="jacobian ie determinant of jacobian matrix" alt="" coords="5,81,167,108"/>
+<area shape="rect" id="node2" href="$namespacesll__m__common__coordinate__transformations.html#a529b5c9cf34d9bbb986acd05506264c0" title="jacobian matrix" alt="" coords="215,5,392,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__common__coordinate__transformations.html#ab696601447594433d005b58fc2df3b24" title="jacobian matrix" alt="" coords="215,56,392,83"/>
+<area shape="rect" id="node4" href="$namespacesll__m__common__coordinate__transformations.html#a4ca700102414d125255457e54bbd56c2" title="jacobian matrix" alt="" coords="215,107,392,133"/>
+<area shape="rect" id="node5" href="$namespacesll__m__common__coordinate__transformations.html#a1de07c8a495d9b0ccefea107292106f2" title="jacobian matrix" alt="" coords="215,157,392,184"/>
 </map>

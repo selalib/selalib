@@ -1,5 +1,8 @@
 <map id="sll_t_params_cos_gaussian_screwpinch" name="sll_t_params_cos_gaussian_screwpinch">
-<area shape="rect" id="node2" href="$structsll__m__initial__distribution_1_1sll__t__params__cos__gaussian.html" title="Data type for distribution function with (multiple) Gaussians in v and one plus cosine perturbations ..." alt="" coords="133,375,332,401"/>
-<area shape="rect" id="node3" href="$structsll__m__initial__distribution_1_1sll__c__distribution__params.html" title="Abstract data type for parameters of initial distribution. " alt="" coords="121,250,253,291"/>
-<area shape="rect" id="node6" href="$structsll__m__profile__functions_1_1sll__t__profile__functions.html" title="sll_t_profile_functions" alt="" coords="328,324,492,351"/>
+<area shape="rect" id="node1" title=" " alt="" coords="211,451,409,492"/>
+<area shape="rect" id="node2" href="$structsll__m__initial__distribution_1_1sll__t__params__cos__gaussian.html" title="Data type for distribution function with (multiple) Gaussians in v and one plus cosine perturbations ..." alt="" coords="128,375,327,401"/>
+<area shape="rect" id="node3" href="$structsll__m__initial__distribution_1_1sll__c__distribution__params.html" title="Abstract data type for parameters of initial distribution." alt="" coords="117,250,249,291"/>
+<area shape="rect" id="node4" title=" " alt="" coords="5,5,143,32"/>
+<area shape="rect" id="node5" title=" " alt="" coords="239,5,357,32"/>
+<area shape="rect" id="node6" href="$structsll__m__profile__functions_1_1sll__t__profile__functions.html" title=" " alt="" coords="323,324,487,351"/>
 </map>

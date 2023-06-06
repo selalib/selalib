@@ -1,7 +1,8 @@
 <map id="sll_s_spline_fem_mass3d" name="sll_s_spline_fem_mass3d">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__fem.html#ab814bfc0f843c1a2b8fe485351798ca0" title="Initialization. " alt="" coords="245,5,421,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__maxwell__3d__trafo.html#aaad1e5b0c976c17ca8c2276ab121313d" title="Initialization. " alt="" coords="242,71,423,112"/>
-<area shape="rect" id="node4" href="$namespacesll__m__maxwell__clamped__3d__trafo.html#ab614fb88d34d5e55292639d8db6b0353" title="Initialization. " alt="" coords="241,136,424,177"/>
-<area shape="rect" id="node5" href="$namespacesll__m__maxwell__3d__trafo__parallel.html#a994d8feec849ce52b5243b251decabbc" title="sll_m_maxwell_3d_trafo\l_parallel::init_3d_trafo\l_parallel" alt="" coords="242,202,423,258"/>
-<area shape="rect" id="node6" href="$namespacesll__m__maxwell__clamped__3d__trafo__parallel.html#ae0872c3bfa3cc2f7b7f3aaca4fd8838e" title="sll_m_maxwell_clamped\l_3d_trafo_parallel::init\l_3d_trafo_parallel" alt="" coords="241,282,424,338"/>
+<area shape="rect" id="node1" title="Set up 3d mass matrix for specific spline degrees and profile function." alt="" coords="236,143,424,170"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__fem.html#ab814bfc0f843c1a2b8fe485351798ca0" title="Initialization." alt="" coords="9,5,185,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__clamped__3d__trafo.html#ab614fb88d34d5e55292639d8db6b0353" title="Initialization." alt="" coords="5,71,188,112"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__3d__trafo.html#aaad1e5b0c976c17ca8c2276ab121313d" title="Initialization." alt="" coords="6,136,187,177"/>
+<area shape="rect" id="node5" href="$namespacesll__m__maxwell__clamped__3d__trafo__parallel.html#ae0872c3bfa3cc2f7b7f3aaca4fd8838e" title=" " alt="" coords="5,202,188,258"/>
+<area shape="rect" id="node6" href="$namespacesll__m__maxwell__3d__trafo__parallel.html#a994d8feec849ce52b5243b251decabbc" title=" " alt="" coords="6,282,187,338"/>
 </map>

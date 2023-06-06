@@ -1,0 +1,6 @@
+<map id="solve_maxwell_2d_fdtd" name="solve_maxwell_2d_fdtd">
+<area shape="rect" id="node1" title="self routine exists only for testing purpose. Use ampere and faraday in your appication." alt="" coords="5,78,181,105"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__2d__fdtd.html#a6de5c1b7051adc605b9c00a0dd4bb082" title="Solve ampere&#45;maxwell equation with FDTD scheme." alt="" coords="229,5,405,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__2d__fdtd.html#a62a93501bc592c0c92f69b0ee0bb70eb" title="Set boundary conditions." alt="" coords="229,71,405,112"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__2d__fdtd.html#abcabb28582107abaea1c75be08ffc30b" title="Solve Faraday equation." alt="" coords="229,136,405,177"/>
+</map>

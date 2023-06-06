@@ -1,12 +1,13 @@
 <map id="sll_s_multiply_g_clamped_1d" name="sll_s_multiply_g_clamped_1d">
-<area shape="rect" id="node2" href="$namespacesll__m__linear__operator__poisson__clamped__1d.html#a29a7daa8197e83b1974a90488639ad1c" title="sll_m_linear_operator\l_poisson_clamped_1d::\ldot_poisson_clamped_1d" alt="" coords="267,5,453,61"/>
-<area shape="rect" id="node3" href="$namespacesll__m__linear__operator__schur__eb__cl__1d.html#a785da40b164e9064091e65e77c068dec" title="sll_m_linear_operator\l_schur_eb_cl_1d::dot\l_schur_eb_cl_1d" alt="" coords="279,85,441,141"/>
-<area shape="rect" id="node4" href="$namespacesll__m__maxwell__clamped__1d__fem__sm.html#a0615d69c6c8cd94ddc01e9bf72a2c22a" title="Multiply by dicrete gradient matrix. " alt="" coords="269,166,451,207"/>
-<area shape="rect" id="node8" href="$namespacesll__m__maxwell__clamped__1d__trafo.html#ad56588cf85e6fbd6f57d82403b1ed31c" title="Multiply by dicrete gradient matrix. " alt="" coords="269,326,451,367"/>
-<area shape="rect" id="node5" href="$namespacesll__m__maxwell__clamped__1d__fem__sm.html#a2b1803a492a64ce08866aa8fbeeb65a2" title="compute e from rho using weak Poisson&#39;s equation ( rho = G^T M_1 G , e = G &#160;) " alt="" coords="501,39,708,95"/>
-<area shape="rect" id="node6" href="$namespacesll__m__maxwell__clamped__1d__fem__sm.html#a4f3c18afd895e955637bb71da95547c4" title="For model with adiabatic electrons. " alt="" coords="506,119,703,175"/>
-<area shape="rect" id="node7" href="$namespacesll__m__maxwell__clamped__1d__fem__sm.html#a9e1faa2161ee4c44036241b83a4b2ce2" title="For model with adiabatic electrons. " alt="" coords="506,199,703,255"/>
-<area shape="rect" id="node9" href="$namespacesll__m__maxwell__clamped__1d__trafo.html#a5fe354bc9d66402eb0fd1794f5ff91cd" title="compute e from rho using weak Poisson&#39;s equation ( rho = G^T M_1 G , e = &#45;G &#160;) " alt="" coords="513,279,697,335"/>
-<area shape="rect" id="node10" href="$namespacesll__m__maxwell__clamped__1d__trafo.html#a3ad88ce78b250bbb86234e3bc63d9ef2" title="For model with adiabatic electrons. " alt="" coords="513,359,696,415"/>
-<area shape="rect" id="node11" href="$namespacesll__m__maxwell__clamped__1d__trafo.html#ac3d65f4752c853b5e2e06ca78dd4abe1" title="For model with adiabatic electrons. " alt="" coords="513,439,696,495"/>
+<area shape="rect" id="node1" title="Multiplication of the input vector in by the clamped derivative matrix G." alt="" coords="495,137,708,164"/>
+<area shape="rect" id="node2" href="$namespacesll__m__linear__operator__poisson__clamped__1d.html#a29a7daa8197e83b1974a90488639ad1c" title=" " alt="" coords="260,5,447,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__linear__operator__schur__eb__cl__1d.html#a785da40b164e9064091e65e77c068dec" title=" " alt="" coords="272,85,435,141"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__clamped__1d__fem__sm.html#a0615d69c6c8cd94ddc01e9bf72a2c22a" title="Multiply by dicrete gradient matrix." alt="" coords="262,166,445,207"/>
+<area shape="rect" id="node8" href="$namespacesll__m__maxwell__clamped__1d__trafo.html#ad56588cf85e6fbd6f57d82403b1ed31c" title="Multiply by dicrete gradient matrix." alt="" coords="262,326,445,367"/>
+<area shape="rect" id="node5" href="$namespacesll__m__maxwell__clamped__1d__fem__sm.html#a9e1faa2161ee4c44036241b83a4b2ce2" title="For model with adiabatic electrons." alt="" coords="10,39,207,95"/>
+<area shape="rect" id="node6" href="$namespacesll__m__maxwell__clamped__1d__fem__sm.html#a4f3c18afd895e955637bb71da95547c4" title="For model with adiabatic electrons." alt="" coords="10,119,207,175"/>
+<area shape="rect" id="node7" href="$namespacesll__m__maxwell__clamped__1d__fem__sm.html#a2b1803a492a64ce08866aa8fbeeb65a2" title="compute e from rho using weak Poisson&#39;s equation ( rho = G^T M_1 G \phi, e = G \phi )" alt="" coords="5,199,212,255"/>
+<area shape="rect" id="node9" href="$namespacesll__m__maxwell__clamped__1d__trafo.html#ac3d65f4752c853b5e2e06ca78dd4abe1" title="For model with adiabatic electrons." alt="" coords="17,279,200,335"/>
+<area shape="rect" id="node10" href="$namespacesll__m__maxwell__clamped__1d__trafo.html#a3ad88ce78b250bbb86234e3bc63d9ef2" title="For model with adiabatic electrons." alt="" coords="17,359,200,415"/>
+<area shape="rect" id="node11" href="$namespacesll__m__maxwell__clamped__1d__trafo.html#a5fe354bc9d66402eb0fd1794f5ff91cd" title="compute e from rho using weak Poisson&#39;s equation ( rho = G^T M_1 G \phi, e = &#45;G \phi )" alt="" coords="17,439,201,495"/>
 </map>

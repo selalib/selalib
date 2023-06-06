@@ -1,4 +1,5 @@
 <map id="sll_s_spline_pp_b_to_pp_3d_cell" name="sll_s_spline_pp_b_to_pp_3d_cell">
-<area shape="rect" id="node2" href="$namespacesll__m__splines__pp.html#a3e49717b4c10582e60662adb7cfd24d2" title="Convert 3d spline in B form to spline in pp form with periodic boundary conditions. " alt="" coords="208,5,363,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__splines__pp.html#a70fb277ea5af3f97a33262915023e427" title="sll_s_spline_evaluate\l_basis_b_form_3d_periodic" alt="" coords="411,5,609,47"/>
+<area shape="rect" id="node1" title="Convert 3d spline in B form in a cell to spline in pp form with periodic boundary conditions." alt="" coords="455,5,609,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__splines__pp.html#a3e49717b4c10582e60662adb7cfd24d2" title="Convert 3d spline in B form to spline in pp form with periodic boundary conditions." alt="" coords="252,5,407,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__splines__pp.html#a70fb277ea5af3f97a33262915023e427" title=" " alt="" coords="5,5,204,47"/>
 </map>

@@ -1,6 +1,13 @@
 <map id="sll_nufft_interpolator_2d_ptr" name="sll_nufft_interpolator_2d_ptr">
-<area shape="rect" id="node2" href="$structsll__m__nufft__interpolator__2d_1_1sll__t__nufft__interpolator__2d.html" title="The nufft&#45;based interpolator is only a wrapper around the capabilities of the nufft package..." alt="" coords="151,469,343,496"/>
-<area shape="rect" id="node3" href="$structsll__m__interpolators__2d__base_1_1sll__c__interpolator__2d.html" title="Base class/basic interface for 2D interpolators. " alt="" coords="5,364,163,391"/>
-<area shape="rect" id="node6" href="$namespacesll__m__nufft__interpolation.html#structsll__m__nufft__interpolation_1_1sll__t__nufft__2d" title="Nufft object for 2d interpolation. It contains fft plan and 1d array to pass data to nufft2d subrouti..." alt="" coords="269,364,379,391"/>
-<area shape="rect" id="node7" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib. " alt="" coords="357,155,427,181"/>
+<area shape="rect" id="node1" title="Pointer to this interpolator derived type." alt="" coords="1196,97,1353,138"/>
+<area shape="rect" id="node2" href="$structsll__m__nufft__interpolator__2d_1_1sll__t__nufft__interpolator__2d.html" title="The nufft&#45;based interpolator is only a wrapper around the capabilities of the nufft package." alt="" coords="913,104,1105,131"/>
+<area shape="rect" id="node3" href="$structsll__m__interpolators__2d__base_1_1sll__c__interpolator__2d.html" title="Base class/basic interface for 2D interpolators." alt="" coords="673,5,831,32"/>
+<area shape="rect" id="node4" title=" " alt="" coords="33,307,170,333"/>
+<area shape="rect" id="node6" href="$namespacesll__m__nufft__interpolation.html#structsll__m__nufft__interpolation_1_1sll__t__nufft__2d" title="Nufft object for 2d interpolation. It contains fft plan and 1d array to pass data to nufft2d subrouti..." alt="" coords="697,336,807,363"/>
+<area shape="rect" id="node7" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib." alt="" coords="411,377,482,404"/>
+<area shape="rect" id="node5" title=" " alt="" coords="388,177,505,204"/>
+<area shape="rect" id="node8" title=" " alt="" coords="69,431,134,457"/>
+<area shape="rect" id="node9" title=" " alt="" coords="5,481,197,537"/>
+<area shape="rect" id="node10" title=" " alt="" coords="347,429,547,470"/>
+<area shape="rect" id="node11" title=" " alt="" coords="353,498,541,539"/>
 </map>

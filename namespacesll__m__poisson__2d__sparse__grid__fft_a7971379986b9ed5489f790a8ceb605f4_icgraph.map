@@ -1,3 +1,4 @@
 <map id="derivative_coeffs_1d" name="derivative_coeffs_1d">
-<area shape="rect" id="node2" href="$namespacesll__m__poisson__2d__sparse__grid__fft.html#a8d1139606d33f42d4334490e5505f6da" title="Create Poisson solver object with Fourier spectral method on 2d sparse grid. " alt="" coords="211,5,389,47"/>
+<area shape="rect" id="node1" title="Helper function to compute the Fourier coefficients for the derivative operation." alt="" coords="232,13,389,39"/>
+<area shape="rect" id="node2" href="$namespacesll__m__poisson__2d__sparse__grid__fft.html#a8d1139606d33f42d4334490e5505f6da" title="Create Poisson solver object with Fourier spectral method on 2d sparse grid." alt="" coords="5,5,184,47"/>
 </map>

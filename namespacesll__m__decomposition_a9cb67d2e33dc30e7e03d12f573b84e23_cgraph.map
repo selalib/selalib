@@ -1,0 +1,11 @@
+<map id="mpi_sendrecv_compressed" name="mpi_sendrecv_compressed">
+<area shape="rect" id="node1" title=" " alt="" coords="5,112,204,139"/>
+<area shape="rect" id="node2" href="$namespacesll__m__compression.html#a373084b7e662cac613eabf1ece27a827" title=" " alt="" coords="485,5,661,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__compression.html#a6d61e5384cf55387f7f96cdccb330951" title="compress buffer" alt="" coords="252,71,412,113"/>
+<area shape="rect" id="node5" href="$namespacesll__m__compression.html#a77a9b816076a5654c024cb99e4b3bbe7" title="decompress buffer" alt="" coords="254,137,410,178"/>
+<area shape="rect" id="node6" href="$namespacesll__m__decomposition.html#af048832f76a35a17fcb680e9f3385dc5" title="MPI sendrecv functionality, wrapped for a compressed buffer." alt="" coords="257,202,407,243"/>
+<area shape="rect" id="node4" href="$namespacesll__m__compression.html#a1410384a8d836b838c8d16fa65cb4cbb" title=" " alt="" coords="733,133,893,189"/>
+<area shape="rect" id="node7" href="$namespacesll__m__compression.html#a1f9054ee749b5c97258fc01e952d8db0" title="allocate array, copy indices from comp into array, return" alt="" coords="476,137,669,178"/>
+<area shape="rect" id="node8" href="$namespacesll__m__compression.html#a574b169d9b0553311d7cc1f550eedaec" title=" " alt="" coords="479,202,666,243"/>
+<area shape="rect" id="node9" href="$namespacesll__m__compression.html#a1cd80129a40d25587f931ca9e3e365b0" title=" " alt="" coords="460,267,685,309"/>
+</map>

@@ -1,18 +1,19 @@
 <map id="solve_circulant" name="solve_circulant">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__1d__fem.html#a9529d7ddd5961fc724e0b452425e5e2f" title="compute Ey from Bz using weak Ampere formulation " alt="" coords="229,45,317,71"/>
-<area shape="rect" id="node5" href="$namespacesll__m__maxwell__1d__fem.html#a2d1b34af6ce5bd3e84443d7ec7e2e1c7" title="sll_s_compute_e_from\l_rho_1d_fem" alt="" coords="189,96,357,137"/>
-<area shape="rect" id="node6" href="$namespacesll__m__maxwell__1d__fem.html#a93a33efea7cd5b3605cd58cea29c20dc" title="Compute rho from Gauss law for given efield. " alt="" coords="193,161,353,203"/>
-<area shape="rect" id="node7" href="$namespacesll__m__maxwell__1d__fem.html#a35f67335e750d8c00872ac2599d5bfbe" title="Compute E_i from j_i integrated over the time interval using weak Ampere formulation. " alt="" coords="173,227,372,254"/>
-<area shape="rect" id="node9" href="$namespacesll__m__maxwell__1d__fem.html#af1b844cf1315847ac495f1d957189479" title="compute_e_from_j_1d\l_fem_shape" alt="" coords="189,279,356,320"/>
-<area shape="rect" id="node10" href="$namespacesll__m__maxwell__1d__fem.html#ae42fa711464cf385b882b84fd8c63511" title="multiply_interpolation\l_inverse_transpose" alt="" coords="189,344,356,385"/>
-<area shape="rect" id="node11" href="$namespacesll__m__maxwell__1d__fem.html#a24ad9e6b445cc06f4c31dda8b252fd26" title="Solves for the efield part in a implicit curl part solve. " alt="" coords="201,410,344,437"/>
-<area shape="rect" id="node12" href="$namespacesll__m__maxwell__1d__fem.html#abfc2b83c57927e44075c5d11b8949235" title="Compute square of the L2norm. " alt="" coords="181,461,364,487"/>
-<area shape="rect" id="node13" href="$namespacesll__m__maxwell__1d__fem.html#a95835fb7a7173512d52e22df72949289" title="inner_product_1d_fem" alt="" coords="189,511,356,538"/>
-<area shape="rect" id="node14" href="$namespacesll__m__maxwell__1d__fem.html#af92aa77aac30fa9ad87a4cf10cb88ceb" title="Compute the L2 projection of a given function f on periodic splines of given degree. " alt="" coords="195,562,350,589"/>
-<area shape="rect" id="node15" href="$namespacesll__m__maxwell__1d__fem.html#acb63eb5eafceb69a879302928c503bfa" title="multiply_mass_1d_fem" alt="" coords="185,613,360,639"/>
-<area shape="rect" id="node16" href="$namespacesll__m__maxwell__1d__fem.html#a07ac85d431e1ab78f59da39ba51cdafb" title="Invert the mass matrix. " alt="" coords="193,663,352,690"/>
-<area shape="rect" id="node17" href="$namespacesll__m__maxwell__1d__fem.html#a51ffa2cd61a78cdc2741d91f48a81574" title="Invert the mass matrix. " alt="" coords="184,714,361,741"/>
-<area shape="rect" id="node3" href="$namespacesll__m__maxwell__1d__fem.html#a47196627859f2c2d812ad68b15d300fb" title="compute Ey from Bz using weak Ampere formulation " alt="" coords="420,5,588,47"/>
-<area shape="rect" id="node4" href="$namespacesll__m__maxwell__1d__fem.html#a5e87fba6009f2ef888e836db7b8eaf0c" title="sll_s_compute_b_from\l_e_1d_fem" alt="" coords="420,71,588,112"/>
-<area shape="rect" id="node8" href="$namespacesll__m__maxwell__1d__fem.html#a3cb1b8bf0285889d4089bf972aa81c3f" title="Choose between compute_E_from_j_1d_fem and compute_E_from_j_1d_fem_shape. " alt="" coords="425,257,583,283"/>
+<area shape="rect" id="node1" title=" " alt="" coords="468,340,588,367"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__1d__fem.html#a35f67335e750d8c00872ac2599d5bfbe" title="Compute E_i from j_i integrated over the time interval using weak Ampere formulation" alt="" coords="221,5,420,32"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__1d__fem.html#af1b844cf1315847ac495f1d957189479" title=" " alt="" coords="237,57,404,98"/>
+<area shape="rect" id="node5" href="$namespacesll__m__maxwell__1d__fem.html#a93a33efea7cd5b3605cd58cea29c20dc" title="Compute rho from Gauss law for given efield." alt="" coords="241,122,401,163"/>
+<area shape="rect" id="node6" href="$namespacesll__m__maxwell__1d__fem.html#a95835fb7a7173512d52e22df72949289" title=" " alt="" coords="237,188,404,215"/>
+<area shape="rect" id="node7" href="$namespacesll__m__maxwell__1d__fem.html#a07ac85d431e1ab78f59da39ba51cdafb" title="Invert the mass matrix." alt="" coords="241,239,400,265"/>
+<area shape="rect" id="node8" href="$namespacesll__m__maxwell__1d__fem.html#abfc2b83c57927e44075c5d11b8949235" title="Compute square of the L2norm." alt="" coords="229,289,412,316"/>
+<area shape="rect" id="node9" href="$namespacesll__m__maxwell__1d__fem.html#af92aa77aac30fa9ad87a4cf10cb88ceb" title="Compute the L2 projection of a given function f on periodic splines of given degree." alt="" coords="243,340,398,367"/>
+<area shape="rect" id="node10" href="$namespacesll__m__maxwell__1d__fem.html#ae42fa711464cf385b882b84fd8c63511" title=" " alt="" coords="237,391,404,433"/>
+<area shape="rect" id="node11" href="$namespacesll__m__maxwell__1d__fem.html#acb63eb5eafceb69a879302928c503bfa" title=" " alt="" coords="233,457,408,484"/>
+<area shape="rect" id="node12" href="$namespacesll__m__maxwell__1d__fem.html#a2d1b34af6ce5bd3e84443d7ec7e2e1c7" title=" " alt="" coords="237,509,405,550"/>
+<area shape="rect" id="node13" href="$namespacesll__m__maxwell__1d__fem.html#a24ad9e6b445cc06f4c31dda8b252fd26" title="Solves for the efield part in a implicit curl part solve." alt="" coords="249,575,392,601"/>
+<area shape="rect" id="node14" href="$namespacesll__m__maxwell__1d__fem.html#a51ffa2cd61a78cdc2741d91f48a81574" title="Invert the mass matrix." alt="" coords="232,625,409,652"/>
+<area shape="rect" id="node15" href="$namespacesll__m__maxwell__1d__fem.html#a9529d7ddd5961fc724e0b452425e5e2f" title="compute Ey from Bz using weak Ampere formulation" alt="" coords="277,676,365,703"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__1d__fem.html#a3cb1b8bf0285889d4089bf972aa81c3f" title="Choose between compute_E_from_j_1d_fem and compute_E_from_j_1d_fem_shape." alt="" coords="10,35,169,61"/>
+<area shape="rect" id="node16" href="$namespacesll__m__maxwell__1d__fem.html#a5e87fba6009f2ef888e836db7b8eaf0c" title=" " alt="" coords="5,635,173,677"/>
+<area shape="rect" id="node17" href="$namespacesll__m__maxwell__1d__fem.html#a47196627859f2c2d812ad68b15d300fb" title="compute Ey from Bz using weak Ampere formulation" alt="" coords="5,701,173,742"/>
 </map>

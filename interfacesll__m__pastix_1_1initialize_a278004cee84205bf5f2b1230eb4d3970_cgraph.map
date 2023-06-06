@@ -1,0 +1,10 @@
+<map id="init_pastix" name="init_pastix">
+<area shape="rect" id="node1" title=" " alt="" coords="5,78,96,105"/>
+<area shape="rect" id="node2" href="$namespacesll__m__collective.html#a396122f49340f0778eb448430d865b4e" title="Determines the rank of the calling process in the communicator." alt="" coords="144,5,312,47"/>
+<area shape="rect" id="node4" href="$namespacesll__m__collective.html#af2d3c240d9dfe7e9c7d7f7c9e0529f17" title="Determines the size of the group associated with a communicator." alt="" coords="145,71,311,112"/>
+<area shape="rect" id="node5" href="$namespacesll__m__collective.html#a939e5faf8e7354e95934cc448ea4623d" title="Starts the paralell environment." alt="" coords="153,136,303,177"/>
+<area shape="rect" id="node3" href="$namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" title="Checks if the pointer ptr is associated to an object." alt="" coords="396,21,559,63"/>
+<area shape="rect" id="node6" href="$namespacesll__m__collective.html#af370573de68ca767e719916ac7a4e524" title=" " alt="" coords="395,103,560,144"/>
+<area shape="rect" id="node7" href="$namespacesll__m__collective.html#afe99ab5fb304ed4d0410f28673e27ece" title=" " alt="" coords="360,168,595,209"/>
+<area shape="rect" id="node8" href="$namespacesll__m__collective.html#a9a5729d7ca2e55890195f76c8a5cbd62" title="Checks the good execution of collective instruction." alt="" coords="643,168,793,209"/>
+</map>

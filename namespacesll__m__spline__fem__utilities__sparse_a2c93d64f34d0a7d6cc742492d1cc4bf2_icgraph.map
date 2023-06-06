@@ -1,4 +1,5 @@
 <map id="assemble_mixedmass_full" name="assemble_mixedmass_full">
-<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities__sparse.html#a836d6dd47591a9908563b281f683ab2e" title="sll_s_spline_fem_mixedmass1d_full" alt="" coords="249,13,507,39"/>
-<area shape="rect" id="node3" href="$namespacesll__m__maxwell__1d__trafo.html#a379870fb13734539528b6b4fd558963f" title="Initialization. " alt="" coords="555,5,736,47"/>
+<area shape="rect" id="node1" title="Assemble the given row of a mixed mass matrix for a full mass_line." alt="" coords="539,13,733,39"/>
+<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities__sparse.html#a836d6dd47591a9908563b281f683ab2e" title=" " alt="" coords="235,13,491,39"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__1d__trafo.html#a379870fb13734539528b6b4fd558963f" title="Initialization." alt="" coords="5,5,187,47"/>
 </map>

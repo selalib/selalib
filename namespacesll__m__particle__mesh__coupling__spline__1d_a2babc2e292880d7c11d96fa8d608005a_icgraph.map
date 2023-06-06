@@ -1,3 +1,4 @@
 <map id="update_charge_int_partial" name="update_charge_int_partial">
-<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__1d.html#a40d80adc5b57f28513a2859e72d00bc9" title="For explicit version of the subcycling propagator (to evaluate the charge as it comes out integrated ..." alt="" coords="244,5,435,32"/>
+<area shape="rect" id="node1" title="Helper function for add_charge_int (takes care of the per cell computations)" alt="" coords="244,5,435,32"/>
+<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__1d.html#a40d80adc5b57f28513a2859e72d00bc9" title="For explicit version of the subcycling propagator (to evaluate the charge as it comes out integrated ..." alt="" coords="5,5,196,32"/>
 </map>

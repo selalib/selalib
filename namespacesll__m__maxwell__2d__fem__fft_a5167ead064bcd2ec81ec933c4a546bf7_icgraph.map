@@ -1,3 +1,4 @@
 <map id="multiply_c" name="multiply_c">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__2d__fem__fft.html#a4cfea01575006ff7271def78cba87814" title="Compute Bz from Ey using strong 1D Faraday equation for spline coefficients $B_z^{new}(x_j) = B_z^{ol..." alt="" coords="144,5,312,47"/>
+<area shape="rect" id="node1" title="Multiply by discrete curl matrix." alt="" coords="221,13,312,39"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__2d__fem__fft.html#a4cfea01575006ff7271def78cba87814" title="Compute Bz from Ey using strong 1D Faraday equation for spline coefficients $B_z^{new}(x_j) = B_z^{ol..." alt="" coords="5,5,173,47"/>
 </map>

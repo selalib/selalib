@@ -1,10 +1,11 @@
 <map id="choose" name="choose">
-<area shape="rect" id="node2" href="$namespacesll__m__box__splines.html#a3036d812bbf7826012acb93b1bc5ad44" title="Computes the box spline of degree deg on (x1, x2) " alt="" coords="121,129,220,156"/>
-<area shape="rect" id="node3" href="$namespacesll__m__box__splines.html#ae85be189f19eda4cfbd8461587cdbe98" title="Computes the value of a box spline. " alt="" coords="268,5,459,32"/>
-<area shape="rect" id="node4" href="$namespacesll__m__box__splines.html#a22194490adc78c1d67ab8345417700f8" title="Interpolates on point of cartesian coordinates (x1, x2) " alt="" coords="284,57,443,98"/>
-<area shape="rect" id="node5" href="$namespacesll__m__box__splines.html#ae867b46ed0654e35ad21b818a3198601" title="Computes x&#45;derivative on (x,y) " alt="" coords="292,122,435,163"/>
-<area shape="rect" id="node6" href="$namespacesll__m__box__splines.html#a0f40714993a4e4bdcf19d5798130ae75" title="Computes the values or derivatives of box splines. " alt="" coords="507,188,681,215"/>
-<area shape="rect" id="node9" href="$namespacesll__m__box__splines.html#acefc07fcf7d400ff2f46c5ac346f8b1a" title="Computes y&#45;derivative on (x,y) " alt="" coords="292,239,435,281"/>
-<area shape="rect" id="node7" href="$namespacesll__m__fekete__integration.html#ac7c05ae36ac69d55d2c022d71e82cae9" title="Writes on a file values of boxsplines on fekete points. " alt="" coords="729,181,913,222"/>
-<area shape="rect" id="node8" href="$namespacesll__m__fekete__integration.html#adceb8456a1011a2bb4dcecfd28374463" title="This function is supposed to write all django input files needed for a Django/Jorek simulation..." alt="" coords="961,181,1168,222"/>
+<area shape="rect" id="node1" title="Computes the binomial coefficient (n, k)" alt="" coords="1099,109,1167,136"/>
+<area shape="rect" id="node2" href="$namespacesll__m__box__splines.html#a3036d812bbf7826012acb93b1bc5ad44" title="Computes the box spline of degree deg on (x1, x2)" alt="" coords="952,109,1051,136"/>
+<area shape="rect" id="node3" href="$namespacesll__m__box__splines.html#a0f40714993a4e4bdcf19d5798130ae75" title="Computes the values or derivatives of box splines." alt="" coords="491,44,665,71"/>
+<area shape="rect" id="node6" href="$namespacesll__m__box__splines.html#ae867b46ed0654e35ad21b818a3198601" title="Computes x&#45;derivative on (x,y)" alt="" coords="737,37,880,78"/>
+<area shape="rect" id="node7" href="$namespacesll__m__box__splines.html#acefc07fcf7d400ff2f46c5ac346f8b1a" title="Computes y&#45;derivative on (x,y)" alt="" coords="737,102,880,143"/>
+<area shape="rect" id="node8" href="$namespacesll__m__box__splines.html#ae85be189f19eda4cfbd8461587cdbe98" title="Computes the value of a box spline." alt="" coords="713,168,904,195"/>
+<area shape="rect" id="node9" href="$namespacesll__m__box__splines.html#a22194490adc78c1d67ab8345417700f8" title="Interpolates on point of cartesian coordinates (x1, x2)" alt="" coords="729,219,888,261"/>
+<area shape="rect" id="node4" href="$namespacesll__m__fekete__integration.html#ac7c05ae36ac69d55d2c022d71e82cae9" title="Writes on a file values of boxsplines on fekete points." alt="" coords="260,37,443,78"/>
+<area shape="rect" id="node5" href="$namespacesll__m__fekete__integration.html#adceb8456a1011a2bb4dcecfd28374463" title="This function is supposed to write all django input files needed for a Django/Jorek simulation." alt="" coords="5,37,212,78"/>
 </map>

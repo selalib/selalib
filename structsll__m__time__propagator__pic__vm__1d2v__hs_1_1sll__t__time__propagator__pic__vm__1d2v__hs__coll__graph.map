@@ -1,4 +1,13 @@
 <map id="sll_t_time_propagator_pic_vm_1d2v_hs" name="sll_t_time_propagator_pic_vm_1d2v_hs">
-<area shape="rect" id="node2" href="$structsll__m__time__propagator__base_1_1sll__c__time__propagator__base.html" title="Type for Hamiltonian splittings. " alt="" coords="292,5,496,32"/>
-<area shape="rect" id="node3" href="$structsll__m__hamiltonian__splitting__base_1_1sll__c__hamiltonian__splitting__base.html" title="Type for Hamiltonian splittings. " alt="" coords="5,5,240,32"/>
+<area shape="rect" id="node1" title="Hamiltonian splitting type for Vlasov&#45;Maxwell 1d2v." alt="" coords="679,249,843,290"/>
+<area shape="rect" id="node2" href="$structsll__m__time__propagator__base_1_1sll__c__time__propagator__base.html" title="Type for Hamiltonian splittings." alt="" coords="292,5,496,32"/>
+<area shape="rect" id="node3" href="$structsll__m__hamiltonian__splitting__base_1_1sll__c__hamiltonian__splitting__base.html" title="Type for Hamiltonian splittings." alt="" coords="5,5,240,32"/>
+<area shape="rect" id="node4" title=" " alt="" coords="361,77,427,104"/>
+<area shape="rect" id="node5" title=" " alt="" coords="318,129,470,170"/>
+<area shape="rect" id="node6" title=" " alt="" coords="323,194,465,235"/>
+<area shape="rect" id="node7" title=" " alt="" coords="323,259,465,301"/>
+<area shape="rect" id="node8" title=" " alt="" coords="323,325,465,366"/>
+<area shape="rect" id="node9" title=" " alt="" coords="325,464,463,491"/>
+<area shape="rect" id="node10" title=" " alt="" coords="289,517,499,558"/>
+<area shape="rect" id="node11" title=" " alt="" coords="335,716,453,743"/>
 </map>

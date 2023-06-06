@@ -1,3 +1,6 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$interfacesll__m__xdmf__serial__blocks_1_1sll__xdmf__close.html" title="Close the xdmf file. " alt="" coords="5,5,124,32"/>
+<area shape="rect" id="node1" href="$structsll__m__sparse__grid__interpolator_1_1sll__t__sparse__grid__interpolator.html" title="Class defining the sparse grid data structure." alt="" coords="5,56,220,83"/>
+<area shape="rect" id="node2" href="$structsll__m__sparse__grid__2d_1_1sll__t__sparse__grid__2d.html" title="Sparse grid object for 2d with interpolation routines." alt="" coords="268,5,423,32"/>
+<area shape="rect" id="node3" href="$structsll__m__sparse__grid__3d_1_1sll__t__sparse__grid__3d.html" title="Sparse grid object for 3d with interpolation routines." alt="" coords="268,56,423,83"/>
+<area shape="rect" id="node4" href="$structsll__m__sparse__grid__4d_1_1sll__t__sparse__grid__4d.html" title="Sparse grid object for 4d with interpolation routines. Note in 4d we have only an implementation of a..." alt="" coords="268,107,423,133"/>
 </map>

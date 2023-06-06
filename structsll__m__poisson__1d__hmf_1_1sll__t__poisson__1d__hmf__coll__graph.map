@@ -1,4 +1,10 @@
 <map id="sll_t_poisson_1d_hmf" name="sll_t_poisson_1d_hmf">
-<area shape="rect" id="node2" href="$structsll__m__poisson__1d__base_1_1sll__c__poisson__1d__base.html" title="sll_c_poisson_1d_base" alt="" coords="5,139,175,165"/>
-<area shape="rect" id="node3" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib. " alt="" coords="199,139,269,165"/>
+<area shape="rect" id="node1" title="Implementation of the poisson 1d solver for the Vlasov&#45;HMF model." alt="" coords="633,168,796,195"/>
+<area shape="rect" id="node2" href="$structsll__m__poisson__1d__base_1_1sll__c__poisson__1d__base.html" title=" " alt="" coords="347,49,516,76"/>
+<area shape="rect" id="node3" title=" " alt="" coords="350,101,513,142"/>
+<area shape="rect" id="node4" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib." alt="" coords="396,167,467,193"/>
+<area shape="rect" id="node5" title=" " alt="" coords="69,85,134,112"/>
+<area shape="rect" id="node6" title=" " alt="" coords="33,196,170,223"/>
+<area shape="rect" id="node7" title=" " alt="" coords="5,5,197,61"/>
+<area shape="rect" id="node8" title=" " alt="" coords="373,283,490,309"/>
 </map>

@@ -1,3 +1,9 @@
 <map id="sll_t_maxwell_3d_pstd" name="sll_t_maxwell_3d_pstd">
-<area shape="rect" id="node2" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib. " alt="" coords="111,155,181,181"/>
+<area shape="rect" id="node1" title="Maxwell solver object." alt="" coords="279,392,450,419"/>
+<area shape="rect" id="node2" title=" " alt="" coords="51,177,214,218"/>
+<area shape="rect" id="node3" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib." alt="" coords="239,184,309,211"/>
+<area shape="rect" id="node4" title=" " alt="" coords="5,20,71,47"/>
+<area shape="rect" id="node5" title=" " alt="" coords="320,20,457,47"/>
+<area shape="rect" id="node6" title=" " alt="" coords="95,5,287,61"/>
+<area shape="rect" id="node7" title=" " alt="" coords="497,184,614,211"/>
 </map>

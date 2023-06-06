@@ -1,3 +1,13 @@
 <map id="sll_t_poisson_3d_periodic_par" name="sll_t_poisson_3d_periodic_par">
-<area shape="rect" id="node3" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib. " alt="" coords="339,117,409,144"/>
+<area shape="rect" id="node1" title="Structure to solve Poisson equation on 3d mesh with periodic boundary conditions. Solver is parallel ..." alt="" coords="692,349,908,376"/>
+<area shape="rect" id="node2" title=" " alt="" coords="381,56,501,83"/>
+<area shape="rect" id="node3" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib." alt="" coords="405,115,476,141"/>
+<area shape="rect" id="node4" title=" " alt="" coords="69,85,134,112"/>
+<area shape="rect" id="node5" title=" " alt="" coords="33,196,170,223"/>
+<area shape="rect" id="node6" title=" " alt="" coords="5,5,197,61"/>
+<area shape="rect" id="node7" title=" " alt="" coords="363,290,519,331"/>
+<area shape="rect" id="node8" title=" " alt="" coords="365,387,517,443"/>
+<area shape="rect" id="node9" title=" " alt="" coords="363,527,519,569"/>
+<area shape="rect" id="node10" title=" " alt="" coords="347,602,535,643"/>
+<area shape="rect" id="node11" title=" " alt="" coords="382,801,499,828"/>
 </map>

@@ -1,4 +1,5 @@
 <map id="sll_f_new_coordinate_transformation_2d_analytic" name="sll_f_new_coordinate_transformation_2d_analytic">
-<area shape="rect" id="node2" href="$namespacesll__m__coordinate__transformations__2d.html#a1cdc78a7b0da5f52f92e9613ea7c6657" title="sll_s_coordinate_transformation\l_2d_analytic_init" alt="" coords="261,5,492,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__coordinate__transformations__2d.html#ad5f03cea86cfabcf020fb9865f422793" title="jacobian_2d_analytic" alt="" coords="540,13,699,39"/>
+<area shape="rect" id="node1" title="Create the analytic coordinate transformation." alt="" coords="5,5,213,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__coordinate__transformations__2d.html#a1cdc78a7b0da5f52f92e9613ea7c6657" title=" " alt="" coords="261,5,492,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__coordinate__transformations__2d.html#ad5f03cea86cfabcf020fb9865f422793" title=" " alt="" coords="540,13,699,39"/>
 </map>

@@ -1,3 +1,4 @@
 <map id="sll_t_preconditioner_curl_solver_fft" name="sll_t_preconditioner_curl_solver_fft">
-<area shape="rect" id="node2" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver " alt="" coords="11,5,151,47"/>
+<area shape="rect" id="node1" title="Linear solver for FFT&#45;based inversion of 3d tensor product of circulant matrices (extending the abstr..." alt="" coords="5,95,156,136"/>
+<area shape="rect" id="node2" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver" alt="" coords="11,5,151,47"/>
 </map>

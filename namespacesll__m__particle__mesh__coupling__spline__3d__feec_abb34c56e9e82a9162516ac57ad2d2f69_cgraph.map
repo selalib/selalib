@@ -1,3 +1,4 @@
 <map id="point_add_eval" name="point_add_eval">
-<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__3d__feec.html#abfee33f2a32f4155838f54794a32b78b" title="Sets the index of the splines that are involved in computations that concern splines from index box..." alt="" coords="175,5,264,32"/>
+<area shape="rect" id="node1" title="Helper function for add_current_evaluate that takes care of the per&#45;cell computations." alt="" coords="5,5,127,32"/>
+<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__3d__feec.html#abfee33f2a32f4155838f54794a32b78b" title="Sets the index of the splines that are involved in computations that concern splines from index box." alt="" coords="175,5,264,32"/>
 </map>

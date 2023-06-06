@@ -1,4 +1,5 @@
 <map id="assemble_mass_clamped_full" name="assemble_mass_clamped_full">
-<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities__sparse.html#a3fcb7d2b9d5aadd6a42eb295cc25b3b6" title="Set up 1d mass matrix for specific spline degree and profile function. " alt="" coords="272,5,460,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__maxwell__clamped__1d__trafo.html#a800127433401043caf9d2b00dfa7e79f" title="Initialization. " alt="" coords="508,5,691,47"/>
+<area shape="rect" id="node1" title="Assemble the given row of a sparse matrix for a full mass line." alt="" coords="472,13,691,39"/>
+<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities__sparse.html#a3fcb7d2b9d5aadd6a42eb295cc25b3b6" title="Set up 1d mass matrix for specific spline degree and profile function." alt="" coords="236,5,424,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__clamped__1d__trafo.html#a800127433401043caf9d2b00dfa7e79f" title="Initialization." alt="" coords="5,5,188,47"/>
 </map>

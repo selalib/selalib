@@ -1,3 +1,4 @@
 <map id="sll_s_qn_solver_2d_polar_par_init" name="sll_s_qn_solver_2d_polar_par_init">
-<area shape="rect" id="node2" href="$namespacesll__m__qn__solver__3d__polar__par.html#a2e6d1e5238b003c9d2a5bf33a11644d0" title="Initialize the 3D (wrapper) solver. " alt="" coords="197,5,385,61"/>
+<area shape="rect" id="node1" title="Initialize the solver." alt="" coords="241,13,385,54"/>
+<area shape="rect" id="node2" href="$namespacesll__m__qn__solver__3d__polar__par.html#a2e6d1e5238b003c9d2a5bf33a11644d0" title="Initialize the 3D (wrapper) solver." alt="" coords="5,5,193,61"/>
 </map>

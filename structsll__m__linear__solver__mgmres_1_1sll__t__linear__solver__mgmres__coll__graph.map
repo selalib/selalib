@@ -1,4 +1,11 @@
 <map id="sll_t_linear_solver_mgmres" name="sll_t_linear_solver_mgmres">
-<area shape="rect" id="node2" href="$structsll__m__linear__solver__iter__abstract_1_1sll__t__linear__solver__iter__abstract.html" title="class for abstract iterative linear solver " alt="" coords="653,247,793,289"/>
-<area shape="rect" id="node3" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver " alt="" coords="312,174,452,215"/>
+<area shape="rect" id="node1" title="class for a sequential gmres linear solver" alt="" coords="839,247,979,289"/>
+<area shape="rect" id="node2" href="$structsll__m__linear__solver__iter__abstract_1_1sll__t__linear__solver__iter__abstract.html" title="class for abstract iterative linear solver" alt="" coords="649,247,789,289"/>
+<area shape="rect" id="node3" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver" alt="" coords="308,174,448,215"/>
+<area shape="rect" id="node4" title=" " alt="" coords="41,7,107,33"/>
+<area shape="rect" id="node5" title=" " alt="" coords="5,183,143,209"/>
+<area shape="rect" id="node6" title=" " alt="" coords="284,383,472,425"/>
+<area shape="rect" id="node7" title=" " alt="" coords="301,93,455,149"/>
+<area shape="rect" id="node8" title=" " alt="" coords="319,455,437,481"/>
+<area shape="rect" id="node9" title=" " alt="" coords="301,240,455,296"/>
 </map>

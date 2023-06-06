@@ -1,6 +1,7 @@
 <map id="nufft_interpolate2d_disp" name="nufft_interpolate2d_disp">
-<area shape="rect" id="node2" href="$namespacesll__m__nufft__interpolation.html#a39fecd3696259ffa2ad4a468ccb2feca" title="Compute the fft and interpolate array values. " alt="" coords="233,35,431,91"/>
-<area shape="rect" id="node3" href="$namespacesll__m__nufft__interpolation.html#a162b55abc00342f2e8676595c9427205" title="Compute the fft and prepare data for nufft call. " alt="" coords="479,5,683,47"/>
-<area shape="rect" id="node5" href="$namespacesll__m__nufft__interpolation.html#a9cf8db8010fa72b2b232962b1f38fbec" title="Compute the fft and interpolate array values when x and y are surely inside the domain. Optimized version for advector. " alt="" coords="482,71,679,127"/>
-<area shape="rect" id="node4" href="$namespacesll__m__fft.html#a1da210c56b980ae78e65f9a4a473c432" title="Compute fast Fourier transform in complex to complex mode. " alt="" coords="731,5,867,47"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,50,185,77"/>
+<area shape="rect" id="node2" href="$namespacesll__m__nufft__interpolation.html#a39fecd3696259ffa2ad4a468ccb2feca" title="Compute the fft and interpolate array values." alt="" coords="233,35,431,91"/>
+<area shape="rect" id="node3" href="$namespacesll__m__nufft__interpolation.html#a162b55abc00342f2e8676595c9427205" title="Compute the fft and prepare data for nufft call." alt="" coords="479,5,683,47"/>
+<area shape="rect" id="node5" href="$namespacesll__m__nufft__interpolation.html#a9cf8db8010fa72b2b232962b1f38fbec" title="Compute the fft and interpolate array values when x and y are surely inside the domain...." alt="" coords="482,71,679,127"/>
+<area shape="rect" id="node4" href="$namespacesll__m__fft.html#a1da210c56b980ae78e65f9a4a473c432" title="Compute fast Fourier transform in complex to complex mode." alt="" coords="731,5,867,47"/>
 </map>

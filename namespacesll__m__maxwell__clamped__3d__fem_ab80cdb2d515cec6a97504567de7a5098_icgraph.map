@@ -1,5 +1,6 @@
 <map id="multiply_mass_3dkron" name="multiply_mass_3dkron">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__clamped__3d__fem.html#a48f3447e7f31426cadc7ba1bf19beb39" title="Compute inner product. " alt="" coords="228,5,395,32"/>
-<area shape="rect" id="node4" href="$namespacesll__m__maxwell__clamped__3d__fem.html#a654c691f5f554385d6d320d3692cc285" title="Multiply by the mass matrix. " alt="" coords="224,56,399,83"/>
-<area shape="rect" id="node3" href="$namespacesll__m__maxwell__clamped__3d__fem.html#ab93e5016a1216cbae942e53f8ac55be8" title="Compute square of the L2norm. " alt="" coords="447,5,629,32"/>
+<area shape="rect" id="node1" title="Multiply by the mass matrix." alt="" coords="459,31,629,57"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__clamped__3d__fem.html#a48f3447e7f31426cadc7ba1bf19beb39" title="Compute inner product." alt="" coords="240,5,407,32"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__clamped__3d__fem.html#a654c691f5f554385d6d320d3692cc285" title="Multiply by the mass matrix." alt="" coords="236,56,411,83"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__clamped__3d__fem.html#ab93e5016a1216cbae942e53f8ac55be8" title="Compute square of the L2norm." alt="" coords="5,5,188,32"/>
 </map>

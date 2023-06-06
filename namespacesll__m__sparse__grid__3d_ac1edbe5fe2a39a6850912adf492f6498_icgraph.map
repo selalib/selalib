@@ -1,3 +1,4 @@
 <map id="displace" name="displace">
-<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__3d.html#a1a7a611e44ecbbb689ee85411b7fc897" title="Compute value at displaced grid points using trigonometric interpolation (based on SG FFT) ..." alt="" coords="129,5,297,47"/>
+<area shape="rect" id="node1" title=" " alt="" coords="221,13,297,39"/>
+<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__3d.html#a1a7a611e44ecbbb689ee85411b7fc897" title="Compute value at displaced grid points using trigonometric interpolation (based on SG FFT)" alt="" coords="5,5,173,47"/>
 </map>

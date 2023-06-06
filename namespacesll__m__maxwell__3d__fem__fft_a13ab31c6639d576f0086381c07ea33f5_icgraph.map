@@ -1,5 +1,6 @@
 <map id="multiply_mass_2form" name="multiply_mass_2form">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__fem__fft.html#a01c619d73d2b079d62d58e5d7b18f07a" title="compute Ey from Bz using weak Ampere formulation " alt="" coords="231,5,399,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__maxwell__3d__fem__fft.html#a92f3104e545181a21659fffd7bf3e6bd" title="Solve curl part of Maxwell&#39;s equations. " alt="" coords="241,71,388,112"/>
-<area shape="rect" id="node4" href="$namespacesll__m__maxwell__3d__fem__fft.html#adf449c72634051c9778ba058092a3162" title="Multiply by the mass matrix. " alt="" coords="217,137,412,163"/>
+<area shape="rect" id="node1" title="Helper function for multiply_mass." alt="" coords="248,64,412,91"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__fem__fft.html#adf449c72634051c9778ba058092a3162" title="Multiply by the mass matrix." alt="" coords="5,5,200,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__3d__fem__fft.html#a92f3104e545181a21659fffd7bf3e6bd" title="Solve curl part of Maxwell&#39;s equations." alt="" coords="29,57,176,98"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__3d__fem__fft.html#a01c619d73d2b079d62d58e5d7b18f07a" title="compute Ey from Bz using weak Ampere formulation" alt="" coords="19,122,187,163"/>
 </map>

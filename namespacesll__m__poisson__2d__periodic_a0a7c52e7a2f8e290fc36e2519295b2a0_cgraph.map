@@ -1,4 +1,0 @@
-<map id="initialize_poisson_2d_periodic_fft" name="initialize_poisson_2d_periodic_fft">
-<area shape="rect" id="node2" href="$namespacesll__m__fft.html#abe788dd46bc7218c0f8cad37e09b1bdd" title="Create new 2d complex to real plan for forward FFT. " alt="" coords="188,5,324,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__fft.html#a8bf95871bff87667b2a2dcb7ce0c443c" title="Create new 2d real to complex plan for backward FFT. " alt="" coords="188,71,324,112"/>
-</map>

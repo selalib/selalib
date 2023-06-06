@@ -1,5 +1,6 @@
 <map id="dot_maxwell_eb_fourier" name="dot_maxwell_eb_fourier">
-<area shape="rect" id="node2" href="$namespacesll__m__linear__operator__maxwell__eb__schur.html#a4bf122119c2ace522a97caa9b7281ff8" title="Helper function. " alt="" coords="234,5,286,32"/>
-<area shape="rect" id="node4" href="$namespacesll__m__linear__operator__maxwell__eb__schur.html#aa4fb4b97759bab4e9cfd6bc5a3c6a2d0" title="Helper function. " alt="" coords="232,56,288,83"/>
-<area shape="rect" id="node3" href="$namespacesll__m__fft.html#a98e3ba2b5431c58a3f5100ac171616a5" title="Compute fast Fourier transform in complex to complex mode. " alt="" coords="336,23,472,65"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,184,57"/>
+<area shape="rect" id="node2" href="$namespacesll__m__linear__operator__maxwell__eb__schur.html#a4bf122119c2ace522a97caa9b7281ff8" title="Helper function." alt="" coords="234,5,286,32"/>
+<area shape="rect" id="node4" href="$namespacesll__m__linear__operator__maxwell__eb__schur.html#aa4fb4b97759bab4e9cfd6bc5a3c6a2d0" title="Helper function." alt="" coords="232,56,288,83"/>
+<area shape="rect" id="node3" href="$namespacesll__m__fft.html#a98e3ba2b5431c58a3f5100ac171616a5" title="Compute fast Fourier transform in complex to complex mode." alt="" coords="336,23,472,65"/>
 </map>

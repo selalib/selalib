@@ -1,8 +1,9 @@
 <map id="sll_s_new_array_linspace" name="sll_s_new_array_linspace">
-<area shape="rect" id="node2" href="$namespacesll__m__poisson__2d__polar.html#a1cbf53db6d782b38d4ef697a75f70c32" title="sll_o_initialize the Poisson solver in polar coordinates " alt="" coords="240,5,447,47"/>
-<area shape="rect" id="node4" href="$namespacesll__m__poisson__2d__polar__par.html#a0f1dc18ba51644f7472cbb9f2b9b87df" title="sll_o_initialize the Poisson solver in polar coordinates " alt="" coords="255,71,432,127"/>
-<area shape="rect" id="node5" href="$namespacesll__m__qn__solver__2d__polar.html#a415a362f5de77031f02637bafd15b96a" title="Initialize the solver. " alt="" coords="259,151,428,207"/>
-<area shape="rect" id="node6" href="$namespacesll__m__qn__solver__2d__polar__par.html#a469531318563d910cd216334ff4a1828" title="Initialize the solver. " alt="" coords="249,231,437,287"/>
-<area shape="rect" id="node3" href="$namespacesll__m__poisson__2d__polar.html#a626a3a26fa63ae7a36c1819d40877047" title="OO interface: allocate pointer to Poisson solver and initialize it. " alt="" coords="495,5,705,47"/>
-<area shape="rect" id="node7" href="$namespacesll__m__qn__solver__3d__polar__par.html#a2e6d1e5238b003c9d2a5bf33a11644d0" title="Initialize the 3D (wrapper) solver. " alt="" coords="506,231,694,287"/>
+<area shape="rect" id="node1" title="Equivalent to numpy.linspace @contact Yaman Güçlü, IPP Garching." alt="" coords="519,126,705,153"/>
+<area shape="rect" id="node2" href="$namespacesll__m__poisson__2d__polar.html#a1cbf53db6d782b38d4ef697a75f70c32" title="sll_o_initialize the Poisson solver in polar coordinates" alt="" coords="264,5,471,47"/>
+<area shape="rect" id="node4" href="$namespacesll__m__poisson__2d__polar__par.html#a0f1dc18ba51644f7472cbb9f2b9b87df" title="sll_o_initialize the Poisson solver in polar coordinates" alt="" coords="279,71,456,127"/>
+<area shape="rect" id="node5" href="$namespacesll__m__qn__solver__2d__polar.html#a415a362f5de77031f02637bafd15b96a" title="Initialize the solver." alt="" coords="283,151,452,207"/>
+<area shape="rect" id="node6" href="$namespacesll__m__qn__solver__2d__polar__par.html#a469531318563d910cd216334ff4a1828" title="Initialize the solver." alt="" coords="273,231,461,287"/>
+<area shape="rect" id="node3" href="$namespacesll__m__poisson__2d__polar.html#a626a3a26fa63ae7a36c1819d40877047" title="OO interface: allocate pointer to Poisson solver and initialize it." alt="" coords="5,5,216,47"/>
+<area shape="rect" id="node7" href="$namespacesll__m__qn__solver__3d__polar__par.html#a2e6d1e5238b003c9d2a5bf33a11644d0" title="Initialize the 3D (wrapper) solver." alt="" coords="17,231,205,287"/>
 </map>

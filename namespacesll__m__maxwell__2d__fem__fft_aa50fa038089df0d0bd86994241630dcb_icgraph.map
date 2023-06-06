@@ -1,8 +1,9 @@
 <map id="multiply_mass_2dkron" name="multiply_mass_2dkron">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__2d__fem__fft.html#aa51ed5a01418cd3e1b624e1ebce8b256" title="inner_product_2d_fem" alt="" coords="224,9,391,36"/>
-<area shape="rect" id="node4" href="$namespacesll__m__maxwell__2d__fem__fft.html#a006fdf650e785cedeb1d16b07c90465b" title="multiply_mass_1form" alt="" coords="225,64,389,91"/>
-<area shape="rect" id="node6" href="$namespacesll__m__maxwell__2d__fem__fft.html#af6f5c8ce2e047a477749e729b4560c97" title="multiply_mass_2form" alt="" coords="225,121,389,148"/>
-<area shape="rect" id="node3" href="$namespacesll__m__maxwell__2d__fem__fft.html#ae5ef6b42145027447666df57a376d2ac" title="Compute square of the L2norm. " alt="" coords="439,5,621,32"/>
-<area shape="rect" id="node5" href="$namespacesll__m__maxwell__2d__fem__fft.html#a05723424fae2c505c4a6848f2ae0008a" title="compute rho from e using weak Gauss law ( rho = G^T M_1 e ) " alt="" coords="450,57,610,98"/>
-<area shape="rect" id="node7" href="$namespacesll__m__maxwell__2d__fem__fft.html#a782c4f37c0d356fc5af8b524636b8c7e" title="compute Ey from Bz using weak Ampere formulation " alt="" coords="446,122,614,163"/>
+<area shape="rect" id="node1" title="Multiply by the mass matrix." alt="" coords="451,64,621,91"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__2d__fem__fft.html#aa51ed5a01418cd3e1b624e1ebce8b256" title=" " alt="" coords="236,9,403,36"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__2d__fem__fft.html#a006fdf650e785cedeb1d16b07c90465b" title=" " alt="" coords="237,64,401,91"/>
+<area shape="rect" id="node6" href="$namespacesll__m__maxwell__2d__fem__fft.html#af6f5c8ce2e047a477749e729b4560c97" title=" " alt="" coords="237,121,401,148"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__2d__fem__fft.html#ae5ef6b42145027447666df57a376d2ac" title="Compute square of the L2norm." alt="" coords="5,5,188,32"/>
+<area shape="rect" id="node5" href="$namespacesll__m__maxwell__2d__fem__fft.html#a05723424fae2c505c4a6848f2ae0008a" title="compute rho from e using weak Gauss law ( rho = G^T M_1 e )" alt="" coords="17,57,177,98"/>
+<area shape="rect" id="node7" href="$namespacesll__m__maxwell__2d__fem__fft.html#a782c4f37c0d356fc5af8b524636b8c7e" title="compute Ey from Bz using weak Ampere formulation" alt="" coords="13,122,181,163"/>
 </map>

@@ -1,10 +1,11 @@
 <map id="sll_s_multiply_gt_clamped_1d" name="sll_s_multiply_gt_clamped_1d">
-<area shape="rect" id="node2" href="$namespacesll__m__linear__operator__poisson__clamped__1d.html#a29a7daa8197e83b1974a90488639ad1c" title="sll_m_linear_operator\l_poisson_clamped_1d::\ldot_poisson_clamped_1d" alt="" coords="272,5,459,61"/>
-<area shape="rect" id="node3" href="$namespacesll__m__linear__operator__schur__eb__cl__1d.html#a785da40b164e9064091e65e77c068dec" title="sll_m_linear_operator\l_schur_eb_cl_1d::dot\l_schur_eb_cl_1d" alt="" coords="284,85,447,141"/>
-<area shape="rect" id="node4" href="$namespacesll__m__maxwell__clamped__1d__fem__sm.html#a295adaa51397d56b8d34d4e8f95ef5fb" title="Multiply by transpose of dicrete gradient matrix. " alt="" coords="272,166,459,207"/>
-<area shape="rect" id="node7" href="$namespacesll__m__maxwell__clamped__1d__trafo.html#af80d8382e5e69b6521296cd7ea11e8d9" title="Multiply by transpose of dicrete gradient matrix. " alt="" coords="274,246,457,287"/>
-<area shape="rect" id="node5" href="$namespacesll__m__maxwell__clamped__1d__fem__sm.html#a16cbd5837030c919150d86c19097f010" title="Compute rho from Gauss law for given efield. " alt="" coords="507,79,705,135"/>
-<area shape="rect" id="node6" href="$namespacesll__m__maxwell__clamped__1d__fem__sm.html#a9e1faa2161ee4c44036241b83a4b2ce2" title="For model with adiabatic electrons. " alt="" coords="507,159,705,215"/>
-<area shape="rect" id="node8" href="$namespacesll__m__maxwell__clamped__1d__trafo.html#ad95f42db0b196af187241167195cd45a" title="Compute rho from Gauss law for given efield. " alt="" coords="515,239,697,295"/>
-<area shape="rect" id="node9" href="$namespacesll__m__maxwell__clamped__1d__trafo.html#ac3d65f4752c853b5e2e06ca78dd4abe1" title="For model with adiabatic electrons. " alt="" coords="515,319,697,375"/>
+<area shape="rect" id="node1" title="Multiplication of the input vector in by the transposed clamped derivative matrix G^T." alt="" coords="487,137,705,164"/>
+<area shape="rect" id="node2" href="$namespacesll__m__linear__operator__poisson__clamped__1d.html#a29a7daa8197e83b1974a90488639ad1c" title=" " alt="" coords="252,5,439,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__linear__operator__schur__eb__cl__1d.html#a785da40b164e9064091e65e77c068dec" title=" " alt="" coords="264,85,427,141"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__clamped__1d__fem__sm.html#a295adaa51397d56b8d34d4e8f95ef5fb" title="Multiply by transpose of dicrete gradient matrix." alt="" coords="252,166,439,207"/>
+<area shape="rect" id="node7" href="$namespacesll__m__maxwell__clamped__1d__trafo.html#af80d8382e5e69b6521296cd7ea11e8d9" title="Multiply by transpose of dicrete gradient matrix." alt="" coords="254,246,437,287"/>
+<area shape="rect" id="node5" href="$namespacesll__m__maxwell__clamped__1d__fem__sm.html#a9e1faa2161ee4c44036241b83a4b2ce2" title="For model with adiabatic electrons." alt="" coords="6,79,203,135"/>
+<area shape="rect" id="node6" href="$namespacesll__m__maxwell__clamped__1d__fem__sm.html#a16cbd5837030c919150d86c19097f010" title="Compute rho from Gauss law for given efield." alt="" coords="5,159,204,215"/>
+<area shape="rect" id="node8" href="$namespacesll__m__maxwell__clamped__1d__trafo.html#ac3d65f4752c853b5e2e06ca78dd4abe1" title="For model with adiabatic electrons." alt="" coords="13,239,196,295"/>
+<area shape="rect" id="node9" href="$namespacesll__m__maxwell__clamped__1d__trafo.html#ad95f42db0b196af187241167195cd45a" title="Compute rho from Gauss law for given efield." alt="" coords="13,319,196,375"/>
 </map>

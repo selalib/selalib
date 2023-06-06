@@ -1,4 +1,7 @@
 <map id="sll_t_matrix_csr" name="sll_t_matrix_csr">
-<area shape="rect" id="node2" href="$structsll__m__matrix__abstract_1_1sll__t__matrix__abstract.html" title="abstract class for matrix " alt="" coords="73,331,231,357"/>
-<area shape="rect" id="node3" href="$structsll__m__linear__operator__abstract_1_1sll__t__linear__operator__abstract.html" title="class for abstract linear operator " alt="" coords="81,212,236,253"/>
+<area shape="rect" id="node1" title="class for a csr matrix" alt="" coords="5,407,131,433"/>
+<area shape="rect" id="node2" href="$structsll__m__matrix__abstract_1_1sll__t__matrix__abstract.html" title="abstract class for matrix" alt="" coords="71,331,230,357"/>
+<area shape="rect" id="node3" href="$structsll__m__linear__operator__abstract_1_1sll__t__linear__operator__abstract.html" title="class for abstract linear operator" alt="" coords="77,212,232,253"/>
+<area shape="rect" id="node4" title=" " alt="" coords="13,5,78,32"/>
+<area shape="rect" id="node5" title=" " alt="" coords="118,5,255,32"/>
 </map>

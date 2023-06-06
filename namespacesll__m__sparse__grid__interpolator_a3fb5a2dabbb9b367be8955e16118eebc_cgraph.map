@@ -1,5 +1,6 @@
 <map id="initialize_sg" name="initialize_sg">
-<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__interpolator.html#aba310a580506ebd76f00591da61f21f6" title="fft_initialize" alt="" coords="153,46,252,73"/>
-<area shape="rect" id="node3" href="$namespacesll__m__fft.html#af45a653220c441e3d483c921318af5a8" title="Function to allocate an aligned complex array. " alt="" coords="300,5,499,47"/>
-<area shape="rect" id="node4" href="$namespacesll__m__fft.html#abd8e9cb4be235cbdce3b3f1c2ba1a9dd" title="Create new 1d complex to complex plan. " alt="" coords="331,71,467,112"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,46,105,73"/>
+<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__interpolator.html#aba310a580506ebd76f00591da61f21f6" title=" " alt="" coords="153,46,252,73"/>
+<area shape="rect" id="node3" href="$namespacesll__m__fft.html#af45a653220c441e3d483c921318af5a8" title="Function to allocate an aligned complex array." alt="" coords="300,5,499,47"/>
+<area shape="rect" id="node4" href="$namespacesll__m__fft.html#abd8e9cb4be235cbdce3b3f1c2ba1a9dd" title="Create new 1d complex to complex plan." alt="" coords="331,71,467,112"/>
 </map>

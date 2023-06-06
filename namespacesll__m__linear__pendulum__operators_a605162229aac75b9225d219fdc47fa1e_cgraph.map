@@ -1,4 +1,5 @@
 <map id="sll_s_check_order" name="sll_s_check_order">
-<area shape="rect" id="node2" href="$namespacesll__m__operator__splitting.html#ad7ac7066d769b435f70a6364f9f98b6f" title="Initialises data for operator splitting. " alt="" coords="191,5,400,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__operator__splitting.html#a9f1b9c3c2b355bf8fe5b3712f1e9f98c" title="Apply the composition method for given number of times steps. " alt="" coords="206,71,385,112"/>
+<area shape="rect" id="node1" title="checks the order of a splitting method on the linear pendulum. used for unit testing." alt="" coords="5,46,143,73"/>
+<area shape="rect" id="node2" href="$namespacesll__m__operator__splitting.html#a9f1b9c3c2b355bf8fe5b3712f1e9f98c" title="Apply the composition method for given number of times steps." alt="" coords="206,5,385,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__operator__splitting.html#ad7ac7066d769b435f70a6364f9f98b6f" title="Initialises data for operator splitting." alt="" coords="191,71,400,112"/>
 </map>

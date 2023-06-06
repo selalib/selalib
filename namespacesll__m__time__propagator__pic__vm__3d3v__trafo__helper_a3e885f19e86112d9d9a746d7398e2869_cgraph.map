@@ -1,3 +1,4 @@
 <map id="advect_vb_pic_vm_3d3v_trafo" name="advect_vb_pic_vm_3d3v_trafo">
-<area shape="rect" id="node2" href="$namespacesll__m__time__propagator__pic__vm__3d3v__cl__helper.html#a3a03f7097b62efb0cedd0865650fef8c" title="invert matrix " alt="" coords="236,5,417,76"/>
+<area shape="rect" id="node1" title="advect_vb: Equations to be solved $(\mathbb{I}&#45;\Delta \frac{\Delta t q}{2 m} DF^{&#45;\top} \mathbb{B}(\X..." alt="" coords="5,20,188,61"/>
+<area shape="rect" id="node2" href="$namespacesll__m__time__propagator__pic__vm__3d3v__cl__helper.html#a3a03f7097b62efb0cedd0865650fef8c" title="invert matrix" alt="" coords="236,5,417,76"/>
 </map>

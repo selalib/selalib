@@ -1,4 +1,5 @@
 <map id="sll_s_binary_file_create" name="sll_s_binary_file_create">
-<area shape="rect" id="node2" href="$namespacesll__m__xdmf.html#a6206e0336944846facc12c8175ee11b4" title="Write 2d array in binary or hdf5 file and the matching line in XDMF file. " alt="" coords="228,5,391,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__xdmf.html#a6e95da19da0e62591ee0402ddfd44009" title="Write 3d array in binary or hdf5 file and the matching line in XDMF file. " alt="" coords="228,71,391,112"/>
+<area shape="rect" id="node1" title="Create binary file." alt="" coords="229,60,404,87"/>
+<area shape="rect" id="node2" href="$interfacesll__m__xdmf_1_1sll__o__xdmf__write__array.html#a7a1d425faccc29ff354cd3e1aaaed6b4" title="Write 2d array in binary or hdf5 file and the matching line in XDMF file." alt="" coords="5,5,181,61"/>
+<area shape="rect" id="node3" href="$interfacesll__m__xdmf_1_1sll__o__xdmf__write__array.html#a86efc8993c8f9143859caf5bebc101ec" title="Write 3d array in binary or hdf5 file and the matching line in XDMF file." alt="" coords="5,85,181,141"/>
 </map>

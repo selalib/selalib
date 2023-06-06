@@ -1,6 +1,7 @@
 <map id="multiply_mass_trafo" name="multiply_mass_trafo">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__trafo.html#a9c8bd7548ed7595bd9cd363c9bc945f7" title="compute E from B using weak Ampere formulation " alt="" coords="216,5,384,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__maxwell__3d__trafo.html#a4ef2e873bb0a87c754459d85e8853488" title="compute rho from e using weak Gauss law ( rho = G^T M_1 e ) " alt="" coords="209,71,391,112"/>
-<area shape="rect" id="node4" href="$namespacesll__m__maxwell__3d__trafo.html#a25dff51f3f0733e200540abc415b3710" title="Compute inner product. " alt="" coords="214,137,386,163"/>
-<area shape="rect" id="node5" href="$namespacesll__m__maxwell__3d__trafo.html#a7f3df9e2486b3c0ecd3c616012cdf120" title="Compute square of the L2norm. " alt="" coords="439,137,627,163"/>
+<area shape="rect" id="node1" title="Multiply by the mass matrix." alt="" coords="471,64,627,91"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__trafo.html#a25dff51f3f0733e200540abc415b3710" title="Compute inner product." alt="" coords="246,5,418,32"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__3d__trafo.html#a9c8bd7548ed7595bd9cd363c9bc945f7" title="compute E from B using weak Ampere formulation" alt="" coords="248,57,416,98"/>
+<area shape="rect" id="node5" href="$namespacesll__m__maxwell__3d__trafo.html#a4ef2e873bb0a87c754459d85e8853488" title="compute rho from e using weak Gauss law ( rho = G^T M_1 e )" alt="" coords="241,122,423,163"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__3d__trafo.html#a7f3df9e2486b3c0ecd3c616012cdf120" title="Compute square of the L2norm." alt="" coords="5,5,193,32"/>
 </map>

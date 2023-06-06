@@ -1,3 +1,4 @@
 <map id="sll_s_poisson_2d_polar_par_solve" name="sll_s_poisson_2d_polar_par_solve">
-<area shape="rect" id="node2" href="$namespacesll__m__poisson__2d__polar__par.html#a31d9a7a9fdb837944fee170d63389db0" title="Check if array sizes are compatible with the layout. " alt="" coords="224,13,423,39"/>
+<area shape="rect" id="node1" title="Solve the Poisson equation and get the electrostatic potential." alt="" coords="5,5,176,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__poisson__2d__polar__par.html#a31d9a7a9fdb837944fee170d63389db0" title="Check if array sizes are compatible with the layout." alt="" coords="224,13,421,39"/>
 </map>

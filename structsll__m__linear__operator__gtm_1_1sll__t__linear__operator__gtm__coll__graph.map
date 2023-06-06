@@ -1,5 +1,10 @@
 <map id="sll_t_linear_operator_gtm" name="sll_t_linear_operator_gtm">
-<area shape="rect" id="node2" href="$structsll__m__linear__operator__abstract_1_1sll__t__linear__operator__abstract.html" title="class for abstract linear operator " alt="" coords="337,163,492,205"/>
-<area shape="rect" id="node5" href="$structsll__m__linear__operator__block_1_1sll__t__linear__operator__block.html" title="class for a linear operator_block " alt="" coords="652,238,807,279"/>
-<area shape="rect" id="node6" href="$structsll__m__linear__operator__block_1_1jrk__t__linear__operator__pointer.html" title="class that contains a pointer to a linear operator " alt="" coords="336,307,493,349"/>
+<area shape="rect" id="node1" title=" " alt="" coords="895,193,1083,220"/>
+<area shape="rect" id="node2" href="$structsll__m__linear__operator__abstract_1_1sll__t__linear__operator__abstract.html" title="class for abstract linear operator" alt="" coords="337,163,492,205"/>
+<area shape="rect" id="node5" href="$structsll__m__linear__operator__block_1_1sll__t__linear__operator__block.html" title="class for a linear operator_block" alt="" coords="652,238,807,279"/>
+<area shape="rect" id="node3" title=" " alt="" coords="49,5,115,32"/>
+<area shape="rect" id="node4" title=" " alt="" coords="13,201,151,228"/>
+<area shape="rect" id="node6" href="$structsll__m__linear__operator__block_1_1jrk__t__linear__operator__pointer.html" title="class that contains a pointer to a linear operator" alt="" coords="336,307,493,349"/>
+<area shape="rect" id="node7" title=" " alt="" coords="5,300,159,356"/>
+<area shape="rect" id="node8" title=" " alt="" coords="356,373,473,400"/>
 </map>

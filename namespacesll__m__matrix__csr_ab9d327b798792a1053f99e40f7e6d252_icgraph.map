@@ -1,3 +1,4 @@
 <map id="dot_vector_default" name="dot_vector_default">
-<area shape="rect" id="node2" href="$namespacesll__m__matrix__csr.html#a1bd375c21c6d1c98cefa90e756a754a5" title="apply the dot operation of real vector " alt="" coords="197,5,316,32"/>
+<area shape="rect" id="node1" title="sequential dot operation" alt="" coords="172,5,316,32"/>
+<area shape="rect" id="node2" href="$namespacesll__m__matrix__csr.html#a1bd375c21c6d1c98cefa90e756a754a5" title="apply the dot operation of real vector" alt="" coords="5,5,124,32"/>
 </map>

@@ -1,3 +1,4 @@
 <map id="advect_ex_pic_vm_3d3v" name="advect_ex_pic_vm_3d3v">
-<area shape="rect" id="node2" href="$namespacesll__m__time__propagator__pic__vm__3d3v__helper.html#a43dae2d9231a6a8ee4d3c7f791897f1a" title="Helper function for advect_ex. " alt="" coords="236,5,439,47"/>
+<area shape="rect" id="node1" title="advect_ex: Equations to be solved $\frac{X^{n+1}&#45;X^n}{\Delta t}=\frac{V^{n+1}+V^n}{2}$ $\frac{V^{n+1}..." alt="" coords="5,13,188,39"/>
+<area shape="rect" id="node2" href="$namespacesll__m__time__propagator__pic__vm__3d3v__helper.html#a43dae2d9231a6a8ee4d3c7f791897f1a" title="Helper function for advect_ex." alt="" coords="236,5,439,47"/>
 </map>

@@ -1,13 +1,21 @@
 <map id="sll_t_maxwell_3d_fem_fft" name="sll_t_maxwell_3d_fem_fft">
-<area shape="rect" id="node2" href="$structsll__m__maxwell__3d__base_1_1sll__c__maxwell__3d__base.html" title="sll_c_maxwell_3d_base" alt="" coords="925,447,1100,473"/>
-<area shape="rect" id="node3" href="$structsll__m__profile__functions_1_1sll__t__profile__functions.html" title="sll_t_profile_functions" alt="" coords="655,447,819,473"/>
-<area shape="rect" id="node6" href="$structsll__m__poisson__3d__fem__fft_1_1sll__t__poisson__3d__fem__fft.html" title="sll_t_poisson_3d_fem_fft" alt="" coords="645,1043,828,1069"/>
-<area shape="rect" id="node13" href="$structsll__m__linear__solver__spline__mass__fft_1_1sll__t__linear__solver__spline__mass__fft.html" title="Linear solver for FFT&#45;based inversion of 3d tensor product of circulant matrices (extending the abstr..." alt="" coords="667,875,807,917"/>
-<area shape="rect" id="node7" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib. " alt="" coords="338,883,409,909"/>
-<area shape="rect" id="node9" href="$structsll__m__matrix__csr_1_1sll__t__matrix__csr.html" title="class for a csr matrix " alt="" coords="950,119,1075,145"/>
-<area shape="rect" id="node11" href="$structsll__m__linear__operator__abstract_1_1sll__t__linear__operator__abstract.html" title="class for abstract linear operator " alt="" coords="296,138,451,179"/>
-<area shape="rect" id="node14" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver " alt="" coords="303,786,443,827"/>
-<area shape="rect" id="node12" href="$structsll__m__linear__operator__maxwell__eb__schur_1_1sll__t__linear__operator__maxwell__eb__schur.html" title="sll_t_linear_operator\l_maxwell_eb_schur" alt="" coords="659,498,814,539"/>
-<area shape="rect" id="node15" href="$structsll__m__linear__operator__kron_1_1sll__t__linear__operator__kron.html" title="class for a linear operator " alt="" coords="641,263,832,289"/>
-<area shape="rect" id="node10" href="$structsll__m__matrix__abstract_1_1sll__t__matrix__abstract.html" title="abstract class for matrix " alt="" coords="657,119,816,145"/>
+<area shape="rect" id="node1" title=" " alt="" coords="1300,317,1489,344"/>
+<area shape="rect" id="node2" href="$structsll__m__maxwell__3d__base_1_1sll__c__maxwell__3d__base.html" title=" " alt="" coords="1025,635,1200,661"/>
+<area shape="rect" id="node3" href="$structsll__m__profile__functions_1_1sll__t__profile__functions.html" title=" " alt="" coords="755,695,919,721"/>
+<area shape="rect" id="node4" title=" " alt="" coords="390,973,507,1000"/>
+<area shape="rect" id="node6" href="$structsll__m__poisson__3d__fem__fft_1_1sll__t__poisson__3d__fem__fft.html" title=" " alt="" coords="745,1320,928,1347"/>
+<area shape="rect" id="node16" href="$structsll__m__linear__solver__spline__mass__fft_1_1sll__t__linear__solver__spline__mass__fft.html" title="Linear solver for FFT&#45;based inversion of 3d tensor product of circulant matrices (extending the abstr..." alt="" coords="767,429,907,470"/>
+<area shape="rect" id="node5" title=" " alt="" coords="69,103,134,129"/>
+<area shape="rect" id="node7" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib." alt="" coords="413,653,484,680"/>
+<area shape="rect" id="node12" href="$structsll__m__matrix__csr_1_1sll__t__matrix__csr.html" title="class for a csr matrix" alt="" coords="1050,135,1175,161"/>
+<area shape="rect" id="node14" href="$structsll__m__linear__operator__abstract_1_1sll__t__linear__operator__abstract.html" title="class for abstract linear operator" alt="" coords="371,149,526,190"/>
+<area shape="rect" id="node17" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver" alt="" coords="379,431,519,473"/>
+<area shape="rect" id="node15" href="$structsll__m__linear__operator__maxwell__eb__schur_1_1sll__t__linear__operator__maxwell__eb__schur.html" title=" " alt="" coords="759,310,914,351"/>
+<area shape="rect" id="node8" title=" " alt="" coords="33,523,170,549"/>
+<area shape="rect" id="node18" href="$structsll__m__linear__operator__kron_1_1sll__t__linear__operator__kron.html" title="class for a linear operator" alt="" coords="741,236,932,263"/>
+<area shape="rect" id="node9" title=" " alt="" coords="5,676,197,732"/>
+<area shape="rect" id="node10" title=" " alt="" coords="355,1443,543,1485"/>
+<area shape="rect" id="node11" title=" " alt="" coords="347,1518,551,1559"/>
+<area shape="rect" id="node13" href="$structsll__m__matrix__abstract_1_1sll__t__matrix__abstract.html" title="abstract class for matrix" alt="" coords="757,135,916,161"/>
+<area shape="rect" id="node19" title=" " alt="" coords="372,215,525,271"/>
 </map>

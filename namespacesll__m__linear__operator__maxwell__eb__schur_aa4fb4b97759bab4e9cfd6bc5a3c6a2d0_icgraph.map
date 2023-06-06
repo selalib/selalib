@@ -1,4 +1,5 @@
 <map id="ifft3d" name="ifft3d">
-<area shape="rect" id="node2" href="$namespacesll__m__linear__operator__maxwell__eb__schur.html#a7d719dc1fb1e417c14c31c6aeb7182ae" title="dot_maxwell_eb_fourier" alt="" coords="109,5,288,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__linear__operator__maxwell__eb__schur.html#aa1b697c27e52c7bcc6d7fef2efbace8b" title="inverse_dot_maxwell\l_eb_fourier" alt="" coords="118,57,279,98"/>
+<area shape="rect" id="node1" title="Helper function." alt="" coords="232,35,288,61"/>
+<area shape="rect" id="node2" href="$namespacesll__m__linear__operator__maxwell__eb__schur.html#a7d719dc1fb1e417c14c31c6aeb7182ae" title=" " alt="" coords="5,5,184,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__linear__operator__maxwell__eb__schur.html#aa1b697c27e52c7bcc6d7fef2efbace8b" title=" " alt="" coords="14,57,175,98"/>
 </map>

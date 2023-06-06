@@ -1,7 +1,8 @@
 <map id="assemble2_clamped_boundary" name="assemble2_clamped_boundary">
-<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities__3d__helper.html#a8bf61805b062829a837a69a883fa4580" title="Assemble the boundary part of the clamped mass matrix. " alt="" coords="277,71,484,112"/>
-<area shape="rect" id="node3" href="$namespacesll__m__spline__fem__utilities__3d__clamped.html#a4fceedb527087eaedb3605232a9f1398" title="Set up 3d clamped mass matrix for specific spline degrees and profile function. " alt="" coords="532,63,724,119"/>
-<area shape="rect" id="node4" href="$namespacesll__m__maxwell__clamped__3d__fem.html#afadba212d3f01a688b12c751068d1707" title="Initialization. " alt="" coords="772,5,955,47"/>
-<area shape="rect" id="node5" href="$namespacesll__m__maxwell__clamped__3d__trafo.html#ab614fb88d34d5e55292639d8db6b0353" title="Initialization. " alt="" coords="772,71,955,112"/>
-<area shape="rect" id="node6" href="$namespacesll__m__maxwell__clamped__3d__trafo__parallel.html#ae0872c3bfa3cc2f7b7f3aaca4fd8838e" title="sll_m_maxwell_clamped\l_3d_trafo_parallel::init\l_3d_trafo_parallel" alt="" coords="772,137,955,193"/>
+<area shape="rect" id="node1" title=" " alt="" coords="731,78,955,105"/>
+<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities__3d__helper.html#a8bf61805b062829a837a69a883fa4580" title="Assemble the boundary part of the clamped mass matrix." alt="" coords="476,71,683,112"/>
+<area shape="rect" id="node3" href="$namespacesll__m__spline__fem__utilities__3d__clamped.html#a4fceedb527087eaedb3605232a9f1398" title="Set up 3d clamped mass matrix for specific spline degrees and profile function." alt="" coords="236,63,428,119"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__clamped__3d__fem.html#afadba212d3f01a688b12c751068d1707" title="Initialization." alt="" coords="5,5,188,47"/>
+<area shape="rect" id="node5" href="$namespacesll__m__maxwell__clamped__3d__trafo.html#ab614fb88d34d5e55292639d8db6b0353" title="Initialization." alt="" coords="5,71,188,112"/>
+<area shape="rect" id="node6" href="$namespacesll__m__maxwell__clamped__3d__trafo__parallel.html#ae0872c3bfa3cc2f7b7f3aaca4fd8838e" title=" " alt="" coords="5,137,188,193"/>
 </map>

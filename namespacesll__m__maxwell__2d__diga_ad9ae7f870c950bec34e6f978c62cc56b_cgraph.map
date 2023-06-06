@@ -1,4 +1,5 @@
 <map id="sll_s_solve_maxwell_2d_diga" name="sll_s_solve_maxwell_2d_diga">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__2d__diga.html#a91c113f4fc41d1f20e4398f7720e3a27" title="dof_local" alt="" coords="222,5,303,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__maxwell__2d__diga.html#a7b618a16a5f96c98b9c93be828e1d96c" title="dof_neighbor" alt="" coords="209,56,316,83"/>
+<area shape="rect" id="node1" title="Solve the maxwell equation." alt="" coords="5,23,161,65"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__2d__diga.html#a91c113f4fc41d1f20e4398f7720e3a27" title=" " alt="" coords="222,5,303,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__2d__diga.html#a7b618a16a5f96c98b9c93be828e1d96c" title=" " alt="" coords="209,56,316,83"/>
 </map>

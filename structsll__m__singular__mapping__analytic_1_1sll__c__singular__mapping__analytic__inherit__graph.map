@@ -1,5 +1,6 @@
 <map id="sll_c_singular_mapping_analytic" name="sll_c_singular_mapping_analytic">
-<area shape="rect" id="node3" href="$structsll__m__singular__mapping__analytic__czarny_1_1sll__t__singular__mapping__analytic__czarny.html" title="Concrete type, analytical singular mapping. " alt="" coords="5,169,177,211"/>
-<area shape="rect" id="node4" href="$structsll__m__singular__mapping__analytic__target_1_1sll__t__singular__mapping__analytic__target.html" title="Concrete type, analytical singular mapping. " alt="" coords="201,169,373,211"/>
-<area shape="rect" id="node2" href="$structsll__m__singular__mapping__base_1_1sll__c__singular__mapping.html" title="Abstract type, singular mapping. " alt="" coords="101,5,276,32"/>
+<area shape="rect" id="node1" title="Abstract type, analytical singular mapping." alt="" coords="101,80,276,121"/>
+<area shape="rect" id="node3" href="$structsll__m__singular__mapping__analytic__czarny_1_1sll__t__singular__mapping__analytic__czarny.html" title="Concrete type, analytical singular mapping." alt="" coords="5,169,177,211"/>
+<area shape="rect" id="node4" href="$structsll__m__singular__mapping__analytic__target_1_1sll__t__singular__mapping__analytic__target.html" title="Concrete type, analytical singular mapping." alt="" coords="201,169,373,211"/>
+<area shape="rect" id="node2" href="$structsll__m__singular__mapping__base_1_1sll__c__singular__mapping.html" title="Abstract type, singular mapping." alt="" coords="101,5,276,32"/>
 </map>

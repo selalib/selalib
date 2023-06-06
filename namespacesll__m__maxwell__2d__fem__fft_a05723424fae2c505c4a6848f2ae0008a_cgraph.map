@@ -1,6 +1,7 @@
 <map id="compute_rho_from_e_2d_fem" name="compute_rho_from_e_2d_fem">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__2d__fem__fft.html#a006fdf650e785cedeb1d16b07c90465b" title="multiply_mass_1form" alt="" coords="213,13,377,39"/>
-<area shape="rect" id="node5" href="$namespacesll__m__maxwell__2d__fem__fft.html#ac78e4a0fa7951bd0788f94762af83601" title="Multiply by transpose of dicrete gradient matrix. " alt="" coords="247,63,343,90"/>
-<area shape="rect" id="node3" href="$namespacesll__m__maxwell__2d__fem__fft.html#aa50fa038089df0d0bd86994241630dcb" title="Multiply by the mass matrix. " alt="" coords="425,13,596,39"/>
-<area shape="rect" id="node4" href="$namespacesll__m__spline__fem__utilities.html#a528fc7241e39fd979bd521f0c2d7b350" title="Multiply the vector invec with the spline FEM mass matrix with mass line mass. " alt="" coords="644,5,885,47"/>
+<area shape="rect" id="node1" title="compute rho from e using weak Gauss law ( rho = G^T M_1 e )" alt="" coords="5,23,165,65"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__2d__fem__fft.html#ac78e4a0fa7951bd0788f94762af83601" title="Multiply by transpose of dicrete gradient matrix." alt="" coords="247,5,343,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__2d__fem__fft.html#a006fdf650e785cedeb1d16b07c90465b" title=" " alt="" coords="213,56,377,83"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__2d__fem__fft.html#aa50fa038089df0d0bd86994241630dcb" title="Multiply by the mass matrix." alt="" coords="425,56,596,83"/>
+<area shape="rect" id="node5" href="$namespacesll__m__spline__fem__utilities.html#a528fc7241e39fd979bd521f0c2d7b350" title="Multiply the vector invec with the spline FEM mass matrix with mass line mass." alt="" coords="644,49,885,90"/>
 </map>

@@ -1,0 +1,4 @@
+<map id="sll_collective_scatter_real" name="sll_collective_scatter_real">
+<area shape="rect" id="node1" title="Sends data from one process to all other processes in a communicator." alt="" coords="5,13,196,39"/>
+<area shape="rect" id="node2" href="$namespacesll__m__collective.html#a9a5729d7ca2e55890195f76c8a5cbd62" title="Checks the good execution of collective instruction." alt="" coords="244,5,395,47"/>
+</map>

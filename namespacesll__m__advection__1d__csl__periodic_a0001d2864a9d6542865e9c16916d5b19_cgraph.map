@@ -1,11 +1,12 @@
 <map id="update_solution_csl_periodic" name="update_solution_csl_periodic">
-<area shape="rect" id="node2" href="$namespacesll__m__advection__1d__csl__periodic.html#a2a854b6d456b4307bd6bfabda8c29a26" title="compute_csl_ww" alt="" coords="249,5,382,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__gauss__legendre__integration.html#a0df63a9e8ee884c2d4a0d1f53602a949" title="Returns a 2d array of size (2,npoints) containing gauss&#45;legendre points and weights in the interval [..." alt="" coords="204,56,427,112"/>
-<area shape="rect" id="node4" href="$namespacesll__m__advection__1d__csl__periodic.html#af937e6876cc1afcbe583b713447017f2" title="compute_node_derivative\l_order3" alt="" coords="220,137,411,178"/>
-<area shape="rect" id="node6" href="$namespacesll__m__characteristics__1d__base.html#ad98c7d14825f9703cf4cd5bc33f0233b" title="sll_m_characteristics\l_1d_base::sll_f_process\l_outside_point_periodic" alt="" coords="227,203,403,259"/>
-<area shape="rect" id="node7" href="$namespacesll__m__advection__1d__csl__periodic.html#aa98a9ffa40840c0bbdf8b3fd0bd07b15" title="evaluate_hermite_1d" alt="" coords="500,312,660,339"/>
-<area shape="rect" id="node8" href="$namespacesll__m__advection__1d__csl__periodic.html#a03bf92b99e58381e267caa3da6634abd" title="contribution_gauss\l_lagrange" alt="" coords="243,399,388,441"/>
-<area shape="rect" id="node10" href="$namespacesll__m__advection__1d__csl__periodic.html#a8f900b8856afe2d6ac3ed35ad20d892c" title="contribution_simpson\l_hermite" alt="" coords="234,334,397,375"/>
-<area shape="rect" id="node5" href="$namespacesll__m__advection__1d__csl__periodic.html#a367396d77752de25e7f0567266fe4d8b" title="compute_quadrature" alt="" coords="501,144,659,171"/>
-<area shape="rect" id="node9" href="$namespacesll__m__lagrange__interpolation.html#a8408ec777b0a4163e8d141bd68ff7a0f" title="sll_m_lagrange_interpolation\l::sll_f_lagrange_interpolate" alt="" coords="475,399,685,441"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,187,156,229"/>
+<area shape="rect" id="node2" href="$namespacesll__m__advection__1d__csl__periodic.html#a2a854b6d456b4307bd6bfabda8c29a26" title=" " alt="" coords="249,5,382,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__advection__1d__csl__periodic.html#af937e6876cc1afcbe583b713447017f2" title=" " alt="" coords="220,57,411,98"/>
+<area shape="rect" id="node5" href="$namespacesll__m__advection__1d__csl__periodic.html#a03bf92b99e58381e267caa3da6634abd" title=" " alt="" coords="243,122,388,163"/>
+<area shape="rect" id="node7" href="$namespacesll__m__advection__1d__csl__periodic.html#a8f900b8856afe2d6ac3ed35ad20d892c" title=" " alt="" coords="234,187,397,229"/>
+<area shape="rect" id="node8" href="$namespacesll__m__advection__1d__csl__periodic.html#aa98a9ffa40840c0bbdf8b3fd0bd07b15" title=" " alt="" coords="500,224,660,251"/>
+<area shape="rect" id="node9" href="$namespacesll__m__gauss__legendre__integration.html#a0df63a9e8ee884c2d4a0d1f53602a949" title="Returns a 2d array of size (2,npoints) containing gauss&#45;legendre points and weights in the interval [..." alt="" coords="204,304,427,360"/>
+<area shape="rect" id="node10" href="$namespacesll__m__characteristics__1d__base.html#ad98c7d14825f9703cf4cd5bc33f0233b" title=" " alt="" coords="227,384,403,440"/>
+<area shape="rect" id="node4" href="$namespacesll__m__advection__1d__csl__periodic.html#a367396d77752de25e7f0567266fe4d8b" title=" " alt="" coords="501,64,659,91"/>
+<area shape="rect" id="node6" href="$namespacesll__m__lagrange__interpolation.html#a8408ec777b0a4163e8d141bd68ff7a0f" title=" " alt="" coords="475,122,685,163"/>
 </map>

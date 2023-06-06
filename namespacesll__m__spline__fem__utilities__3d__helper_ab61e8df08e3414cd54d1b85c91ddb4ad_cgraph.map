@@ -1,4 +1,5 @@
 <map id="sll_s_spline_fem_sparsity_mass3d" name="sll_s_spline_fem_sparsity_mass3d">
-<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities__3d__helper.html#a0ecb5b69702c19db85ec6fcf8f5cf530" title="loop2" alt="" coords="243,13,301,39"/>
-<area shape="rect" id="node3" href="$namespacesll__m__spline__fem__utilities__3d__helper.html#a44ec465b69568824a811ff2ba3831a7a" title="loop1" alt="" coords="349,13,408,39"/>
+<area shape="rect" id="node1" title="Helper function to create sparsity pattern of the 3d mass matrix." alt="" coords="5,5,195,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities__3d__helper.html#a0ecb5b69702c19db85ec6fcf8f5cf530" title=" " alt="" coords="243,13,301,39"/>
+<area shape="rect" id="node3" href="$namespacesll__m__spline__fem__utilities__3d__helper.html#a44ec465b69568824a811ff2ba3831a7a" title=" " alt="" coords="349,13,408,39"/>
 </map>

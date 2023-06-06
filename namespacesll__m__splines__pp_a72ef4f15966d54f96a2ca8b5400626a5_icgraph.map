@@ -1,4 +1,5 @@
 <map id="sll_s_spline_pp_b_to_pp_3d_cella" name="sll_s_spline_pp_b_to_pp_3d_cella">
-<area shape="rect" id="node2" href="$namespacesll__m__splines__pp.html#a109b7091f4f1906d9806c109df6c7ac4" title="Convert 3d spline in B form to spline in pp form for clamped spline. " alt="" coords="208,5,363,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__splines__pp.html#a382a523b8cbb98a4c148f5ba85ffb1e0" title="sll_s_spline_evaluate\l_basis_b_form_3d_clamped" alt="" coords="411,5,613,47"/>
+<area shape="rect" id="node1" title="Convert 3d spline in B form in a cell to spline in pp form with clamped boundary in first direction a..." alt="" coords="459,5,613,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__splines__pp.html#a109b7091f4f1906d9806c109df6c7ac4" title="Convert 3d spline in B form to spline in pp form for clamped spline." alt="" coords="256,5,411,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__splines__pp.html#a382a523b8cbb98a4c148f5ba85ffb1e0" title=" " alt="" coords="5,5,208,47"/>
 </map>

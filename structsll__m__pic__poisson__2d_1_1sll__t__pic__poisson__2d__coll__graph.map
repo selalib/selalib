@@ -1,3 +1,9 @@
 <map id="sll_t_pic_poisson_2d" name="sll_t_pic_poisson_2d">
-<area shape="rect" id="node2" href="$structsll__m__pic__poisson__base_1_1sll__c__pic__poisson.html" title="Basic type of Poisson solver for PIC simulations. " alt="" coords="307,63,441,89"/>
+<area shape="rect" id="node1" title="PIC Poisson solver 2d." alt="" coords="617,136,772,163"/>
+<area shape="rect" id="node2" href="$structsll__m__pic__poisson__base_1_1sll__c__pic__poisson.html" title="Basic type of Poisson solver for PIC simulations." alt="" coords="303,63,437,89"/>
+<area shape="rect" id="node3" title=" " alt="" coords="5,32,143,59"/>
+<area shape="rect" id="node4" title=" " alt="" coords="337,113,403,140"/>
+<area shape="rect" id="node5" title=" " alt="" coords="265,165,475,206"/>
+<area shape="rect" id="node6" title=" " alt="" coords="311,336,429,363"/>
+<area shape="rect" id="node7" title=" " alt="" coords="297,387,443,429"/>
 </map>

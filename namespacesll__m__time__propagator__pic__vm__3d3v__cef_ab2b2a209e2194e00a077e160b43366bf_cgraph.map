@@ -1,3 +1,4 @@
 <map id="operatorhp_pic_vm_3d3v" name="operatorhp_pic_vm_3d3v">
-<area shape="rect" id="node2" href="$namespacesll__m__time__propagator__pic__vm__3d3v__cef.html#aedae0d2a1bf6b14f409e4fd8988484d9" title="Helper function for operatorHp. " alt="" coords="240,5,443,32"/>
+<area shape="rect" id="node1" title="Push H_p: Equations to be solved $X^{n+1}=X^n+\Delta t V^n$ $M_1 e^n= M_1 e^n&#45; \int_{t^n}^{t^{n+1}} \..." alt="" coords="5,5,192,32"/>
+<area shape="rect" id="node2" href="$namespacesll__m__time__propagator__pic__vm__3d3v__cef.html#aedae0d2a1bf6b14f409e4fd8988484d9" title="Helper function for operatorHp." alt="" coords="240,5,443,32"/>
 </map>

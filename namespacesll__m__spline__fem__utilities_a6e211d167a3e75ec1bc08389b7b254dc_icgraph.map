@@ -1,4 +1,5 @@
 <map id="sll_s_spline_fem_mass_line_boundary_full" name="sll_s_spline_fem_mass_line_boundary_full">
-<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities__sparse.html#a3fcb7d2b9d5aadd6a42eb295cc25b3b6" title="Set up 1d mass matrix for specific spline degree and profile function. " alt="" coords="225,5,417,61"/>
-<area shape="rect" id="node3" href="$namespacesll__m__maxwell__clamped__1d__trafo.html#a800127433401043caf9d2b00dfa7e79f" title="Initialization. " alt="" coords="465,13,648,54"/>
+<area shape="rect" id="node1" title="Function computing the boundary part for a mass matrix with clamped splines of degree (full version w..." alt="" coords="476,13,648,54"/>
+<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities__sparse.html#a3fcb7d2b9d5aadd6a42eb295cc25b3b6" title="Set up 1d mass matrix for specific spline degree and profile function." alt="" coords="236,5,428,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__clamped__1d__trafo.html#a800127433401043caf9d2b00dfa7e79f" title="Initialization." alt="" coords="5,13,188,54"/>
 </map>

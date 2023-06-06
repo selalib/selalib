@@ -1,12 +1,13 @@
 <map id="sll_s_multiply_gt_1d" name="sll_s_multiply_gt_1d">
-<area shape="rect" id="node2" href="$namespacesll__m__linear__operator__poisson__1d.html#a153e8d661c69b11b4973c5c07969773d" title="sll_m_linear_operator\l_poisson_1d::dot_poisson_1d" alt="" coords="216,5,427,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__linear__operator__schur__eb__1d.html#ac639f132c47856a22399dd739b4fb128" title="sll_m_linear_operator\l_schur_eb_1d::dot_schur_eb_1d" alt="" coords="208,71,435,112"/>
-<area shape="rect" id="node4" href="$namespacesll__m__maxwell__1d__fem.html#aa477d469a63715e37b1d2c9f9d0a57a0" title="sll_m_maxwell_1d_fem\l::multiply_gt" alt="" coords="233,136,409,177"/>
-<area shape="rect" id="node6" href="$namespacesll__m__maxwell__1d__fem__sm.html#ae5d6f36942ad1f3390025da81662e1c4" title="Multiply by transpose of dicrete gradient matrix. " alt="" coords="233,201,409,243"/>
-<area shape="rect" id="node9" href="$namespacesll__m__maxwell__1d__trafo.html#a3372a7daa9bfed18d307a7944907fc9a" title="Multiply by transpose of dicrete gradient matrix. " alt="" coords="231,315,412,356"/>
-<area shape="rect" id="node5" href="$namespacesll__m__maxwell__1d__fem.html#a1e96468d8d3973e8cfde8e1c239ad85a" title="For model with adiabatic electrons. " alt="" coords="509,74,685,130"/>
-<area shape="rect" id="node7" href="$namespacesll__m__maxwell__1d__fem__sm.html#a1dcfb34db3bbc411d2de54105161b30a" title="Compute rho from Gauss law for given efield. " alt="" coords="507,154,687,210"/>
-<area shape="rect" id="node8" href="$namespacesll__m__maxwell__1d__fem__sm.html#a44da88b229b20ed15111c83383990a66" title="For model with adiabatic electrons. " alt="" coords="508,234,687,290"/>
-<area shape="rect" id="node10" href="$namespacesll__m__maxwell__1d__trafo.html#a10b64c7ae3cab98344ca64c90e7dba94" title="Compute rho from Gauss law for given efield. " alt="" coords="483,315,712,356"/>
-<area shape="rect" id="node11" href="$namespacesll__m__maxwell__1d__trafo.html#a903528819de647900ba7230c356a2181" title="For model with adiabatic electrons. " alt="" coords="485,380,709,421"/>
+<area shape="rect" id="node1" title="Multiplication of the input vector in by the transposed derivative matrix G^T" alt="" coords="557,143,712,170"/>
+<area shape="rect" id="node2" href="$namespacesll__m__linear__operator__poisson__1d.html#a153e8d661c69b11b4973c5c07969773d" title=" " alt="" coords="291,5,501,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__linear__operator__schur__eb__1d.html#ac639f132c47856a22399dd739b4fb128" title=" " alt="" coords="283,71,509,112"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__1d__fem.html#aa477d469a63715e37b1d2c9f9d0a57a0" title=" " alt="" coords="308,136,484,177"/>
+<area shape="rect" id="node6" href="$namespacesll__m__maxwell__1d__fem__sm.html#ae5d6f36942ad1f3390025da81662e1c4" title="Multiply by transpose of dicrete gradient matrix." alt="" coords="308,201,484,243"/>
+<area shape="rect" id="node9" href="$namespacesll__m__maxwell__1d__trafo.html#a3372a7daa9bfed18d307a7944907fc9a" title="Multiply by transpose of dicrete gradient matrix." alt="" coords="305,315,487,356"/>
+<area shape="rect" id="node5" href="$namespacesll__m__maxwell__1d__fem.html#a1e96468d8d3973e8cfde8e1c239ad85a" title="For model with adiabatic electrons." alt="" coords="32,74,208,130"/>
+<area shape="rect" id="node7" href="$namespacesll__m__maxwell__1d__fem__sm.html#a44da88b229b20ed15111c83383990a66" title="For model with adiabatic electrons." alt="" coords="31,154,209,210"/>
+<area shape="rect" id="node8" href="$namespacesll__m__maxwell__1d__fem__sm.html#a1dcfb34db3bbc411d2de54105161b30a" title="Compute rho from Gauss law for given efield." alt="" coords="30,234,210,290"/>
+<area shape="rect" id="node10" href="$namespacesll__m__maxwell__1d__trafo.html#a903528819de647900ba7230c356a2181" title="For model with adiabatic electrons." alt="" coords="8,315,232,356"/>
+<area shape="rect" id="node11" href="$namespacesll__m__maxwell__1d__trafo.html#a10b64c7ae3cab98344ca64c90e7dba94" title="Compute rho from Gauss law for given efield." alt="" coords="5,380,235,421"/>
 </map>

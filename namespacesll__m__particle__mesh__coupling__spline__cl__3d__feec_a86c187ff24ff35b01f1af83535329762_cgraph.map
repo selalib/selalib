@@ -1,5 +1,6 @@
 <map id="init_spline_cl_3d_feec" name="init_spline_cl_3d_feec">
+<area shape="rect" id="node1" title="Initializer." alt="" coords="5,57,171,84"/>
 <area shape="rect" id="node2" href="$namespacesll__m__gauss__legendre__integration.html#a0df63a9e8ee884c2d4a0d1f53602a949" title="Returns a 2d array of size (2,npoints) containing gauss&#45;legendre points and weights in the interval [..." alt="" coords="219,5,441,61"/>
-<area shape="rect" id="node3" href="$namespacesll__m__splines__pp.html#a05168b8afdfed2b282ee242d8d2a2225" title="Initialize sll_t_spline_pp_3d object. " alt="" coords="252,86,408,127"/>
-<area shape="rect" id="node4" href="$namespacesll__m__splines__pp.html#a7e2a3943e2c330a0a9597b535ce259b3" title="Initialize sll_t_spline_pp_1d object (Set poly_coeffs depending on degree) " alt="" coords="489,86,645,127"/>
+<area shape="rect" id="node3" href="$namespacesll__m__splines__pp.html#a05168b8afdfed2b282ee242d8d2a2225" title="Initialize sll_t_spline_pp_3d object." alt="" coords="252,86,408,127"/>
+<area shape="rect" id="node4" href="$namespacesll__m__splines__pp.html#a7e2a3943e2c330a0a9597b535ce259b3" title="Initialize sll_t_spline_pp_1d object (Set poly_coeffs depending on degree)" alt="" coords="489,86,645,127"/>
 </map>

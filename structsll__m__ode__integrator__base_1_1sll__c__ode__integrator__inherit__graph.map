@@ -1,11 +1,12 @@
 <map id="sll_c_ode_integrator" name="sll_c_ode_integrator">
-<area shape="rect" id="node2" href="$structsll__m__rk__explicit_1_1sll__t__rk1e__fwd__euler.html" title="sll_t_rk1e_fwd_euler" alt="" coords="207,5,363,32"/>
-<area shape="rect" id="node3" href="$structsll__m__rk__explicit_1_1sll__t__rk2e__heun.html" title="sll_t_rk2e_heun" alt="" coords="223,56,347,83"/>
-<area shape="rect" id="node4" href="$structsll__m__rk__explicit_1_1sll__t__rk2e__midpoint.html" title="sll_t_rk2e_midpoint" alt="" coords="209,107,360,133"/>
-<area shape="rect" id="node5" href="$structsll__m__rk__explicit_1_1sll__t__rk2e__ralston.html" title="sll_t_rk2e_ralston" alt="" coords="216,157,353,184"/>
-<area shape="rect" id="node6" href="$structsll__m__rk__explicit_1_1sll__t__rk3e__heun3.html" title="sll_t_rk3e_heun3" alt="" coords="219,208,351,235"/>
-<area shape="rect" id="node7" href="$structsll__m__rk__explicit_1_1sll__t__rk4e__classic.html" title="sll_t_rk4e_classic" alt="" coords="217,259,353,285"/>
-<area shape="rect" id="node8" href="$structsll__m__rk__implicit_1_1sll__c__rk__implicit.html" title="sll_c_rk_implicit" alt="" coords="221,309,348,336"/>
-<area shape="rect" id="node9" href="$structsll__m__rk__implicit_1_1sll__t__rk1d__bwd__euler.html" title="sll_t_rk1d_bwd_euler" alt="" coords="411,284,569,311"/>
-<area shape="rect" id="node10" href="$structsll__m__rk__implicit_1_1sll__t__rk1d__trapezoid.html" title="sll_t_rk1d_trapezoid" alt="" coords="413,335,567,361"/>
+<area shape="rect" id="node1" title="Base class for standard ODE integrators." alt="" coords="5,157,159,184"/>
+<area shape="rect" id="node2" href="$structsll__m__rk__explicit_1_1sll__t__rk1e__fwd__euler.html" title=" " alt="" coords="207,5,361,32"/>
+<area shape="rect" id="node3" href="$structsll__m__rk__explicit_1_1sll__t__rk2e__heun.html" title=" " alt="" coords="222,56,346,83"/>
+<area shape="rect" id="node4" href="$structsll__m__rk__explicit_1_1sll__t__rk2e__midpoint.html" title=" " alt="" coords="209,107,359,133"/>
+<area shape="rect" id="node5" href="$structsll__m__rk__explicit_1_1sll__t__rk2e__ralston.html" title=" " alt="" coords="215,157,353,184"/>
+<area shape="rect" id="node6" href="$structsll__m__rk__explicit_1_1sll__t__rk3e__heun3.html" title=" " alt="" coords="218,208,350,235"/>
+<area shape="rect" id="node7" href="$structsll__m__rk__explicit_1_1sll__t__rk4e__classic.html" title=" " alt="" coords="216,259,352,285"/>
+<area shape="rect" id="node8" href="$structsll__m__rk__implicit_1_1sll__c__rk__implicit.html" title=" " alt="" coords="221,309,347,336"/>
+<area shape="rect" id="node9" href="$structsll__m__rk__implicit_1_1sll__t__rk1d__bwd__euler.html" title=" " alt="" coords="409,284,568,311"/>
+<area shape="rect" id="node10" href="$structsll__m__rk__implicit_1_1sll__t__rk1d__trapezoid.html" title=" " alt="" coords="412,335,565,361"/>
 </map>

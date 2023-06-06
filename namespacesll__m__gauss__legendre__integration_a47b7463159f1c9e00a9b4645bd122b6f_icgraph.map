@@ -1,7 +1,8 @@
 <map id="sll_f_gauss_legendre_weights" name="sll_f_gauss_legendre_weights">
-<area shape="rect" id="node2" href="$namespacesll__m__gyroaverage__utilities.html#ace9ca74c71712dea32a595db9b2585fa" title="sll_m_gyroaverage_utilities\l::sll_s_compute_mu" alt="" coords="224,5,427,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__poisson__2d__fem__sps__dense.html#a2e4d51d393a5946c2411faf7d610fedb" title="sll_m_poisson_2d_fem\l_sps_dense::s_poisson\l_2d_fem_sps_dense__init" alt="" coords="231,71,419,127"/>
-<area shape="rect" id="node4" href="$namespacesll__m__poisson__2d__fem__sps__stencil__new.html#a127cdcda85ae466495f5c438070b5b44" title="sll_m_poisson_2d_fem\l_sps_stencil_new::s_poisson\l_2d_fem_sps_stencil_new__init" alt="" coords="212,151,439,207"/>
-<area shape="rect" id="node5" href="$namespacesll__m__qn__solver__2d__fem__sps__stencil__new.html#a56eb8bb5df31b95e1bf5d8ec593af183" title="sll_m_qn_solver_2d\l_fem_sps_stencil_new\l::s_qn_solver_2d_fem\l_sps_stencil_new__init" alt="" coords="240,232,411,303"/>
-<area shape="rect" id="node6" href="$namespacesll__m__dg__interpolator__1d.html#aab53d5893320fe81960e78fc061d7239" title="sll_m_dg_interpolator\l_1d::sll_s_dg_interpolator\l_1d_init" alt="" coords="231,327,419,383"/>
+<area shape="rect" id="node1" title=" " alt="" coords="280,181,439,222"/>
+<area shape="rect" id="node2" href="$namespacesll__m__poisson__2d__fem__sps__dense.html#a2e4d51d393a5946c2411faf7d610fedb" title=" " alt="" coords="25,5,213,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__poisson__2d__fem__sps__stencil__new.html#a127cdcda85ae466495f5c438070b5b44" title=" " alt="" coords="5,85,232,141"/>
+<area shape="rect" id="node4" href="$namespacesll__m__qn__solver__2d__fem__sps__stencil__new.html#a56eb8bb5df31b95e1bf5d8ec593af183" title=" " alt="" coords="33,166,204,237"/>
+<area shape="rect" id="node5" href="$namespacesll__m__gyroaverage__utilities.html#ace9ca74c71712dea32a595db9b2585fa" title=" " alt="" coords="17,261,220,302"/>
+<area shape="rect" id="node6" href="$namespacesll__m__dg__interpolator__1d.html#aab53d5893320fe81960e78fc061d7239" title=" " alt="" coords="25,327,213,383"/>
 </map>

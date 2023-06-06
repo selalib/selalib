@@ -1,3 +1,12 @@
 <map id="sll_t_qn_solver_2d_polar" name="sll_t_qn_solver_2d_polar">
-<area shape="rect" id="node2" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib. " alt="" coords="353,49,424,76"/>
+<area shape="rect" id="node1" title="Class for 2D Poisson solver in polar coordinates." alt="" coords="687,362,829,403"/>
+<area shape="rect" id="node2" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib." alt="" coords="404,95,475,121"/>
+<area shape="rect" id="node3" title=" " alt="" coords="69,5,134,32"/>
+<area shape="rect" id="node4" title=" " alt="" coords="33,95,170,121"/>
+<area shape="rect" id="node5" title=" " alt="" coords="5,145,197,201"/>
+<area shape="rect" id="node6" title=" " alt="" coords="400,257,479,284"/>
+<area shape="rect" id="node7" title=" " alt="" coords="390,333,489,360"/>
+<area shape="rect" id="node8" title=" " alt="" coords="347,385,532,426"/>
+<area shape="rect" id="node9" title=" " alt="" coords="405,451,473,477"/>
+<area shape="rect" id="node10" title=" " alt="" coords="347,502,532,543"/>
 </map>

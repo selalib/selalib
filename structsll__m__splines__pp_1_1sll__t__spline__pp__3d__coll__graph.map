@@ -1,3 +1,6 @@
 <map id="sll_t_spline_pp_3d" name="sll_t_spline_pp_3d">
-<area shape="rect" id="node2" href="$structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html" title="arbitrary degree 1d spline " alt="" coords="170,316,311,343"/>
+<area shape="rect" id="node1" title="arbitrary degree 3d spline" alt="" coords="266,451,407,477"/>
+<area shape="rect" id="node2" href="$structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html" title="arbitrary degree 1d spline" alt="" coords="174,316,315,343"/>
+<area shape="rect" id="node3" title=" " alt="" coords="5,5,143,32"/>
+<area shape="rect" id="node4" title=" " alt="" coords="277,5,394,32"/>
 </map>

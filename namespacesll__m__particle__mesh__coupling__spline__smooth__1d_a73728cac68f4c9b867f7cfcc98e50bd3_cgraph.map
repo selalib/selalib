@@ -1,3 +1,4 @@
 <map id="add_particle_mass_full_spline_smooth_1d" name="add_particle_mass_full_spline_smooth_1d">
-<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__smooth__1d.html#a9a2b0cc3c66e1b47a6523e081ac02312" title="Add charge of one particle with smoothing. " alt="" coords="225,13,353,39"/>
+<area shape="rect" id="node1" title="Add particle mass for one particle (full matrix) WARNING: THIS FUNCTION SEEMS TO HAVE BUGS." alt="" coords="5,5,177,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__smooth__1d.html#a9a2b0cc3c66e1b47a6523e081ac02312" title="Add charge of one particle with smoothing." alt="" coords="225,13,353,39"/>
 </map>

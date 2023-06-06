@@ -1,3 +1,10 @@
 <map id="sll_t_nufft_2d" name="sll_t_nufft_2d">
-<area shape="rect" id="node2" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib. " alt="" coords="111,155,181,181"/>
+<area shape="rect" id="node1" title="Nufft object for 2d interpolation. It contains fft plan and 1d array to pass data to nufft2d subrouti..." alt="" coords="660,271,769,297"/>
+<area shape="rect" id="node2" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib." alt="" coords="411,104,482,131"/>
+<area shape="rect" id="node3" title=" " alt="" coords="69,85,134,112"/>
+<area shape="rect" id="node4" title=" " alt="" coords="33,196,170,223"/>
+<area shape="rect" id="node5" title=" " alt="" coords="5,5,197,61"/>
+<area shape="rect" id="node6" title=" " alt="" coords="347,281,547,322"/>
+<area shape="rect" id="node7" title=" " alt="" coords="388,404,505,431"/>
+<area shape="rect" id="node8" title=" " alt="" coords="353,471,541,513"/>
 </map>

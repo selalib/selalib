@@ -1,6 +1,14 @@
 <map id="sll_t_time_propagator_pic_vm_1d2v_zigsub" name="sll_t_time_propagator_pic_vm_1d2v_zigsub">
-<area shape="rect" id="node2" href="$structsll__m__time__propagator__base_1_1sll__c__time__propagator__base.html" title="Type for Hamiltonian splittings. " alt="" coords="635,16,839,43"/>
-<area shape="rect" id="node3" href="$structsll__m__hamiltonian__splitting__base_1_1sll__c__hamiltonian__splitting__base.html" title="Type for Hamiltonian splittings. " alt="" coords="257,5,492,32"/>
-<area shape="rect" id="node10" href="$structsll__m__binomial__filter_1_1sll__t__binomial__filter.html" title="sll_t_binomial_filter" alt="" coords="661,212,812,239"/>
-<area shape="rect" id="node11" href="$structsll__m__filter__base__1d_1_1sll__c__filter__base__1d.html" title="sll_c_filter_base_1d" alt="" coords="300,291,449,317"/>
+<area shape="rect" id="node1" title="Hamiltonian splitting type for Vlasov&#45;Maxwell 1d2v." alt="" coords="1019,403,1183,445"/>
+<area shape="rect" id="node2" href="$structsll__m__time__propagator__base_1_1sll__c__time__propagator__base.html" title="Type for Hamiltonian splittings." alt="" coords="635,16,839,43"/>
+<area shape="rect" id="node3" href="$structsll__m__hamiltonian__splitting__base_1_1sll__c__hamiltonian__splitting__base.html" title="Type for Hamiltonian splittings." alt="" coords="257,5,492,32"/>
+<area shape="rect" id="node4" title=" " alt="" coords="342,164,407,191"/>
+<area shape="rect" id="node10" href="$structsll__m__binomial__filter_1_1sll__t__binomial__filter.html" title=" " alt="" coords="661,212,812,239"/>
+<area shape="rect" id="node5" title=" " alt="" coords="661,473,813,514"/>
+<area shape="rect" id="node6" title=" " alt="" coords="665,538,808,579"/>
+<area shape="rect" id="node7" title=" " alt="" coords="666,603,807,645"/>
+<area shape="rect" id="node8" title=" " alt="" coords="5,229,143,256"/>
+<area shape="rect" id="node11" href="$structsll__m__filter__base__1d_1_1sll__c__filter__base__1d.html" title=" " alt="" coords="300,291,449,317"/>
+<area shape="rect" id="node9" title=" " alt="" coords="632,669,841,710"/>
+<area shape="rect" id="node12" title=" " alt="" coords="316,376,433,403"/>
 </map>

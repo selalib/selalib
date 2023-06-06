@@ -1,3 +1,4 @@
 <map id="sll_s_spline_fem_mixedmass_line" name="sll_s_spline_fem_mixedmass_line">
-<area shape="rect" id="node2" href="$namespacesll__m__gauss__legendre__integration.html#a0df63a9e8ee884c2d4a0d1f53602a949" title="Returns a 2d array of size (2,npoints) containing gauss&#45;legendre points and weights in the interval [..." alt="" coords="297,5,520,61"/>
+<area shape="rect" id="node1" title="Helper function to find line of mass matrix ( N_i^p N_j^{p&#45;1}))" alt="" coords="5,20,248,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__gauss__legendre__integration.html#a0df63a9e8ee884c2d4a0d1f53602a949" title="Returns a 2d array of size (2,npoints) containing gauss&#45;legendre points and weights in the interval [..." alt="" coords="296,5,519,61"/>
 </map>

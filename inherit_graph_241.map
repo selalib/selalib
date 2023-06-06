@@ -1,4 +1,10 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$structsll__m__pic__poisson__base_1_1sll__c__pic__poisson.html" title="Basic type of Poisson solver for PIC simulations. " alt="" coords="5,5,140,32"/>
-<area shape="rect" id="node2" href="$structsll__m__pic__poisson__2d_1_1sll__t__pic__poisson__2d.html" title="PIC Poisson solver 2d. " alt="" coords="188,5,343,32"/>
+<area shape="rect" id="node1" href="$structsll__m__maxwell__3d__base_1_1sll__c__maxwell__3d__base.html" title=" " alt="" coords="5,107,180,133"/>
+<area shape="rect" id="node2" href="$structsll__m__maxwell__3d__fem_1_1sll__t__maxwell__3d__fem.html" title=" " alt="" coords="239,5,407,32"/>
+<area shape="rect" id="node3" href="$structsll__m__maxwell__3d__fem__fft_1_1sll__t__maxwell__3d__fem__fft.html" title=" " alt="" coords="228,56,417,83"/>
+<area shape="rect" id="node4" href="$structsll__m__maxwell__3d__trafo_1_1sll__t__maxwell__3d__trafo.html" title=" " alt="" coords="236,107,409,133"/>
+<area shape="rect" id="node6" href="$structsll__m__maxwell__clamped__3d__fem_1_1sll__t__maxwell__clamped__3d__fem.html" title=" " alt="" coords="235,158,410,199"/>
+<area shape="rect" id="node7" href="$structsll__m__maxwell__clamped__3d__trafo_1_1sll__t__maxwell__clamped__3d__trafo.html" title=" " alt="" coords="235,223,410,265"/>
+<area shape="rect" id="node5" href="$structsll__m__maxwell__3d__trafo__parallel_1_1sll__t__maxwell__3d__trafo__parallel.html" title=" " alt="" coords="466,99,639,141"/>
+<area shape="rect" id="node8" href="$structsll__m__maxwell__clamped__3d__trafo__parallel_1_1sll__t__maxwell__clamped__3d__trafo__parallel.html" title=" " alt="" coords="465,223,640,265"/>
 </map>

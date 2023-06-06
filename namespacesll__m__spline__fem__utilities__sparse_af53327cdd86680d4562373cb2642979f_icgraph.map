@@ -1,3 +1,4 @@
 <map id="sll_s_spline_fem_mass1d_full" name="sll_s_spline_fem_mass1d_full">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__1d__trafo.html#a379870fb13734539528b6b4fd558963f" title="Initialization. " alt="" coords="269,5,451,47"/>
+<area shape="rect" id="node1" title="Set up 1d mass matrix for specific spline degree and profile function." alt="" coords="235,13,451,39"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__1d__trafo.html#a379870fb13734539528b6b4fd558963f" title="Initialization." alt="" coords="5,5,187,47"/>
 </map>

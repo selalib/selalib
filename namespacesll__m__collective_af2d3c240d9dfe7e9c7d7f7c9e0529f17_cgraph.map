@@ -1,3 +1,4 @@
 <map id="sll_f_get_collective_size" name="sll_f_get_collective_size">
-<area shape="rect" id="node2" href="$namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" title="Checks if the pointer ptr is associated to an object. " alt="" coords="233,5,411,32"/>
+<area shape="rect" id="node1" title="Determines the size of the group associated with a communicator." alt="" coords="5,5,185,32"/>
+<area shape="rect" id="node2" href="$namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" title="Checks if the pointer ptr is associated to an object." alt="" coords="233,5,411,32"/>
 </map>

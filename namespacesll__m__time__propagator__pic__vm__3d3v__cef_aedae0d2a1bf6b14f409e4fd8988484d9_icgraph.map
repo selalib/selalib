@@ -1,3 +1,4 @@
 <map id="compute_particle_boundary" name="compute_particle_boundary">
-<area shape="rect" id="node2" href="$namespacesll__m__time__propagator__pic__vm__3d3v__cef.html#ab2b2a209e2194e00a077e160b43366bf" title="Push H_p: Equations to be solved $X^{n+1}=X^n+ t V^n$ $M_1 e^n= M_1 e^n&#45; {t^n}^{t^{n+1}} {}^1(X())^ d..." alt="" coords="256,5,443,32"/>
+<area shape="rect" id="node1" title="Helper function for operatorHp." alt="" coords="240,5,443,32"/>
+<area shape="rect" id="node2" href="$namespacesll__m__time__propagator__pic__vm__3d3v__cef.html#ab2b2a209e2194e00a077e160b43366bf" title="Push H_p: Equations to be solved $X^{n+1}=X^n+\Delta t V^n$ $M_1 e^n= M_1 e^n&#45; \int_{t^n}^{t^{n+1}} \..." alt="" coords="5,5,192,32"/>
 </map>

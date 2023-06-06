@@ -1,3 +1,4 @@
 <map id="sll_s_poisson_2d_periodic_par_solve_alt" name="sll_s_poisson_2d_periodic_par_solve_alt">
-<area shape="rect" id="node2" href="$namespacesll__m__fft.html#a98e3ba2b5431c58a3f5100ac171616a5" title="Compute fast Fourier transform in complex to complex mode. " alt="" coords="244,5,380,47"/>
+<area shape="rect" id="node1" title="Note that the equation that is solved is: &#160;Thus the user is responsible for giving the proper sign to..." alt="" coords="5,5,196,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__fft.html#a98e3ba2b5431c58a3f5100ac171616a5" title="Compute fast Fourier transform in complex to complex mode." alt="" coords="244,5,380,47"/>
 </map>

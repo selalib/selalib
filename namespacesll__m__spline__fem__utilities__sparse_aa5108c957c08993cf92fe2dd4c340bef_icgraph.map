@@ -1,7 +1,8 @@
 <map id="sll_s_spline_fem_sparsity_mass_clamped" name="sll_s_spline_fem_sparsity_mass_clamped">
-<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities__sparse.html#aeca2e29e9f4de346cf146f50e54cd7ee" title="Set up 1d mass matrix (sparsity pattern and values) " alt="" coords="243,71,431,112"/>
-<area shape="rect" id="node5" href="$namespacesll__m__spline__fem__utilities__sparse.html#a3fcb7d2b9d5aadd6a42eb295cc25b3b6" title="Set up 1d mass matrix for specific spline degree and profile function. " alt="" coords="243,136,431,177"/>
-<area shape="rect" id="node3" href="$namespacesll__m__maxwell__clamped__1d__fem__sm.html#a400fe28b25203e207ad0786874c32912" title="Initialization. " alt="" coords="479,5,696,47"/>
-<area shape="rect" id="node4" href="$namespacesll__m__maxwell__clamped__3d__fem.html#afadba212d3f01a688b12c751068d1707" title="Initialization. " alt="" coords="496,71,679,112"/>
-<area shape="rect" id="node6" href="$namespacesll__m__maxwell__clamped__1d__trafo.html#a800127433401043caf9d2b00dfa7e79f" title="Initialization. " alt="" coords="496,136,679,177"/>
+<area shape="rect" id="node1" title="Helper function to create sparsity pattern of the clamped mass matrix." alt="" coords="507,104,696,145"/>
+<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities__sparse.html#aeca2e29e9f4de346cf146f50e54cd7ee" title="Set up 1d mass matrix (sparsity pattern and values)" alt="" coords="271,71,459,112"/>
+<area shape="rect" id="node5" href="$namespacesll__m__spline__fem__utilities__sparse.html#a3fcb7d2b9d5aadd6a42eb295cc25b3b6" title="Set up 1d mass matrix for specific spline degree and profile function." alt="" coords="271,136,459,177"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__clamped__1d__fem__sm.html#a400fe28b25203e207ad0786874c32912" title="Initialization." alt="" coords="5,5,223,47"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__clamped__3d__fem.html#afadba212d3f01a688b12c751068d1707" title="Initialization." alt="" coords="23,71,205,112"/>
+<area shape="rect" id="node6" href="$namespacesll__m__maxwell__clamped__1d__trafo.html#a800127433401043caf9d2b00dfa7e79f" title="Initialization." alt="" coords="23,136,205,177"/>
 </map>

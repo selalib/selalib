@@ -1,3 +1,9 @@
 <map id="deallocate_compressed_buffer_obj" name="deallocate_compressed_buffer_obj">
-<area shape="rect" id="node2" href="$namespacesll__m__compression.html#a6d61e5384cf55387f7f96cdccb330951" title="compress buffer " alt="" coords="229,13,389,39"/>
+<area shape="rect" id="node1" title=" " alt="" coords="1008,71,1184,112"/>
+<area shape="rect" id="node2" href="$namespacesll__m__compression.html#a6d61e5384cf55387f7f96cdccb330951" title="compress buffer" alt="" coords="785,78,945,105"/>
+<area shape="rect" id="node3" href="$namespacesll__m__decomposition.html#a9cb67d2e33dc30e7e03d12f573b84e23" title=" " alt="" coords="515,20,721,61"/>
+<area shape="rect" id="node7" href="$namespacesll__m__decomposition__advanced.html#a9b934353423d1849f580dcf4a6e1ca0c" title=" " alt="" coords="769,129,960,185"/>
+<area shape="rect" id="node6" href="$namespacesll__m__decomposition__advanced.html#af42d554bcb19c7ec7d9f6de8acc48397" title=" " alt="" coords="531,86,705,142"/>
+<area shape="rect" id="node4" href="$namespacesll__m__decomposition.html#af201a566cea830a31ede199cbf1b2d4c" title=" " alt="" coords="260,13,467,69"/>
+<area shape="rect" id="node5" href="$interfacesll__m__decomposition_1_1sll__f__apply__halo__exchange.html#ae54c6b0143bf098b56199fa66152c113" title=" " alt="" coords="5,5,212,76"/>
 </map>

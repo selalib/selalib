@@ -1,4 +1,5 @@
 <map id="l2projection_1d_fem_sm" name="l2projection_1d_fem_sm">
+<area shape="rect" id="node1" title="Compute the L2 projection of a given function f on periodic splines of given degree." alt="" coords="5,20,188,47"/>
 <area shape="rect" id="node2" href="$namespacesll__m__maxwell__1d__fem__sm.html#a0e20fad6ab1f4e0dc094585298aff7d4" title="Compute the FEM right&#45;hand&#45;side for a given function f and periodic splines of given degree Its compo..." alt="" coords="236,20,439,47"/>
 <area shape="rect" id="node3" href="$namespacesll__m__gauss__legendre__integration.html#a0df63a9e8ee884c2d4a0d1f53602a949" title="Returns a 2d array of size (2,npoints) containing gauss&#45;legendre points and weights in the interval [..." alt="" coords="487,5,709,61"/>
 </map>

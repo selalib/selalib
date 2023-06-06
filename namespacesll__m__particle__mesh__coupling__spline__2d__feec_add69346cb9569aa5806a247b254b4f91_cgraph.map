@@ -1,4 +1,5 @@
 <map id="add_particle_mass_spline_2d_feec" name="add_particle_mass_spline_2d_feec">
-<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__2d__feec.html#a81cd837d9e71ab24c22efd9ad75a07d9" title="convert_x_to_xbox" alt="" coords="261,5,407,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__particle__mesh__coupling__spline__2d__feec.html#aa0a1a91bcb700facfc28bd973bc6ab5c" title="convert_index_2d_to_1d" alt="" coords="244,56,424,83"/>
+<area shape="rect" id="node1" title="Add charge of one particle." alt="" coords="5,23,196,65"/>
+<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__2d__feec.html#aa0a1a91bcb700facfc28bd973bc6ab5c" title=" " alt="" coords="244,5,424,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__particle__mesh__coupling__spline__2d__feec.html#a81cd837d9e71ab24c22efd9ad75a07d9" title=" " alt="" coords="261,56,407,83"/>
 </map>

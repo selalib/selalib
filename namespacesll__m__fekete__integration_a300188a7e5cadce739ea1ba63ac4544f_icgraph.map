@@ -1,4 +1,5 @@
 <map id="triangle_area" name="triangle_area">
-<area shape="rect" id="node2" href="$namespacesll__m__fekete__integration.html#acac4a2483e951c19928f9c4de14738d5" title="Writes fekete points coordinates of a hex&#45;mesh reference triangle. " alt="" coords="161,13,295,39"/>
-<area shape="rect" id="node3" href="$namespacesll__m__fekete__integration.html#adceb8456a1011a2bb4dcecfd28374463" title="This function is supposed to write all django input files needed for a Django/Jorek simulation..." alt="" coords="343,5,508,47"/>
+<area shape="rect" id="node1" title=" " alt="" coords="400,13,508,39"/>
+<area shape="rect" id="node2" href="$namespacesll__m__fekete__integration.html#acac4a2483e951c19928f9c4de14738d5" title="Writes fekete points coordinates of a hex&#45;mesh reference triangle." alt="" coords="219,13,352,39"/>
+<area shape="rect" id="node3" href="$namespacesll__m__fekete__integration.html#adceb8456a1011a2bb4dcecfd28374463" title="This function is supposed to write all django input files needed for a Django/Jorek simulation." alt="" coords="5,5,171,47"/>
 </map>

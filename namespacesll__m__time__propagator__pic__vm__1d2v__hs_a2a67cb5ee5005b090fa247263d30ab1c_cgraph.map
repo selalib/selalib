@@ -1,3 +1,4 @@
 <map id="operatorhp1_pic_vm_1d2v_hs" name="operatorhp1_pic_vm_1d2v_hs">
-<area shape="rect" id="node2" href="$namespacesll__m__time__propagator__pic__vm__1d2v__hs.html#a050e749e580159d46974e5e42880997d" title="compute_particle_boundary\l_current" alt="" coords="208,5,411,47"/>
+<area shape="rect" id="node1" title="Push Hp1: Equations to solve are \partial_t f + v_1 \partial_{x_1} f = 0 &#45;&gt; X_new = X_old + dt V_1 V_..." alt="" coords="5,5,160,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__time__propagator__pic__vm__1d2v__hs.html#a050e749e580159d46974e5e42880997d" title=" " alt="" coords="208,5,411,47"/>
 </map>

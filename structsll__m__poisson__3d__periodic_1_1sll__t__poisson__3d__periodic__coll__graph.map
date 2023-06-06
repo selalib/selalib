@@ -1,3 +1,9 @@
 <map id="sll_t_poisson_3d_periodic" name="sll_t_poisson_3d_periodic">
-<area shape="rect" id="node2" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib. " alt="" coords="111,147,181,174"/>
+<area shape="rect" id="node1" title="Structure to solve Poisson equation on 3d domain. Mesh is cartesian and all boundary conditions are p..." alt="" coords="600,255,788,281"/>
+<area shape="rect" id="node2" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib." alt="" coords="387,108,458,135"/>
+<area shape="rect" id="node3" title=" " alt="" coords="69,85,134,112"/>
+<area shape="rect" id="node4" title=" " alt="" coords="33,197,170,224"/>
+<area shape="rect" id="node5" title=" " alt="" coords="5,5,197,61"/>
+<area shape="rect" id="node6" title=" " alt="" coords="347,280,499,336"/>
+<area shape="rect" id="node7" title=" " alt="" coords="364,364,481,391"/>
 </map>

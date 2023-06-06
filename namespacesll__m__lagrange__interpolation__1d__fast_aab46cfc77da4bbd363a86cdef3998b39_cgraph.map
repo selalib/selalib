@@ -1,8 +1,9 @@
 <map id="sll_s_lagrange_interpolation_1d_fast_disp_centered_periodicl" name="sll_s_lagrange_interpolation_1d_fast_disp_centered_periodicl">
-<area shape="rect" id="node2" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#a7f4d88f171a861b1efa88dc385690aad" title="vectorizable 6&#45;pt&#45;lagrange interpolation " alt="" coords="292,5,397,32"/>
-<area shape="rect" id="node4" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#a4256739817750a8ef482115919ff3469" title="single point 6&#45;pt&#45;lagrange interpolation " alt="" coords="307,56,382,83"/>
-<area shape="rect" id="node5" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#ac816afaf40d8b320cdd6fe0d60bd6381" title="vectorizable 4&#45;pt&#45;lagrange interpolation " alt="" coords="292,107,397,133"/>
-<area shape="rect" id="node7" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#af837ccecbba2b8eece28c134d0302bb6" title="single point 4&#45;pt&#45;lagrange interpolation " alt="" coords="307,157,382,184"/>
-<area shape="rect" id="node3" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#ad9f17b7a010913e89f73a0be4351071c" title="Compute coefficients for Lagrange interpolation for normalized displacement p. " alt="" coords="445,44,560,71"/>
-<area shape="rect" id="node6" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#a1e5686ba11a77c998f3a2e3925279956" title="Compute coefficients for Lagrange interpolation for normalized displacement p. " alt="" coords="445,120,560,147"/>
+<area shape="rect" id="node1" title="Lagrange interpolation centered around the interval of displacement, periodic boundary condtions,..." alt="" coords="5,74,244,115"/>
+<area shape="rect" id="node2" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#af837ccecbba2b8eece28c134d0302bb6" title="single point 4&#45;pt&#45;lagrange interpolation" alt="" coords="307,5,382,32"/>
+<area shape="rect" id="node4" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#ac816afaf40d8b320cdd6fe0d60bd6381" title="vectorizable 4&#45;pt&#45;lagrange interpolation" alt="" coords="292,56,397,83"/>
+<area shape="rect" id="node5" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#a4256739817750a8ef482115919ff3469" title="single point 6&#45;pt&#45;lagrange interpolation" alt="" coords="307,107,382,133"/>
+<area shape="rect" id="node7" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#a7f4d88f171a861b1efa88dc385690aad" title="vectorizable 6&#45;pt&#45;lagrange interpolation" alt="" coords="292,157,397,184"/>
+<area shape="rect" id="node3" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#a1e5686ba11a77c998f3a2e3925279956" title="Compute coefficients for Lagrange interpolation for normalized displacement p." alt="" coords="445,44,560,71"/>
+<area shape="rect" id="node6" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#ad9f17b7a010913e89f73a0be4351071c" title="Compute coefficients for Lagrange interpolation for normalized displacement p." alt="" coords="445,120,560,147"/>
 </map>

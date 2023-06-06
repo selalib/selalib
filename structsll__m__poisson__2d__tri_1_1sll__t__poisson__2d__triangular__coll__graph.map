@@ -1,3 +1,7 @@
 <map id="sll_t_poisson_2d_triangular" name="sll_t_poisson_2d_triangular">
-<area shape="rect" id="node3" href="$structsll__m__triangular__meshes_1_1sll__t__triangular__mesh__2d.html" title="2d hexagonal mesh " alt="" coords="212,309,397,335"/>
+<area shape="rect" id="node1" title="Derived type for Poisson solver on unstructured mesh with triangles." alt="" coords="95,465,293,492"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,5,71,32"/>
+<area shape="rect" id="node3" href="$structsll__m__triangular__meshes_1_1sll__t__triangular__mesh__2d.html" title="2d hexagonal mesh" alt="" coords="209,309,395,335"/>
+<area shape="rect" id="node4" title=" " alt="" coords="96,5,233,32"/>
+<area shape="rect" id="node5" title=" " alt="" coords="318,5,435,32"/>
 </map>

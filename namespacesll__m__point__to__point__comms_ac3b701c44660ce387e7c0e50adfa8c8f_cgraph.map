@@ -1,8 +1,9 @@
 <map id="sll_s_comm_receive_real64" name="sll_s_comm_receive_real64">
-<area shape="rect" id="node2" href="$namespacesll__m__point__to__point__comms.html#ace7366fed79af3987767fde1b8184410" title="port_is_busy" alt="" coords="231,5,335,32"/>
-<area shape="rect" id="node4" href="$namespacesll__m__point__to__point__comms.html#a649d95ce15846973ed2e19fcf54b02fe" title="flip_buffer" alt="" coords="240,56,327,83"/>
-<area shape="rect" id="node6" href="$namespacesll__m__point__to__point__comms.html#a419cb5e1f63300697382a581bc8c7862" title="receive_tag" alt="" coords="234,107,333,133"/>
-<area shape="rect" id="node7" href="$namespacesll__m__collective.html#a9a5729d7ca2e55890195f76c8a5cbd62" title="Checks the good execution of collective instruction. " alt="" coords="208,158,359,199"/>
-<area shape="rect" id="node3" href="$namespacesll__m__point__to__point__comms.html#a8b121863ece95e8dd94458f440835b18" title="check_port" alt="" coords="407,19,500,45"/>
-<area shape="rect" id="node5" href="$namespacesll__m__point__to__point__comms.html#a2ec99c657fccfca4a2631c9408e2a9c1" title="flip_bit" alt="" coords="420,81,487,108"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,74,160,115"/>
+<area shape="rect" id="node2" href="$namespacesll__m__point__to__point__comms.html#a649d95ce15846973ed2e19fcf54b02fe" title=" " alt="" coords="240,56,327,83"/>
+<area shape="rect" id="node5" href="$namespacesll__m__point__to__point__comms.html#ace7366fed79af3987767fde1b8184410" title=" " alt="" coords="231,5,335,32"/>
+<area shape="rect" id="node6" href="$namespacesll__m__point__to__point__comms.html#a419cb5e1f63300697382a581bc8c7862" title=" " alt="" coords="234,107,333,133"/>
+<area shape="rect" id="node7" href="$namespacesll__m__collective.html#a9a5729d7ca2e55890195f76c8a5cbd62" title="Checks the good execution of collective instruction." alt="" coords="208,158,359,199"/>
+<area shape="rect" id="node3" href="$namespacesll__m__point__to__point__comms.html#a8b121863ece95e8dd94458f440835b18" title=" " alt="" coords="407,19,500,45"/>
+<area shape="rect" id="node4" href="$namespacesll__m__point__to__point__comms.html#a2ec99c657fccfca4a2631c9408e2a9c1" title=" " alt="" coords="420,81,487,108"/>
 </map>

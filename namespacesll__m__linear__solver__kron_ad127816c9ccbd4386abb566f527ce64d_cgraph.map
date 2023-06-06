@@ -1,3 +1,4 @@
 <map id="sll_create_linear_solver_with_name" name="sll_create_linear_solver_with_name">
-<area shape="rect" id="node2" href="$namespacesll__m__linear__solver__kron.html#a7eed632e9e77d79dfca4655c851c3b61" title="allocate the linear solver object " alt="" coords="229,5,369,47"/>
+<area shape="rect" id="node1" title="create an linear solver using its name and a linear operator" alt="" coords="5,5,181,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__linear__solver__kron.html#a7eed632e9e77d79dfca4655c851c3b61" title="allocate the linear solver object" alt="" coords="229,5,369,47"/>
 </map>

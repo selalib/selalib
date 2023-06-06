@@ -1,4 +1,5 @@
 <map id="constant_advection_spl_non_unif_per" name="constant_advection_spl_non_unif_per">
-<area shape="rect" id="node2" href="$namespacesll__m__cubic__non__uniform__splines.html#ac8b14ab9cbf822045356380851d80c20" title="sll_m_cubic_non_uniform\l_splines::sll_s_compute\l_spline_nonunif_1d_periodic_aux2" alt="" coords="203,5,448,61"/>
-<area shape="rect" id="node3" href="$namespacesll__m__cubic__non__uniform__splines.html#a6c0e817e4ecc3db5169312815e5e23cd" title="sll_m_cubic_non_uniform\l_splines::sll_s_interpolate\l_array_value_nonunif_aux" alt="" coords="229,85,422,141"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,53,155,94"/>
+<area shape="rect" id="node2" href="$namespacesll__m__cubic__non__uniform__splines.html#ac8b14ab9cbf822045356380851d80c20" title=" " alt="" coords="203,5,448,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__cubic__non__uniform__splines.html#a6c0e817e4ecc3db5169312815e5e23cd" title=" " alt="" coords="229,85,422,141"/>
 </map>

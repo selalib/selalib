@@ -1,0 +1,7 @@
+<map id="sll_s_mpi_sendrecv_compressed_core" name="sll_s_mpi_sendrecv_compressed_core">
+<area shape="rect" id="node1" title="MPI sendrecv functionality, wrapped for a compressed buffer." alt="" coords="753,53,903,95"/>
+<area shape="rect" id="node2" href="$namespacesll__m__decomposition.html#a9cb67d2e33dc30e7e03d12f573b84e23" title=" " alt="" coords="507,27,705,54"/>
+<area shape="rect" id="node5" href="$namespacesll__m__decomposition__advanced.html#a9b934353423d1849f580dcf4a6e1ca0c" title=" " alt="" coords="511,78,701,134"/>
+<area shape="rect" id="node3" href="$namespacesll__m__decomposition.html#af201a566cea830a31ede199cbf1b2d4c" title=" " alt="" coords="260,20,459,61"/>
+<area shape="rect" id="node4" href="$interfacesll__m__decomposition_1_1sll__f__apply__halo__exchange.html#ae54c6b0143bf098b56199fa66152c113" title=" " alt="" coords="5,5,212,76"/>
+</map>

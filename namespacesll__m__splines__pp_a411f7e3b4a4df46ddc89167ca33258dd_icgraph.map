@@ -1,14 +1,15 @@
 <map id="sll_s_spline_pp_b_to_pp_1d_cella" name="sll_s_spline_pp_b_to_pp_1d_cella">
-<area shape="rect" id="node2" href="$namespacesll__m__splines__pp.html#abf8e9df8c41cd12d7457aef4e7510825" title="Convert 1d spline in B form to spline in pp form for clamped spline. " alt="" coords="238,5,393,47"/>
-<area shape="rect" id="node4" href="$namespacesll__m__splines__pp.html#a3d7983b209b302141850ea69b757b51b" title="Convert 1d spline in B form to spline in pp form for clamped spline and Dirichlet conditions on the r..." alt="" coords="208,71,423,112"/>
-<area shape="rect" id="node5" href="$namespacesll__m__splines__pp.html#ad9b7b9b7852ac7873a01d8480d15819a" title="Convert 2d spline in B form to spline in pp form. " alt="" coords="238,136,393,177"/>
-<area shape="rect" id="node6" href="$namespacesll__m__splines__pp.html#a72ef4f15966d54f96a2ca8b5400626a5" title="Convert 3d spline in B form in a cell to spline in pp form with clamped boundary in first direction a..." alt="" coords="238,201,393,243"/>
-<area shape="rect" id="node9" href="$namespacesll__m__splines__pp.html#a1e67da5c2dc436b0b8cbd874575e4631" title="Convert 3d spline in B form in a cell to spline in pp form with clamped boundary in all three directi..." alt="" coords="238,267,393,308"/>
-<area shape="rect" id="node12" href="$namespacesll__m__splines__pp.html#a9de4fa50cb649ed3fd93d415c65a6e84" title="Convert 3d spline in B form in a cell to spline in pp form with clamped boundary in all three directi..." alt="" coords="238,332,393,373"/>
-<area shape="rect" id="node3" href="$namespacesll__m__splines__pp.html#ae856e97f9b335607629a52dc2d54adc9" title="sll_s_spline_evaluate\l_basis_b_form_1d_clamped" alt="" coords="471,5,673,47"/>
-<area shape="rect" id="node7" href="$namespacesll__m__splines__pp.html#a109b7091f4f1906d9806c109df6c7ac4" title="Convert 3d spline in B form to spline in pp form for clamped spline. " alt="" coords="495,201,649,243"/>
-<area shape="rect" id="node8" href="$namespacesll__m__splines__pp.html#a382a523b8cbb98a4c148f5ba85ffb1e0" title="sll_s_spline_evaluate\l_basis_b_form_3d_clamped" alt="" coords="721,201,924,243"/>
-<area shape="rect" id="node10" href="$namespacesll__m__splines__pp.html#a033f4f58d0202d7d899c86e4329336ca" title="Convert 3d spline in B form to spline in pp form for clamped spline. " alt="" coords="489,267,655,308"/>
-<area shape="rect" id="node11" href="$namespacesll__m__mapping__3d.html#a60939a1ce730d16e9922bcf50cb7f27d" title="Initialize the coordinate transformation. " alt="" coords="736,274,909,301"/>
-<area shape="rect" id="node13" href="$namespacesll__m__splines__pp.html#aceeeac2f921344b851fe65f3a4b91e90" title="Convert 3d spline in B form to spline in pp form for clamped spline. " alt="" coords="493,332,651,373"/>
+<area shape="rect" id="node1" title="Convert 1d spline in B form in a cell to spline in pp form for specified pp_coefficients of the b_spl..." alt="" coords="769,169,924,211"/>
+<area shape="rect" id="node2" href="$namespacesll__m__splines__pp.html#abf8e9df8c41cd12d7457aef4e7510825" title="Convert 1d spline in B form to spline in pp form for clamped spline." alt="" coords="537,5,691,47"/>
+<area shape="rect" id="node4" href="$namespacesll__m__splines__pp.html#a3d7983b209b302141850ea69b757b51b" title="Convert 1d spline in B form to spline in pp form for clamped spline and Dirichlet conditions on the r..." alt="" coords="507,71,721,112"/>
+<area shape="rect" id="node5" href="$namespacesll__m__splines__pp.html#ad9b7b9b7852ac7873a01d8480d15819a" title="Convert 2d spline in B form to spline in pp form." alt="" coords="537,136,691,177"/>
+<area shape="rect" id="node6" href="$namespacesll__m__splines__pp.html#a72ef4f15966d54f96a2ca8b5400626a5" title="Convert 3d spline in B form in a cell to spline in pp form with clamped boundary in first direction a..." alt="" coords="537,201,691,243"/>
+<area shape="rect" id="node9" href="$namespacesll__m__splines__pp.html#a1e67da5c2dc436b0b8cbd874575e4631" title="Convert 3d spline in B form in a cell to spline in pp form with clamped boundary in all three directi..." alt="" coords="537,267,691,308"/>
+<area shape="rect" id="node12" href="$namespacesll__m__splines__pp.html#a9de4fa50cb649ed3fd93d415c65a6e84" title="Convert 3d spline in B form in a cell to spline in pp form with clamped boundary in all three directi..." alt="" coords="537,332,691,373"/>
+<area shape="rect" id="node3" href="$namespacesll__m__splines__pp.html#ae856e97f9b335607629a52dc2d54adc9" title=" " alt="" coords="256,5,459,47"/>
+<area shape="rect" id="node7" href="$namespacesll__m__splines__pp.html#a109b7091f4f1906d9806c109df6c7ac4" title="Convert 3d spline in B form to spline in pp form for clamped spline." alt="" coords="280,201,435,243"/>
+<area shape="rect" id="node8" href="$namespacesll__m__splines__pp.html#a382a523b8cbb98a4c148f5ba85ffb1e0" title=" " alt="" coords="5,201,208,243"/>
+<area shape="rect" id="node10" href="$namespacesll__m__splines__pp.html#a033f4f58d0202d7d899c86e4329336ca" title="Convert 3d spline in B form to spline in pp form for clamped spline." alt="" coords="274,267,441,308"/>
+<area shape="rect" id="node11" href="$namespacesll__m__mapping__3d.html#a60939a1ce730d16e9922bcf50cb7f27d" title="Initialize the coordinate transformation." alt="" coords="20,274,193,301"/>
+<area shape="rect" id="node13" href="$namespacesll__m__splines__pp.html#aceeeac2f921344b851fe65f3a4b91e90" title="Convert 3d spline in B form to spline in pp form for clamped spline." alt="" coords="278,332,437,373"/>
 </map>

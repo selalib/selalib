@@ -1,3 +1,4 @@
 <map id="cg_linear_solver" name="cg_linear_solver">
-<area shape="rect" id="node2" href="$namespacesll__m__linear__solver__cg.html#ab2d6b7c34cccafc523d2c47317d1f771" title="af solves the linear system with real vectors " alt="" coords="181,5,384,32"/>
+<area shape="rect" id="node1" title="cg interface" alt="" coords="256,5,384,32"/>
+<area shape="rect" id="node2" href="$namespacesll__m__linear__solver__cg.html#ab2d6b7c34cccafc523d2c47317d1f771" title="af solves the linear system with real vectors" alt="" coords="5,5,208,32"/>
 </map>

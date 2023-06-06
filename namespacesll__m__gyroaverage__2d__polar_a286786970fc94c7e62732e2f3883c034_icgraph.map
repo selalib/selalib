@@ -1,10 +1,11 @@
 <map id="localize_polar" name="localize_polar">
-<area shape="rect" id="node2" href="$namespacesll__m__gyroaverage__2d__polar.html#a1882bcc115806b5d1d1b08a53c89490b" title="sll_s_compute_gyroaverage\l_points_polar_hermite" alt="" coords="179,27,383,68"/>
-<area shape="rect" id="node4" href="$namespacesll__m__gyroaverage__2d__polar.html#ad0d78870c3122209c645119e78d4e664" title="sll_s_pre_compute_gyroaverage\l_polar_hermite_c1" alt="" coords="165,107,397,148"/>
-<area shape="rect" id="node7" href="$namespacesll__m__gyroaverage__2d__polar.html#a30a5d229d04d2f50183b935ace028438" title="sll_s_pre_compute_gyroaverage\l_polar_spl" alt="" coords="165,172,397,213"/>
-<area shape="rect" id="node9" href="$namespacesll__m__gyroaverage__2d__polar.html#a46ed1c8f5b1c864caaef928162bac84d" title="sll_s_pre_compute_gyroaverage\l_polar_spl_fft" alt="" coords="165,237,397,279"/>
-<area shape="rect" id="node3" href="$namespacesll__m__gyroaverage__2d__polar__hermite__solver.html#afd578efdda5cfc4e19d981df4c069d6b" title="sll_m_gyroaverage_2d\l_polar_hermite_solver\l::compute_gyroaverage\l_2d_polar_hermite" alt="" coords="453,5,629,76"/>
-<area shape="rect" id="node5" href="$namespacesll__m__gyroaverage__2d__polar__hermite__solver.html#afe968126a853c6bab9577236b11d84d3" title="sll_m_gyroaverage_2d\l_polar_hermite_solver\l::initialize_gyroaverage\l_2d_polar_hermite_solver" alt="" coords="445,100,636,171"/>
-<area shape="rect" id="node6" href="$namespacesll__m__gyroaverage__2d__polar__hermite__solver.html#a42ac604e078262319d85f8fd436bd506" title="sll_m_gyroaverage_2d\l_polar_hermite_solver\l::sll_f_new_gyroaverage\l_2d_polar_hermite_solver" alt="" coords="684,100,875,171"/>
-<area shape="rect" id="node8" href="$namespacesll__m__gyroaverage__2d__polar__splines__solver.html#a2027a05dfe7a379899c5e06c046d0a95" title="sll_m_gyroaverage_2d\l_polar_splines_solver\l::compute_gyroaverage\l_2d_polar_splines" alt="" coords="453,205,629,276"/>
+<area shape="rect" id="node1" title=" " alt="" coords="763,147,875,174"/>
+<area shape="rect" id="node2" href="$namespacesll__m__gyroaverage__2d__polar.html#a1882bcc115806b5d1d1b08a53c89490b" title=" " alt="" coords="497,27,701,68"/>
+<area shape="rect" id="node4" href="$namespacesll__m__gyroaverage__2d__polar.html#ad0d78870c3122209c645119e78d4e664" title=" " alt="" coords="483,107,715,148"/>
+<area shape="rect" id="node7" href="$namespacesll__m__gyroaverage__2d__polar.html#a30a5d229d04d2f50183b935ace028438" title=" " alt="" coords="483,172,715,213"/>
+<area shape="rect" id="node9" href="$namespacesll__m__gyroaverage__2d__polar.html#a46ed1c8f5b1c864caaef928162bac84d" title=" " alt="" coords="483,237,715,279"/>
+<area shape="rect" id="node3" href="$namespacesll__m__gyroaverage__2d__polar__hermite__solver.html#afd578efdda5cfc4e19d981df4c069d6b" title=" " alt="" coords="251,5,427,76"/>
+<area shape="rect" id="node5" href="$namespacesll__m__gyroaverage__2d__polar__hermite__solver.html#afe968126a853c6bab9577236b11d84d3" title=" " alt="" coords="244,100,435,171"/>
+<area shape="rect" id="node6" href="$namespacesll__m__gyroaverage__2d__polar__hermite__solver.html#a42ac604e078262319d85f8fd436bd506" title=" " alt="" coords="5,100,196,171"/>
+<area shape="rect" id="node8" href="$namespacesll__m__gyroaverage__2d__polar__splines__solver.html#a2027a05dfe7a379899c5e06c046d0a95" title=" " alt="" coords="251,205,427,276"/>
 </map>

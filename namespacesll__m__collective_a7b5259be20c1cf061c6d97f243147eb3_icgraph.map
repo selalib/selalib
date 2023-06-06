@@ -1,4 +1,4 @@
 <map id="sll_s_collective_reduce_real64" name="sll_s_collective_reduce_real64">
-<area shape="rect" id="node2" href="$namespacesll__m__collective.html#ac8bae8f91ad6e50a9bb12085cbefcae0" title="Performs a global sum over an array and writes the result in the given node If no node in root_rank i..." alt="" coords="225,5,421,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__collective.html#a111afaef4e1249822349750605043ce2" title="Performs a global sum and writes the result in the given node. " alt="" coords="469,5,652,47"/>
+<area shape="rect" id="node1" title=" " alt="" coords="257,20,429,61"/>
+<area shape="rect" id="node2" href="$interfacesll__m__collective_1_1sll__o__collective__globalsum.html#a49a7a4f5adaf93ee2edfdcf0c27588bf" title="Performs a global sum over an array and writes the result in the given node If no node in root_rank i..." alt="" coords="5,5,209,76"/>
 </map>

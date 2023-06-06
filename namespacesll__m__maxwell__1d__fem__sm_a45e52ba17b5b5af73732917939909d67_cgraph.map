@@ -1,11 +1,12 @@
 <map id="init_1d_fem_sm" name="init_1d_fem_sm">
-<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities.html#ae3b59ded8bbb13b7762f0ac9dfb320be" title="Computes the mass line for a mass matrix with degree splines. " alt="" coords="201,13,411,54"/>
-<area shape="rect" id="node4" href="$namespacesll__m__spline__fem__utilities__sparse.html#a2003f09f29c8034b9cb433328afaef6b" title="Set up 1d mass matrix (sparsity pattern and values) " alt="" coords="183,143,429,185"/>
-<area shape="rect" id="node7" href="$namespacesll__m__spline__fem__utilities.html#adfa24c61f416471302339b83845ac77c" title="Helper function to find line of mass matrix ( N_i^p N_j^{p&#45;1})) " alt="" coords="180,78,432,119"/>
-<area shape="rect" id="node8" href="$namespacesll__m__spline__fem__utilities__sparse.html#ab1ac1f6dcb1c4dfe4711711a3e89dbe6" title="sll_m_spline_fem_utilities\l_sparse::sll_s_spline_fem\l_mixedmass1d" alt="" coords="210,232,402,288"/>
-<area shape="rect" id="node3" href="$namespacesll__m__gauss__legendre__integration.html#a0df63a9e8ee884c2d4a0d1f53602a949" title="Returns a 2d array of size (2,npoints) containing gauss&#45;legendre points and weights in the interval [..." alt="" coords="482,5,705,61"/>
-<area shape="rect" id="node5" href="$namespacesll__m__spline__fem__utilities__sparse.html#a10fb9b7a4dea5775b5aa44f03be76f0e" title="Helper function to create sparsity pattern of the mass matrix. " alt="" coords="497,85,689,141"/>
-<area shape="rect" id="node6" href="$namespacesll__m__spline__fem__utilities__sparse.html#af733f1fdecc6e55f524603a72888ed31" title="Assemble sparse matrix for mass matrix. " alt="" coords="497,166,689,207"/>
-<area shape="rect" id="node9" href="$namespacesll__m__spline__fem__utilities__sparse.html#ac6a7e77bc6c96ef0043d1391b6789d57" title="Helper function to create sparsity pattern of the mass matrix with mixed degree deg1 and deg2..." alt="" coords="484,232,703,288"/>
-<area shape="rect" id="node10" href="$namespacesll__m__spline__fem__utilities__sparse.html#a547d8c6bef87406ed54468ccacf4c462" title="Assemble the mixed mass matrix. " alt="" coords="480,313,707,354"/>
+<area shape="rect" id="node1" title="Initialization." alt="" coords="5,178,132,205"/>
+<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities__sparse.html#a2003f09f29c8034b9cb433328afaef6b" title="Set up 1d mass matrix (sparsity pattern and values)" alt="" coords="182,72,429,113"/>
+<area shape="rect" id="node5" href="$namespacesll__m__spline__fem__utilities.html#ae3b59ded8bbb13b7762f0ac9dfb320be" title="Computes the mass line for a mass matrix with degree splines." alt="" coords="200,137,411,179"/>
+<area shape="rect" id="node7" href="$namespacesll__m__spline__fem__utilities__sparse.html#ab1ac1f6dcb1c4dfe4711711a3e89dbe6" title=" " alt="" coords="209,269,401,325"/>
+<area shape="rect" id="node10" href="$namespacesll__m__spline__fem__utilities.html#adfa24c61f416471302339b83845ac77c" title="Helper function to find line of mass matrix ( N_i^p N_j^{p&#45;1}))" alt="" coords="180,203,431,244"/>
+<area shape="rect" id="node3" href="$namespacesll__m__spline__fem__utilities__sparse.html#af733f1fdecc6e55f524603a72888ed31" title="Assemble sparse matrix for mass matrix." alt="" coords="495,5,687,47"/>
+<area shape="rect" id="node4" href="$namespacesll__m__spline__fem__utilities__sparse.html#a10fb9b7a4dea5775b5aa44f03be76f0e" title="Helper function to create sparsity pattern of the mass matrix." alt="" coords="495,71,687,127"/>
+<area shape="rect" id="node6" href="$namespacesll__m__gauss__legendre__integration.html#a0df63a9e8ee884c2d4a0d1f53602a949" title="Returns a 2d array of size (2,npoints) containing gauss&#45;legendre points and weights in the interval [..." alt="" coords="480,163,703,219"/>
+<area shape="rect" id="node8" href="$namespacesll__m__spline__fem__utilities__sparse.html#a547d8c6bef87406ed54468ccacf4c462" title="Assemble the mixed mass matrix." alt="" coords="479,269,704,311"/>
+<area shape="rect" id="node9" href="$namespacesll__m__spline__fem__utilities__sparse.html#ac6a7e77bc6c96ef0043d1391b6789d57" title="Helper function to create sparsity pattern of the mass matrix with mixed degree deg1 and deg2." alt="" coords="482,335,701,391"/>
 </map>

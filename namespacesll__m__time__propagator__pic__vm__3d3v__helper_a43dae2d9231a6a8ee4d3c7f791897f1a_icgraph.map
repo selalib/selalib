@@ -1,3 +1,4 @@
 <map id="compute_particle_boundary_current_evaluate" name="compute_particle_boundary_current_evaluate">
-<area shape="rect" id="node2" href="$namespacesll__m__time__propagator__pic__vm__3d3v__helper.html#a850ed1a9baf155570412dcfd3a06524e" title="advect_ex: Equations to be solved ${X^{n+1}&#45;X^n}{ t}={V^{n+1}+V^n}{2}$ ${V^{n+1}&#45;V^n}{ t}={W}_{{q}{m}..." alt="" coords="256,13,439,39"/>
+<area shape="rect" id="node1" title="Helper function for advect_ex." alt="" coords="236,5,439,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__time__propagator__pic__vm__3d3v__helper.html#a850ed1a9baf155570412dcfd3a06524e" title="advect_ex: Equations to be solved $\frac{X^{n+1}&#45;X^n}{\Delta t}=\frac{V^{n+1}+V^n}{2}$ $\frac{V^{n+1}..." alt="" coords="5,13,188,39"/>
 </map>

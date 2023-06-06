@@ -1,5 +1,6 @@
 <map id="compute_e_from_rho_fft" name="compute_e_from_rho_fft">
-<area shape="rect" id="node2" href="$namespacesll__m__poisson__2d__fem__fft.html#aa4910be1ce75a6a69aa714258f81a256" title="fft2d" alt="" coords="237,5,289,32"/>
-<area shape="rect" id="node4" href="$namespacesll__m__poisson__2d__fem__fft.html#a731d887011b633a14af792426bb2e619" title="Helper function for 3d fft. " alt="" coords="235,56,291,83"/>
-<area shape="rect" id="node3" href="$namespacesll__m__fft.html#a98e3ba2b5431c58a3f5100ac171616a5" title="Compute fast Fourier transform in complex to complex mode. " alt="" coords="339,23,475,65"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,187,57"/>
+<area shape="rect" id="node2" href="$namespacesll__m__poisson__2d__fem__fft.html#aa4910be1ce75a6a69aa714258f81a256" title=" " alt="" coords="237,5,289,32"/>
+<area shape="rect" id="node4" href="$namespacesll__m__poisson__2d__fem__fft.html#a731d887011b633a14af792426bb2e619" title="Helper function for 3d fft." alt="" coords="235,56,291,83"/>
+<area shape="rect" id="node3" href="$namespacesll__m__fft.html#a98e3ba2b5431c58a3f5100ac171616a5" title="Compute fast Fourier transform in complex to complex mode." alt="" coords="339,23,475,65"/>
 </map>

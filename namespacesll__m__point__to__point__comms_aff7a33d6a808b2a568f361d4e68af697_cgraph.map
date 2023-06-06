@@ -1,7 +1,8 @@
 <map id="sll_f_new_comm_real64" name="sll_f_new_comm_real64">
-<area shape="rect" id="node2" href="$namespacesll__m__collective.html#af2d3c240d9dfe7e9c7d7f7c9e0529f17" title="Determines the size of the group associated with a communicator. " alt="" coords="233,5,399,47"/>
-<area shape="rect" id="node4" href="$namespacesll__m__collective.html#a396122f49340f0778eb448430d865b4e" title="Determines the rank of the calling process in the communicator. " alt="" coords="232,71,400,112"/>
-<area shape="rect" id="node5" href="$namespacesll__m__point__to__point__comms.html#a99312be7b1a4279658bd79f47ef3fbe8" title="initialize_port_real64" alt="" coords="237,137,395,163"/>
-<area shape="rect" id="node3" href="$namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" title="Checks if the pointer ptr is associated to an object. " alt="" coords="452,39,615,80"/>
-<area shape="rect" id="node6" href="$namespacesll__m__point__to__point__comms.html#a8b2b86cbd9fa8c6e300dc8d8a6566cb2" title="initialize_buffer_real64" alt="" coords="448,137,619,163"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,64,184,91"/>
+<area shape="rect" id="node2" href="$namespacesll__m__point__to__point__comms.html#a99312be7b1a4279658bd79f47ef3fbe8" title=" " alt="" coords="237,5,395,32"/>
+<area shape="rect" id="node4" href="$namespacesll__m__collective.html#a396122f49340f0778eb448430d865b4e" title="Determines the rank of the calling process in the communicator." alt="" coords="232,57,400,98"/>
+<area shape="rect" id="node6" href="$namespacesll__m__collective.html#af2d3c240d9dfe7e9c7d7f7c9e0529f17" title="Determines the size of the group associated with a communicator." alt="" coords="233,122,399,163"/>
+<area shape="rect" id="node3" href="$namespacesll__m__point__to__point__comms.html#a8b2b86cbd9fa8c6e300dc8d8a6566cb2" title=" " alt="" coords="448,5,619,32"/>
+<area shape="rect" id="node5" href="$namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" title="Checks if the pointer ptr is associated to an object." alt="" coords="452,89,615,130"/>
 </map>

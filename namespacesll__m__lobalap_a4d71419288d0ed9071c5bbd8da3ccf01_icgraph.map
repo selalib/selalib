@@ -1,8 +1,9 @@
 <map id="potexact" name="potexact">
-<area shape="rect" id="node2" href="$namespacesll__m__lobalap.html#ae29dd83fb0cb9e334cb7d0987cec9dfb" title="sll_s_plotgmsh" alt="" coords="141,25,259,51"/>
-<area shape="rect" id="node4" href="$namespacesll__m__lobalap.html#adbbffd4923326de94ac0f93c76aa3fe3" title="sll_s_init" alt="" coords="161,86,239,113"/>
-<area shape="rect" id="node6" href="$namespacesll__m__lobalap.html#a06608d70ef9ef85c8348201a631e771e" title="sll_s_assemb_rhs" alt="" coords="132,147,268,174"/>
-<area shape="rect" id="node3" href="$namespacesll__m__lobatto__poisson.html#a9766264551c01603444d5fac8876b0ae" title="sll_m_lobatto_poisson\l::delete_lobatto_poisson" alt="" coords="316,5,497,47"/>
-<area shape="rect" id="node5" href="$namespacesll__m__lobatto__poisson.html#ade8d9828f8cfb56297d7d3ca1c09809e" title="sll_m_lobatto_poisson\l::initialize_lobatto\l_poisson" alt="" coords="323,71,490,127"/>
-<area shape="rect" id="node7" href="$namespacesll__m__lobatto__poisson.html#a9c5866187baac222bbdcdb355c578fcb" title="sll_m_lobatto_poisson\l::solve_lobatto_poisson" alt="" coords="319,152,494,193"/>
+<area shape="rect" id="node1" title=" " alt="" coords="409,100,488,127"/>
+<area shape="rect" id="node2" href="$namespacesll__m__lobalap.html#a06608d70ef9ef85c8348201a631e771e" title=" " alt="" coords="225,35,361,61"/>
+<area shape="rect" id="node4" href="$namespacesll__m__lobalap.html#adbbffd4923326de94ac0f93c76aa3fe3" title=" " alt="" coords="254,100,333,127"/>
+<area shape="rect" id="node6" href="$namespacesll__m__lobalap.html#ae29dd83fb0cb9e334cb7d0987cec9dfb" title=" " alt="" coords="234,165,353,192"/>
+<area shape="rect" id="node3" href="$interfacesll__m__lobatto__poisson_1_1sll__o__solve.html#ab1781bbf9be1b6fae88bc61ceda525c4" title=" " alt="" coords="8,5,175,61"/>
+<area shape="rect" id="node5" href="$interfacesll__m__lobatto__poisson_1_1sll__o__create.html#a0614e36f77c5cf5049ec4c5147f4f9b8" title=" " alt="" coords="5,85,177,141"/>
+<area shape="rect" id="node7" href="$interfacesll__m__lobatto__poisson_1_1sll__o__delete.html#ac34cc00966b7df892e8fd9b28cbb1e96" title=" " alt="" coords="8,165,175,221"/>
 </map>

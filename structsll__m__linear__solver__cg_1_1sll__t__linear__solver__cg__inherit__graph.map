@@ -1,4 +1,5 @@
 <map id="sll_t_linear_solver_cg" name="sll_t_linear_solver_cg">
-<area shape="rect" id="node2" href="$structsll__m__linear__solver__iter__abstract_1_1sll__t__linear__solver__iter__abstract.html" title="class for abstract iterative linear solver " alt="" coords="17,95,157,136"/>
-<area shape="rect" id="node3" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver " alt="" coords="17,5,157,47"/>
+<area shape="rect" id="node1" title="class for the cg linear solver" alt="" coords="5,184,168,211"/>
+<area shape="rect" id="node2" href="$structsll__m__linear__solver__iter__abstract_1_1sll__t__linear__solver__iter__abstract.html" title="class for abstract iterative linear solver" alt="" coords="17,95,157,136"/>
+<area shape="rect" id="node3" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver" alt="" coords="17,5,157,47"/>
 </map>

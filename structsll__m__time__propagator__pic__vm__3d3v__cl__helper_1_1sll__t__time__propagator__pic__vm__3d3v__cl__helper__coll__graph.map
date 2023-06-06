@@ -1,6 +1,12 @@
 <map id="sll_t_time_propagator_pic_vm_3d3v_cl_helper" name="sll_t_time_propagator_pic_vm_3d3v_cl_helper">
-<area shape="rect" id="node3" href="$structsll__m__mapping__3d_1_1sll__t__mapping__3d.html" title="type collecting functions for analytical coordinate mapping " alt="" coords="961,298,1097,325"/>
-<area shape="rect" id="node10" href="$structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html" title="arbitrary degree 1d spline " alt="" coords="359,566,501,593"/>
-<area shape="rect" id="node6" href="$structsll__m__mapping__3d_1_1matrix__element.html" title="matrix_element" alt="" coords="675,183,802,210"/>
-<area shape="rect" id="node9" href="$structsll__m__splines__pp_1_1sll__t__spline__pp__3d.html" title="arbitrary degree 3d spline " alt="" coords="668,566,809,593"/>
+<area shape="rect" id="node1" title="Hamiltonian splitting type for Vlasov&#45;Maxwell 3d3v." alt="" coords="1336,128,1517,169"/>
+<area shape="rect" id="node2" title=" " alt="" coords="920,5,1129,47"/>
+<area shape="rect" id="node3" href="$structsll__m__mapping__3d_1_1sll__t__mapping__3d.html" title="type collecting functions for analytical coordinate mapping" alt="" coords="957,323,1093,350"/>
+<area shape="rect" id="node4" title=" " alt="" coords="702,410,767,437"/>
+<area shape="rect" id="node5" title=" " alt="" coords="5,133,143,159"/>
+<area shape="rect" id="node10" href="$structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html" title="arbitrary degree 1d spline" alt="" coords="359,591,501,618"/>
+<area shape="rect" id="node6" href="$structsll__m__mapping__3d_1_1matrix__element.html" title=" " alt="" coords="671,183,798,210"/>
+<area shape="rect" id="node7" title=" " alt="" coords="353,263,507,319"/>
+<area shape="rect" id="node8" title=" " alt="" coords="15,722,133,749"/>
+<area shape="rect" id="node9" href="$structsll__m__splines__pp_1_1sll__t__spline__pp__3d.html" title="arbitrary degree 3d spline" alt="" coords="664,591,805,618"/>
 </map>

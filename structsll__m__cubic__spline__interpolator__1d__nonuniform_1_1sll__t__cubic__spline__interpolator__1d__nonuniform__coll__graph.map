@@ -1,5 +1,9 @@
 <map id="sll_t_cubic_spline_interpolator_1d_nonuniform" name="sll_t_cubic_spline_interpolator_1d_nonuniform">
-<area shape="rect" id="node2" href="$structsll__m__interpolators__1d__base_1_1sll__c__interpolator__1d.html" title="Abstract class for 1D interpolation and reconstruction. " alt="" coords="321,5,478,32"/>
-<area shape="rect" id="node3" href="$structsll__m__cubic__splines_1_1sll__t__cubic__spline__1d.html" title="basic type for one&#45;dimensional cubic spline data. " alt="" coords="320,453,479,480"/>
-<area shape="rect" id="node7" href="$structsll__m__cubic__non__uniform__splines_1_1sll__t__cubic__nonunif__spline__1d.html" title="Spline object. " alt="" coords="326,278,473,319"/>
+<area shape="rect" id="node1" title="sll_interpolator_1d implemented with cubic splines on non uniform mesh" alt="" coords="623,278,833,319"/>
+<area shape="rect" id="node2" href="$structsll__m__interpolators__1d__base_1_1sll__c__interpolator__1d.html" title="Abstract class for 1D interpolation and reconstruction." alt="" coords="317,5,474,32"/>
+<area shape="rect" id="node3" href="$structsll__m__cubic__splines_1_1sll__t__cubic__spline__1d.html" title="basic type for one&#45;dimensional cubic spline data." alt="" coords="316,453,475,480"/>
+<area shape="rect" id="node4" title=" " alt="" coords="41,389,107,416"/>
+<area shape="rect" id="node7" href="$structsll__m__cubic__non__uniform__splines_1_1sll__t__cubic__nonunif__spline__1d.html" title="Spline object." alt="" coords="322,278,469,319"/>
+<area shape="rect" id="node5" title=" " alt="" coords="5,165,143,192"/>
+<area shape="rect" id="node6" title=" " alt="" coords="15,685,133,712"/>
 </map>

@@ -1,3 +1,4 @@
 <map id="multiply_c" name="multiply_c">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__trafo.html#ac367f83184eafa6e3b6a8314ae5caa17" title="Compute B from E using strong 3D Faraday equation for spline coefficients. " alt="" coords="144,5,312,47"/>
+<area shape="rect" id="node1" title="Multiply by discrete curl matrix." alt="" coords="221,13,312,39"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__trafo.html#ac367f83184eafa6e3b6a8314ae5caa17" title="Compute B from E using strong 3D Faraday equation for spline coefficients." alt="" coords="5,5,173,47"/>
 </map>

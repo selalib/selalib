@@ -1,3 +1,4 @@
 <map id="sll_s_spline_fem_mixedmass_line_boundary" name="sll_s_spline_fem_mixedmass_line_boundary">
-<area shape="rect" id="node2" href="$namespacesll__m__splines__pp.html#ab63c3a25b861ed9b8701ae2f65942bcf" title="Perform a 1d hornerschema on the pp_coeffs at index. " alt="" coords="267,5,441,47"/>
+<area shape="rect" id="node1" title="Computes the mixed mass line for a mass matrix with degree splines." alt="" coords="5,5,217,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__splines__pp.html#ab63c3a25b861ed9b8701ae2f65942bcf" title="Perform a 1d hornerschema on the pp_coeffs at index." alt="" coords="265,5,440,47"/>
 </map>

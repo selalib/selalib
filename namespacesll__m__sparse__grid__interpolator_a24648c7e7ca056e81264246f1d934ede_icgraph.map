@@ -1,6 +1,7 @@
 <map id="dehierarchical_order_d_dimension" name="dehierarchical_order_d_dimension">
-<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__interpolator.html#a43b4046ed1ac974e2dfd27f19f00b751" title="hierarchical_order" alt="" coords="216,15,355,42"/>
-<area shape="rect" id="node4" href="$namespacesll__m__sparse__grid__interpolator.html#a49d1d06bbd974667a9ac4c977dec9f66" title="dehierarchical_order" alt="" coords="208,67,363,94"/>
-<area shape="rect" id="node3" href="$namespacesll__m__sparse__grid__interpolator.html#a648a776ea927eabfeb25b6bfa1522939" title="compute_hierarchical\l_surplus" alt="" coords="419,5,581,47"/>
-<area shape="rect" id="node5" href="$namespacesll__m__sparse__grid__interpolator.html#a883077583cdbfbb223a3d5ce55fac984" title="compute_dehierarchical" alt="" coords="411,71,589,98"/>
+<area shape="rect" id="node1" title=" " alt="" coords="435,27,589,69"/>
+<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__interpolator.html#a49d1d06bbd974667a9ac4c977dec9f66" title=" " alt="" coords="232,8,387,35"/>
+<area shape="rect" id="node4" href="$namespacesll__m__sparse__grid__interpolator.html#a43b4046ed1ac974e2dfd27f19f00b751" title=" " alt="" coords="240,60,379,87"/>
+<area shape="rect" id="node3" href="$namespacesll__m__sparse__grid__interpolator.html#a883077583cdbfbb223a3d5ce55fac984" title=" " alt="" coords="5,5,184,32"/>
+<area shape="rect" id="node5" href="$namespacesll__m__sparse__grid__interpolator.html#a648a776ea927eabfeb25b6bfa1522939" title=" " alt="" coords="13,57,176,98"/>
 </map>

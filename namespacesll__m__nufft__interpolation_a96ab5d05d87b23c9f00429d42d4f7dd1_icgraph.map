@@ -1,3 +1,4 @@
 <map id="sll_f_nufft_2d_interpolate_value_from_fft" name="sll_f_nufft_2d_interpolate_value_from_fft">
-<area shape="rect" id="node2" href="$namespacesll__m__nufft__interpolator__2d.html#ac850328f2555a8ebcb2abca5357fbf34" title="sll_m_nufft_interpolator\l_2d::interpolate_value\l_nufft2d" alt="" coords="240,5,417,61"/>
+<area shape="rect" id="node1" title="Interpolate single value when the fft is already compute." alt="" coords="231,13,417,54"/>
+<area shape="rect" id="node2" href="$namespacesll__m__nufft__interpolator__2d.html#ac850328f2555a8ebcb2abca5357fbf34" title=" " alt="" coords="5,5,183,61"/>
 </map>

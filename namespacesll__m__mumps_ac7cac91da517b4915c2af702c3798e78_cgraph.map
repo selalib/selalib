@@ -1,7 +1,0 @@
-<map id="init_mumps" name="init_mumps">
-<area shape="rect" id="node2" href="$namespacesll__m__collective.html#a939e5faf8e7354e95934cc448ea4623d" title="Starts the paralell environment. " alt="" coords="161,5,311,47"/>
-<area shape="rect" id="node4" href="$namespacesll__m__collective.html#a396122f49340f0778eb448430d865b4e" title="Determines the rank of the calling process in the communicator. " alt="" coords="152,71,320,112"/>
-<area shape="rect" id="node6" href="$namespacesll__m__collective.html#af2d3c240d9dfe7e9c7d7f7c9e0529f17" title="Determines the size of the group associated with a communicator. " alt="" coords="153,136,319,177"/>
-<area shape="rect" id="node3" href="$namespacesll__m__collective.html#a9a5729d7ca2e55890195f76c8a5cbd62" title="Checks the good execution of collective instruction. " alt="" coords="374,5,525,47"/>
-<area shape="rect" id="node5" href="$namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" title="Checks if the pointer ptr is associated to an object. " alt="" coords="368,103,531,144"/>
-</map>

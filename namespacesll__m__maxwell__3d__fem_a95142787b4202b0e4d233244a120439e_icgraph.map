@@ -1,3 +1,4 @@
 <map id="sll_s_compute_rhs_fem" name="sll_s_compute_rhs_fem">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__fem.html#ab2781eda74156655a5fd15db858c1170" title="Compute the L2 projection of a given function f on periodic splines of given degree. " alt="" coords="228,5,383,32"/>
+<area shape="rect" id="node1" title="Compute the FEM right&#45;hand&#45;side for a given function f and periodic splines of given degree Its compo..." alt="" coords="208,5,383,32"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__fem.html#ab2781eda74156655a5fd15db858c1170" title="Compute the L2 projection of a given function f on periodic splines of given degree." alt="" coords="5,5,160,32"/>
 </map>

@@ -1,3 +1,4 @@
 <map id="sll_s_bsplines_new_mirror_copy" name="sll_s_bsplines_new_mirror_copy">
-<area shape="rect" id="node2" href="$namespacesll__m__polar__spline__interpolator__2d.html#a5c440d9eda2bf561171b5dc3b23d2652" title="Initialize a 2D tensor&#45;product spline interpolator object. " alt="" coords="200,5,391,76"/>
+<area shape="rect" id="node1" title="Create B&#45;splines by mirroring radial basis onto extended domain [&#45;R,R]." alt="" coords="244,20,391,61"/>
+<area shape="rect" id="node2" href="$namespacesll__m__polar__spline__interpolator__2d.html#a5c440d9eda2bf561171b5dc3b23d2652" title="Initialize a 2D tensor&#45;product spline interpolator object." alt="" coords="5,5,196,76"/>
 </map>

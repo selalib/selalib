@@ -1,4 +1,5 @@
 <map id="advect_ex_pic_vm_3d3v_trafo" name="advect_ex_pic_vm_3d3v_trafo">
-<area shape="rect" id="node2" href="$namespacesll__m__time__propagator__pic__vm__3d3v__trafo__helper.html#a5276bfa84f63cabff1eeb735420219cd" title="Helper function for advect_ex. " alt="" coords="236,5,439,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__time__propagator__pic__vm__3d3v__trafo__helper.html#a9134711200dbc1c20093dbbb43bc2aaa" title="Helper function for advect_ex. " alt="" coords="236,71,439,112"/>
+<area shape="rect" id="node1" title="advect_ex: Equations to be solved $\frac{\Xi^{n+1}&#45;\Xi^n}{\Delta t}=\frac{DF^{&#45;1}(\Xi^{n+1})+DF^{&#45;1}(..." alt="" coords="5,39,188,80"/>
+<area shape="rect" id="node2" href="$namespacesll__m__time__propagator__pic__vm__3d3v__trafo__helper.html#a9134711200dbc1c20093dbbb43bc2aaa" title="Helper function for advect_ex." alt="" coords="236,5,439,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__time__propagator__pic__vm__3d3v__trafo__helper.html#a5276bfa84f63cabff1eeb735420219cd" title="Helper function for advect_ex." alt="" coords="236,71,439,112"/>
 </map>

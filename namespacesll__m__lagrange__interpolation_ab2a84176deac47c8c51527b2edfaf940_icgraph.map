@@ -1,5 +1,6 @@
 <map id="compute_size_hermite1d" name="compute_size_hermite1d">
-<area shape="rect" id="node2" href="$namespacesll__m__lagrange__interpolation.html#a9bf3be21f8df23ee085c529c321dbe26" title="initialize_interpolants\l_hermite1d" alt="" coords="241,5,403,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__lagrange__interpolation.html#abb96f73dc8b218eaf15ae864a456bf01" title="initialize_interpolants\l_hermite2d" alt="" coords="241,71,403,112"/>
-<area shape="rect" id="node4" href="$namespacesll__m__lagrange__interpolation.html#af35615b1645decdb973369f391cf2945" title="compute_interpolants\l_hermite2d" alt="" coords="240,136,404,177"/>
+<area shape="rect" id="node1" title=" " alt="" coords="217,78,404,105"/>
+<area shape="rect" id="node2" href="$namespacesll__m__lagrange__interpolation.html#af35615b1645decdb973369f391cf2945" title=" " alt="" coords="5,5,169,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__lagrange__interpolation.html#a9bf3be21f8df23ee085c529c321dbe26" title=" " alt="" coords="6,71,169,112"/>
+<area shape="rect" id="node4" href="$namespacesll__m__lagrange__interpolation.html#abb96f73dc8b218eaf15ae864a456bf01" title=" " alt="" coords="6,136,169,177"/>
 </map>

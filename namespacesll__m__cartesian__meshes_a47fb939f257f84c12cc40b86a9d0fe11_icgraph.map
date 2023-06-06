@@ -1,4 +1,5 @@
 <map id="sll_f_new_cartesian_mesh_2d" name="sll_f_new_cartesian_mesh_2d">
-<area shape="rect" id="node2" href="$namespacesll__m__cartesian__meshes.html#ab5c7c7adab553e987f64394b4c61414f" title="Create a 2d mesh from two 1d meshes. " alt="" coords="221,5,375,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__dk__curv__mesh.html#a4c65d8244e6f18bd6fb5cff4c5c5ee74" title="Initialize simulation from input file. " alt="" coords="204,71,392,112"/>
+<area shape="rect" id="node1" title="allocates the memory space for a new 2D cartesian mesh on the heap, initializes it with the given arg..." alt="" coords="241,50,392,91"/>
+<area shape="rect" id="node2" href="$interfacesll__m__cartesian__meshes_1_1operator_07_5_08.html#a4dbb2708cb07f9686e4b73512b38d7fc" title="Create a 2d mesh from two 1d meshes." alt="" coords="7,5,192,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__dk__curv__mesh.html#a4c65d8244e6f18bd6fb5cff4c5c5ee74" title="Initialize simulation from input file." alt="" coords="5,86,193,127"/>
 </map>

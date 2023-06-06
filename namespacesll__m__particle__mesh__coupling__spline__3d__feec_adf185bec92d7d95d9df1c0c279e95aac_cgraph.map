@@ -1,3 +1,4 @@
 <map id="add_current_1d" name="add_current_1d">
-<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__3d__feec.html#a58549de6968ed8de0c6cb6b315fb52b1" title="Helper function for add_current_update_v. " alt="" coords="176,5,263,32"/>
+<area shape="rect" id="node1" title="Add current for one particle and update v (according to H_p1 part in Hamiltonian splitting)" alt="" coords="5,5,128,32"/>
+<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__3d__feec.html#a58549de6968ed8de0c6cb6b315fb52b1" title="Helper function for add_current_update_v." alt="" coords="176,5,263,32"/>
 </map>

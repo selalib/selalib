@@ -1,5 +1,6 @@
 <map id="sll_s_spline_fem_mass3d_clamped" name="sll_s_spline_fem_mass3d_clamped">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__clamped__3d__fem.html#afadba212d3f01a688b12c751068d1707" title="Initialization. " alt="" coords="241,5,424,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__maxwell__clamped__3d__trafo.html#ab614fb88d34d5e55292639d8db6b0353" title="Initialization. " alt="" coords="241,71,424,112"/>
-<area shape="rect" id="node4" href="$namespacesll__m__maxwell__clamped__3d__trafo__parallel.html#ae0872c3bfa3cc2f7b7f3aaca4fd8838e" title="sll_m_maxwell_clamped\l_3d_trafo_parallel::init\l_3d_trafo_parallel" alt="" coords="241,137,424,193"/>
+<area shape="rect" id="node1" title="Set up 3d clamped mass matrix for specific spline degrees and profile function." alt="" coords="236,71,424,112"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__clamped__3d__fem.html#afadba212d3f01a688b12c751068d1707" title="Initialization." alt="" coords="5,5,188,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__clamped__3d__trafo.html#ab614fb88d34d5e55292639d8db6b0353" title="Initialization." alt="" coords="5,71,188,112"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__clamped__3d__trafo__parallel.html#ae0872c3bfa3cc2f7b7f3aaca4fd8838e" title=" " alt="" coords="5,137,188,193"/>
 </map>

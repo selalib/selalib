@@ -1,3 +1,4 @@
 <map id="sll_collective_globalsum_array_comp32" name="sll_collective_globalsum_array_comp32">
-<area shape="rect" id="node2" href="$namespacesll__m__collective.html#ae9216615a24d9be017b335fd99e3be4f" title="Performs a global sum and writes the result in the given node. " alt="" coords="236,5,419,47"/>
+<area shape="rect" id="node1" title="Performs a global sum over an array and writes the result in the given node If no node in root_rank i..." alt="" coords="303,13,485,54"/>
+<area shape="rect" id="node2" href="$interfacesll__m__collective_1_1sll__o__collective__globalsum.html#a9f95041b56f71e8ad2001991da1ef0e3" title="Performs a global sum and writes the result in the given node." alt="" coords="5,5,255,61"/>
 </map>

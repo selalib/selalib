@@ -1,3 +1,4 @@
 <map id="rhs_threeform" name="rhs_threeform">
+<area shape="rect" id="node1" title="Compute $\int f(F(\xi)) N_i(\xi) d\xi$ for scalar function f, where $N_i$ is the B&#45;spline starting at..." alt="" coords="5,20,120,47"/>
 <area shape="rect" id="node2" href="$namespacesll__m__gauss__legendre__integration.html#a0df63a9e8ee884c2d4a0d1f53602a949" title="Returns a 2d array of size (2,npoints) containing gauss&#45;legendre points and weights in the interval [..." alt="" coords="168,5,391,61"/>
 </map>

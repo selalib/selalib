@@ -1,5 +1,6 @@
 <map id="sll_f_spline_pp_horner_3d_d1" name="sll_f_spline_pp_horner_3d_d1">
-<area shape="rect" id="node2" href="$namespacesll__m__splines__pp.html#acf3c65f47e6b878f86ed229904c30cb4" title="Perform a 1d hornerschema on the pp_coeffs at index. " alt="" coords="232,5,399,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__splines__pp.html#a0e728b131757d9606adbb1227354c22a" title="Perform a 2d hornerschema on the pp_coeffs at the indices. " alt="" coords="220,71,411,98"/>
-<area shape="rect" id="node4" href="$namespacesll__m__splines__pp.html#ab63c3a25b861ed9b8701ae2f65942bcf" title="Perform a 1d hornerschema on the pp_coeffs at index. " alt="" coords="459,97,649,123"/>
+<area shape="rect" id="node1" title="Perform a 3d hornerschema on the pp_coeffs at the indices." alt="" coords="5,23,172,65"/>
+<area shape="rect" id="node2" href="$namespacesll__m__splines__pp.html#ab63c3a25b861ed9b8701ae2f65942bcf" title="Perform a 1d hornerschema on the pp_coeffs at index." alt="" coords="459,5,649,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__splines__pp.html#a0e728b131757d9606adbb1227354c22a" title="Perform a 2d hornerschema on the pp_coeffs at the indices." alt="" coords="220,31,411,57"/>
+<area shape="rect" id="node4" href="$namespacesll__m__splines__pp.html#acf3c65f47e6b878f86ed229904c30cb4" title="Perform a 1d hornerschema on the pp_coeffs at index." alt="" coords="232,82,399,123"/>
 </map>

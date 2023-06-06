@@ -1,3 +1,4 @@
 <map id="sll_f_spherical_x3" name="sll_f_spherical_x3">
-<area shape="rect" id="node2" href="$namespacesll__m__mapping__3d.html#abc09520b4d075920a495aceaa88d2e6b" title="Initialize the coordinate transformation from nml file. " alt="" coords="192,5,365,47"/>
+<area shape="rect" id="node1" title="direct mapping" alt="" coords="227,13,365,39"/>
+<area shape="rect" id="node2" href="$namespacesll__m__mapping__3d.html#abc09520b4d075920a495aceaa88d2e6b" title="Initialize the coordinate transformation from nml file." alt="" coords="5,5,179,47"/>
 </map>

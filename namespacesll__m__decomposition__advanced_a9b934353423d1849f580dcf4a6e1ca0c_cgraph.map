@@ -1,0 +1,10 @@
+<map id="sll_s_blocking_halo_exchange" name="sll_s_blocking_halo_exchange">
+<area shape="rect" id="node1" title=" " alt="" coords="5,86,153,127"/>
+<area shape="rect" id="node2" href="$namespacesll__m__compression.html#a373084b7e662cac613eabf1ece27a827" title=" " alt="" coords="203,5,379,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__decomposition__advanced.html#a7a25f720a657df4d5c03f9673b44be23" title=" " alt="" coords="201,86,380,127"/>
+<area shape="rect" id="node4" href="$namespacesll__m__decomposition.html#af048832f76a35a17fcb680e9f3385dc5" title="MPI sendrecv functionality, wrapped for a compressed buffer." alt="" coords="211,152,371,208"/>
+<area shape="rect" id="node5" href="$namespacesll__m__compression.html#a1f9054ee749b5c97258fc01e952d8db0" title="allocate array, copy indices from comp into array, return" alt="" coords="444,94,637,135"/>
+<area shape="rect" id="node6" href="$namespacesll__m__compression.html#a574b169d9b0553311d7cc1f550eedaec" title=" " alt="" coords="447,159,634,201"/>
+<area shape="rect" id="node8" href="$namespacesll__m__compression.html#a1cd80129a40d25587f931ca9e3e365b0" title=" " alt="" coords="428,225,653,266"/>
+<area shape="rect" id="node7" href="$namespacesll__m__compression.html#a1410384a8d836b838c8d16fa65cb4cbb" title=" " alt="" coords="701,152,861,208"/>
+</map>

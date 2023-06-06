@@ -1,4 +1,5 @@
 <map id="compute_spline_2d_prdc_hrmt" name="compute_spline_2d_prdc_hrmt">
-<area shape="rect" id="node2" href="$namespacesll__m__cubic__splines.html#a3f3f1aa98bfbb8c05458a1eb30941d6d" title="compute_spline_1d_hermite_aux" alt="" coords="275,5,513,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__cubic__splines.html#a908d8f64cc3a4c32d9bdc5afc4077948" title="compute_spline_1d_periodic_aux" alt="" coords="275,56,513,83"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,227,57"/>
+<area shape="rect" id="node2" href="$namespacesll__m__cubic__splines.html#a3f3f1aa98bfbb8c05458a1eb30941d6d" title=" " alt="" coords="275,5,513,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__cubic__splines.html#a908d8f64cc3a4c32d9bdc5afc4077948" title=" " alt="" coords="275,56,513,83"/>
 </map>

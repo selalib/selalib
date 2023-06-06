@@ -1,6 +1,7 @@
 <map id="sll_s_spline_evaluate_basis_b_form_1d_periodic" name="sll_s_spline_evaluate_basis_b_form_1d_periodic">
-<area shape="rect" id="node2" href="$namespacesll__m__splines__pp.html#a9375e3f69bc194b10b4c9973e590a428" title="Convert 1d spline in B form to spline in pp form with periodic boundary conditions. " alt="" coords="255,5,410,47"/>
-<area shape="rect" id="node4" href="$namespacesll__m__splines__pp.html#aac718fb34dbd7eb0e310c43067de4a69" title="sll_s_spline_evaluate\l_basis_pp_form_1d" alt="" coords="252,71,413,112"/>
-<area shape="rect" id="node3" href="$namespacesll__m__splines__pp.html#a1a051605f297f81093a1ff7008bd4143" title="Convert 1d spline in B form in a cell to spline in pp form with periodic boundary conditions..." alt="" coords="479,5,634,47"/>
-<area shape="rect" id="node5" href="$namespacesll__m__splines__pp.html#ab63c3a25b861ed9b8701ae2f65942bcf" title="Perform a 1d hornerschema on the pp_coeffs at index. " alt="" coords="461,78,652,105"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,39,204,80"/>
+<area shape="rect" id="node2" href="$namespacesll__m__splines__pp.html#aac718fb34dbd7eb0e310c43067de4a69" title=" " alt="" coords="252,5,413,47"/>
+<area shape="rect" id="node4" href="$namespacesll__m__splines__pp.html#a9375e3f69bc194b10b4c9973e590a428" title="Convert 1d spline in B form to spline in pp form with periodic boundary conditions." alt="" coords="255,71,410,112"/>
+<area shape="rect" id="node3" href="$namespacesll__m__splines__pp.html#ab63c3a25b861ed9b8701ae2f65942bcf" title="Perform a 1d hornerschema on the pp_coeffs at index." alt="" coords="461,13,652,39"/>
+<area shape="rect" id="node5" href="$namespacesll__m__splines__pp.html#a1a051605f297f81093a1ff7008bd4143" title="Convert 1d spline in B form in a cell to spline in pp form with periodic boundary conditions." alt="" coords="479,71,634,112"/>
 </map>

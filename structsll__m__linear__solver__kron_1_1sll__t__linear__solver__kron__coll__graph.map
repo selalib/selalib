@@ -1,3 +1,8 @@
 <map id="sll_t_linear_solver_kron" name="sll_t_linear_solver_kron">
-<area shape="rect" id="node2" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver " alt="" coords="327,109,467,150"/>
+<area shape="rect" id="node1" title="class for the kronecker linear solver" alt="" coords="680,209,856,236"/>
+<area shape="rect" id="node2" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver" alt="" coords="323,107,463,149"/>
+<area shape="rect" id="node3" title=" " alt="" coords="41,12,107,39"/>
+<area shape="rect" id="node4" title=" " alt="" coords="5,152,143,179"/>
+<area shape="rect" id="node5" title=" " alt="" coords="299,237,487,278"/>
+<area shape="rect" id="node6" title=" " alt="" coords="284,303,503,359"/>
 </map>

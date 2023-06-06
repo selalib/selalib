@@ -1,5 +1,6 @@
 <map id="sll_s_distribution_m4_gnuplot" name="sll_s_distribution_m4_gnuplot">
-<area shape="rect" id="node2" href="$namespacesll__m__utilities.html#a4d45f033e67c39369da8b297302793cb" title="Convert an integer &lt; 9999 to a 4 characters string. " alt="" coords="185,5,321,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__pic__visu.html#a536ad033c27e9d151e7c07367db381df" title="compute_df_m4" alt="" coords="190,71,317,98"/>
-<area shape="rect" id="node4" href="$namespacesll__m__pic__visu.html#ab38fc874bb67ca1cb5926ad5fcb027fe" title="M4 function from Monhagan (SPH method) " alt="" coords="369,71,424,98"/>
+<area shape="rect" id="node1" title="GNUplot readable output for particles density." alt="" coords="5,27,137,69"/>
+<area shape="rect" id="node2" href="$namespacesll__m__pic__visu.html#a536ad033c27e9d151e7c07367db381df" title=" " alt="" coords="190,5,317,32"/>
+<area shape="rect" id="node4" href="$namespacesll__m__utilities.html#a4d45f033e67c39369da8b297302793cb" title="Convert an integer &lt; 9999 to a 4 characters string." alt="" coords="185,57,321,98"/>
+<area shape="rect" id="node3" href="$namespacesll__m__pic__visu.html#ab38fc874bb67ca1cb5926ad5fcb027fe" title="M4 function from Monhagan (SPH method)" alt="" coords="369,5,424,32"/>
 </map>

@@ -1,4 +1,5 @@
 <map id="rhs_twoform" name="rhs_twoform">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__trafo.html#a11b0cc50d265c800a17b7a50d8e48b43" title="Compute the FEM right&#45;hand&#45;side for a given function f and periodic splines of given degree Its compo..." alt="" coords="157,5,337,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__maxwell__3d__trafo.html#aa8a1936b0ff83f9a2bb904326b3e9ddd" title="Compute the L2 projection of a given function f on periodic splines of given degree. " alt="" coords="385,5,545,32"/>
+<area shape="rect" id="node1" title="Compute $\int f(F(\xi))\cdot DF(\xi) N_i(\xi) d\xi$ for vector function f, where $N_i$ is the B&#45;splin..." alt="" coords="441,5,545,32"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__trafo.html#a11b0cc50d265c800a17b7a50d8e48b43" title="Compute the FEM right&#45;hand&#45;side for a given function f and periodic splines of given degree Its compo..." alt="" coords="213,5,393,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__3d__trafo.html#aa8a1936b0ff83f9a2bb904326b3e9ddd" title="Compute the L2 projection of a given function f on periodic splines of given degree." alt="" coords="5,5,165,32"/>
 </map>

@@ -1,3 +1,4 @@
 <map id="compute_particle_boundary_current" name="compute_particle_boundary_current">
-<area shape="rect" id="node2" href="$namespacesll__m__time__propagator__pic__vm__3d3v__hs.html#acf3522561eb31571abb25fa6ec47c74e" title="Push Hp1: Equations to solve are &#160;f + v_1 {x_1} f = 0 &#45;&gt; xnew = xold + dt V_1 V_new,2 = V_old,2 + &#160;h V_old,1 B_old &#160;E_1 = &#45; &#160;v_1 f(t,x_1, v) dv &#45;&gt; E_{1,new} = E_{1,old} &#45; &#160;&#160;v_1 f(t,x_1+s v_1,v) dv ds &#160;E_2 = 0 &#45;&gt; E_{2,new} = E_{2,old} &#160;B = 0 =&gt; B_new = B_old. " alt="" coords="256,5,411,47"/>
+<area shape="rect" id="node1" title="Helper function for operatorHp1." alt="" coords="208,5,411,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__time__propagator__pic__vm__3d3v__hs.html#acf3522561eb31571abb25fa6ec47c74e" title="Push Hp1: Equations to solve are \partial_t f + v_1 \partial_{x_1} f = 0 &#45;&gt; xnew = xold + dt V_1 V_ne..." alt="" coords="5,5,160,47"/>
 </map>

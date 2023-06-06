@@ -1,5 +1,9 @@
 <map id="sll_t_linear_operator_poisson_clamped_1d" name="sll_t_linear_operator_poisson_clamped_1d">
-<area shape="rect" id="node2" href="$structsll__m__linear__operator__abstract_1_1sll__t__linear__operator__abstract.html" title="class for abstract linear operator " alt="" coords="28,212,182,253"/>
-<area shape="rect" id="node6" href="$structsll__m__matrix__abstract_1_1sll__t__matrix__abstract.html" title="abstract class for matrix " alt="" coords="24,332,183,359"/>
-<area shape="rect" id="node5" href="$structsll__m__matrix__csr_1_1sll__t__matrix__csr.html" title="class for a csr matrix " alt="" coords="158,409,284,436"/>
+<area shape="rect" id="node1" title=" " alt="" coords="253,499,418,540"/>
+<area shape="rect" id="node2" href="$structsll__m__linear__operator__abstract_1_1sll__t__linear__operator__abstract.html" title="class for abstract linear operator" alt="" coords="28,212,182,253"/>
+<area shape="rect" id="node6" href="$structsll__m__matrix__abstract_1_1sll__t__matrix__abstract.html" title="abstract class for matrix" alt="" coords="24,332,183,359"/>
+<area shape="rect" id="node3" title=" " alt="" coords="138,5,203,32"/>
+<area shape="rect" id="node5" href="$structsll__m__matrix__csr_1_1sll__t__matrix__csr.html" title="class for a csr matrix" alt="" coords="158,409,284,436"/>
+<area shape="rect" id="node4" title=" " alt="" coords="238,5,375,32"/>
+<area shape="rect" id="node7" title=" " alt="" coords="412,409,529,436"/>
 </map>

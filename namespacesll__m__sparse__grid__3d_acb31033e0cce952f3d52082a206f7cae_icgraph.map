@@ -1,3 +1,4 @@
 <map id="set_hierarchy_info" name="set_hierarchy_info">
-<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__3d.html#a3bfeba4f4ecaf67b8a3abfc7d6347320" title="Initialization function. Set up the hierarchy of the sparse grid. " alt="" coords="196,5,312,32"/>
+<area shape="rect" id="node1" title="Helfer function for initialization. Setting all the information needed for node counter of the sparse..." alt="" coords="169,5,312,32"/>
+<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__3d.html#a3bfeba4f4ecaf67b8a3abfc7d6347320" title="Initialization function. Set up the hierarchy of the sparse grid." alt="" coords="5,5,121,32"/>
 </map>

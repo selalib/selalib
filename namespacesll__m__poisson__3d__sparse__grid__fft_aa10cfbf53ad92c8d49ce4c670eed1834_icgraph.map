@@ -1,4 +1,5 @@
 <map id="insert_fourier_real" name="insert_fourier_real">
-<area shape="rect" id="node2" href="$namespacesll__m__poisson__3d__sparse__grid__fft.html#ac2fb667f84a059b6480a32140105d512" title="Helper function to compute the Fourier coefficients for the derivative operation. ..." alt="" coords="195,13,352,39"/>
-<area shape="rect" id="node3" href="$namespacesll__m__poisson__3d__sparse__grid__fft.html#a65185b18c7e832796656cb022d5dc207" title="Create Poisson solver object with Fourier spectral method on 3d sparse grid. " alt="" coords="400,5,579,47"/>
+<area shape="rect" id="node1" title="Helper function to insert the real Fourier coefficient into the sparse grid data structure." alt="" coords="437,13,579,39"/>
+<area shape="rect" id="node2" href="$namespacesll__m__poisson__3d__sparse__grid__fft.html#ac2fb667f84a059b6480a32140105d512" title="Helper function to compute the Fourier coefficients for the derivative operation." alt="" coords="232,13,389,39"/>
+<area shape="rect" id="node3" href="$namespacesll__m__poisson__3d__sparse__grid__fft.html#a65185b18c7e832796656cb022d5dc207" title="Create Poisson solver object with Fourier spectral method on 3d sparse grid." alt="" coords="5,5,184,47"/>
 </map>

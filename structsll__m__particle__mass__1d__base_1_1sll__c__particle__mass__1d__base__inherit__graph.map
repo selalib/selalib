@@ -1,6 +1,7 @@
 <map id="sll_c_particle_mass_1d_base" name="sll_c_particle_mass_1d_base">
-<area shape="rect" id="node3" href="$structsll__m__linear__operator__particle__mass__1d_1_1sll__t__linear__operator__particle__mass__1d.html" title="sll_t_linear_operator\l_particle_mass_1d" alt="" coords="427,5,582,47"/>
-<area shape="rect" id="node4" href="$structsll__m__linear__operator__particle__mass__cl__1d_1_1sll__t__linear__operator__particle__mass__cl__1d.html" title="sll_t_linear_operator\l_particle_mass_cl_1d" alt="" coords="424,71,585,112"/>
-<area shape="rect" id="node5" href="$structsll__m__linear__operator__particle__mass__smooth__1d_1_1sll__t__linear__operator__particle__mass__smooth__1d.html" title="sll_t_linear_operator\l_particle_mass_smooth_1d" alt="" coords="405,136,604,177"/>
-<area shape="rect" id="node2" href="$structsll__m__linear__operator__abstract_1_1sll__t__linear__operator__abstract.html" title="class for abstract linear operator " alt="" coords="5,71,160,112"/>
+<area shape="rect" id="node1" title=" " alt="" coords="208,71,357,112"/>
+<area shape="rect" id="node3" href="$structsll__m__linear__operator__particle__mass__1d_1_1sll__t__linear__operator__particle__mass__1d.html" title=" " alt="" coords="427,5,582,47"/>
+<area shape="rect" id="node4" href="$structsll__m__linear__operator__particle__mass__cl__1d_1_1sll__t__linear__operator__particle__mass__cl__1d.html" title=" " alt="" coords="424,71,585,112"/>
+<area shape="rect" id="node5" href="$structsll__m__linear__operator__particle__mass__smooth__1d_1_1sll__t__linear__operator__particle__mass__smooth__1d.html" title=" " alt="" coords="405,136,604,177"/>
+<area shape="rect" id="node2" href="$structsll__m__linear__operator__abstract_1_1sll__t__linear__operator__abstract.html" title="class for abstract linear operator" alt="" coords="5,71,160,112"/>
 </map>

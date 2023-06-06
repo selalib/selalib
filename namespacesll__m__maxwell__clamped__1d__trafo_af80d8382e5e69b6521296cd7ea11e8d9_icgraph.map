@@ -1,4 +1,5 @@
 <map id="multiply_gt" name="multiply_gt">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__clamped__1d__trafo.html#ad95f42db0b196af187241167195cd45a" title="Compute rho from Gauss law for given efield. " alt="" coords="149,5,309,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__maxwell__clamped__1d__trafo.html#ac3d65f4752c853b5e2e06ca78dd4abe1" title="For model with adiabatic electrons. " alt="" coords="152,71,307,112"/>
+<area shape="rect" id="node1" title="Multiply by transpose of dicrete gradient matrix." alt="" coords="213,46,309,73"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__clamped__1d__trafo.html#ac3d65f4752c853b5e2e06ca78dd4abe1" title="For model with adiabatic electrons." alt="" coords="8,5,163,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__clamped__1d__trafo.html#ad95f42db0b196af187241167195cd45a" title="Compute rho from Gauss law for given efield." alt="" coords="5,71,165,112"/>
 </map>

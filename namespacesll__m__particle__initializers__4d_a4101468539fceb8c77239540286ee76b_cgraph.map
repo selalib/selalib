@@ -1,4 +1,4 @@
 <map id="sll_s_initial_random_particles_4d" name="sll_s_initial_random_particles_4d">
-<area shape="rect" id="node2" href="$namespacesll__m__particle__initializers__4d.html#a8764061f0ba5d4770941607bf24b02a5" title="sll_f_eval_landau1d" alt="" coords="205,13,356,39"/>
-<area shape="rect" id="node3" href="$namespacesll__m__particle__initializers__4d.html#af354e14dffe594d1863562b99d88cebb" title="sll_f_eval_landau2d" alt="" coords="404,13,555,39"/>
+<area shape="rect" id="node1" title="Initialize particles in a 2d+2v phase space using random generators. The Landau damping case with a p..." alt="" coords="5,5,157,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__particle__initializers__4d.html#a8764061f0ba5d4770941607bf24b02a5" title=" " alt="" coords="205,13,356,39"/>
 </map>

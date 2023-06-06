@@ -1,4 +1,5 @@
 <map id="assemble_mass3d_clamped_boundary" name="assemble_mass3d_clamped_boundary">
-<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities__3d__helper.html#a48122c3cd88685ee9f9f3becaa352521" title="assemble2_clamped_boundary" alt="" coords="260,13,484,39"/>
-<area shape="rect" id="node3" href="$namespacesll__m__spline__fem__utilities__3d__helper.html#ad35e0645447e7d2d6d3afe30843e0838" title="assemble1_clamped_boundary" alt="" coords="532,13,756,39"/>
+<area shape="rect" id="node1" title="Assemble the boundary part of the clamped mass matrix." alt="" coords="5,5,212,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities__3d__helper.html#a48122c3cd88685ee9f9f3becaa352521" title=" " alt="" coords="260,13,484,39"/>
+<area shape="rect" id="node3" href="$namespacesll__m__spline__fem__utilities__3d__helper.html#ad35e0645447e7d2d6d3afe30843e0838" title=" " alt="" coords="532,13,756,39"/>
 </map>

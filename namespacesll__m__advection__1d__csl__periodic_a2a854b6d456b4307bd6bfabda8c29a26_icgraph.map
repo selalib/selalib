@@ -1,4 +1,5 @@
 <map id="compute_csl_ww" name="compute_csl_ww">
-<area shape="rect" id="node2" href="$namespacesll__m__advection__1d__csl__periodic.html#a0001d2864a9d6542865e9c16916d5b19" title="update_solution_csl\l_periodic" alt="" coords="187,5,337,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__advection__1d__csl__periodic.html#aa0160216674adab2d9e9fc52c3c7dc53" title="csl_periodic_advect_1d" alt="" coords="385,13,559,39"/>
+<area shape="rect" id="node1" title=" " alt="" coords="425,13,559,39"/>
+<area shape="rect" id="node2" href="$namespacesll__m__advection__1d__csl__periodic.html#a0001d2864a9d6542865e9c16916d5b19" title=" " alt="" coords="227,5,377,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__advection__1d__csl__periodic.html#aa0160216674adab2d9e9fc52c3c7dc53" title=" " alt="" coords="5,13,179,39"/>
 </map>

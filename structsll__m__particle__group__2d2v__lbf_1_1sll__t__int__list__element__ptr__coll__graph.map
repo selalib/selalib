@@ -1,3 +1,5 @@
 <map id="sll_t_int_list_element_ptr" name="sll_t_int_list_element_ptr">
-<area shape="rect" id="node2" href="$structsll__m__particle__group__2d2v__lbf_1_1sll__t__int__list__element.html" title="linked lists of integers, used in some of the module routines " alt="" coords="18,95,179,121"/>
+<area shape="rect" id="node1" title="a pointer type is needed for arrays of lists" alt="" coords="5,184,192,211"/>
+<area shape="rect" id="node2" href="$structsll__m__particle__group__2d2v__lbf_1_1sll__t__int__list__element.html" title="linked lists of integers, used in some of the module routines" alt="" coords="18,95,179,121"/>
+<area shape="rect" id="node3" title=" " alt="" coords="30,5,167,32"/>
 </map>

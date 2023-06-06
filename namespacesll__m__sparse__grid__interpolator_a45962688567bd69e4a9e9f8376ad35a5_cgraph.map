@@ -1,5 +1,6 @@
 <map id="integrate_trapezoidal2" name="integrate_trapezoidal2">
-<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__interpolator.html#a560a21107f02666d121ea200f0ec6e24" title="hierarchical_part" alt="" coords="231,5,361,32"/>
-<area shape="rect" id="node4" href="$namespacesll__m__sparse__grid__interpolator.html#a0f1a7c18559af8b9ee87e2a15b3a1dd4" title="dehierarchical_part" alt="" coords="223,56,369,83"/>
-<area shape="rect" id="node3" href="$namespacesll__m__sparse__grid__interpolator.html#a1922c60eabeb5ce3b2d43f7d2db8bf65" title="dehierarchical_part\l_d_dimension" alt="" coords="417,23,564,65"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,175,57"/>
+<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__interpolator.html#a0f1a7c18559af8b9ee87e2a15b3a1dd4" title=" " alt="" coords="223,5,369,32"/>
+<area shape="rect" id="node4" href="$namespacesll__m__sparse__grid__interpolator.html#a560a21107f02666d121ea200f0ec6e24" title=" " alt="" coords="231,56,361,83"/>
+<area shape="rect" id="node3" href="$namespacesll__m__sparse__grid__interpolator.html#a1922c60eabeb5ce3b2d43f7d2db8bf65" title=" " alt="" coords="417,23,564,65"/>
 </map>

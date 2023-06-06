@@ -1,3 +1,4 @@
 <map id="sll_t_sparse_grid_4d" name="sll_t_sparse_grid_4d">
-<area shape="rect" id="node2" href="$structsll__m__sparse__grid__interpolator_1_1sll__t__sparse__grid__interpolator.html" title="Class defining the sparse grid data structure. " alt="" coords="5,5,220,32"/>
+<area shape="rect" id="node1" title="Sparse grid object for 4d with interpolation routines. Note in 4d we have only an implementation of a..." alt="" coords="35,80,190,107"/>
+<area shape="rect" id="node2" href="$structsll__m__sparse__grid__interpolator_1_1sll__t__sparse__grid__interpolator.html" title="Class defining the sparse grid data structure." alt="" coords="5,5,220,32"/>
 </map>

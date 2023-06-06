@@ -1,4 +1,5 @@
 <map id="mult_givens" name="mult_givens">
-<area shape="rect" id="node2" href="$namespacesll__m__linear__solver__mgmres.html#a04157a5ec632f8776cdf4a4e371f17c1" title="mgmres_linear_solver" alt="" coords="156,13,323,39"/>
-<area shape="rect" id="node3" href="$namespacesll__m__linear__solver__mgmres.html#a57de7606d063f28ce3f5a7933d62c38c" title="solves the linear system with real vectors " alt="" coords="371,5,551,47"/>
+<area shape="rect" id="node1" title=" " alt="" coords="448,13,551,39"/>
+<area shape="rect" id="node2" href="$namespacesll__m__linear__solver__mgmres.html#a04157a5ec632f8776cdf4a4e371f17c1" title=" " alt="" coords="233,13,400,39"/>
+<area shape="rect" id="node3" href="$namespacesll__m__linear__solver__mgmres.html#a57de7606d063f28ce3f5a7933d62c38c" title="solves the linear system with real vectors" alt="" coords="5,5,185,47"/>
 </map>

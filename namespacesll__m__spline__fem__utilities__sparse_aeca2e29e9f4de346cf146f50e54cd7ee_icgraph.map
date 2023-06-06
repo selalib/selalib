@@ -1,4 +1,5 @@
 <map id="sll_s_spline_fem_mass1d_clamped" name="sll_s_spline_fem_mass1d_clamped">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__clamped__1d__fem__sm.html#a400fe28b25203e207ad0786874c32912" title="Initialization. " alt="" coords="241,5,459,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__maxwell__clamped__3d__fem.html#afadba212d3f01a688b12c751068d1707" title="Initialization. " alt="" coords="259,71,441,112"/>
+<area shape="rect" id="node1" title="Set up 1d mass matrix (sparsity pattern and values)" alt="" coords="271,39,459,80"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__clamped__1d__fem__sm.html#a400fe28b25203e207ad0786874c32912" title="Initialization." alt="" coords="5,5,223,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__clamped__3d__fem.html#afadba212d3f01a688b12c751068d1707" title="Initialization." alt="" coords="23,71,205,112"/>
 </map>

@@ -1,8 +1,9 @@
 <map id="sll_s_spline_fem_mixedmass_line_full" name="sll_s_spline_fem_mixedmass_line_full">
-<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities__sparse.html#a836d6dd47591a9908563b281f683ab2e" title="sll_m_spline_fem_utilities\l_sparse::sll_s_spline_fem\l_mixedmass1d_full" alt="" coords="277,11,469,67"/>
-<area shape="rect" id="node4" href="$namespacesll__m__spline__fem__utilities__sparse.html#a58ea8913e3f0590a3a20406f15b23c11" title="Set up 1d mixed mass matrix for specific spline degrees and profile function. " alt="" coords="267,103,479,159"/>
-<area shape="rect" id="node3" href="$namespacesll__m__maxwell__1d__trafo.html#a379870fb13734539528b6b4fd558963f" title="Initialization. " alt="" coords="545,5,726,47"/>
-<area shape="rect" id="node5" href="$namespacesll__m__maxwell__clamped__1d__fem__sm.html#a400fe28b25203e207ad0786874c32912" title="Initialization. " alt="" coords="527,71,744,112"/>
-<area shape="rect" id="node6" href="$namespacesll__m__maxwell__clamped__1d__trafo.html#a800127433401043caf9d2b00dfa7e79f" title="Initialization. " alt="" coords="544,136,727,177"/>
-<area shape="rect" id="node7" href="$namespacesll__m__maxwell__clamped__3d__fem.html#afadba212d3f01a688b12c751068d1707" title="Initialization. " alt="" coords="544,201,727,243"/>
+<area shape="rect" id="node1" title="Helper function to find line of mass matrix ( N_i^p N_j^{p&#45;1}))" alt="" coords="529,136,741,177"/>
+<area shape="rect" id="node2" href="$namespacesll__m__spline__fem__utilities__sparse.html#a58ea8913e3f0590a3a20406f15b23c11" title="Set up 1d mixed mass matrix for specific spline degrees and profile function." alt="" coords="271,77,481,133"/>
+<area shape="rect" id="node6" href="$namespacesll__m__spline__fem__utilities__sparse.html#a836d6dd47591a9908563b281f683ab2e" title=" " alt="" coords="280,169,472,225"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__clamped__1d__fem__sm.html#a400fe28b25203e207ad0786874c32912" title="Initialization." alt="" coords="5,5,223,47"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__clamped__1d__trafo.html#a800127433401043caf9d2b00dfa7e79f" title="Initialization." alt="" coords="23,71,205,112"/>
+<area shape="rect" id="node5" href="$namespacesll__m__maxwell__clamped__3d__fem.html#afadba212d3f01a688b12c751068d1707" title="Initialization." alt="" coords="23,136,205,177"/>
+<area shape="rect" id="node7" href="$namespacesll__m__maxwell__1d__trafo.html#a379870fb13734539528b6b4fd558963f" title="Initialization." alt="" coords="23,201,205,243"/>
 </map>

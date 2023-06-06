@@ -1,5 +1,6 @@
 <map id="sll_f_change_elements_notation" name="sll_f_change_elements_notation">
-<area shape="rect" id="node2" href="$namespacesll__m__hexagonal__meshes.html#a99a1f6a0f986b08021d2c0f336ba4aef" title="Writes files for CAID. " alt="" coords="234,5,393,32"/>
-<area shape="rect" id="node4" href="$namespacesll__m__box__splines.html#a0c9a0bd0c7da4d792500caf130c3ddd0" title="Writes connectivity for CAID / DJANGO. " alt="" coords="224,57,403,98"/>
-<area shape="rect" id="node3" href="$namespacesll__m__fekete__integration.html#adceb8456a1011a2bb4dcecfd28374463" title="This function is supposed to write all django input files needed for a Django/Jorek simulation..." alt="" coords="451,27,657,69"/>
+<area shape="rect" id="node1" title="Function that allows to change from the current element notation to one more intuitive." alt="" coords="487,27,657,69"/>
+<area shape="rect" id="node2" href="$namespacesll__m__hexagonal__meshes.html#a99a1f6a0f986b08021d2c0f336ba4aef" title="Writes files for CAID." alt="" coords="270,5,429,32"/>
+<area shape="rect" id="node4" href="$namespacesll__m__box__splines.html#a0c9a0bd0c7da4d792500caf130c3ddd0" title="Writes connectivity for CAID / DJANGO." alt="" coords="260,57,439,98"/>
+<area shape="rect" id="node3" href="$namespacesll__m__fekete__integration.html#adceb8456a1011a2bb4dcecfd28374463" title="This function is supposed to write all django input files needed for a Django/Jorek simulation." alt="" coords="5,27,212,69"/>
 </map>

@@ -1,4 +1,10 @@
 <map id="sll_t_preconditioner_curl_solver_fft" name="sll_t_preconditioner_curl_solver_fft">
-<area shape="rect" id="node2" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver " alt="" coords="306,168,446,209"/>
-<area shape="rect" id="node5" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib. " alt="" coords="206,175,277,202"/>
+<area shape="rect" id="node1" title="Linear solver for FFT&#45;based inversion of 3d tensor product of circulant matrices (extending the abstr..." alt="" coords="729,227,880,269"/>
+<area shape="rect" id="node2" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver" alt="" coords="371,119,511,161"/>
+<area shape="rect" id="node3" title=" " alt="" coords="69,260,134,287"/>
+<area shape="rect" id="node5" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib." alt="" coords="405,265,476,292"/>
+<area shape="rect" id="node4" title=" " alt="" coords="33,99,170,125"/>
+<area shape="rect" id="node6" title=" " alt="" coords="5,324,197,380"/>
+<area shape="rect" id="node7" title=" " alt="" coords="347,346,535,387"/>
+<area shape="rect" id="node8" title=" " alt="" coords="382,487,499,513"/>
 </map>

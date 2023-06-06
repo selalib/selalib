@@ -1,4 +1,4 @@
 <map id="sll_s_collective_reduce_int" name="sll_s_collective_reduce_int">
-<area shape="rect" id="node2" href="$namespacesll__m__collective.html#acd47e0720544a6b163abed3635482e8d" title="Performs a global sum over an array and writes the result in the given node If no node in root_rank i..." alt="" coords="249,5,432,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__collective.html#ae8aae91f97b429d2093d51c9e0a2cbfd" title="Performs a global sum and writes the result in the given node. " alt="" coords="480,5,663,47"/>
+<area shape="rect" id="node1" title="Reduces integer values on all processes to a single value." alt="" coords="244,27,440,54"/>
+<area shape="rect" id="node2" href="$interfacesll__m__collective_1_1sll__o__collective__globalsum.html#a73bb4a75a226fb5b6ac7ea090dee806b" title="Performs a global sum over an array and writes the result in the given node If no node in root_rank i..." alt="" coords="5,5,196,76"/>
 </map>

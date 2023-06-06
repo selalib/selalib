@@ -1,3 +1,4 @@
 <map id="l2norm_squared_3d_trafo" name="l2norm_squared_3d_trafo">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__clamped__3d__trafo.html#a12d86d37fca9ad83589e2cad9bf71012" title="Compute inner product. " alt="" coords="241,5,413,32"/>
+<area shape="rect" id="node1" title="Compute square of the L2norm." alt="" coords="5,5,193,32"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__clamped__3d__trafo.html#a12d86d37fca9ad83589e2cad9bf71012" title="Compute inner product." alt="" coords="241,5,413,32"/>
 </map>

@@ -1,3 +1,4 @@
 <map id="inner_product_3d_fem" name="inner_product_3d_fem">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__fem.html#a5fc38d7461b2f12a65e34990f95d0a8d" title="Compute square of the L2norm. " alt="" coords="220,5,403,32"/>
+<area shape="rect" id="node1" title="Compute inner product." alt="" coords="236,5,403,32"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__fem.html#a5fc38d7461b2f12a65e34990f95d0a8d" title="Compute square of the L2norm." alt="" coords="5,5,188,32"/>
 </map>

@@ -1,3 +1,4 @@
 <map id="sll_s_spline_pp_horner_m_3d" name="sll_s_spline_pp_horner_m_3d">
-<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__3d__feec.html#a0a55d8ef4a6d5c04308d60a9811b12e2" title="Add charge of one particle. " alt="" coords="265,5,452,76"/>
+<area shape="rect" id="node1" title="Perform three times a 1d hornerschema on the poly_coeffs." alt="" coords="240,27,452,54"/>
+<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__3d__feec.html#a0a55d8ef4a6d5c04308d60a9811b12e2" title="Add charge of one particle." alt="" coords="5,5,192,76"/>
 </map>

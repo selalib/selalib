@@ -1,7 +1,8 @@
 <map id="displace1d" name="displace1d">
-<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__interpolator.html#a43519e208322b3650a80b3263d4489bd" title="extract_fourier" alt="" coords="172,5,291,32"/>
-<area shape="rect" id="node4" href="$namespacesll__m__sparse__grid__interpolator.html#a35c48d986fad2e74033a92d8bd35c4c6" title="displace_fourier_coeffs" alt="" coords="145,56,317,83"/>
-<area shape="rect" id="node5" href="$namespacesll__m__sparse__grid__interpolator.html#aad904cb37ec386510d3f63b8818ba2a1" title="insert_fourier" alt="" coords="177,107,286,133"/>
-<area shape="rect" id="node3" href="$namespacesll__m__sparse__grid__interpolator.html#af7efccbf9f9a03918fea841de55ae8e8" title="extract_recursive_fourier" alt="" coords="365,5,551,32"/>
-<area shape="rect" id="node6" href="$namespacesll__m__sparse__grid__interpolator.html#a330e536e8349fd8ad5f0d92b18d34bb1" title="insert_recursive_fourier" alt="" coords="370,107,546,133"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,56,97,83"/>
+<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__interpolator.html#a35c48d986fad2e74033a92d8bd35c4c6" title=" " alt="" coords="145,5,317,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__sparse__grid__interpolator.html#a43519e208322b3650a80b3263d4489bd" title=" " alt="" coords="172,56,291,83"/>
+<area shape="rect" id="node5" href="$namespacesll__m__sparse__grid__interpolator.html#aad904cb37ec386510d3f63b8818ba2a1" title=" " alt="" coords="177,107,286,133"/>
+<area shape="rect" id="node4" href="$namespacesll__m__sparse__grid__interpolator.html#af7efccbf9f9a03918fea841de55ae8e8" title=" " alt="" coords="365,56,551,83"/>
+<area shape="rect" id="node6" href="$namespacesll__m__sparse__grid__interpolator.html#a330e536e8349fd8ad5f0d92b18d34bb1" title=" " alt="" coords="370,107,546,133"/>
 </map>

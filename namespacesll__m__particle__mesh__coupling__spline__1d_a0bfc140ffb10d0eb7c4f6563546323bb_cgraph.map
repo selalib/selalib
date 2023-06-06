@@ -1,3 +1,4 @@
 <map id="add_particle_mass_spline_1d" name="add_particle_mass_spline_1d">
+<area shape="rect" id="node1" title="Add the contribution of one particle to the approximate mass matrix." alt="" coords="5,5,219,32"/>
 <area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__1d.html#acd3198a72571d1253f83aaa909e67031" title="Helper function that identifies in which box the particle is found and its normalized poistion in the..." alt="" coords="267,5,412,32"/>
 </map>

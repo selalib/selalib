@@ -1,7 +1,8 @@
 <map id="sll_s_compute_rho_from_e_3d_fem_fft" name="sll_s_compute_rho_from_e_3d_fem_fft">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__fem__fft.html#ae07f9ed77d53f2f362a890d1023c22cf" title="Helper function for multiply_mass. " alt="" coords="235,15,399,42"/>
-<area shape="rect" id="node5" href="$namespacesll__m__maxwell__3d__fem__fft.html#a905ee9289db36c78f8d002682078d8ab" title="Multiply by transpose of dicrete gradient matrix. " alt="" coords="269,67,365,94"/>
-<area shape="rect" id="node3" href="$namespacesll__m__maxwell__3d__fem__fft.html#af661de8498b97c6bb3b0549168a27a7e" title="Multiply by the mass matrix. " alt="" coords="457,13,628,39"/>
-<area shape="rect" id="node4" href="$namespacesll__m__spline__fem__utilities.html#a528fc7241e39fd979bd521f0c2d7b350" title="Multiply the vector invec with the spline FEM mass matrix with mass line mass. " alt="" coords="687,5,928,47"/>
-<area shape="rect" id="node6" href="$namespacesll__m__spline__fem__utilities.html#ab2d9661937b3bdb9799c3d8f2d0771c4" title="Multiply by transpose of dicrete gradient matrix (3d version) " alt="" coords="447,64,639,105"/>
+<area shape="rect" id="node1" title="compute rho from e using weak Gauss law ( rho = G^T M_1 e )" alt="" coords="5,35,187,76"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__fem__fft.html#a905ee9289db36c78f8d002682078d8ab" title="Multiply by transpose of dicrete gradient matrix." alt="" coords="269,15,365,42"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__3d__fem__fft.html#ae07f9ed77d53f2f362a890d1023c22cf" title="Helper function for multiply_mass." alt="" coords="235,67,399,94"/>
+<area shape="rect" id="node3" href="$namespacesll__m__spline__fem__utilities.html#ab2d9661937b3bdb9799c3d8f2d0771c4" title="Multiply by transpose of dicrete gradient matrix (3d version)" alt="" coords="447,5,639,47"/>
+<area shape="rect" id="node5" href="$namespacesll__m__maxwell__3d__fem__fft.html#af661de8498b97c6bb3b0549168a27a7e" title="Multiply by the mass matrix." alt="" coords="457,71,628,98"/>
+<area shape="rect" id="node6" href="$namespacesll__m__spline__fem__utilities.html#a528fc7241e39fd979bd521f0c2d7b350" title="Multiply the vector invec with the spline FEM mass matrix with mass line mass." alt="" coords="687,64,928,105"/>
 </map>

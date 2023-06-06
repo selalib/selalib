@@ -1,13 +1,14 @@
 <map id="sll_s_fft_init_r2r_1d" name="sll_s_fft_init_r2r_1d">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__1d__fem.html#a5b82c557e498ae59986631d0aea7ed63" title="sll_m_maxwell_1d_fem\l::init_1d_fem" alt="" coords="209,5,385,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__maxwell__1d__ps.html#a58acf90332f482fb7d2c8590a1670ce2" title="sll_m_maxwell_1d_ps\l::init_1d_ps" alt="" coords="214,71,379,112"/>
-<area shape="rect" id="node4" href="$namespacesll__m__poisson__2d__polar__par.html#a0f1dc18ba51644f7472cbb9f2b9b87df" title="sll_o_initialize the Poisson solver in polar coordinates " alt="" coords="208,137,385,193"/>
-<area shape="rect" id="node5" href="$namespacesll__m__qn__solver__2d__polar__par.html#a469531318563d910cd216334ff4a1828" title="Initialize the solver. " alt="" coords="203,217,391,273"/>
-<area shape="rect" id="node7" href="$namespacesll__m__periodic__interp.html#abc80c95f808db2e9ff4e176e86d5d241" title="sll_m_periodic_interp\l::sll_s_periodic_interp_init" alt="" coords="201,297,392,339"/>
-<area shape="rect" id="node12" href="$namespacesll__m__fft__filter__1d.html#a6e052c5b11799e73750562e334da44ed" title="sll_m_fft_filter_1d\l::init_fft_1d" alt="" coords="227,363,366,404"/>
-<area shape="rect" id="node6" href="$namespacesll__m__qn__solver__3d__polar__par.html#a2e6d1e5238b003c9d2a5bf33a11644d0" title="Initialize the 3D (wrapper) solver. " alt="" coords="464,217,652,273"/>
-<area shape="rect" id="node8" href="$namespacesll__m__periodic__interpolator__1d.html#a137a06d731f848d2844a08ecd61f0ce5" title="initialize periodic interpolator " alt="" coords="440,297,676,339"/>
-<area shape="rect" id="node10" href="$namespacesll__m__advection__1d__periodic.html#abcf0ae4a5833355e3bf2f6c582130c82" title="sll_m_advection_1d\l_periodic::initialize\l_periodic_1d_advector" alt="" coords="474,363,642,419"/>
-<area shape="rect" id="node9" href="$namespacesll__m__periodic__interpolator__1d.html#ad3e7d16f12ac8ac11ec359bdb2e6337d" title="Create a new interpolator. " alt="" coords="724,297,969,339"/>
-<area shape="rect" id="node11" href="$namespacesll__m__advection__1d__periodic.html#a15d29082b9a28ef683f78578511aa95f" title="sll_m_advection_1d\l_periodic::sll_f_new\l_periodic_1d_advector" alt="" coords="763,363,931,419"/>
+<area shape="rect" id="node1" title="Create new 1d real to real plan." alt="" coords="821,177,969,203"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__1d__fem.html#a5b82c557e498ae59986631d0aea7ed63" title=" " alt="" coords="590,5,766,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__1d__ps.html#a58acf90332f482fb7d2c8590a1670ce2" title=" " alt="" coords="595,71,761,112"/>
+<area shape="rect" id="node4" href="$namespacesll__m__fft__filter__1d.html#a6e052c5b11799e73750562e334da44ed" title=" " alt="" coords="609,136,747,177"/>
+<area shape="rect" id="node5" href="$namespacesll__m__periodic__interp.html#abc80c95f808db2e9ff4e176e86d5d241" title=" " alt="" coords="583,201,773,243"/>
+<area shape="rect" id="node10" href="$namespacesll__m__poisson__2d__polar__par.html#a0f1dc18ba51644f7472cbb9f2b9b87df" title="sll_o_initialize the Poisson solver in polar coordinates" alt="" coords="589,267,767,323"/>
+<area shape="rect" id="node11" href="$namespacesll__m__qn__solver__2d__polar__par.html#a469531318563d910cd216334ff4a1828" title="Initialize the solver." alt="" coords="584,347,772,403"/>
+<area shape="rect" id="node6" href="$namespacesll__m__periodic__interpolator__1d.html#a137a06d731f848d2844a08ecd61f0ce5" title="initialize periodic interpolator" alt="" coords="299,165,535,207"/>
+<area shape="rect" id="node8" href="$namespacesll__m__advection__1d__periodic.html#abcf0ae4a5833355e3bf2f6c582130c82" title=" " alt="" coords="333,231,501,287"/>
+<area shape="rect" id="node7" href="$namespacesll__m__periodic__interpolator__1d.html#ad3e7d16f12ac8ac11ec359bdb2e6337d" title="Create a new interpolator." alt="" coords="5,165,251,207"/>
+<area shape="rect" id="node9" href="$namespacesll__m__advection__1d__periodic.html#a15d29082b9a28ef683f78578511aa95f" title=" " alt="" coords="44,231,212,287"/>
+<area shape="rect" id="node12" href="$namespacesll__m__qn__solver__3d__polar__par.html#a2e6d1e5238b003c9d2a5bf33a11644d0" title="Initialize the 3D (wrapper) solver." alt="" coords="323,347,511,403"/>
 </map>

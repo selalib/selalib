@@ -1,5 +1,6 @@
 <map id="sll_s_desrem" name="sll_s_desrem">
-<area shape="rect" id="node2" href="$namespacesll__m__poisson__2d__tri.html#a614cd0693ce9792bb8431418021635d7" title="sll_m_poisson_2d_tri\l::poissn" alt="" coords="160,39,319,80"/>
-<area shape="rect" id="node3" href="$namespacesll__m__poisson__2d__tri.html#abf9dd3db10a3e7b84641fb3e47f7a43c" title="Compute electric field from charge density. " alt="" coords="373,5,577,47"/>
-<area shape="rect" id="node4" href="$namespacesll__m__poisson__2d__tri.html#afe843b7e28519e6687f729412b009523" title="sll_m_poisson_2d_tri\l::sll_s_compute_phi_from_rho" alt="" coords="367,71,583,112"/>
+<area shape="rect" id="node1" title=" " alt="" coords="476,46,583,73"/>
+<area shape="rect" id="node2" href="$namespacesll__m__poisson__2d__tri.html#a614cd0693ce9792bb8431418021635d7" title=" " alt="" coords="269,39,428,80"/>
+<area shape="rect" id="node3" href="$namespacesll__m__poisson__2d__tri.html#abf9dd3db10a3e7b84641fb3e47f7a43c" title="Compute electric field from charge density." alt="" coords="11,5,215,47"/>
+<area shape="rect" id="node4" href="$namespacesll__m__poisson__2d__tri.html#afe843b7e28519e6687f729412b009523" title=" " alt="" coords="5,71,221,112"/>
 </map>

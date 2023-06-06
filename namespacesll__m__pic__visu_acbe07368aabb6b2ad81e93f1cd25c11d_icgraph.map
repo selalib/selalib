@@ -1,4 +1,5 @@
 <map id="sll_s_compute_df_cic" name="sll_s_compute_df_cic">
-<area shape="rect" id="node2" href="$namespacesll__m__pic__visu.html#a18ee4e2413e318fe46a94506bdf191fc" title="VisIt readable output for particles density Data file format could be XML, HDF5 or Binary (not fully ..." alt="" coords="232,5,405,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__pic__visu__parallel.html#ad67f213921eb3b0568bc86f927776a8d" title="VisIt readable output for particles density Data file format could be XML, HDF5 or Binary (not fully ..." alt="" coords="213,57,424,98"/>
+<area shape="rect" id="node1" title="Compute grid field from particles distribution with the CIC scheme (Cloud In." alt="" coords="264,35,424,61"/>
+<area shape="rect" id="node2" href="$namespacesll__m__pic__visu.html#a18ee4e2413e318fe46a94506bdf191fc" title="VisIt readable output for particles density Data file format could be XML, HDF5 or Binary (not fully ..." alt="" coords="24,5,197,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__pic__visu__parallel.html#ad67f213921eb3b0568bc86f927776a8d" title="VisIt readable output for particles density Data file format could be XML, HDF5 or Binary (not fully ..." alt="" coords="5,57,216,98"/>
 </map>

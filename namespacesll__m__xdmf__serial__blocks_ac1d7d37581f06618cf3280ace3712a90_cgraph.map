@@ -1,6 +1,0 @@
-<map id="sll_s_xdmf_open_serial_blocks" name="sll_s_xdmf_open_serial_blocks">
-<area shape="rect" id="node2" href="$namespacesll__m__utilities.html#a4d45f033e67c39369da8b297302793cb" title="Convert an integer &lt; 9999 to a 4 characters string. " alt="" coords="255,5,391,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__xml__io.html#aa79c90960210f0f247699f5c6559531a" title="Create the XML file and begin to write first lines. You get the file unit number. ..." alt="" coords="251,71,396,112"/>
-<area shape="rect" id="node4" href="$namespacesll__m__hdf5__io__serial.html#a4ee38dc50c13e54d6b1e905ca852e49b" title="Create new HDF5 file. " alt="" coords="246,137,401,193"/>
-<area shape="rect" id="node5" href="$namespacesll__m__hdf5__io__serial.html#aad08ae9d9ee0157ed6f78f50717367f1" title="Close existing HDF5 file. " alt="" coords="228,217,419,259"/>
-</map>

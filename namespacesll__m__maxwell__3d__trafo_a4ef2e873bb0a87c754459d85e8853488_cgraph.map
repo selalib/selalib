@@ -1,5 +1,6 @@
 <map id="sll_s_compute_rho_from_e_3d_trafo" name="sll_s_compute_rho_from_e_3d_trafo">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__trafo.html#ae642a3e028fc2b18e446cfc10b0a5e21" title="Multiply by the mass matrix. " alt="" coords="235,5,391,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__maxwell__3d__trafo.html#a6c69dd5652ad0da9d7b611c82c65a705" title="Multiply by transpose of dicrete gradient matrix. " alt="" coords="265,56,361,83"/>
-<area shape="rect" id="node4" href="$namespacesll__m__spline__fem__utilities.html#ab2d9661937b3bdb9799c3d8f2d0771c4" title="Multiply by transpose of dicrete gradient matrix (3d version) " alt="" coords="439,49,631,90"/>
+<area shape="rect" id="node1" title="compute rho from e using weak Gauss law ( rho = G^T M_1 e )" alt="" coords="5,31,187,72"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__trafo.html#a6c69dd5652ad0da9d7b611c82c65a705" title="Multiply by transpose of dicrete gradient matrix." alt="" coords="265,13,361,39"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__3d__trafo.html#ae642a3e028fc2b18e446cfc10b0a5e21" title="Multiply by the mass matrix." alt="" coords="235,63,391,90"/>
+<area shape="rect" id="node3" href="$namespacesll__m__spline__fem__utilities.html#ab2d9661937b3bdb9799c3d8f2d0771c4" title="Multiply by transpose of dicrete gradient matrix (3d version)" alt="" coords="439,5,631,47"/>
 </map>

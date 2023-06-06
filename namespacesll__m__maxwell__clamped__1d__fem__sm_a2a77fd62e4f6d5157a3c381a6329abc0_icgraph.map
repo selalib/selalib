@@ -1,3 +1,4 @@
 <map id="sll_s_compute_rhs_fem_sm" name="sll_s_compute_rhs_fem_sm">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__clamped__1d__fem__sm.html#ad7883e9d238c2872f7cf162c132a277a" title="Compute the L2 projection of a given function f on periodic splines of given degree. " alt="" coords="256,5,439,32"/>
+<area shape="rect" id="node1" title="Compute the FEM right&#45;hand&#45;side for a given function f and clamped splines of given degree Its compon..." alt="" coords="236,5,439,32"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__clamped__1d__fem__sm.html#ad7883e9d238c2872f7cf162c132a277a" title="Compute the L2 projection of a given function f on periodic splines of given degree." alt="" coords="5,5,188,32"/>
 </map>

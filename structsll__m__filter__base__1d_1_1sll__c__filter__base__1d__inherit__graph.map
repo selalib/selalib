@@ -1,4 +1,5 @@
 <map id="sll_c_filter_base_1d" name="sll_c_filter_base_1d">
-<area shape="rect" id="node2" href="$structsll__m__binomial__filter_1_1sll__t__binomial__filter.html" title="sll_t_binomial_filter" alt="" coords="5,80,156,107"/>
-<area shape="rect" id="node3" href="$structsll__m__fft__filter__1d_1_1sll__t__fft__filter__1d.html" title="sll_t_fft_filter_1d" alt="" coords="181,80,311,107"/>
+<area shape="rect" id="node1" title=" " alt="" coords="89,5,238,32"/>
+<area shape="rect" id="node2" href="$structsll__m__binomial__filter_1_1sll__t__binomial__filter.html" title=" " alt="" coords="5,80,156,107"/>
+<area shape="rect" id="node3" href="$structsll__m__fft__filter__1d_1_1sll__t__fft__filter__1d.html" title=" " alt="" coords="181,80,311,107"/>
 </map>

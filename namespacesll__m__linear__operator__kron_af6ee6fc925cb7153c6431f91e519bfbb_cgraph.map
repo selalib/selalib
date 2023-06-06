@@ -1,7 +1,8 @@
 <map id="dot_linear_operator_kron" name="dot_linear_operator_kron">
-<area shape="rect" id="node2" href="$namespacesll__m__linear__operator__kron.html#a18267a150cb94d3954ba6bede91554ec" title="apply the dot operation " alt="" coords="487,49,687,76"/>
-<area shape="rect" id="node6" href="$namespacesll__m__linear__operator__kron.html#a329423cf7f82fb4d683880ba0ca1110a" title="apply the dot operation " alt="" coords="239,100,439,127"/>
-<area shape="rect" id="node3" href="$namespacesll__m__linear__operator__kron.html#add80f97c45c857e5a2828ab6e9abd722" title="converts a vector to a matrix " alt="" coords="735,5,889,32"/>
-<area shape="rect" id="node4" href="$namespacesll__m__linear__operator__kron.html#a4cfac47f167a2df2e965677387d6adf6" title="returnes the transpose of a 2d array " alt="" coords="758,125,866,152"/>
-<area shape="rect" id="node5" href="$namespacesll__m__linear__operator__kron.html#a8b75d7c3bba7b090d5e807d1f66bfc7d" title="converts a matrix to a vector " alt="" coords="735,63,889,89"/>
+<area shape="rect" id="node1" title="apply the dot operation" alt="" coords="5,75,191,101"/>
+<area shape="rect" id="node2" href="$namespacesll__m__linear__operator__kron.html#a18267a150cb94d3954ba6bede91554ec" title="apply the dot operation" alt="" coords="487,49,687,76"/>
+<area shape="rect" id="node6" href="$namespacesll__m__linear__operator__kron.html#a329423cf7f82fb4d683880ba0ca1110a" title="apply the dot operation" alt="" coords="239,100,439,127"/>
+<area shape="rect" id="node3" href="$namespacesll__m__linear__operator__kron.html#a8b75d7c3bba7b090d5e807d1f66bfc7d" title="converts a matrix to a vector" alt="" coords="735,5,889,32"/>
+<area shape="rect" id="node4" href="$namespacesll__m__linear__operator__kron.html#a4cfac47f167a2df2e965677387d6adf6" title="returnes the transpose of a 2d array" alt="" coords="758,125,866,152"/>
+<area shape="rect" id="node5" href="$namespacesll__m__linear__operator__kron.html#add80f97c45c857e5a2828ab6e9abd722" title="converts a vector to a matrix" alt="" coords="735,63,889,89"/>
 </map>

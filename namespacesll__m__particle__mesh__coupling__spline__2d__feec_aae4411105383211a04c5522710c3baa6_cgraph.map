@@ -1,4 +1,5 @@
 <map id="init_spline_2d_feec" name="init_spline_2d_feec">
+<area shape="rect" id="node1" title="Constructor." alt="" coords="5,57,152,84"/>
 <area shape="rect" id="node2" href="$namespacesll__m__gauss__legendre__integration.html#a0df63a9e8ee884c2d4a0d1f53602a949" title="Returns a 2d array of size (2,npoints) containing gauss&#45;legendre points and weights in the interval [..." alt="" coords="200,5,423,61"/>
-<area shape="rect" id="node3" href="$namespacesll__m__splines__pp.html#a7e2a3943e2c330a0a9597b535ce259b3" title="Initialize sll_t_spline_pp_1d object (Set poly_coeffs depending on degree) " alt="" coords="233,86,389,127"/>
+<area shape="rect" id="node3" href="$namespacesll__m__splines__pp.html#a7e2a3943e2c330a0a9597b535ce259b3" title="Initialize sll_t_spline_pp_1d object (Set poly_coeffs depending on degree)" alt="" coords="233,86,389,127"/>
 </map>

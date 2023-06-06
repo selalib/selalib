@@ -1,4 +1,5 @@
 <map id="ifft2d" name="ifft2d">
-<area shape="rect" id="node2" href="$namespacesll__m__poisson__2d__fem__fft.html#a5840cdf1605c61b15dd5f2de41ef7483" title="compute_e_from_rho_fft" alt="" coords="115,5,297,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__poisson__2d__fem__fft.html#a4fe951dec8d79c67b42f49ee21a67e5b" title="compute_phi_from_rho_fft" alt="" coords="109,56,303,83"/>
+<area shape="rect" id="node1" title="Helper function for 3d fft." alt="" coords="247,31,303,57"/>
+<area shape="rect" id="node2" href="$namespacesll__m__poisson__2d__fem__fft.html#a5840cdf1605c61b15dd5f2de41ef7483" title=" " alt="" coords="11,5,193,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__poisson__2d__fem__fft.html#a4fe951dec8d79c67b42f49ee21a67e5b" title=" " alt="" coords="5,56,199,83"/>
 </map>

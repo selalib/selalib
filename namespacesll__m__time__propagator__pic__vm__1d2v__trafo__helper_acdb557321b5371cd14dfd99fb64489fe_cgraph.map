@@ -1,3 +1,4 @@
 <map id="advect_ex_pic_vm_1d2v_trafo" name="advect_ex_pic_vm_1d2v_trafo">
-<area shape="rect" id="node2" href="$namespacesll__m__time__propagator__pic__vm__1d2v__trafo__helper.html#a5351ec2dbf5c0980c370efb865af96ed" title="Helper function for advect_ex. " alt="" coords="236,5,439,47"/>
+<area shape="rect" id="node1" title="advect_ex: Equations to be solved $\frac{\Xi^{n+1}&#45;\Xi^n}{\Delta t}=\frac{DF^{&#45;1}(\Xi^{n+1})+DF^{&#45;1}(..." alt="" coords="5,5,188,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__time__propagator__pic__vm__1d2v__trafo__helper.html#a5351ec2dbf5c0980c370efb865af96ed" title="Helper function for advect_ex." alt="" coords="236,5,439,47"/>
 </map>

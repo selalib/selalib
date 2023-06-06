@@ -1,8 +1,0 @@
-<map id="sll_s_gnuplot_curv_2d_parallel" name="sll_s_gnuplot_curv_2d_parallel">
-<area shape="rect" id="node2" href="$namespacesll__m__collective.html#a396122f49340f0778eb448430d865b4e" title="Determines the rank of the calling process in the communicator. " alt="" coords="196,5,364,47"/>
-<area shape="rect" id="node4" href="$namespacesll__m__collective.html#af2d3c240d9dfe7e9c7d7f7c9e0529f17" title="Determines the size of the group associated with a communicator. " alt="" coords="197,71,363,112"/>
-<area shape="rect" id="node5" href="$namespacesll__m__utilities.html#a4d45f033e67c39369da8b297302793cb" title="Convert an integer &lt; 9999 to a 4 characters string. " alt="" coords="212,136,348,177"/>
-<area shape="rect" id="node6" href="$namespacesll__m__utilities.html#afa513cebb464773e58d9364a6e231924" title="Get a file unit number free before creating a file. " alt="" coords="212,201,348,243"/>
-<area shape="rect" id="node7" href="$namespacesll__m__ascii__io.html#a5bdc9dafa86f86e97f1ae807804f269e" title="Create ASCII file. " alt="" coords="206,267,354,308"/>
-<area shape="rect" id="node3" href="$namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" title="Checks if the pointer ptr is associated to an object. " alt="" coords="412,39,575,80"/>
-</map>

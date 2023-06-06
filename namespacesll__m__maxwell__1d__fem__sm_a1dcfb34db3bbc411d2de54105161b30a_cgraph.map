@@ -1,4 +1,5 @@
 <map id="compute_rho_from_e_1d_fem_sm" name="compute_rho_from_e_1d_fem_sm">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__1d__fem__sm.html#ae5d6f36942ad1f3390025da81662e1c4" title="Multiply by transpose of dicrete gradient matrix. " alt="" coords="213,13,309,39"/>
-<area shape="rect" id="node3" href="$namespacesll__m__spline__fem__utilities.html#aba0cb18b680186b2cd8bf714527fe4a7" title="Multiplication of the input vector in by the transposed derivative matrix G^T. " alt="" coords="357,5,549,47"/>
+<area shape="rect" id="node1" title="Compute rho from Gauss law for given efield." alt="" coords="5,5,165,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__1d__fem__sm.html#ae5d6f36942ad1f3390025da81662e1c4" title="Multiply by transpose of dicrete gradient matrix." alt="" coords="213,13,309,39"/>
+<area shape="rect" id="node3" href="$namespacesll__m__spline__fem__utilities.html#aba0cb18b680186b2cd8bf714527fe4a7" title="Multiplication of the input vector in by the transposed derivative matrix G^T" alt="" coords="357,5,549,47"/>
 </map>

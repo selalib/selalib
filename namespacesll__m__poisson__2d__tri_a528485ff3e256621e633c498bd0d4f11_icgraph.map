@@ -1,4 +1,5 @@
 <map id="initialize_poisson_solver" name="initialize_poisson_solver">
-<area shape="rect" id="node2" href="$namespacesll__m__poisson__2d__tri.html#aa53d2590e2d41cb21a8d905da8cab8d3" title="sll_s_poisson_2d_triangular_init" alt="" coords="188,5,417,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__poisson__2d__tri.html#a7177a22a26838aee55ca4c7a9c36ebc7" title="initialize_poisson\l_solver_from_file" alt="" coords="235,57,370,98"/>
+<area shape="rect" id="node1" title=" " alt="" coords="283,46,417,87"/>
+<area shape="rect" id="node2" href="$interfacesll__m__poisson__2d__tri_1_1sll__o__create.html#aa40d4d111c61f8173846c6cae4e32d5f" title=" " alt="" coords="25,5,215,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__poisson__2d__tri.html#aa53d2590e2d41cb21a8d905da8cab8d3" title=" " alt="" coords="5,85,235,112"/>
 </map>

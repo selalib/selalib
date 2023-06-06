@@ -1,3 +1,4 @@
 <map id="update_j" name="update_j">
-<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__cl__1d.html#a042c2f3c84f21487e6a950cb8097907e" title="Add current with integration over x. " alt="" coords="132,5,277,47"/>
+<area shape="rect" id="node1" title="Helper function for add_current." alt="" coords="199,13,277,39"/>
+<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__cl__1d.html#a042c2f3c84f21487e6a950cb8097907e" title="Add current with integration over x." alt="" coords="5,5,151,47"/>
 </map>

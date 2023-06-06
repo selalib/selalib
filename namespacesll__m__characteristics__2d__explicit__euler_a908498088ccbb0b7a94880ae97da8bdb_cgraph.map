@@ -1,5 +1,6 @@
 <map id="sll_f_new_explicit_euler_2d_charac" name="sll_f_new_explicit_euler_2d_charac">
-<area shape="rect" id="node2" href="$namespacesll__m__characteristics__2d__explicit__euler.html#a9dbbd8a528e6e4f1d6f6701d05b087a8" title="initialize_explicit\l_euler_2d_charac" alt="" coords="192,53,327,94"/>
-<area shape="rect" id="node3" href="$namespacesll__m__characteristics__2d__base.html#a2c5e6a5c73925dd52b2b5d0c4bbabf78" title="sll_m_characteristics\l_2d_base::sll_f_process\l_outside_point_periodic" alt="" coords="387,5,563,61"/>
-<area shape="rect" id="node4" href="$namespacesll__m__characteristics__2d__base.html#acbf7214cdc138a1134771deab9353804" title="sll_m_characteristics\l_2d_base::sll_f_process\l_outside_point_set_to_limit" alt="" coords="375,85,576,141"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,53,144,94"/>
+<area shape="rect" id="node2" href="$namespacesll__m__characteristics__2d__explicit__euler.html#a9dbbd8a528e6e4f1d6f6701d05b087a8" title=" " alt="" coords="192,53,327,94"/>
+<area shape="rect" id="node3" href="$namespacesll__m__characteristics__2d__base.html#a2c5e6a5c73925dd52b2b5d0c4bbabf78" title=" " alt="" coords="387,5,563,61"/>
+<area shape="rect" id="node4" href="$namespacesll__m__characteristics__2d__base.html#acbf7214cdc138a1134771deab9353804" title=" " alt="" coords="375,85,576,141"/>
 </map>

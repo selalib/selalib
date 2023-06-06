@@ -1,8 +1,9 @@
 <map id="sll_f_change_elements_notation" name="sll_f_change_elements_notation">
-<area shape="rect" id="node2" href="$namespacesll__m__hexagonal__meshes.html#aa579f5999884452ce000e206a88dc6b7" title="Returns indices of the edges of a given cell. " alt="" coords="224,70,392,111"/>
-<area shape="rect" id="node6" href="$namespacesll__m__hexagonal__meshes.html#a8bed234b81efa9e2e353c3f594c104e3" title="Computes the number of cell from point to origin. " alt="" coords="631,157,781,184"/>
-<area shape="rect" id="node3" href="$namespacesll__m__hexagonal__meshes.html#aa03f58c798d529ebb1b9d0f03b712035" title="Transform cartesian coordinates to 1st hexagonal coordinates. " alt="" coords="440,5,580,32"/>
-<area shape="rect" id="node4" href="$namespacesll__m__hexagonal__meshes.html#a8e973ce50cda93bfa411d78cff346741" title="Transform cartesian coordinates to 2ndst hexagonal coordinates. " alt="" coords="440,56,580,83"/>
-<area shape="rect" id="node5" href="$namespacesll__m__hexagonal__meshes.html#a4f66e0c718eda16377ca26d5c95b419f" title="Transform hexagonal coordinates to global index. " alt="" coords="453,107,567,133"/>
-<area shape="rect" id="node7" href="$namespacesll__m__hexagonal__meshes.html#a47f7a419f8f8904d408ad3a630612ee4" title="Finds the index in the global array of the point which coordinates where passed as parameter..." alt="" coords="628,107,784,133"/>
+<area shape="rect" id="node1" title="Function that allows to change from the current element notation to one more intuitive." alt="" coords="5,49,176,90"/>
+<area shape="rect" id="node2" href="$namespacesll__m__hexagonal__meshes.html#a8bed234b81efa9e2e353c3f594c104e3" title="Computes the number of cell from point to origin." alt="" coords="631,5,781,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__hexagonal__meshes.html#aa579f5999884452ce000e206a88dc6b7" title="Returns indices of the edges of a given cell." alt="" coords="224,78,392,119"/>
+<area shape="rect" id="node4" href="$namespacesll__m__hexagonal__meshes.html#a4f66e0c718eda16377ca26d5c95b419f" title="Transform hexagonal coordinates to global index." alt="" coords="453,56,567,83"/>
+<area shape="rect" id="node6" href="$namespacesll__m__hexagonal__meshes.html#aa03f58c798d529ebb1b9d0f03b712035" title="Transform cartesian coordinates to 1st hexagonal coordinates." alt="" coords="440,107,580,133"/>
+<area shape="rect" id="node7" href="$namespacesll__m__hexagonal__meshes.html#a8e973ce50cda93bfa411d78cff346741" title="Transform cartesian coordinates to 2ndst hexagonal coordinates." alt="" coords="440,157,580,184"/>
+<area shape="rect" id="node5" href="$namespacesll__m__hexagonal__meshes.html#a47f7a419f8f8904d408ad3a630612ee4" title="Finds the index in the global array of the point which coordinates where passed as parameter." alt="" coords="628,56,784,83"/>
 </map>

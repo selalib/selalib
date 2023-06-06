@@ -1,4 +1,8 @@
 <map id="sll_t_linear_operator_particle_mass_cl_3d_od" name="sll_t_linear_operator_particle_mass_cl_3d_od">
-<area shape="rect" id="node2" href="$structsll__m__particle__mass__3d__base_1_1sll__c__particle__mass__3d__base.html" title="sll_c_particle_mass\l_3d_base" alt="" coords="167,348,316,389"/>
-<area shape="rect" id="node3" href="$structsll__m__linear__operator__abstract_1_1sll__t__linear__operator__abstract.html" title="class for abstract linear operator " alt="" coords="372,213,527,255"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,439,189,480"/>
+<area shape="rect" id="node2" href="$structsll__m__particle__mass__3d__base_1_1sll__c__particle__mass__3d__base.html" title=" " alt="" coords="167,348,316,389"/>
+<area shape="rect" id="node3" href="$structsll__m__linear__operator__abstract_1_1sll__t__linear__operator__abstract.html" title="class for abstract linear operator" alt="" coords="373,213,528,255"/>
+<area shape="rect" id="node4" title=" " alt="" coords="418,5,483,32"/>
+<area shape="rect" id="node5" title=" " alt="" coords="90,5,227,32"/>
+<area shape="rect" id="node6" title=" " alt="" coords="232,221,349,247"/>
 </map>

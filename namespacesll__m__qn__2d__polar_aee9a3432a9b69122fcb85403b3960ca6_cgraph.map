@@ -1,7 +1,8 @@
 <map id="test_solve_circulant_system" name="test_solve_circulant_system">
-<area shape="rect" id="node2" href="$namespacesll__m__qn__2d__polar.html#aa95847c3b2595b8fe8221ed6e58caf9f" title="solve_circulant_system" alt="" coords="205,5,380,32"/>
-<area shape="rect" id="node5" href="$namespacesll__m__qn__2d__polar.html#a01fc8864e65db95d0fc3e98f251f5043" title="matrix_product_circ" alt="" coords="217,56,368,83"/>
-<area shape="rect" id="node3" href="$sol_8f.html#a4145fac37257dc54fbe9cb58cba9e27d" title="sol" alt="" coords="468,5,509,32"/>
-<area shape="rect" id="node4" href="$sol_8f.html#af0ab570d99532a3735bed4c552583c95" title="scal" alt="" coords="597,5,645,32"/>
-<area shape="rect" id="node6" href="$namespacesll__m__qn__2d__polar.html#aa7736b2f0573912e8b31a2356f047473" title="matrix_product" alt="" coords="428,56,549,83"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,23,157,65"/>
+<area shape="rect" id="node2" href="$namespacesll__m__qn__2d__polar.html#a01fc8864e65db95d0fc3e98f251f5043" title=" " alt="" coords="217,5,368,32"/>
+<area shape="rect" id="node4" href="$namespacesll__m__qn__2d__polar.html#aa95847c3b2595b8fe8221ed6e58caf9f" title=" " alt="" coords="205,56,380,83"/>
+<area shape="rect" id="node3" href="$namespacesll__m__qn__2d__polar.html#aa7736b2f0573912e8b31a2356f047473" title=" " alt="" coords="428,5,549,32"/>
+<area shape="rect" id="node5" href="$sol_8f.html#a4145fac37257dc54fbe9cb58cba9e27d" title=" " alt="" coords="468,56,509,83"/>
+<area shape="rect" id="node6" href="$sol_8f.html#af0ab570d99532a3735bed4c552583c95" title=" " alt="" coords="597,56,645,83"/>
 </map>

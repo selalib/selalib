@@ -1,3 +1,4 @@
 <map id="push_v_bpart" name="push_v_bpart">
-<area shape="rect" id="node2" href="$namespacesll__m__time__propagator__pic__vm__1d2v__boris.html#a3cf6fda0130133cfc272f9b90ea21601" title="Second order Boris pusher using staggered grid. " alt="" coords="163,5,279,32"/>
+<area shape="rect" id="node1" title="Pusher for vxB part." alt="" coords="169,5,279,32"/>
+<area shape="rect" id="node2" href="$namespacesll__m__time__propagator__pic__vm__1d2v__boris.html#a3cf6fda0130133cfc272f9b90ea21601" title="Second order Boris pusher using staggered grid." alt="" coords="5,5,121,32"/>
 </map>

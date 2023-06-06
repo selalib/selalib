@@ -1,3 +1,4 @@
 <map id="delete_poisson_2d_periodic_fft" name="delete_poisson_2d_periodic_fft">
-<area shape="rect" id="node2" href="$namespacesll__m__fft.html#a07f504fcd2559674b7b22de039f063ff" title="Delete a plan. " alt="" coords="276,5,445,32"/>
+<area shape="rect" id="node1" title="Delete the Poisson object." alt="" coords="5,5,228,32"/>
+<area shape="rect" id="node2" href="$namespacesll__m__fft.html#a07f504fcd2559674b7b22de039f063ff" title="Delete a plan." alt="" coords="276,5,445,32"/>
 </map>

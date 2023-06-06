@@ -1,10 +1,11 @@
 <map id="sll_s_multiply_ct" name="sll_s_multiply_ct">
-<area shape="rect" id="node2" href="$namespacesll__m__linear__operator__curl__3d.html#a1b8233b5900d9706d37b2d5f2a1326a4" title="sll_m_linear_operator\l_curl_3d::dot_curl_3d" alt="" coords="216,5,379,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__linear__operator__schur__eb__3d.html#a1bb2f57edb4800c7f63a4e3d29ccf2aa" title="sll_m_linear_operator\l_schur_eb_3d::dot_schur_eb_3d" alt="" coords="184,71,411,112"/>
-<area shape="rect" id="node4" href="$namespacesll__m__maxwell__3d__fem.html#a0001263f5a14e1b5c6de63b7e6d3b9cc" title="Multiply by transpose of discrete curl matrix. " alt="" coords="209,136,385,177"/>
-<area shape="rect" id="node6" href="$namespacesll__m__maxwell__3d__fem__fft.html#a24b4ab3b098cf2009db35e01d87292ea" title="Multiply by transpose of discrete curl matrix. " alt="" coords="209,201,385,243"/>
-<area shape="rect" id="node8" href="$namespacesll__m__maxwell__3d__trafo.html#aef0f9b0fc02e9082605d8899b987fd6b" title="Multiply by transpose of discrete curl matrix. " alt="" coords="207,273,388,315"/>
-<area shape="rect" id="node5" href="$namespacesll__m__maxwell__3d__fem.html#acbb9aa5733d6f6df88281bd65669fa2d" title="compute Ey from Bz using weak Ampere formulation " alt="" coords="461,114,637,170"/>
-<area shape="rect" id="node7" href="$namespacesll__m__maxwell__3d__fem__fft.html#a01c619d73d2b079d62d58e5d7b18f07a" title="compute Ey from Bz using weak Ampere formulation " alt="" coords="461,194,637,250"/>
-<area shape="rect" id="node9" href="$namespacesll__m__maxwell__3d__trafo.html#a9c8bd7548ed7595bd9cd363c9bc945f7" title="compute E from B using weak Ampere formulation " alt="" coords="459,274,640,330"/>
+<area shape="rect" id="node1" title="Multiply by transpose of discrete curl matrix." alt="" coords="509,143,640,170"/>
+<area shape="rect" id="node2" href="$namespacesll__m__linear__operator__curl__3d.html#a1b8233b5900d9706d37b2d5f2a1326a4" title=" " alt="" coords="267,5,429,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__linear__operator__schur__eb__3d.html#a1bb2f57edb4800c7f63a4e3d29ccf2aa" title=" " alt="" coords="235,71,461,112"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__3d__fem.html#a0001263f5a14e1b5c6de63b7e6d3b9cc" title="Multiply by transpose of discrete curl matrix." alt="" coords="260,136,436,177"/>
+<area shape="rect" id="node6" href="$namespacesll__m__maxwell__3d__fem__fft.html#a24b4ab3b098cf2009db35e01d87292ea" title="Multiply by transpose of discrete curl matrix." alt="" coords="260,201,436,243"/>
+<area shape="rect" id="node8" href="$namespacesll__m__maxwell__3d__trafo.html#aef0f9b0fc02e9082605d8899b987fd6b" title="Multiply by transpose of discrete curl matrix." alt="" coords="257,273,439,315"/>
+<area shape="rect" id="node5" href="$namespacesll__m__maxwell__3d__fem.html#acbb9aa5733d6f6df88281bd65669fa2d" title="compute Ey from Bz using weak Ampere formulation" alt="" coords="8,114,184,170"/>
+<area shape="rect" id="node7" href="$namespacesll__m__maxwell__3d__fem__fft.html#a01c619d73d2b079d62d58e5d7b18f07a" title="compute Ey from Bz using weak Ampere formulation" alt="" coords="8,194,184,250"/>
+<area shape="rect" id="node9" href="$namespacesll__m__maxwell__3d__trafo.html#a9c8bd7548ed7595bd9cd363c9bc945f7" title="compute E from B using weak Ampere formulation" alt="" coords="5,274,187,330"/>
 </map>

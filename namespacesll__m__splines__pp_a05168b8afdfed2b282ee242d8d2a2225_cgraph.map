@@ -1,3 +1,4 @@
 <map id="sll_s_spline_pp_init_3d" name="sll_s_spline_pp_init_3d">
-<area shape="rect" id="node2" href="$namespacesll__m__splines__pp.html#a7e2a3943e2c330a0a9597b535ce259b3" title="Initialize sll_t_spline_pp_1d object (Set poly_coeffs depending on degree) " alt="" coords="224,5,395,32"/>
+<area shape="rect" id="node1" title="Initialize sll_t_spline_pp_3d object." alt="" coords="5,5,176,32"/>
+<area shape="rect" id="node2" href="$namespacesll__m__splines__pp.html#a7e2a3943e2c330a0a9597b535ce259b3" title="Initialize sll_t_spline_pp_1d object (Set poly_coeffs depending on degree)" alt="" coords="224,5,395,32"/>
 </map>

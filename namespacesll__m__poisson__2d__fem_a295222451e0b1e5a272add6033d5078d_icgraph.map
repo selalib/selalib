@@ -1,3 +1,4 @@
 <map id="som" name="som">
-<area shape="rect" id="node2" href="$namespacesll__m__poisson__2d__fem.html#a3392a667a566f6fc97d7ad18060e84a1" title="Initialize Poisson solver object using finite elements method. " alt="" coords="104,5,239,47"/>
+<area shape="rect" id="node1" title="Get the node index." alt="" coords="225,20,276,47"/>
+<area shape="rect" id="node2" href="$interfacesll__m__poisson__2d__fem_1_1sll__o__create.html#afbaafd23b7a61d5ad0144478208a4aae" title="Initialize Poisson solver object using finite elements method." alt="" coords="5,5,177,61"/>
 </map>

@@ -1,0 +1,4 @@
+<map id="sll_collective_gather_real32" name="sll_collective_gather_real32">
+<area shape="rect" id="node1" title="Gathers together real values from a group of processes." alt="" coords="5,5,161,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__collective.html#a9a5729d7ca2e55890195f76c8a5cbd62" title="Checks the good execution of collective instruction." alt="" coords="209,5,360,47"/>
+</map>

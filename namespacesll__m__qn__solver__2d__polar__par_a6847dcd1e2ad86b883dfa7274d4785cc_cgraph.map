@@ -1,3 +1,4 @@
 <map id="sll_s_qn_solver_2d_polar_par_solve" name="sll_s_qn_solver_2d_polar_par_solve">
-<area shape="rect" id="node2" href="$namespacesll__m__qn__solver__2d__polar__par.html#a73267da261954756976f2194cc7af865" title="Check if array sizes are compatible with the layout. " alt="" coords="197,13,396,39"/>
+<area shape="rect" id="node1" title="Solve the quasi&#45;neutrality equation and get the electrostatic potential." alt="" coords="5,5,149,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__qn__solver__2d__polar__par.html#a73267da261954756976f2194cc7af865" title="Check if array sizes are compatible with the layout." alt="" coords="197,13,395,39"/>
 </map>

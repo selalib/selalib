@@ -1,6 +1,7 @@
 <map id="sll_t_linear_solver_iter_abstract" name="sll_t_linear_solver_iter_abstract">
-<area shape="rect" id="node3" href="$structsll__m__linear__solver__cg_1_1sll__t__linear__solver__cg.html" title="class for the cg linear solver " alt="" coords="5,191,168,218"/>
-<area shape="rect" id="node4" href="$structsll__m__linear__solver__mgmres_1_1sll__t__linear__solver__mgmres.html" title="class for a sequential gmres linear solver " alt="" coords="193,184,333,225"/>
-<area shape="rect" id="node5" href="$structsll__m__uzawa__iterator_1_1sll__t__uzawa__iterator.html" title="sll_t_uzawa_iterator" alt="" coords="357,191,510,218"/>
-<area shape="rect" id="node2" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver " alt="" coords="193,5,333,47"/>
+<area shape="rect" id="node1" title="class for abstract iterative linear solver" alt="" coords="193,95,333,136"/>
+<area shape="rect" id="node3" href="$structsll__m__linear__solver__cg_1_1sll__t__linear__solver__cg.html" title="class for the cg linear solver" alt="" coords="5,191,168,218"/>
+<area shape="rect" id="node4" href="$structsll__m__linear__solver__mgmres_1_1sll__t__linear__solver__mgmres.html" title="class for a sequential gmres linear solver" alt="" coords="193,184,333,225"/>
+<area shape="rect" id="node5" href="$structsll__m__uzawa__iterator_1_1sll__t__uzawa__iterator.html" title=" " alt="" coords="357,191,510,218"/>
+<area shape="rect" id="node2" href="$structsll__m__linear__solver__abstract_1_1sll__t__linear__solver__abstract.html" title="class for abstract linear solver" alt="" coords="193,5,333,47"/>
 </map>

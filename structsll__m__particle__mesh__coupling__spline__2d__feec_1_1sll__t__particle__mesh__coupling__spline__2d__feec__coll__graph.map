@@ -1,3 +1,6 @@
 <map id="sll_t_particle_mesh_coupling_spline_2d_feec" name="sll_t_particle_mesh_coupling_spline_2d_feec">
-<area shape="rect" id="node3" href="$structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html" title="arbitrary degree 1d spline " alt="" coords="181,367,322,394"/>
+<area shape="rect" id="node1" title="Particle mesh coupling in 3d based on (arbitrary degree) spline on a tensor product uniform mesh." alt="" coords="159,553,347,595"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,5,143,32"/>
+<area shape="rect" id="node3" href="$structsll__m__splines__pp_1_1sll__t__spline__pp__1d.html" title="arbitrary degree 1d spline" alt="" coords="182,375,323,401"/>
+<area shape="rect" id="node4" title=" " alt="" coords="298,5,415,32"/>
 </map>

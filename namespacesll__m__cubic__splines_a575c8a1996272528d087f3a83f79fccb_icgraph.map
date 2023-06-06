@@ -1,11 +1,12 @@
 <map id="interpolate_derivative_aux" name="interpolate_derivative_aux">
-<area shape="rect" id="node2" href="$namespacesll__m__cubic__splines.html#a20d325fd04e034c8ddd6e5ba214db9d0" title="returns the value of the derivative at the image of the abscissa &#39;x&#39;, using the spline coefficients s..." alt="" coords="263,93,399,134"/>
-<area shape="rect" id="node5" href="$namespacesll__m__cubic__splines.html#a872e8839340faa83e0513d849103b674" title="returns the values of the derivatives evaluated at a collection of abscissae stored in the input 1D a..." alt="" coords="251,187,412,229"/>
-<area shape="rect" id="node8" href="$namespacesll__m__cubic__splines.html#a4a4ca9e875e412121ae2d9b01eb5aa18" title="analogous to the sll_s_cubic_spline_1d_eval_array_deriv() subroutine but its input and output arrays ..." alt="" coords="258,253,405,294"/>
-<area shape="rect" id="node9" href="$namespacesll__m__cubic__splines.html#a9f207e5c634fc68284cb6f28aee7cef8" title="Returns the interpolated value of the derivative in the x1 direction at the point (x1..." alt="" coords="260,325,403,366"/>
-<area shape="rect" id="node3" href="$namespacesll__m__cubic__spline__interpolator__1d.html#ab5170ffba89fc8d3da679aef50e65182" title="sll_m_cubic_spline\l_interpolator_1d::interpolate\l_deriv1_cs1d" alt="" coords="466,5,673,61"/>
-<area shape="rect" id="node4" href="$namespacesll__m__cubic__spline__interpolator__1d__nonuniform.html#a4fca6d79277033808d7fcc14e9a5ea03" title="sll_m_cubic_spline\l_interpolator_1d_nonuniform\l::interpolate_deriv1_cs1d" alt="" coords="464,85,675,141"/>
-<area shape="rect" id="node6" href="$namespacesll__m__cubic__spline__interpolator__1d.html#af8b5d44a288bd78ca278dfd172bd1b6c" title="sll_m_cubic_spline\l_interpolator_1d::interpolate\l_derivatives_cs1d" alt="" coords="466,165,673,221"/>
-<area shape="rect" id="node7" href="$namespacesll__m__cubic__spline__interpolator__1d__nonuniform.html#ad7577fa72d293954f9423564b5217274" title="sll_m_cubic_spline\l_interpolator_1d_nonuniform\l::interpolate_derivatives_cs1d" alt="" coords="460,245,679,301"/>
-<area shape="rect" id="node10" href="$namespacesll__m__cubic__spline__interpolator__2d.html#af1ede9ba198e76e41e590dec3402365b" title="sll_m_cubic_spline\l_interpolator_2d::interpolate\l_deriv1_cs2d" alt="" coords="466,325,673,381"/>
+<area shape="rect" id="node1" title=" " alt="" coords="481,141,679,168"/>
+<area shape="rect" id="node2" href="$namespacesll__m__cubic__splines.html#a4a4ca9e875e412121ae2d9b01eb5aa18" title="analogous to the sll_s_cubic_spline_1d_eval_array_deriv() subroutine but its input and output arrays ..." alt="" coords="279,31,426,73"/>
+<area shape="rect" id="node3" href="$namespacesll__m__cubic__splines.html#a20d325fd04e034c8ddd6e5ba214db9d0" title="returns the value of the derivative at the image of the abscissa &#39;x&#39;, using the spline coefficients s..." alt="" coords="285,97,421,138"/>
+<area shape="rect" id="node6" href="$namespacesll__m__cubic__splines.html#a9f207e5c634fc68284cb6f28aee7cef8" title="Returns the interpolated value of the derivative in the x1 direction at the point (x1,..." alt="" coords="281,166,424,207"/>
+<area shape="rect" id="node8" href="$namespacesll__m__cubic__splines.html#a872e8839340faa83e0513d849103b674" title="returns the values of the derivatives evaluated at a collection of abscissae stored in the input 1D a..." alt="" coords="272,253,433,294"/>
+<area shape="rect" id="node4" href="$namespacesll__m__cubic__spline__interpolator__1d.html#ab5170ffba89fc8d3da679aef50e65182" title=" " alt="" coords="11,5,218,61"/>
+<area shape="rect" id="node5" href="$namespacesll__m__cubic__spline__interpolator__1d__nonuniform.html#a4fca6d79277033808d7fcc14e9a5ea03" title=" " alt="" coords="9,85,220,141"/>
+<area shape="rect" id="node7" href="$namespacesll__m__cubic__spline__interpolator__2d.html#af1ede9ba198e76e41e590dec3402365b" title=" " alt="" coords="11,165,218,221"/>
+<area shape="rect" id="node9" href="$namespacesll__m__cubic__spline__interpolator__1d.html#af8b5d44a288bd78ca278dfd172bd1b6c" title=" " alt="" coords="11,245,218,301"/>
+<area shape="rect" id="node10" href="$namespacesll__m__cubic__spline__interpolator__1d__nonuniform.html#ad7577fa72d293954f9423564b5217274" title=" " alt="" coords="5,325,224,381"/>
 </map>

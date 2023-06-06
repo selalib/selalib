@@ -1,3 +1,4 @@
 <map id="add_charge_single_spline_1d" name="add_charge_single_spline_1d">
+<area shape="rect" id="node1" title="helper function to compute the integral of j using Gauss quadrature (needs to be provided for the der..." alt="" coords="5,5,217,32"/>
 <area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__1d.html#acd3198a72571d1253f83aaa909e67031" title="Helper function that identifies in which box the particle is found and its normalized poistion in the..." alt="" coords="265,5,411,32"/>
 </map>

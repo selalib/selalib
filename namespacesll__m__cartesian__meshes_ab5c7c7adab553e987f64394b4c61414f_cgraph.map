@@ -1,4 +1,0 @@
-<map id="sll_f_tensor_product_1d_1d" name="sll_f_tensor_product_1d_1d">
-<area shape="rect" id="node2" href="$namespacesll__m__cartesian__meshes.html#a47fb939f257f84c12cc40b86a9d0fe11" title="allocates the memory space for a new 2D cartesian mesh on the heap, initializes it with the given arg..." alt="" coords="207,5,357,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__cartesian__meshes.html#ab2d0d888cbfa10e6b2a37a5bcf427ef3" title="initializes a cartesian mesh 2D object that has been already allocated. " alt="" coords="405,5,567,47"/>
-</map>

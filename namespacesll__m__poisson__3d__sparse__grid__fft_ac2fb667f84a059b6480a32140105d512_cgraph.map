@@ -1,4 +1,5 @@
 <map id="derivative_coeffs_1d" name="derivative_coeffs_1d">
-<area shape="rect" id="node2" href="$namespacesll__m__poisson__3d__sparse__grid__fft.html#aa10cfbf53ad92c8d49ce4c670eed1834" title="Helper function to insert the real Fourier coefficient into the sparse grid data structure. " alt="" coords="211,5,352,32"/>
+<area shape="rect" id="node1" title="Helper function to compute the Fourier coefficients for the derivative operation." alt="" coords="5,5,163,32"/>
+<area shape="rect" id="node2" href="$namespacesll__m__poisson__3d__sparse__grid__fft.html#aa10cfbf53ad92c8d49ce4c670eed1834" title="Helper function to insert the real Fourier coefficient into the sparse grid data structure." alt="" coords="211,5,352,32"/>
 <area shape="rect" id="node3" href="$namespacesll__m__poisson__3d__sparse__grid__fft.html#a2a8b5586f7fa239699794bbbf7884e56" title="Helper function to insert the real Fourier coefficient into the sparse grid data structure (recursive..." alt="" coords="400,5,608,32"/>
 </map>

@@ -1,3 +1,4 @@
 <map id="update_field_linear_partial" name="update_field_linear_partial">
-<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__1d.html#ace826827e88543c8c916cb1819bf560f" title="Evaluates the integrals with tau function for implicit subcycling. " alt="" coords="200,5,347,47"/>
+<area shape="rect" id="node1" title="Helper function for evaluate_int_linear_quad (implements part within one cell)" alt="" coords="200,5,347,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__1d.html#ace826827e88543c8c916cb1819bf560f" title="Evaluates the integrals with tau function for implicit subcycling." alt="" coords="5,5,152,47"/>
 </map>

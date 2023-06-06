@@ -1,4 +1,5 @@
 <map id="sll_count_non_zero_elts_mp" name="sll_count_non_zero_elts_mp">
-<area shape="rect" id="node2" href="$namespacesll__m__sparse__matrix__mp.html#ad32ebfd00f8ef3065b6859eca129d87a" title="initialization of CSR matrix type " alt="" coords="200,13,383,39"/>
-<area shape="rect" id="node3" href="$namespacesll__m__sparse__matrix__mp.html#ab8ac37685dad402f808e43fd26578034" title="allocates the memory space for a new CSR type on the heap, " alt="" coords="431,13,617,39"/>
+<area shape="rect" id="node1" title=" " alt="" coords="471,5,617,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__sparse__matrix__mp.html#ad32ebfd00f8ef3065b6859eca129d87a" title="initialization of CSR matrix type" alt="" coords="240,13,423,39"/>
+<area shape="rect" id="node3" href="$namespacesll__m__sparse__matrix__mp.html#ab8ac37685dad402f808e43fd26578034" title="allocates the memory space for a new CSR type on the heap," alt="" coords="5,13,192,39"/>
 </map>

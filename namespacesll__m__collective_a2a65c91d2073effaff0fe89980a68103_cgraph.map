@@ -1,6 +1,7 @@
 <map id="sll_s_collective_alltoallv_int_simple" name="sll_s_collective_alltoallv_int_simple">
-<area shape="rect" id="node2" href="$namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" title="Checks if the pointer ptr is associated to an object. " alt="" coords="480,25,657,52"/>
-<area shape="rect" id="node3" href="$namespacesll__m__collective.html#af2d3c240d9dfe7e9c7d7f7c9e0529f17" title="Determines the size of the group associated with a communicator. " alt="" coords="243,25,423,52"/>
-<area shape="rect" id="node4" href="$namespacesll__m__collective.html#aa66cb9d644105795e81bb937f540ef8f" title="Sends integer data from all to all processes. " alt="" coords="235,76,432,102"/>
-<area shape="rect" id="node5" href="$namespacesll__m__collective.html#a9a5729d7ca2e55890195f76c8a5cbd62" title="Checks the good execution of collective instruction. " alt="" coords="492,101,645,128"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,49,187,90"/>
+<area shape="rect" id="node2" href="$namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" title="Checks if the pointer ptr is associated to an object." alt="" coords="480,5,657,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__collective.html#af2d3c240d9dfe7e9c7d7f7c9e0529f17" title="Determines the size of the group associated with a communicator." alt="" coords="243,31,423,57"/>
+<area shape="rect" id="node4" href="$namespacesll__m__collective.html#aa66cb9d644105795e81bb937f540ef8f" title="Sends integer data from all to all processes." alt="" coords="235,81,432,108"/>
+<area shape="rect" id="node5" href="$namespacesll__m__collective.html#a9a5729d7ca2e55890195f76c8a5cbd62" title="Checks the good execution of collective instruction." alt="" coords="257,132,410,159"/>
 </map>

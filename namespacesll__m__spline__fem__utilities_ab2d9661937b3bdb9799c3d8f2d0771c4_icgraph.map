@@ -1,11 +1,12 @@
 <map id="sll_s_multiply_gt" name="sll_s_multiply_gt">
-<area shape="rect" id="node2" href="$namespacesll__m__linear__operator__curl__3d.html#a1b8233b5900d9706d37b2d5f2a1326a4" title="sll_m_linear_operator\l_curl_3d::dot_curl_3d" alt="" coords="209,5,372,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__linear__operator__gtm.html#a1a168f0b20027d7d17cef9fb6dc6e606" title="sll_m_linear_operator\l_gtm::dot_gtm" alt="" coords="209,71,372,112"/>
-<area shape="rect" id="node4" href="$namespacesll__m__linear__operator__poisson__3d.html#a1befd05f3dc9f5b28ceab901680adb35" title="sll_m_linear_operator\l_poisson_3d::dot_poisson_3d" alt="" coords="185,136,396,177"/>
-<area shape="rect" id="node5" href="$namespacesll__m__maxwell__3d__fem.html#a1cce1d51a1485076e1f2ec5295f11939" title="Multiply by transpose of dicrete gradient matrix. " alt="" coords="203,201,379,243"/>
-<area shape="rect" id="node7" href="$namespacesll__m__maxwell__3d__fem__fft.html#a905ee9289db36c78f8d002682078d8ab" title="Multiply by transpose of dicrete gradient matrix. " alt="" coords="203,267,379,308"/>
-<area shape="rect" id="node9" href="$namespacesll__m__maxwell__3d__trafo.html#a6c69dd5652ad0da9d7b611c82c65a705" title="Multiply by transpose of dicrete gradient matrix. " alt="" coords="200,339,381,380"/>
-<area shape="rect" id="node6" href="$namespacesll__m__maxwell__3d__fem.html#ab56bf0cde263ae5552883dc13471bfee" title="compute rho from e using weak Gauss law ( rho = G^T M_1 e ) " alt="" coords="444,179,633,235"/>
-<area shape="rect" id="node8" href="$namespacesll__m__maxwell__3d__fem__fft.html#a3aaf003e9993faa41ebfc6d5b81fd5ca" title="compute rho from e using weak Gauss law ( rho = G^T M_1 e ) " alt="" coords="451,259,627,315"/>
-<area shape="rect" id="node10" href="$namespacesll__m__maxwell__3d__trafo.html#a4ef2e873bb0a87c754459d85e8853488" title="compute rho from e using weak Gauss law ( rho = G^T M_1 e ) " alt="" coords="444,339,633,395"/>
+<area shape="rect" id="node1" title="Multiply by transpose of dicrete gradient matrix (3d version)" alt="" coords="501,177,633,203"/>
+<area shape="rect" id="node2" href="$namespacesll__m__linear__operator__curl__3d.html#a1b8233b5900d9706d37b2d5f2a1326a4" title=" " alt="" coords="267,5,429,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__linear__operator__gtm.html#a1a168f0b20027d7d17cef9fb6dc6e606" title=" " alt="" coords="267,71,429,112"/>
+<area shape="rect" id="node4" href="$namespacesll__m__linear__operator__poisson__3d.html#a1befd05f3dc9f5b28ceab901680adb35" title=" " alt="" coords="243,136,453,177"/>
+<area shape="rect" id="node5" href="$namespacesll__m__maxwell__3d__fem.html#a1cce1d51a1485076e1f2ec5295f11939" title="Multiply by transpose of dicrete gradient matrix." alt="" coords="260,201,436,243"/>
+<area shape="rect" id="node7" href="$namespacesll__m__maxwell__3d__fem__fft.html#a905ee9289db36c78f8d002682078d8ab" title="Multiply by transpose of dicrete gradient matrix." alt="" coords="260,267,436,308"/>
+<area shape="rect" id="node9" href="$namespacesll__m__maxwell__3d__trafo.html#a6c69dd5652ad0da9d7b611c82c65a705" title="Multiply by transpose of dicrete gradient matrix." alt="" coords="257,339,439,380"/>
+<area shape="rect" id="node6" href="$namespacesll__m__maxwell__3d__fem.html#ab56bf0cde263ae5552883dc13471bfee" title="compute rho from e using weak Gauss law ( rho = G^T M_1 e )" alt="" coords="5,179,195,235"/>
+<area shape="rect" id="node8" href="$namespacesll__m__maxwell__3d__fem__fft.html#a3aaf003e9993faa41ebfc6d5b81fd5ca" title="compute rho from e using weak Gauss law ( rho = G^T M_1 e )" alt="" coords="12,259,188,315"/>
+<area shape="rect" id="node10" href="$namespacesll__m__maxwell__3d__trafo.html#a4ef2e873bb0a87c754459d85e8853488" title="compute rho from e using weak Gauss law ( rho = G^T M_1 e )" alt="" coords="5,339,195,395"/>
 </map>

@@ -1,4 +1,5 @@
 <map id="weak_curl" name="weak_curl">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__1d__fem.html#a47196627859f2c2d812ad68b15d300fb" title="compute Ey from Bz using weak Ampere formulation " alt="" coords="141,5,309,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__maxwell__1d__fem.html#a5e87fba6009f2ef888e836db7b8eaf0c" title="sll_s_compute_b_from\l_e_1d_fem" alt="" coords="141,71,309,112"/>
+<area shape="rect" id="node1" title="compute Ey from Bz using weak Ampere formulation" alt="" coords="221,46,309,73"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__1d__fem.html#a5e87fba6009f2ef888e836db7b8eaf0c" title=" " alt="" coords="5,5,173,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__1d__fem.html#a47196627859f2c2d812ad68b15d300fb" title="compute Ey from Bz using weak Ampere formulation" alt="" coords="5,71,173,112"/>
 </map>

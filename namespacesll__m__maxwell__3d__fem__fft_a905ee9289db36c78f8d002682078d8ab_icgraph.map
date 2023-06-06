@@ -1,3 +1,4 @@
 <map id="multiply_gt" name="multiply_gt">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__fem__fft.html#a3aaf003e9993faa41ebfc6d5b81fd5ca" title="compute rho from e using weak Gauss law ( rho = G^T M_1 e ) " alt="" coords="149,5,331,47"/>
+<area shape="rect" id="node1" title="Multiply by transpose of dicrete gradient matrix." alt="" coords="235,13,331,39"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__3d__fem__fft.html#a3aaf003e9993faa41ebfc6d5b81fd5ca" title="compute rho from e using weak Gauss law ( rho = G^T M_1 e )" alt="" coords="5,5,187,47"/>
 </map>

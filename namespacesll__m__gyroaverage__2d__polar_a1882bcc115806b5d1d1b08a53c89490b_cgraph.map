@@ -1,8 +1,9 @@
 <map id="sll_s_compute_gyroaverage_points_polar_hermite" name="sll_s_compute_gyroaverage_points_polar_hermite">
-<area shape="rect" id="node2" href="$namespacesll__m__gyroaverage__2d__polar.html#ab5853a5652521bebf3ea7eea21e2a24f" title="hermite_coef_nat_per" alt="" coords="257,5,421,32"/>
-<area shape="rect" id="node4" href="$namespacesll__m__gyroaverage__2d__polar.html#a286786970fc94c7e62732e2f3883c034" title="localize_polar" alt="" coords="283,56,395,83"/>
-<area shape="rect" id="node7" href="$namespacesll__m__gyroaverage__2d__polar.html#a8e92009e84f2f4d6e10b5062c3eb3b71" title="interpolate_hermite" alt="" coords="264,107,415,133"/>
-<area shape="rect" id="node3" href="$namespacesll__m__gyroaverage__2d__polar.html#a4c48b5571832c07ba198492b73b55b0a" title="compute_w_hermite" alt="" coords="469,5,624,32"/>
-<area shape="rect" id="node5" href="$namespacesll__m__gyroaverage__2d__polar.html#a4f0e92fea34e0d1352d4d6326dd1eb94" title="localize_nat" alt="" coords="497,56,597,83"/>
-<area shape="rect" id="node6" href="$namespacesll__m__gyroaverage__2d__polar.html#af1effd049b177ea89d86d58f6cb1ced6" title="localize_per" alt="" coords="497,107,597,133"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,49,209,90"/>
+<area shape="rect" id="node2" href="$namespacesll__m__gyroaverage__2d__polar.html#ab5853a5652521bebf3ea7eea21e2a24f" title=" " alt="" coords="257,5,421,32"/>
+<area shape="rect" id="node4" href="$namespacesll__m__gyroaverage__2d__polar.html#a8e92009e84f2f4d6e10b5062c3eb3b71" title=" " alt="" coords="264,56,415,83"/>
+<area shape="rect" id="node5" href="$namespacesll__m__gyroaverage__2d__polar.html#a286786970fc94c7e62732e2f3883c034" title=" " alt="" coords="283,107,395,133"/>
+<area shape="rect" id="node3" href="$namespacesll__m__gyroaverage__2d__polar.html#a4c48b5571832c07ba198492b73b55b0a" title=" " alt="" coords="469,5,624,32"/>
+<area shape="rect" id="node6" href="$namespacesll__m__gyroaverage__2d__polar.html#a4f0e92fea34e0d1352d4d6326dd1eb94" title=" " alt="" coords="497,81,597,108"/>
+<area shape="rect" id="node7" href="$namespacesll__m__gyroaverage__2d__polar.html#af1effd049b177ea89d86d58f6cb1ced6" title=" " alt="" coords="497,132,597,159"/>
 </map>

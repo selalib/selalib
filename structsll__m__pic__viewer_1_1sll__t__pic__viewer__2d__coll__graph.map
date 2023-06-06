@@ -1,4 +1,8 @@
 <map id="sll_t_pic_viewer_2d" name="sll_t_pic_viewer_2d">
-<area shape="rect" id="node2" href="$structsll__m__cartesian__meshes_1_1sll__t__cartesian__mesh__2d.html" title="2D cartesian mesh " alt="" coords="162,168,345,195"/>
-<area shape="rect" id="node3" href="$structsll__m__meshes__base_1_1sll__c__mesh__2d__base.html" title="2D logical mesh " alt="" coords="5,5,160,32"/>
+<area shape="rect" id="node1" title=" " alt="" coords="272,257,421,284"/>
+<area shape="rect" id="node2" href="$structsll__m__cartesian__meshes_1_1sll__t__cartesian__mesh__2d.html" title="2D cartesian mesh" alt="" coords="162,168,345,195"/>
+<area shape="rect" id="node3" href="$structsll__m__meshes__base_1_1sll__c__mesh__2d__base.html" title="2D logical mesh" alt="" coords="5,5,160,32"/>
+<area shape="rect" id="node4" title=" " alt="" coords="185,5,322,32"/>
+<area shape="rect" id="node5" title=" " alt="" coords="347,5,464,32"/>
+<area shape="rect" id="node6" title=" " alt="" coords="369,168,509,195"/>
 </map>
