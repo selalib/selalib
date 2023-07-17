@@ -7,10 +7,10 @@ endif()
 add_library(sll_file_io_parallel STATIC ${IO_SRC})
 
 target_include_directories(sll_file_io_parallel BEFORE
-                           PUBLIC ${HDF5_INCLUDE_DIR_FORTRAN})
+                           PUBLIC ${HDF5_Fortran_INCLUDE_DIRS})
 
 target_link_libraries(sll_file_io_parallel sll_collective sll_file_io
-                      sll_assert sll_utilities ${HDF5_LIBRARIES})
+                      sll_assert sll_utilities ${HDF5_LIBRARIES} ${HDF5_Fortran_LIBRARIES})
 
 if(HDF5_ENABLED AND BUILD_TESTING)
   add_subdirectory(testing)

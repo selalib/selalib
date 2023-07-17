@@ -4,7 +4,7 @@ set(SIM_BASE_CLASS
     "${CMAKE_SOURCE_DIR}/src/simulation_tools/simulation_base/sll_m_sim_base_class.F90"
 )
 
-include_directories(BEFORE ${HDF5_INCLUDE_DIR_FORTRAN})
+include_directories(BEFORE ${HDF5_Fortran_INCLUDE_DIRS})
 
 # Define MUDPACK macro if MUDPACK is built
 if(BUILD_MUDPACK)
