@@ -2,6 +2,10 @@ set(HDF5_ROOT
     $ENV{HDF5_ROOT}
     CACHE PATH "HDF5 location")
 
+set( HDF5_USE_STATIC_LIBRARIES ON )
+
+find_package( HDF5 COMPONENTS C Fortran REQUIRED )
+
 if(NOT HDF5_FOUND AND HDF5_ENABLED)
 
   if(MPI_Fortran_LIBRARIES)
