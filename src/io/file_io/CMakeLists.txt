@@ -15,8 +15,8 @@ set(IO_SRC
 add_library(sll_file_io STATIC ${IO_SRC})
 
 target_include_directories(sll_file_io BEFORE
-                           PUBLIC ${HDF5_INCLUDE_DIR_FORTRAN})
-target_link_libraries(sll_file_io sll_utilities ${HDF5_LIBRARIES})
+                           PUBLIC ${HDF5_Fortran_INCLUDE_DIRS})
+target_link_libraries(sll_file_io sll_utilities ${HDF5_LIBRARIES} ${HDF5_Fortran_LIBRARIES})
 
 if(BUILD_TESTING)
   add_subdirectory(testing)
