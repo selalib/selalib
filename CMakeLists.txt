@@ -13,7 +13,7 @@ if(OPTIONS_FILE)
   message("OPTIONS_FILE ARE READ")
 endif()
 
-cmake_minimum_required(VERSION 3.1.0)
+cmake_minimum_required(VERSION 3.6.0)
 project(SeLaLib)
 
 enable_language(Fortran)
@@ -126,15 +126,8 @@ include(ZFPConfig)
 include(FFTConfig)
 include(DoxygenConfig)
 
-# if BLASLAPACK_DIR was specified
-if(DEFINED BLASLAPACK_DIR)
-  set(BLASLAPACK_DIR
-      ${BLASLAPACK_DIR}
-      CACHE STRING "blas-lapack directory.")
-  find_package(BlasLapack)
-else()
-  include(LapackConfig)
-endif()
+find_package(BLAS)
+find_package(LAPACK)
 
 include(PreprocessorTarget)
 # Note: The following include must be placed after the compiler flags are fixed.
