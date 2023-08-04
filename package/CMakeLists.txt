@@ -87,7 +87,7 @@ set(SLL_LIB "${CMAKE_CURRENT_BINARY_DIR}/libselalib.a")
 add_custom_command(
   OUTPUT ${SLL_LIB}
   DEPENDS ${SLL_LIBS}
-  COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/make_package.py
+  COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/make_package.py
           ${SLL_LIB} ${libpaths}
   COMMENT "Repackage all static libraries into a single archive: 'libselalib.a'"
   VERBATIM)

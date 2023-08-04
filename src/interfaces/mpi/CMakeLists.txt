@@ -149,7 +149,7 @@ if(ERR_STAT)
   string(REPLACE ";" " " CMD_MSG "${CMD}")
   message(STATUS ${CMD_MSG})
   execute_process(COMMAND ${CMD} ERROR_FILE ${ERR_FILE})
-  execute_process(COMMAND ${PYTHON_EXECUTABLE} ${PYSCRIPT} ${ERR_FILE}
+  execute_process(COMMAND ${Python3_EXECUTABLE} ${PYSCRIPT} ${ERR_FILE}
                           ${EXT_FILE})
   remove_definitions(${MPI_DEFS})
   add_definitions(-DMPI_AUTO)
