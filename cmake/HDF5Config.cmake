@@ -3,6 +3,7 @@ set(HDF5_ROOT
     CACHE PATH "HDF5 location")
 
 set( HDF5_USE_STATIC_LIBRARIES ON )
+set( HDF5_PREFER_PARALLEL TRUE)
 
 find_package( HDF5 COMPONENTS C Fortran REQUIRED )
 
