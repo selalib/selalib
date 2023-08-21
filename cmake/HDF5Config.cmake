@@ -7,7 +7,18 @@ set( HDF5_PREFER_PARALLEL TRUE)
 
 find_package( HDF5 COMPONENTS C Fortran REQUIRED )
 
-if(NOT HDF5_FOUND AND HDF5_ENABLED)
+message(STATUS "HDF5 FOUND : ${HDF5_FOUND}")
+message(STATUS "HDF5 VERSION : ${HDF5_VERSION}")
+
+if(HDF5_IS_PARALLEL)
+   message(STATUS "HDF5 parallel supported")
+   add_definitions(-DHDF5_PARALLEL)
+else(HDF5_IS_PARALLEL)
+   message(STATUS "HDF5 parallel not supported")
+   message(STATUS "try to find the parallel version somewhere else")
+endif()
+
+if(NOT HDF5_IS_PARALLEL)
 
   if(MPI_Fortran_LIBRARIES)
     list(GET MPI_Fortran_LIBRARIES 0 HEAD)
@@ -80,79 +91,7 @@ if(NOT HDF5_FOUND AND HDF5_ENABLED)
 
 endif()
 
-if(HDF5_FOUND)
-
-  message(STATUS "HDF5 FOUND")
-
-  set(HDF5_IS_PARALLEL FALSE)
-
-  macro(CHECK_HDF5_DEPS HDF5_HAVE_STRING HDF5_HAVE_BOOL)
-    file(STRINGS "${HDF5_INCLUDE_DIR}/H5pubconf.h" HDF5_HAVE_DEFINE
-         REGEX ${HDF5_HAVE_STRING})
-    if(HDF5_HAVE_DEFINE)
-      set(${HDF5_HAVE_BOOL} TRUE)
-    else()
-      set(${HDF5_HAVE_BOOL} FALSE)
-    endif()
-  endmacro(CHECK_HDF5_DEPS)
-
-  if(EXISTS "${HDF5_INCLUDE_DIR}/H5pubconf.h")
-    check_hdf5_deps("HAVE_PARALLEL 1" HDF5_IS_PARALLEL)
-    check_hdf5_deps("HAVE_LIBPTHREAD 1" HDF5_HAVE_LIBPTHREAD)
-    check_hdf5_deps("HAVE_GPFS 1" HDF5_HAVE_GPFS)
-    check_hdf5_deps("HAVE_LIBDL 1" HDF5_HAVE_LIBDL)
-    check_hdf5_deps("HAVE_LIBSZ 1" HDF5_HAVE_LIBSZ)
-  endif()
-
-  set(HDF5_IS_PARALLEL
-      ${HDF5_IS_PARALLEL}
-      CACHE BOOL "HDF5 library compiled with parallel IO support")
-  mark_as_advanced(HDF5_IS_PARALLEL)
-
-  if(HDF5_IS_PARALLEL)
-    message(STATUS "HDF5 parallel supported")
-    add_definitions(-DHDF5_PARALLEL)
-  else(HDF5_IS_PARALLEL)
-    message(STATUS "HDF5 parallel not supported")
-  endif()
-
-  set(HDF5_HAVE_LIBPTHREAD
-      ${HDF5_HAVE_LIBPTHREAD}
-      CACHE BOOL "HDF5 library compiled with pthread library")
-  mark_as_advanced(HDF5_HAVE_LIBPTHREAD)
-  if(HDF5_HAVE_LIBPTHREAD)
-    find_library(PTHREAD_LIBRARY NAMES pthread)
-    set(HDF5_LIBRARIES ${HDF5_LIBRARIES} ${PTHREAD_LIBRARY})
-  endif()
-
-  set(HDF5_HAVE_GPFS
-      ${HDF5_HAVE_GPFS}
-      CACHE BOOL "HDF5 library compiled with GPFS")
-  mark_as_advanced(HDF5_HAVE_GPFS)
-  if(HDF5_HAVE_GPFS)
-    find_library(GPFS_LIBRARY NAMES gpfs)
-    set(HDF5_LIBRARIES ${HDF5_LIBRARIES} ${GPFS_LIBRARY})
-  endif()
-
-  set(HDF5_HAVE_LIBDL
-      ${HDF5_HAVE_LIBDL}
-      CACHE BOOL "HDF5 library compiled with LIBDL")
-  mark_as_advanced(HDF5_HAVE_LIBDL)
-  if(HDF5_HAVE_LIBDL)
-    find_library(DL_LIBRARY NAMES dl)
-    set(HDF5_LIBRARIES ${HDF5_LIBRARIES} ${DL_LIBRARY})
-  endif()
-
-  set(HDF5_HAVE_LIBSZ
-      ${HDF5_HAVE_LIBSZ}
-      CACHE BOOL "HDF5 library compiled with LIBSZ")
-  mark_as_advanced(HDF5_HAVE_LIBSZ)
-  if(HDF5_HAVE_LIBSZ)
-    find_library(SZ_LIBRARY NAMES sz)
-    set(HDF5_LIBRARIES ${HDF5_LIBRARIES} ${SZ_LIBRARY})
-  endif()
-
-else()
+if(NOT HDF5_FOUND)
 
   message(
     STATUS
@@ -170,24 +109,17 @@ if(HDF5_ENABLED
    AND HDF5_IS_PARALLEL
    AND NOT MPI_ENABLED)
 
-  message(STATUS "HD5 is PARALLEL and needs MPI, please set MPI_ENABLED")
-  message(STATUS "HD5 is set to OFF")
+  message(STATUS "HDF5 is PARALLEL and needs MPI, please set MPI_ENABLED")
+  message(STATUS "HDF5 is set to OFF")
   set(HDF5_ENABLED
       OFF
       CACHE BOOL " " FORCE)
   add_definitions(-DNOHDF5)
 
-endif(
-  HDF5_ENABLED
-  AND HDF5_IS_PARALLEL
-  AND NOT MPI_ENABLED)
+endif()
 
 message(STATUS "##########################################################")
-message(STATUS "HDF5_INCLUDE_DIR:${HDF5_INCLUDE_DIR}")
-message(STATUS "HDF5_INCLUDE_DIR_FORTRAN:${HDF5_INCLUDE_DIR_FORTRAN}")
-message(STATUS "HDF5_LIBRARIES:${HDF5_LIBRARIES}")
-message(STATUS "ZLIB_LIBRARIES:${ZLIB_LIBRARIES}")
+message(STATUS "HDF5_INCLUDE_DIRS:${HDF5_INCLUDE_DIRS}")
+message(STATUS "HDF5_Fortran_INCLUDE_DIRS:${HDF5_Fortran_INCLUDE_DIRS}")
+message(STATUS "HDF5_Fortran_LIBRARIES:${HDF5_Fortran_LIBRARIES}")
 message(STATUS "##########################################################")
-
-mark_as_advanced(HDF5_FORTRAN_LIBRARY HDF5_C_LIBRARY HDF5_INCLUDE_DIR
-                 HDF5_INCLUDE_DIR_FORTRAN)
