@@ -91,12 +91,64 @@ if(NOT HDF5_IS_PARALLEL)
 
 endif()
 
-if(NOT HDF5_FOUND)
+if(HDF5_FOUND)
 
-  message(
-    STATUS
-      "Build SeLaLib without HDF5... binary output only for serial applications "
-  )
+  macro(CHECK_HDF5_DEPS HDF5_HAVE_STRING HDF5_HAVE_BOOL)
+    file(STRINGS "${HDF5_INCLUDE_DIR}/H5pubconf.h" HDF5_HAVE_DEFINE
+         REGEX ${HDF5_HAVE_STRING})
+    if(HDF5_HAVE_DEFINE)
+      set(${HDF5_HAVE_BOOL} TRUE)
+    else()
+      set(${HDF5_HAVE_BOOL} FALSE)
+    endif()
+  endmacro(CHECK_HDF5_DEPS)
+
+  if(EXISTS "${HDF5_INCLUDE_DIR}/H5pubconf.h")
+    check_hdf5_deps("HAVE_LIBPTHREAD 1" HDF5_HAVE_LIBPTHREAD)
+    check_hdf5_deps("HAVE_GPFS 1" HDF5_HAVE_GPFS)
+    check_hdf5_deps("HAVE_LIBDL 1" HDF5_HAVE_LIBDL)
+    check_hdf5_deps("HAVE_LIBSZ 1" HDF5_HAVE_LIBSZ)
+  endif()
+
+  set(HDF5_HAVE_LIBPTHREAD
+      ${HDF5_HAVE_LIBPTHREAD}
+      CACHE BOOL "HDF5 library compiled with pthread library")
+  mark_as_advanced(HDF5_HAVE_LIBPTHREAD)
+  if(HDF5_HAVE_LIBPTHREAD)
+    find_library(PTHREAD_LIBRARY NAMES pthread)
+    set(HDF5_LIBRARIES ${HDF5_LIBRARIES} ${PTHREAD_LIBRARY})
+  endif()
+
+  set(HDF5_HAVE_GPFS
+      ${HDF5_HAVE_GPFS}
+      CACHE BOOL "HDF5 library compiled with GPFS")
+  mark_as_advanced(HDF5_HAVE_GPFS)
+  if(HDF5_HAVE_GPFS)
+    find_library(GPFS_LIBRARY NAMES gpfs)
+    set(HDF5_LIBRARIES ${HDF5_LIBRARIES} ${GPFS_LIBRARY})
+  endif()
+
+  set(HDF5_HAVE_LIBDL
+      ${HDF5_HAVE_LIBDL}
+      CACHE BOOL "HDF5 library compiled with LIBDL")
+  mark_as_advanced(HDF5_HAVE_LIBDL)
+  if(HDF5_HAVE_LIBDL)
+    find_library(DL_LIBRARY NAMES dl)
+    set(HDF5_LIBRARIES ${HDF5_LIBRARIES} ${DL_LIBRARY})
+  endif()
+
+  set(HDF5_HAVE_LIBSZ
+      ${HDF5_HAVE_LIBSZ}
+      CACHE BOOL "HDF5 library compiled with LIBSZ")
+  mark_as_advanced(HDF5_HAVE_LIBSZ)
+  if(HDF5_HAVE_LIBSZ)
+    find_library(SZ_LIBRARY NAMES sz)
+    set(HDF5_LIBRARIES ${HDF5_LIBRARIES} ${SZ_LIBRARY})
+  endif()
+
+else()
+
+  message( STATUS "Build SeLaLib without HDF5... binary output only")
   add_definitions(-DNOHDF5)
   set(HDF5_ENABLED
       OFF
