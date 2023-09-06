@@ -28,7 +28,7 @@ target_link_libraries(sll_m_sim_bsl_vp_3d3v_cart_dd_slim_interface ${SLL_LIB}
                       ${SLL_EXT} ${SLL_DEPS})
 
 install(TARGETS sll_m_sim_bsl_vp_3d3v_cart_dd_slim_interface
-	#DESTINATION ${INSTALL_DIR}
+	ARCHIVE DESTINATION lib
 	)
 
 # build a test that checks if the simulation's functions (exported via
