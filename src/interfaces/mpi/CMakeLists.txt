@@ -14,7 +14,11 @@ message(STATUS "=========================================================")
 # "/usr/local/Cellar/open-mpi/1.10.1/include;/usr/local/Cellar/open-mpi/1.10.1/lib"
 # ) set( TEST_STRING
 # "/opt/mpi/bullxmpi/1.2.8.4/include;/opt/mpi/bullxmpi/1.2.8.4/lib" )
+if("${MPI_Fortran_INCLUDE_PATH}" STREQUAL "")
+  message(FATAL_ERROR "MPI_Fortran_INCLUDE_PATH is empty")
+endif()
 set(TEST_STRING ${MPI_Fortran_INCLUDE_PATH})
+string(TOLOWER ${TEST_STRING} TEST_STRING)
 string(REGEX MATCH "open\\-?mpi|mpich|impi|bullxmpi" MPI_LIB ${TEST_STRING})
 if(MPI_LIB)
   string(REPLACE "-" "" MPI_LIB ${MPI_LIB})
