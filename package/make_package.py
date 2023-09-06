@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding: utf8
 """
 Repackage contents of multiple static libraries into a single archive.
