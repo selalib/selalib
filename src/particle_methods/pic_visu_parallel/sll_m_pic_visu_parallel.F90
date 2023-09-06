@@ -38,7 +38,7 @@ module sll_m_pic_visu_parallel
    use sll_m_xdmf, only: &
       sll_s_xdmf_corect2d_nodes
 
-   use sll_mpi, only: &
+   use mpi, only: &
       mpi_sum
 
    implicit none

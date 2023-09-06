@@ -28,7 +28,7 @@ module m_parallel_array_output
    use sll_m_xml_io, only: &
       sll_s_xml_file_create
 
-   use sll_mpi, only: &
+   use mpi, only: &
       mpi_real8, &
       mpi_reduce, &
       mpi_sum

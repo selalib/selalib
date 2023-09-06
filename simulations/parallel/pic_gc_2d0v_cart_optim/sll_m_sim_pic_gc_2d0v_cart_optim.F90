@@ -77,7 +77,7 @@ module sll_m_sim_pic_gc_2d0v_cart_optim
       sll_s_set_time_mark, &
       sll_t_time_mark
 
-   use sll_mpi, only: &
+   use mpi, only: &
       mpi_sum
 
 #ifdef _OPENMP

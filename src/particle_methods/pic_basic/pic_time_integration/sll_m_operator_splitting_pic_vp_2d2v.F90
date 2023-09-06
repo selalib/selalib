@@ -23,7 +23,7 @@ module sll_m_operator_splitting_pic_vp_2d2v
   use sll_m_pic_poisson_base, only: &
     sll_c_pic_poisson
 
-  use sll_mpi, only: &
+  use mpi, only: &
     mpi_sum
 
   implicit none

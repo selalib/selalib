@@ -13,7 +13,7 @@ program test_decomposition_advanced
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  use sll_mpi, only: &
+  use mpi, only: &
     mpi_land
 
   use sll_m_collective, only: &

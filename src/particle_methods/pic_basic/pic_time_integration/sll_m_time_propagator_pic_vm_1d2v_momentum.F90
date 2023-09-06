@@ -35,7 +35,7 @@ module sll_m_time_propagator_pic_vm_1d2v_momentum
   use sll_m_particle_group_base, only: &
     sll_t_particle_array
 
-  use sll_mpi, only: &
+  use mpi, only: &
        mpi_sum
 
   implicit none

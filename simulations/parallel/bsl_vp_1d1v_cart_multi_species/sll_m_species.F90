@@ -75,7 +75,7 @@ module sll_m_species
       sll_o_xdmf_open, &
       sll_o_xdmf_write_array
 
-   use sll_mpi, only: &
+   use mpi, only: &
       mpi_sum
 
 #ifdef _OPENMP

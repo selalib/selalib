@@ -48,7 +48,7 @@ program test_maxwell_2d_periodic_cart_par
       sll_s_xml_file_close, &
       sll_s_xml_file_create
 
-   use sll_mpi, only: &
+   use mpi, only: &
       mpi_real8, &
       mpi_reduce, &
       mpi_sum, &

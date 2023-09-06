@@ -17,7 +17,7 @@ program test_hdf5_io_parallel
       sll_o_hdf5_par_write_array, &
       sll_o_hdf5_par_read_array
 
-   use sll_mpi, only: &
+   use mpi, only: &
       mpi_comm_world, &
       mpi_info_null, &
       mpi_init, &

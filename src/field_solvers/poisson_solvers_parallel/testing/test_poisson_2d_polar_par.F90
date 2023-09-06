@@ -46,7 +46,7 @@ program test_poisson_2d_polar_par
    use m_test_poisson_2d_polar_disk_dirichlet, only: &
       t_test_poisson_2d_polar_disk_dirichlet_quadratic
 
-   use sll_mpi, only: &
+   use mpi, only: &
       mpi_max
 
    use sll_m_collective, only: &

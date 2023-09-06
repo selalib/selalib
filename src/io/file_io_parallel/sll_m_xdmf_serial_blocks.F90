@@ -35,7 +35,7 @@ module sll_m_xdmf_serial_blocks
       sll_s_xml_file_close, &
       sll_s_xml_file_create
 
-   use sll_mpi, only: &
+   use mpi, only: &
       mpi_comm_rank, &
       mpi_comm_size, &
       mpi_comm_world, &

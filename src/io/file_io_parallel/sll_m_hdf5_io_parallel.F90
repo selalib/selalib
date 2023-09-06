@@ -62,7 +62,7 @@ module sll_m_hdf5_io_parallel
       hsize_t, &
       hssize_t
 
-   use sll_mpi, only: &
+   use mpi, only: &
       mpi_info_null
 
    implicit none

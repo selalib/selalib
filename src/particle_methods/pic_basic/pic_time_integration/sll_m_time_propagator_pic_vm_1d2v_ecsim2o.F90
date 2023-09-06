@@ -27,7 +27,7 @@ module sll_m_time_propagator_pic_vm_1d2v_ecsim2o
   use sll_m_gauss_legendre_integration, only : &
        sll_f_gauss_legendre_points_and_weights
 
-  use sll_mpi, only: &
+  use mpi, only: &
        mpi_sum
 
   use sll_m_linear_operator_ecsim_eb, only : &

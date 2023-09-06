@@ -20,7 +20,7 @@ program test_decomposition_6d3d_remap
   use sll_m_decomposition
   use sll_m_remapper
   use sll_m_poisson_3d_periodic_par
-  use sll_mpi
+  use mpi
 
   implicit none
   !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -302,7 +302,7 @@ contains
   ! PROTOTYPE : Sum all elements in a 3d buffer.
   ! Update: Removed MPI_IN_PLACE because of problems with OpenMPI.
   subroutine sll_collective_allreduce_sum_3d_real64( col, buffer )
-    use sll_mpi
+    use mpi
     type(sll_t_collective_t), pointer :: col
     sll_real64, dimension(:,:,:), intent(inout) :: buffer
     sll_real64, dimension(:,:,:), allocatable :: temp

@@ -51,7 +51,7 @@ program remap_test_5d
    use sll_m_utilities, only: &
       sll_f_is_power_of_two
 
-   use sll_mpi, only: &
+   use mpi, only: &
       mpi_prod
 
    implicit none

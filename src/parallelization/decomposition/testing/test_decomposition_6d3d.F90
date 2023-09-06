@@ -15,7 +15,7 @@ program test_decomposition
 
   use sll_m_collective
   use sll_m_decomposition
-  use sll_mpi
+  use mpi
 
   implicit none
   !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

@@ -25,7 +25,7 @@ program comm_unit_test
       sll_t_p2p_comm_real64, &
       sll_s_view_port
 
-   use sll_mpi, only: &
+   use mpi, only: &
       mpi_land
 
    implicit none

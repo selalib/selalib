@@ -41,7 +41,7 @@ module sll_m_decomposition
   use sll_m_collective, only: &
     sll_t_collective_t
 
-  use sll_mpi, only: &
+  use mpi, only: &
     mpi_cart_create, &
     mpi_cart_get, &
     mpi_cart_sub, &

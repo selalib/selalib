@@ -71,7 +71,7 @@ module sll_m_sim_bsl_vp_2d2v_cart
       sll_s_xml_file_create, &
       sll_o_xml_grid_geometry
 
-   use sll_mpi, only: &
+   use mpi, only: &
       mpi_wtime
 
    implicit none

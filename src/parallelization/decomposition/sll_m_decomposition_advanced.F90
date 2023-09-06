@@ -42,7 +42,7 @@ module sll_m_decomposition_advanced
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  use sll_mpi, only: &
+  use mpi, only: &
     mpi_double_precision, &
     mpi_real, &
     mpi_sendrecv, &

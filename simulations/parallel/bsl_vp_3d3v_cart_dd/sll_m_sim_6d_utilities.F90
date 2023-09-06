@@ -23,7 +23,7 @@ module sll_m_sim_6d_utilities
 
   use sll_m_hdf5_io_parallel
   use sll_m_hdf5_io_serial
-  use sll_mpi, only : &
+  use mpi, only : &
        mpi_bcast, &
        mpi_double_precision, &
        mpi_sum, &

@@ -24,7 +24,7 @@ program comm_unit_test_2d
       sll_s_configure_comm_real64_torus_2d, &
       sll_t_p2p_comm_real64
 
-   use sll_mpi, only: &
+   use mpi, only: &
       mpi_land
 
    implicit none

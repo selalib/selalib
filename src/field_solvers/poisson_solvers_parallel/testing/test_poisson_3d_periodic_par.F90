@@ -48,7 +48,7 @@ program test_poisson_3d_periodic_par
       sll_o_local_to_global, &
       sll_f_new_layout_3d
 
-   use sll_mpi, only: &
+   use mpi, only: &
       mpi_prod
 
    implicit none

@@ -15,7 +15,7 @@ module sll_m_pic_poisson_2d
        sll_c_poisson_2d_base, sll_i_function_of_position
   use sll_m_collective, only : &
        sll_v_world_collective, sll_o_collective_allreduce
-  use sll_mpi, only: &
+  use mpi, only: &
        MPI_SUM
 
 

@@ -30,7 +30,7 @@ module sll_m_maxwell_3d_trafo_parallel
   use sll_m_maxwell_3d_trafo, only : &
        sll_t_maxwell_3d_trafo
 
-  use sll_mpi, only: &
+  use mpi, only: &
        mpi_sum
 
   use sll_m_profile_functions, only: &

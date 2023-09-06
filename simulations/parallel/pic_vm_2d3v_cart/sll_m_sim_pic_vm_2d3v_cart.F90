@@ -67,7 +67,7 @@ module sll_m_sim_pic_vm_2d3v_cart
        sll_f_time_elapsed_between, &
        sll_t_time_mark
 
-  use sll_mpi, only: &
+  use mpi, only: &
        mpi_sum
 
   implicit none

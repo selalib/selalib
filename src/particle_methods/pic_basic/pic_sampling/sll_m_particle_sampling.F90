@@ -34,7 +34,7 @@ module sll_m_particle_sampling
   use sll_m_mapping_3d, only: &
        sll_t_mapping_3d
 
-  use sll_mpi, only: &
+  use mpi, only: &
        mpi_sum
 
   implicit none

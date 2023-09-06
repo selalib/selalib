@@ -189,7 +189,7 @@ module sll_m_sim_bsl_gk_3d1v_polar_multi_mu
       sll_o_xdmf_open, &
       sll_o_xdmf_write_array
 
-   use sll_mpi, only: &
+   use mpi, only: &
       mpi_sum
 
    implicit none

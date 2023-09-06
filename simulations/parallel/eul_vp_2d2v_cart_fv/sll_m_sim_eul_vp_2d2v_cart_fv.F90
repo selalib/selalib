@@ -66,7 +66,7 @@ module sll_m_sim_eul_vp_2d2v_cart_fv
    use sll_m_utilities, only: &
       sll_s_new_file_id
 
-   use sll_mpi, only: &
+   use mpi, only: &
       mpi_allreduce, &
       mpi_comm_world, &
       mpi_double_precision, &

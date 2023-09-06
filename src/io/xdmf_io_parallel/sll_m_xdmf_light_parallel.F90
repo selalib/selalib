@@ -24,7 +24,7 @@ module sll_m_xdmf_light_parallel
    use sll_m_xdmf_light_serial, only: &
       sll_t_xdmf_file
 
-   use sll_mpi, only: &
+   use mpi, only: &
       mpi_any_source, &
       mpi_any_tag, &
       mpi_character, &

@@ -131,7 +131,7 @@ module sll_m_collective
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-   use sll_mpi, only: &
+   use mpi, only: &
       mpi_allgather, &
       mpi_allgatherv, &
       mpi_allreduce, &
@@ -1303,7 +1303,7 @@ contains !************************** Operations **************************
    !> @param[in]    col wrapper around the communicator
    !> @param[inout] 3d buffer
    subroutine sll_s_collective_allreduce_sum_3d_real64(col, buffer)
-      use sll_mpi
+      use mpi
       type(sll_t_collective_t) :: col
       sll_real64, dimension(:, :, :), intent(inout) :: buffer
       sll_real64, dimension(:, :, :), allocatable :: temp
@@ -1984,7 +1984,7 @@ contains !************************** Operations **************************
 
    !> Function to derive a "collective" from a plain MPI communicator,
    function sll_f_create_collective(comm)
-      use sll_mpi
+      use mpi
       type(sll_t_collective_t), pointer :: sll_f_create_collective !< Collective object
       sll_int32, intent(in) :: comm !< MPI communicator
 
