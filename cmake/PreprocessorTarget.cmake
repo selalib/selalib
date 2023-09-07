@@ -164,9 +164,8 @@ function(add_preprocessor_target)
                         ${CMAKE_Fortran_COMPILER})
     set(preprocessor_only_flags ${preprocessor_only_flags}
                                 ${OpenMP_Fortran_FLAGS})
-    # else()
-    # we have modified the preprocessor command because of Forcheck. We do not
-    # add the OpenMP flag, since it might not work with the modified
+    # else() we have modified the preprocessor command because of Forcheck. We
+    # do not add the OpenMP flag, since it might not work with the modified
     # preprocessor command
   endif()
 

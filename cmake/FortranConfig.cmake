@@ -80,7 +80,8 @@ else()
 
 endif()
 
-message(STATUS "Fortran ${Fortran_COMPILER_NAME} version ${Fortran_COMPILER_VERSION}")
+message(
+  STATUS "Fortran ${Fortran_COMPILER_NAME} version ${Fortran_COMPILER_VERSION}")
 
 # --- enable fully user-defineable compiler flags
 if(FORCE_Fortran_FLAGS_RELEASE)

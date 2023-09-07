@@ -24,7 +24,9 @@ elseif(${FFT_LIB} STREQUAL "FFTW")
   if(FFTW_FOUND)
     add_definitions(-DFFTW)
   else(FFTW_FOUND)
-    message(SEND_ERROR "FFTW NOT FOUND, try set env variable FFTW_ROOT or change FFT_LIB ")
+    message(
+      SEND_ERROR
+        "FFTW NOT FOUND, try set env variable FFTW_ROOT or change FFT_LIB ")
   endif(FFTW_FOUND)
   set(FFTW_ENABLED ON)
 
