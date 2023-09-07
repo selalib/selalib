@@ -6,7 +6,7 @@ program test_time_propagator_pic_1d2v_vm_trafo
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  use sll_mpi, only: &
+  use mpi, only: &
     MPI_SUM
 
   use sll_m_collective, only: &

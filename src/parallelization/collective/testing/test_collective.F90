@@ -27,7 +27,7 @@ program collective_test
       sll_s_halt_collective, &
       sll_v_world_collective
 
-   use sll_mpi, only: &
+   use mpi, only: &
       mpi_land, &
       mpi_sum
 

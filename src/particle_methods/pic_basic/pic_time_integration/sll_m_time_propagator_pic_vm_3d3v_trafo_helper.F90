@@ -59,7 +59,7 @@ module sll_m_time_propagator_pic_vm_3d3v_trafo_helper
   use sll_m_maxwell_3d_base, only: &
        sll_c_maxwell_3d_base
 
-  use sll_mpi, only: &
+  use mpi, only: &
        mpi_sum, &
        mpi_max
 

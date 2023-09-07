@@ -67,7 +67,7 @@ module sll_m_sim_bsl_vp_2d2v_curv
       sll_f_is_even, &
       sll_s_new_file_id
 
-   use sll_mpi, only: &
+   use mpi, only: &
       mpi_sum
 
    implicit none

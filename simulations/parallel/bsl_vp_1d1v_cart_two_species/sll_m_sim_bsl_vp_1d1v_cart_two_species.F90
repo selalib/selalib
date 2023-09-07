@@ -167,7 +167,7 @@ module sll_m_sim_bsl_vp_1d1v_cart_two_species
       sll_o_xdmf_open, &
       sll_o_xdmf_write_array
 
-   use sll_mpi, only: &
+   use mpi, only: &
       mpi_sum
 
    implicit none

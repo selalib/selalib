@@ -156,7 +156,7 @@ module sll_m_sim_bsl_vp_1d1v_cart
    use sll_m_xdmf, only: &
       sll_s_plot_f_cartesian
 
-   use sll_mpi, only: &
+   use mpi, only: &
       mpi_sum
 
 #ifdef _OPENMP

@@ -54,7 +54,7 @@ program test_io_parallel
       sll_s_xml_file_create, &
       sll_o_xml_grid_geometry
 
-   use sll_mpi, only: &
+   use mpi, only: &
       mpi_info_null, &
       mpi_thread_single, &
       mpi_wtime

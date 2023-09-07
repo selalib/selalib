@@ -81,7 +81,7 @@ module sll_m_sim_pic_vp_2d2v_cart_optim
    use sll_m_sim_base, only: &
       sll_c_simulation_base_class
 
-   use sll_mpi, only: &
+   use mpi, only: &
       mpi_sum
 
 #ifdef _OPENMP

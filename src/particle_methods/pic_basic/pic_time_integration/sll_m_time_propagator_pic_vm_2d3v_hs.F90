@@ -29,7 +29,7 @@ module sll_m_time_propagator_pic_vm_2d3v_hs
        sll_c_particle_group_base, &
        sll_t_particle_array
 
-  use sll_mpi, only: &
+  use mpi, only: &
        mpi_sum
 
   implicit none

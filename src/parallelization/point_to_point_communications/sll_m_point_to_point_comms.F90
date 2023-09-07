@@ -11,7 +11,7 @@ module sll_m_point_to_point_comms
       sll_f_get_collective_size, &
       sll_s_test_mpi_error
 
-   use sll_mpi, only: &
+   use mpi, only: &
       mpi_double_precision, &
       mpi_get_count, &
       mpi_irecv, &

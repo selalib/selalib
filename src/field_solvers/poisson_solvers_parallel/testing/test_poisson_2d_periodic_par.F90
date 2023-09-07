@@ -47,7 +47,7 @@ program test_poisson_2d_periodic_cart_par
       sll_f_new_layout_2d, &
       sll_o_view_lims
 
-   use sll_mpi, only: &
+   use mpi, only: &
       mpi_prod
 
    implicit none

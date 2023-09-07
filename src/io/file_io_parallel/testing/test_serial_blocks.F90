@@ -17,7 +17,7 @@ program test_serial_blocks
       sll_s_xdmf_close_serial_blocks, &
       sll_s_xdmf_open_serial_blocks
 
-   use sll_mpi, only: &
+   use mpi, only: &
       mpi_barrier, &
       mpi_cart_coords, &
       mpi_cart_create, &

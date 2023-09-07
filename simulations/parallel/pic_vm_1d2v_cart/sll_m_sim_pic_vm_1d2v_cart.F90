@@ -75,7 +75,7 @@ module sll_m_sim_pic_vm_1d2v_cart
   use sll_m_maxwell_clamped_1d_trafo, only:&
        sll_t_maxwell_clamped_1d_trafo
 
-  use sll_mpi, only: &
+  use mpi, only: &
        mpi_sum
 
   use sll_m_particle_mesh_coupling_base_1d, only: &

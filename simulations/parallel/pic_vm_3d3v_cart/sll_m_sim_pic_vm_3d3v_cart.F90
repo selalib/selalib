@@ -68,7 +68,7 @@ module sll_m_sim_pic_vm_3d3v_cart
   use sll_m_maxwell_clamped_3d_trafo_parallel, only:&
        sll_t_maxwell_clamped_3d_trafo_parallel
 
-  use sll_mpi, only: &
+  use mpi, only: &
        mpi_sum
 
   use sll_m_particle_mesh_coupling_base_3d, only: &

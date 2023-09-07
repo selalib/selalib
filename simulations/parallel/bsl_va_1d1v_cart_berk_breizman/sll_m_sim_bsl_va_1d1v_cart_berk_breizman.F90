@@ -113,7 +113,7 @@ module sll_m_sim_bsl_va_1d1v_cart_berk_breizman
       sll_s_int2string, &
       sll_s_new_file_id
 
-   use sll_mpi, only: &
+   use mpi, only: &
       mpi_sum
 
 #ifdef _OPENMP

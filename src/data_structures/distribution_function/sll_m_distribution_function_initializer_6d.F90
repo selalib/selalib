@@ -19,7 +19,7 @@ module sll_m_distribution_function_initializer_6d
   use sll_m_constants, only: &
        sll_p_twopi
 
-  use sll_mpi, only : &
+  use mpi, only : &
        mpi_sum
   
 #ifdef _OPENMP

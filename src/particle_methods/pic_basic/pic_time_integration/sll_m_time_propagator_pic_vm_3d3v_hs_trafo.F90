@@ -37,7 +37,7 @@ module sll_m_time_propagator_pic_vm_3d3v_hs_trafo
   use sll_m_maxwell_3d_base, only: &
        sll_c_maxwell_3d_base
 
-  use sll_mpi, only: &
+  use mpi, only: &
        mpi_sum
 
   use sll_m_particle_group_base, only: &
