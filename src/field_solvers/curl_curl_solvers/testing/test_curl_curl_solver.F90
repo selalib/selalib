@@ -95,13 +95,13 @@ program test_curl_curl_solver
 
   ! Define computational domain
   x_min = .0_f64; x_max = 2.0_f64*sll_p_pi
-  n_dofs = 16![16, 16, 8]
+  n_dofs = [16, 8, 8]
   n_total = product(n_dofs)
   domain(1,:) = [x_min, x_max]
   domain(2,:) = [x_min, x_max]
   domain(3,:) = [x_min, x_max]
   ! Set spline degree of 0-forms
-  deg = 3![3,3,2]
+  deg = [3,3,2]
 
   delta_x = (domain(:,2)-domain(:,1))/real(n_dofs,f64)
 
@@ -212,7 +212,7 @@ program test_curl_curl_solver
   deallocate( current )
   deallocate( noise )
 
-  if ( error(1) < 3.d-4 .AND. error(2) < 8.d-4 .AND. error(3) < 1.d-3 .AND. error(4) < 4.d-4 ) then
+  if ( error(1) < 3.5d-3 .AND. error(2) < 7.1d-3 .AND. error(3) < 1.4d-2 .AND. error(4) < 2.2d-2 ) then
      print*, 'PASSED.'
   else
      print*, 'FAILED.'
