@@ -131,37 +131,7 @@ module sll_m_collective
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-   use mpi, only: &
-      mpi_allgather, &
-      mpi_allgatherv, &
-      mpi_allreduce, &
-      mpi_alltoall, &
-      mpi_alltoallv, &
-      mpi_barrier, &
-      mpi_bcast, &
-      mpi_comm_rank, &
-      mpi_comm_size, &
-      mpi_comm_split, &
-      mpi_comm_world, &
-      mpi_complex, &
-      mpi_double_complex, &
-      mpi_double_precision, &
-      mpi_finalize, &
-      mpi_gather, &
-      mpi_gatherv, &
-      mpi_init_thread, &
-      mpi_integer, &
-      mpi_integer8, &
-      mpi_logical, &
-      mpi_real, &
-      mpi_real8, &
-      mpi_reduce, &
-      mpi_scatter, &
-      mpi_scatterv, &
-      mpi_success, &
-      mpi_sum, &
-      mpi_thread_funneled, &
-      mpi_byte
+   use mpi
 
    implicit none
 
