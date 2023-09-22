@@ -5,6 +5,7 @@
 [![Build and test](https://github.com/selalib/selalib/workflows/OSX/badge.svg)](https://github.com/selalib/selalib/actions)
 [![Documentation](https://img.shields.io/badge/Documentation-Guide-cyan)](https://selalib.github.io)
 [![Documentation](https://img.shields.io/badge/Documentation-Doxygen-green)](https://selalib.github.io/selalib)
+[![Latest spack version](https://img.shields.io/spack/v/selalib)](https://spack.readthedocs.io/en/latest/package_list.html#selalib)
 
 Modular library for the kinetic and gyrokinetic simulation of tokamak plasmas by the semi-lagrangian or particle-in-cell methods.
 
