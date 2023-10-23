@@ -2,21 +2,21 @@ set(HDF5_ROOT
     $ENV{HDF5_ROOT}
     CACHE PATH "HDF5 location")
 
-set( HDF5_USE_STATIC_LIBRARIES ON )
-set( HDF5_PREFER_PARALLEL TRUE)
-set( HDF5_FIND_DEBUG TRUE )
+set(HDF5_USE_STATIC_LIBRARIES ON)
+set(HDF5_PREFER_PARALLEL TRUE)
+set(HDF5_FIND_DEBUG TRUE)
 
-find_package( HDF5 COMPONENTS Fortran )
+find_package(HDF5 COMPONENTS Fortran)
 
 message(STATUS "HDF5 FOUND : ${HDF5_FOUND}")
 message(STATUS "HDF5 VERSION : ${HDF5_VERSION}")
 
 if(HDF5_IS_PARALLEL)
-   message(STATUS "HDF5 parallel supported")
-   add_definitions(-DHDF5_PARALLEL)
+  message(STATUS "HDF5 parallel supported")
+  add_definitions(-DHDF5_PARALLEL)
 else(HDF5_IS_PARALLEL)
-   message(STATUS "HDF5 parallel not supported")
-   message(STATUS "try to find the parallel version somewhere else")
+  message(STATUS "HDF5 parallel not supported")
+  message(STATUS "try to find the parallel version somewhere else")
 endif()
 
 if(NOT HDF5_IS_PARALLEL)
@@ -83,8 +83,8 @@ if(NOT HDF5_IS_PARALLEL)
   set(HDF5_LIBRARIES ${HDF5_FORTRAN_LIBRARY} ${HDF5_C_LIBRARY}
                      ${ZLIB_LIBRARIES})
 
-  set(HDF5_Fortran_INCLUDE_DIRS  ${HDF5_INCLUDE_DIR_FORTRAN})
-  set(HDF5_Fortran_LIBRARIES  ${HDF5_LIBRARIES})
+  set(HDF5_Fortran_INCLUDE_DIRS ${HDF5_INCLUDE_DIR_FORTRAN})
+  set(HDF5_Fortran_LIBRARIES ${HDF5_LIBRARIES})
 
   if(DEFINED HDF5_FORTRAN_LIBRARY)
     set(HDF5_FOUND YES)
@@ -149,7 +149,7 @@ if(HDF5_FOUND)
 
 else()
 
-  message( STATUS "Build SeLaLib without HDF5... binary output only")
+  message(STATUS "Build SeLaLib without HDF5... binary output only")
   add_definitions(-DNOHDF5)
   set(HDF5_ENABLED
       OFF

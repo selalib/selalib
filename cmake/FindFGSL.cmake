@@ -57,23 +57,24 @@ else()
   set(GSL_LIBRARIES "${GSL_LIB}" "${GSL_CBLAS_LIB}")
 
   find_path(
-      FGSL_INCLUDES
-      NAMES fgsl.mod
-      HINTS /usr/local/include
-      PATH_SUFFIXES fgsl
-      DOC "Path to fgsl.mod")
+    FGSL_INCLUDES
+    NAMES fgsl.mod
+    HINTS /usr/local/include
+    PATH_SUFFIXES fgsl
+    DOC "Path to fgsl.mod")
 
   find_library(
-      FGSL_LIB
-      NAMES fgsl
-      DOC "Path to libfgsl.a")
+    FGSL_LIB
+    NAMES fgsl
+    DOC "Path to libfgsl.a")
 
   if(FGSL_LIB)
-      set(FGSL_LIBRARIES "${FGSL_LIB}" "${GSL_LIBRARIES}")
+    set(FGSL_LIBRARIES "${FGSL_LIB}" "${GSL_LIBRARIES}")
   endif(FGSL_LIB)
 
   include(FindPackageHandleStandardArgs)
-  find_package_handle_standard_args(FGSL DEFAULT_MSG FGSL_LIBRARIES FGSL_INCLUDES)
+  find_package_handle_standard_args(FGSL DEFAULT_MSG FGSL_LIBRARIES
+                                    FGSL_INCLUDES)
 
   mark_as_advanced(FGSL_LIB FGSL_INCLUDES GSL_LIB GSL_CBLAS_LIB GSL_INCLUDES)
 
