@@ -118,8 +118,8 @@ include(ZFPConfig)
 include(FFTConfig)
 include(DoxygenConfig)
 
-find_package(BLAS)
-find_package(LAPACK)
+find_package(BLAS REQUIRED)
+find_package(LAPACK REQUIRED)
 
 include(PreprocessorTarget)
 # Note: The following include must be placed after the compiler flags are fixed.
